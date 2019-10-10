@@ -596,47 +596,12 @@ class TopologyPage extends Component {
     appendCircle(enterCircle)
       .on("mouseover", function(d) {
         // mouseover a circle
-        return;
         self.current_node = d;
-        self.props.service.management.topology.delUpdatedAction(
-          "connectionPopupHTML"
-        );
-        let e = d3.event;
-        self.popupCancelled = false;
-        d.toolTip(self.props.service.management.topology).then(function(
-          toolTip
-        ) {
-          self.showToolTip(toolTip, e);
-        });
-        if (d === self.mousedown_node) return;
-        // enlarge target node
-        d3.select(this).attr("transform", "scale(1.1)");
-        if (!self.selected_node) {
-          return;
-        }
-        // highlight the next-hop route from the selected node to this node
-        self.clearAllHighlights();
-        // we need .router.node info to highlight hops
-        self.props.service.management.topology.ensureAllEntities(
-          [
-            {
-              entity: "router.node",
-              attrs: ["id", "nextHop"]
-            }
-          ],
-          function() {
-            self.mouseover_node = d; // save this node in case the topology changes so we can restore the highlights
-            self.nextHopHighlight(self.selected_node, d);
-            self.restart();
-          }
-        );
       })
       .on("mouseout", function() {
-        return;
         // mouse out for a circle
         self.current_node = null;
         // unenlarge target node
-        d3.select(this).attr("transform", "");
         self.setState({ showPopup: false });
         self.popupCancelled = true;
         self.clearAllHighlights();
@@ -661,9 +626,6 @@ class TopologyPage extends Component {
         // mouse up for circle
         self.backgroundMap.restartZoom();
         if (!self.mousedown_node) return;
-
-        // unenlarge target node
-        d3.select(this).attr("transform", "");
 
         // check for drag
         self.mouseup_node = d;
@@ -703,7 +665,6 @@ class TopologyPage extends Component {
         }
       })
       .on("contextmenu", d => {
-        return;
         // circle
         d3.event.preventDefault();
         this.contextEventPosition = [d3.event.pageX, d3.event.pageY];
@@ -712,7 +673,6 @@ class TopologyPage extends Component {
         return false;
       })
       .on("click", d => {
-        return;
         // circle
         if (!this.mouseup_node) return;
         // clicked on a circle
@@ -762,6 +722,9 @@ class TopologyPage extends Component {
       if (isNaN(d.x) || isNaN(d.px)) {
         d.x = d.px = d.sx;
         d.y = d.py = d.sy;
+      }
+      if (d.x === 0) {
+        console.log("dx was 0");
       }
       // don't let the edges of the circle go beyond the edges of the svg
       let r = Nodes.radius(d.nodeType);

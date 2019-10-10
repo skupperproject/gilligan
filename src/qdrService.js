@@ -73,7 +73,7 @@ export class QDRService {
   disconnect() {
     this.management.connection.disconnect();
     delete this.management;
-    this.management = new dm(this.$location.protocol(), DEFAULT_INTERVAL);
+    this.management = new dm(window.location.protocol, DEFAULT_INTERVAL);
   }
 }
 

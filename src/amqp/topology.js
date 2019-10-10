@@ -109,8 +109,6 @@ class Topology {
           if (workInfo[rId].router.attributeNames.indexOf("metaData") === -1) {
             workInfo[rId].router.attributeNames.push("metaData");
             workInfo[rId].router.results[0].push(genProperties(routerIndex++));
-            console.log(`inserting metaData for ${rId}`);
-            console.log(workInfo[rId].router);
           }
         }
       }
