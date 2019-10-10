@@ -21,6 +21,10 @@ class ConnectPage extends React.Component {
   render() {
     const { showForm } = this.state;
     const { from } = this.props.location.state || { from: { pathname: "/" } };
+    console.log(
+      `connectPage from.pathname is ${from.pathname} and showForm is ${showForm}`
+    );
+    console.log(this.props.location.history);
     return (
       <PageSection variant={PageSectionVariants.light} className="connect-page">
         {showForm ? (

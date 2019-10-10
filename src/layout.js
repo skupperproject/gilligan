@@ -96,7 +96,7 @@ class PageLayout extends React.Component {
           r => {
             this.setState({
               connected: true,
-              connectPath,
+              connectPath: "/topology",
               username: "Alan Hale Jr."
             });
           },
@@ -240,8 +240,14 @@ class PageLayout extends React.Component {
     // we render a <Redirect> object
     const redirectAfterConnect = () => {
       let { connectPath } = this.state;
+      if (
+        connectPath === "/login" ||
+        connectPath === "" ||
+        connectPath === undefined
+      )
+        connectPath = "/topology";
       if (connectPath !== "") {
-        if (connectPath === "/login") connectPath = "/";
+        console.log(`redirecting to ${connectPath}`);
         return <Redirect to={connectPath} />;
       }
       return <React.Fragment />;
@@ -259,7 +265,6 @@ class PageLayout extends React.Component {
       }
       return <React.Fragment />;
     };
-
     return (
       <Router>
         {redirectAfterConnect()}

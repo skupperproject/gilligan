@@ -492,7 +492,6 @@ export class Nodes {
         node.router.attributeNames,
         node.router.results[0]
       );
-      console.log(nobj);
       position.fixed = position.fixed ? true : false;
       let parts = id.split("/");
       this.addUsing(
