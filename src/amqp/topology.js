@@ -93,17 +93,41 @@ class Topology {
       for (let entity in workInfo[rId]) {
         if (entity === "router") {
           const genProperties = index => {
-            const clusters = [
+            const namespaces = ["namespace-1", "namespace-2", "namespace-3"];
+            const zones = [
               "US-East",
+              "EU-West",
               "US-West",
+              "EU-East",
               "EU-North",
-              "EU-South",
-              "RDU-Private"
+              "EU-South"
             ];
-            const namespaces = ["myproject", "main"];
+            const providers = ["AWS", "Azure", "Private"];
+            const locations = [
+              "Westford",
+              "Galway",
+              "Denver",
+              "Athens",
+              "Sirkka",
+              "Seville"
+            ];
             return {
-              cluster: clusters[index % clusters.length],
-              namespace: namespaces[index % namespaces.length]
+              namespace: {
+                name: namespaces[index % namespaces.length],
+                services: [
+                  {
+                    name: "service1",
+                    type: index === 0 ? "resident" : "proxy"
+                  },
+                  {
+                    name: "service2",
+                    type: index === 0 ? "proxy" : "resident"
+                  }
+                ]
+              },
+              zone: zones[index % zones.length],
+              provider: providers[index % providers.length],
+              location: locations[index % locations.length]
             };
           };
           if (workInfo[rId].router.attributeNames.indexOf("metaData") === -1) {

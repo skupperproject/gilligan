@@ -50,6 +50,7 @@ import { css } from "@patternfly/react-styles";
 import { BellIcon, PowerOffIcon } from "@patternfly/react-icons";
 import ConnectPage from "./connectPage";
 import TopologyPage from "./topology/topologyPage";
+import MessageFlowPage from "./chord/qdrChord";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
 const avatarImg = require("./assets/img_avatar.svg");
@@ -61,12 +62,13 @@ class PageLayout extends React.Component {
       connected: false,
       connectPath: "",
       isDropdownOpen: false,
-      activeItem: "topology",
+      activeItem: "network",
       isConnectFormOpen: false,
       username: ""
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
+    this.views = ["Network", "Application", "Service", "Address", "Reality"];
   }
 
   setLocation = where => {
@@ -85,25 +87,24 @@ class PageLayout extends React.Component {
     });
   };
 
-  handleConnect = connectPath => {
-    if (this.state.connected) {
-      this.service.disconnect();
-      this.setState({ connected: false });
+  handleConnect = (connectPath, connected) => {
+    if (!connected) {
+      this.setState({
+        connected: false
+      });
     } else {
-      this.service
-        .connect({ address: "localhost", port: 5673, reconnect: true })
-        .then(
-          r => {
-            this.setState({
-              connected: true,
-              connectPath: "/topology",
-              username: "Alan Hale Jr."
-            });
-          },
-          e => {
-            console.log(e);
-          }
-        );
+      if (
+        connectPath === undefined ||
+        connectPath === "/login" ||
+        connectPath === "/"
+      )
+        connectPath = "/network";
+      this.setState({
+        connected: true,
+        connectPath,
+        username: "Alan Hale Jr.",
+        activeItem: connectPath.slice(1)
+      });
     }
   };
 
@@ -123,22 +124,32 @@ class PageLayout extends React.Component {
     this.setState({ isConnectFormOpen: false });
   };
 
+  toL = s => s[0].toLowerCase() + s.slice(1);
+
   render() {
     const { isDropdownOpen, activeItem } = this.state;
 
-    const PageNav = (
-      <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
-        <NavList>
-          <NavItem
-            id="topologNavItem"
-            itemId="topology"
-            isActive={activeItem === "topology"}
-          >
-            <Link to="/topology">Topology</Link>
-          </NavItem>
-        </NavList>
-      </Nav>
-    );
+    const PageNav = () => {
+      return (
+        <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
+          <NavList>
+            {this.views.map(V => {
+              const v = this.toL(V);
+              return (
+                <NavItem
+                  id={`${V}NavItem`}
+                  itemId={v}
+                  isActive={activeItem === v}
+                  key={v}
+                >
+                  <Link to={`/${v}`}>{V}</Link>
+                </NavItem>
+              );
+            })}
+          </NavList>
+        </Nav>
+      );
+    };
     const userDropdownItems = [
       <DropdownItem component="button" key="action">
         Logout
@@ -200,7 +211,9 @@ class PageLayout extends React.Component {
       <PageHeader
         className="topology-header"
         logo={
-          <span className="logo-text">Skipper - A console for Skupper</span>
+          <span className="logo-text">
+            Skipper - A tool to visualize a Skupper network
+          </span>
         }
         toolbar={PageToolbar}
         avatar={<Avatar src={avatarImg} alt="Avatar image" />}
@@ -214,7 +227,9 @@ class PageLayout extends React.Component {
 
     const sidebar = PageNav => {
       if (this.state.connected) {
-        return <PageSidebar nav={PageNav} theme="dark" className="pf-m-dark" />;
+        return (
+          <PageSidebar nav={PageNav()} theme="dark" className="pf-m-dark" />
+        );
       }
       return <React.Fragment />;
     };
@@ -229,7 +244,13 @@ class PageLayout extends React.Component {
             <Component service={this.service} {...props} {...more} />
           ) : (
             <Redirect
-              to={{ pathname: "/login", state: { from: props.location } }}
+              to={{
+                pathname: "/login",
+                state: {
+                  from: props.location,
+                  connected: this.state.connected
+                }
+              }}
             />
           )
         }
@@ -240,14 +261,8 @@ class PageLayout extends React.Component {
     // we render a <Redirect> object
     const redirectAfterConnect = () => {
       let { connectPath } = this.state;
-      if (
-        connectPath === "/login" ||
-        connectPath === "" ||
-        connectPath === undefined
-      )
-        connectPath = "/topology";
+      if (connectPath === "/login") connectPath = "/network";
       if (connectPath !== "") {
-        console.log(`redirecting to ${connectPath}`);
         return <Redirect to={connectPath} />;
       }
       return <React.Fragment />;
@@ -259,6 +274,7 @@ class PageLayout extends React.Component {
           <ConnectForm
             handleConnect={this.handleConnect}
             handleConnectCancel={this.handleConnectCancel}
+            service={this.service}
             isConnected={this.state.connected}
           />
         );
@@ -277,11 +293,40 @@ class PageLayout extends React.Component {
           {connectForm()}
           <Switch>
             <PrivateRoute path="/" exact component={TopologyPage} />
-            <PrivateRoute path="/topology" component={TopologyPage} />
+            <PrivateRoute
+              path="/network"
+              type="network"
+              component={TopologyPage}
+            />
+            <PrivateRoute
+              path="/application"
+              type="application"
+              component={TopologyPage}
+            />
+            <PrivateRoute
+              path="/service"
+              type="service"
+              component={TopologyPage}
+            />
+            <PrivateRoute
+              path="/address"
+              type="address"
+              component={MessageFlowPage}
+            />
+            <PrivateRoute
+              path="/reality"
+              type="reality"
+              component={TopologyPage}
+            />
             <Route
               path="/login"
               render={props => (
-                <ConnectPage {...props} handleConnect={this.handleConnect} />
+                <ConnectPage
+                  {...props}
+                  service={this.service}
+                  handleConnect={this.handleConnect}
+                  isConnected={this.state.connected}
+                />
               )}
             />
           </Switch>

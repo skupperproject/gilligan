@@ -168,7 +168,8 @@ export class Legend {
         cury += this.gap(d);
         return t;
       });
-    appendCircle(legendEnter, this.urlPrefix);
+
+    appendCircle(legendEnter, "network", lsvg);
     appendContent(legendEnter);
     appendTitle(legendEnter);
     legendEnter

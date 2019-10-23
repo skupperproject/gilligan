@@ -971,25 +971,228 @@ div.qdrChord .legend-text {
 rect.skupper {
   fill: green;
 }
+circle.skupper {
+  fill: transparent;
+}
 
 text.skupper {
-  stroke: white;
+  fill: white;
 }
 rect.namespace {
   stroke: blue;
   stroke-dasharray: 5;
   fill: transparent;
 }
+
+rect.application.normal {
+  fill-opacity: 0.6;
+}
+
 rect.cluster {
-  fill-opacity: 0.15;
+  fill-opacity: 1;
 }
 
 rect.service {
-  stroke: black;
-  stroke-width: 3px;
   fill: white;
 }
 
+rect.service-type {
+  stroke: black;
+  stroke-width: 1px;
+  fill: white;
+}
+
+rect.service-type.proxy,
+rect.instance.proxy {
+  stroke: gray;
+  stroke-dasharray: 5;
+}
+
+rect.target-type {
+  fill: white;
+  stroke: lightgray;
+}
+
+text.target-type {
+  stroke: lightgray;
+}
+rect.address-stat {
+  stroke: black;
+  fill: #eaeaea;
+  stroke-width: 1px;
+}
+/*
 text.cluster {
   font-weight: bold;
+}
+*/
+
+text.cluster-name,
+text.application.header {
+  stroke: white;
+  fill: white;
+}
+.skipper-table td:first-child {
+  padding-right: 1em;
+}
+
+g.cluster {
+  cursor: default;
+}
+
+rect.instance {
+  fill: white;
+  stroke: black;
+  stroke-width: 1;
+}
+
+text.instance {
+  stroke: black;
+}
+
+rect.normal {
+  fill: white;
+  stroke: black;
+  stroke-width: 1;
+}
+
+circle.router {
+  stroke: black;
+  fill: black;
+}
+
+path.to-router {
+  fill: none;
+}
+
+path.cloud {
+  fill: white;
+  stroke: black;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+path.cloud:hover {
+  fill: aliceblue;
+  stroke: lightskyblue;
+}
+
+path.external {
+  fill: white;
+  stroke-width: 2;
+}
+.topology-page,
+.topology-page .pf-l-stack,
+.topology-page .overview-table,
+.topology-page .pf-c-card,
+.topology-page .qdrTopology,
+.topology-page .diagram,
+#topology {
+  height: 100%;
+}
+
+.topology-page .pf-c-card__body,
+.topology-page .pf-c-card__body:first-child {
+  padding: 0;
+}
+
+.topology-page.pf-c-page__main-section {
+  padding: 0;
+}
+
+.overview-header .pf-c-content ul {
+  background-clip: padding-box;
+  background-color: rgb(255, 255, 255);
+  box-shadow: rgba(3, 3, 3, 0.05) 0px 1px 1px 0px,
+    rgba(3, 3, 3, 0.06) 0px 4px 8px 4px;
+  box-sizing: border-box;
+  color: rgb(21, 21, 21);
+  font-family: RedHatText, Overpass, overpass, helvetica, arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  list-style-image: none;
+  list-style-position: outside;
+  list-style-type: none;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0px;
+  min-width: 100%;
+  padding-bottom: 8px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 8px;
+  position: absolute;
+  text-rendering: optimizelegibility;
+  z-index: 200;
+}
+
+.overview-header .pf-c-content ul li {
+  box-sizing: border-box;
+  color: rgb(21, 21, 21);
+  font-family: RedHatText, Overpass, overpass, helvetica, arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  list-style-image: none;
+  list-style-position: outside;
+  list-style-type: none;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0px;
+  padding-bottom: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 0px;
+  text-rendering: optimizelegibility;
+}
+
+.overview-header .pf-c-content ul li a {
+  background-color: rgba(0, 0, 0, 0);
+  border-bottom-color: rgb(21, 21, 21);
+  border-bottom-style: none;
+  border-bottom-width: 0px;
+  border-image-outset: 0;
+  border-image-repeat: stretch;
+  border-image-slice: 100%;
+  border-image-source: none;
+  border-image-width: 1;
+  border-left-color: rgb(21, 21, 21);
+  border-left-style: none;
+  border-left-width: 0px;
+  border-right-color: rgb(21, 21, 21);
+  border-right-style: none;
+  border-right-width: 0px;
+  border-top-color: rgb(21, 21, 21);
+  border-top-style: none;
+  border-top-width: 0px;
+  box-sizing: border-box;
+  color: rgb(21, 21, 21);
+  cursor: pointer;
+  display: block;
+  font-family: RedHatText, Overpass, overpass, helvetica, arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  list-style-image: none;
+  list-style-position: outside;
+  list-style-type: none;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0px;
+  padding-bottom: 8px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  text-align: left;
+  text-decoration: none;
+  text-rendering: optimizelegibility;
+  white-space: nowrap;
+  width: 157px;
+}
+
+.overview-header .pf-c-content ul li a:hover {
+  background-color: #eaeaea;
 }

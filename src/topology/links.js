@@ -18,7 +18,7 @@ under the License.
 */
 
 import { utils } from "../amqp/utilities.js";
-
+import { getPosition } from "./topoUtils";
 class Link {
   constructor(source, target, dir, cls, uid) {
     this.source = source;
@@ -38,6 +38,16 @@ class Link {
     return `-${selhigh}-${
       end === "end" ? this.target.radius() : this.source.radius()
     }`;
+  }
+  toolTip(event) {
+    return new Promise(resolve => {
+      resolve(
+        `Address: ${this.target.name.toLowerCase()}/get${this.source.name.replace(
+          " ",
+          ""
+        )}`
+      );
+    });
   }
 }
 
@@ -123,8 +133,227 @@ export class Links {
     position.fixed = position.fixed ? true : false;
     return position;
   }
+  initialize(reality, nodes, unknowns, height, localStorage, view, extra) {
+    this.reset();
+    if (view === "reality") {
+      for (let i = 0; i < reality.clusters.length; i++) {
+        for (let j = i + 1; j < reality.clusters.length; j++) {
+          this.getLink(
+            i,
+            j,
+            "both",
+            "",
+            `${nodes.get(i).uid()}-${nodes.get(j).uid()}`
+          );
+        }
+      }
+      reality.applications.forEach(application => {
+        const source = nodes.nodes.findIndex(n => n.name === application.name);
+        application.connections.forEach((connection, connectionIndex) => {
+          const clusterName = connection.serviceInstance.cluster.name;
+          const target = reality.clusters.findIndex(
+            cluster => cluster.name === clusterName
+          );
+          const index =
+            this.links.push(
+              new Link(
+                source,
+                target,
+                "bold",
+                "cloud",
+                `${nodes.get(source).uid()}-${nodes.get(target).uid()}-${this
+                  .links.length - 1}`
+              )
+            ) - 1;
+          const instance = reality.serviceInstances.findIndex(
+            si =>
+              si.serviceType.name ===
+                connection.serviceInstance.serviceType.name &&
+              si.type === connection.serviceInstance.type &&
+              si.cluster.name === connection.serviceInstance.cluster.name &&
+              si.namespace === connection.serviceInstance.namespace
+          );
+          console.log(
+            `creating link between ${source} and ${target} to instance ${connectionIndex}`
+          );
+          this.links[index].instance = connectionIndex;
+          this.links[index].sourceOffset = { x: 40, y: 40 };
+        });
+      });
+    }
+    // for view "network", links are between nodes that contain the same serviceType
+    if (view === "network") {
+      reality.serviceInstances.forEach(
+        (serviceInstance, serviceInstanceIndex) => {
+          const serviceTypeName = serviceInstance.serviceType.name;
+          const clusterName = serviceInstance.cluster.name;
+          for (
+            let i = serviceInstanceIndex + 1;
+            i < reality.serviceInstances.length;
+            i++
+          ) {
+            const otherServiceInstance = reality.serviceInstances[i];
+            if (otherServiceInstance.serviceType.name === serviceTypeName) {
+              const source = reality.clusters.findIndex(
+                cluster => cluster.name === clusterName
+              );
+              const target = reality.clusters.findIndex(
+                cluster => cluster.name === otherServiceInstance.cluster.name
+              );
+              this.getLink(
+                source,
+                target,
+                "both",
+                "",
+                `${nodes.get(source).uid()}-${nodes.get(target).uid()}`
+              );
+            }
+          }
+        }
+      );
+    } else if (view === "application") {
+      // for each node, create a node for each of its metadata addresses
+      nodes.nodes.forEach((node, nodeIndex) => {
+        node.properties.forEach((address, addressIndex) => {
+          const position = this.getPosition(
+            address,
+            nodes,
+            nodeIndex,
+            addressIndex,
+            height,
+            localStorage
+          );
+          let newnode = nodes.addUsing(
+            node.key,
+            address,
+            "normal",
+            nodes.getLength(),
+            position.x,
+            position.y,
+            address,
+            0,
+            position.fixed,
+            {}
+          );
+          newnode.host = "host";
+          newnode.cdir = "in";
+          newnode.user = "user";
+          newnode.isEncrypted = true;
+          newnode.connectionId = "";
+          newnode.uuid = `${node.name}-${address}`;
+          // create a  link between the node and the newnode
+          const source = nodeIndex;
+          const target = nodes.getLength() - 1;
+          this.getLink(
+            source,
+            target,
+            "in",
+            "small",
+            `${nodes.get(source).uid()}-${nodes.get(target).uid()}`
+          );
+        });
+      });
+    } else if (view === "service") {
+      // each node is a cluster
+      const serviceType = extra;
+      // first, connect each node with resident serviceType to all the nodes with
+      // a proxy of that serviceType
+      const sourceInstance = reality.serviceInstances.find(
+        si => si.serviceType.name === serviceType.name && si.type === "resident"
+      );
+      const targetInstances = reality.serviceInstances.filter(
+        si => si.serviceType.name === serviceType.name && si.type === "proxy"
+      );
+      const source = nodes.nodes.findIndex(
+        node => node.name === sourceInstance.cluster.location
+      );
+      if (source > -1) {
+        nodes.nodes[source].properties.extra.type = "resident";
+        targetInstances.forEach(targetInstance => {
+          const target = nodes.nodes.findIndex(
+            node => node.name === targetInstance.cluster.location
+          );
+          if (target > -1) {
+            nodes.nodes[target].properties.extra.type = "proxy";
+            this.getLink(
+              source,
+              target,
+              "both",
+              "",
+              `${nodes.get(source).uid()}-${nodes.get(target).uid()}`
+            );
+          }
+        });
+      }
+      // for each node, add sub nodes for each address used by extra.serviceType
+      // node.properties.cluster is the cluster
+      reality.applications.forEach((application, applicationIndex) => {
+        application.connections.forEach((connection, connectionIndex) => {
+          const serviceInstance = connection.serviceInstance;
+          const serviceInstanceIndex = reality.serviceInstances.findIndex(
+            si =>
+              si.serviceType.name === serviceInstance.serviceType.name &&
+              si.type === serviceInstance.type &&
+              si.cluster.name === serviceInstance.cluster.name &&
+              si.namespace === serviceInstance.namespace
+          );
+          if (serviceInstance.serviceType.name === serviceType.name) {
+            const source = nodes.nodes.findIndex(
+              node => node.name === serviceInstance.cluster.location
+            );
+            connection.addresses.forEach((addressIndex, client) => {
+              // create a sub node for each address and create a link to this node
+              const target = nodes.getLength();
+              const address = serviceType.addresses[addressIndex];
+              const container = `${nodes.nodes[source].name}-${address}`;
+              const position = this.getPosition(
+                container,
+                nodes,
+                source,
+                client,
+                height,
+                localStorage
+              );
+              const addressStat = reality.addressStats.find(as => {
+                return (
+                  as.address === addressIndex &&
+                  as.serviceInstance === serviceInstanceIndex
+                );
+              });
+              let newnode = nodes.addUsing(
+                nodes.nodes[source].key,
+                container,
+                "normal",
+                target,
+                position.x,
+                position.y,
+                container,
+                0,
+                position.fixed,
+                { address, addressStat }
+              );
+              newnode.host = "host";
+              newnode.cdir = "in";
+              newnode.user = "user";
+              newnode.isEncrypted = true;
+              newnode.connectionId = "";
+              newnode.uuid = `${nodes.nodes[source].name}-${address}`;
+              // create a  link between the node and the newnode
+              this.getLink(
+                source,
+                target,
+                "in",
+                "small",
+                `${nodes.get(source).uid()}-${nodes.get(target).uid()}`
+              );
+            });
+          }
+        });
+      });
+    }
+  }
 
-  initialize(nodeInfo, nodes, unknowns, height, localStorage) {
+  _initialize(nodeInfo, nodes, unknowns, height, localStorage, type) {
     this.reset();
     let connectionsPerContainer = {};
     let nodeIds = Object.keys(nodeInfo);
@@ -160,7 +389,40 @@ export class Links {
             const tuid = nodes.get(target).uid();
             this.getLink(source, target, connection.dir, "", `${suid}-${tuid}`);
           }
-          continue;
+          // continue;
+        } else {
+          if (type !== "network") {
+            let target = nodes.getLength();
+            let position = this.getPosition(
+              connection.name,
+              nodes,
+              source,
+              target,
+              height,
+              localStorage
+            );
+            let node = nodes.addUsing(
+              nodeIds[source],
+              connection.name,
+              connection.role,
+              target,
+              position.x,
+              position.y,
+              connection.container,
+              c,
+              position.fixed,
+              connection.properties
+            );
+            node.host = connection.host;
+            node.cdir = "in";
+            node.user = connection.user;
+            node.isEncrypted = connection.isEncrypted;
+            node.connectionId = connection.identity;
+            node.uuid = `${connection.container}-${node.routerId}-${node.nodeType}-${node.cdir}`;
+            const suid = nodes.get(source).uid();
+            const tuid = nodes.get(target).uid();
+            this.getLink(source, target, "in", "small", `${suid}-${tuid}`);
+          }
         }
         /*
         if (!connectionsPerContainer[connection.container])

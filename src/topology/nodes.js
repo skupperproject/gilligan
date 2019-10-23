@@ -19,7 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import { utils } from "../amqp/utilities.js";
-
+import { getPosition } from "./topoUtils";
 export class Node {
   constructor(
     id,
@@ -48,6 +48,9 @@ export class Node {
     this.container = connectionContainer;
     this.isConsole = utils.isConsole(this);
     this.isArtemis = utils.isArtemis(this);
+    this.score = 0;
+    this.targets = [];
+    this.links = [];
   }
   title(hide) {
     let x = "";
@@ -86,9 +89,10 @@ export class Node {
     let type = this.title(true);
     let title = "";
     title += `<table class="popupTable"><tr><td>Type</td><td>${type}</td></tr>`;
-    if (!this.normals || this.normals.length < 2)
+    if (!this.normals || this.normals.length < 2) {
       title += `<tr><td>Host</td><td>${this.host}</td></tr>`;
-    else {
+      title += `<tr><td>${this.row}</td><td>${this.column}</td></tr>`;
+    } else {
       title += `<tr><td>Count</td><td>${this.normals.length}</td></tr>`;
     }
     if (!this.isConsole && !this.isArtemis)
@@ -98,76 +102,30 @@ export class Node {
   }
 
   routerTooltip(topology, verbose) {
-    return new Promise(
-      function(resolve) {
-        topology.ensureEntities(
-          this.key,
-          [
-            {
-              entity: "listener",
-              attrs: ["role", "port", "http"]
-            },
-            {
-              entity: "router"
-            }
-          ],
-          function(foo, nodes) {
-            // update all the router title text
-            let node = nodes[this.key];
-            const err = `<table class="popupTable"><tr><td>Error</td><td>Unable to get router info for ${this.key}</td></tr></table>`;
-            if (!node) {
-              resolve(err);
-              return;
-            }
-            let listeners = node["listener"];
-            let router = node["router"];
-            if (!listeners || !router) {
-              resolve(err);
-              return;
-            }
-            let r = utils.flatten(router.attributeNames, router.results[0]);
-            let title = '<table class="popupTable">';
-            title += "<tr><td>Router</td><td>" + r.name + "</td></tr>";
-            if (r.hostName)
-              title += "<tr><td>Host Name</td><td>" + r.hostHame + "</td></tr>";
-            title += "<tr><td>Version</td><td>" + r.version + "</td></tr>";
-            let ports = [];
-            for (let l = 0; l < listeners.results.length; l++) {
-              let listener = utils.flatten(
-                listeners.attributeNames,
-                listeners.results[l]
-              );
-              if (listener.role === "normal") {
-                ports.push(listener.port + "");
-              }
-            }
-            if (ports.length > 0) {
-              title +=
-                "<tr><td>Ports</td><td>" + ports.join(", ") + "</td></tr>";
-            }
-            // add verbose rows
-            if (verbose) {
-              title +=
-                "<tr><td>Addresses</td><td>" + r.addrCount + "</td></tr>";
-              title +=
-                "<tr><td>Connections</td><td>" +
-                r.connectionCount +
-                "</td></tr>";
-              title += "<tr><td>Links</td><td>" + r.linkCount + "</td></tr>";
-              title +=
-                "<tr><td>Auto links</td><td>" + r.autoLinkCount + "</td></tr>";
-              title +=
-                "<tr><td>Link routes</td><td>" +
-                r.linkRouteCount +
-                "</td></tr>";
-            }
-            title += "</table>";
-            resolve(title);
-            return title;
-          }.bind(this)
-        );
-      }.bind(this)
-    );
+    return new Promise(resolve => {
+      let HTML = "";
+      if (this.dataType === "network") {
+        HTML += "<table class='skipper-table network'>";
+        HTML += `<tr><td>Provider</td><td>${this.properties.cluster.provider}</td></tr>`;
+        HTML += `<tr><td>Zone</td><td>${this.properties.cluster.zone}</td></tr>`;
+        if (this.properties.cluster.namespaces.length > 1) {
+          HTML += `<tr><td>Namespaces</td><td>`;
+          HTML += "<ul>";
+          this.properties.cluster.namespaces.forEach(ns => {
+            HTML += `<li>${ns}</li>`;
+          });
+          HTML += "</ul>";
+        } else {
+          HTML += `<tr><td>Namespace</td><td>`;
+          HTML += this.properties.cluster.namespaces[0];
+        }
+        HTML += `</td></tr>`;
+        HTML += "</table>";
+      } else if (this.dataType === "application") {
+        HTML += "<p>Hi</p>";
+      }
+      resolve(HTML);
+    });
   }
   radius() {
     return nodeProperties[this.nodeType].radius;
@@ -211,8 +169,12 @@ const nodeProperties = {
       end: 20,
       start: -7
     },
-    linkDistance: [75, 40],
-    charge: [-900, -900]
+    linkDistance: [250, 250],
+    charge: [-1900, -1900]
+  },
+  cloud: {
+    charge: [-1900, -900],
+    linkDistance: [150, 70]
   }
 };
 // aliases
@@ -266,7 +228,12 @@ export class Nodes {
       .range(minmax);
     return x(count);
   }
+  reset() {
+    this.nodes.length = 0;
+  }
+
   linkDistance(d, nodeCount) {
+    if (d.target.nodeType === undefined) debugger;
     let range = nodeProperties[d.target.nodeType].linkDistance;
     return Nodes.forceScale(nodeCount, range);
   }
@@ -459,56 +426,114 @@ export class Nodes {
     }
   }
 
-  initialize(nodeInfo, width, height, localStorage) {
-    this.nodes.length = 0;
-    let nodeCount = Object.keys(nodeInfo).length;
-    let yInit = 50;
-    let animate = false;
-    for (let id in nodeInfo) {
-      let name = utils.nameFromId(id);
-      // if we have any new nodes, animate the force graph to position them
-      let position = localStorage[name]
-        ? JSON.parse(localStorage[name])
-        : undefined;
-      if (!position) {
-        animate = true;
-        position = {
-          x: Math.round(
-            width / 4 + (width / 2 / nodeCount) * this.nodes.length
-          ),
-          y: Math.round(
-            height / 2 +
-              (Math.sin(this.nodes.length / (Math.PI * 2.0)) * height) / 4
-          ),
-          fixed: false
-        };
-      }
-      if (position.y > height) {
-        position.y = 200 - yInit;
-        yInit *= -1;
-      }
-      const node = nodeInfo[id];
-      const nobj = utils.flatten(
-        node.router.attributeNames,
-        node.router.results[0]
+  addClusters = (clusters, width, height, yInit, animate, type, extra) => {
+    clusters.forEach(cluster => {
+      const id = utils.idFromName(cluster.location, "_topo");
+      const name = cluster.location;
+      const metaData = { cluster, extra: JSON.parse(JSON.stringify(extra)) };
+      let { position, newyInit, newanimate } = getPosition(
+        name,
+        width,
+        height,
+        localStorage,
+        this.nodes.length,
+        clusters.length,
+        yInit,
+        animate
       );
-      position.fixed = position.fixed ? true : false;
-      let parts = id.split("/");
+      yInit = newyInit;
+      animate = newanimate;
       this.addUsing(
         id,
         name,
-        parts[1],
+        "_topo",
         this.nodes.length,
         position.x,
         position.y,
         name,
         undefined,
         position.fixed,
-        {
-          cluster: nobj.metaData.cluster,
-          namespace: nobj.metaData.namespace
+        metaData
+      ).dataType = type;
+    });
+  };
+  initialize(reality, width, height, localStorage, type, extra) {
+    let yInit = 50;
+    let animate = false;
+    // for "network", nodes are the clusters
+    if (type === "network" || type === "reality") {
+      const clusters = reality.clusters;
+      this.addClusters(clusters, width, height, yInit, animate, type, extra);
+
+      if (type === "reality") {
+        reality.applications.forEach(application => {
+          const id = utils.idFromName(application.name, "_topo");
+          this.addUsing(
+            id,
+            application.name,
+            "cloud",
+            this.nodes.length,
+            0,
+            0,
+            application.name,
+            undefined,
+            false,
+            { application }
+          ).dataType = type;
+        });
+      }
+    }
+    // for "application", nodes are service types
+    if (type === "application") {
+      const serviceTypes = {};
+      extra.connections.forEach(connection => {
+        const serviceTypeName = connection.serviceInstance.serviceType.name;
+        serviceTypes[serviceTypeName] = connection.serviceInstance.serviceType;
+      });
+      for (const serviceTypeName in serviceTypes) {
+        const id = utils.idFromName(serviceTypeName, "_topo");
+        const metaData = serviceTypes[serviceTypeName].addresses;
+        let { position, newyInit, newanimate } = getPosition(
+          serviceTypeName,
+          width,
+          height,
+          localStorage,
+          Object.keys(serviceTypes).length,
+          yInit,
+          animate
+        );
+        yInit = newyInit;
+        animate = newanimate;
+        this.addUsing(
+          id,
+          serviceTypeName,
+          "_topo",
+          this.nodes.length,
+          position.x,
+          position.y,
+          serviceTypeName,
+          undefined,
+          position.fixed,
+          metaData
+        ).dataType = type;
+      }
+    }
+    if (type === "service") {
+      const serviceTypeName = extra.name;
+      // add a cluster if it contains extra.serviceType
+      const clusters = [];
+      reality.serviceInstances.forEach(serviceInstance => {
+        if (serviceInstance.serviceType.name === serviceTypeName) {
+          if (
+            !clusters.find(
+              cluster => cluster.name === serviceInstance.cluster.name
+            )
+          ) {
+            clusters.push(serviceInstance.cluster);
+          }
         }
-      );
+      });
+      this.addClusters(clusters, width, height, yInit, animate, type, extra);
     }
     return animate;
   }

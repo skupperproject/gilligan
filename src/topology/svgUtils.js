@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import * as d3 from "d3";
 import { Nodes } from "./nodes.js";
 
 export function updateState(circle) {
@@ -34,81 +33,54 @@ export function updateState(circle) {
     });
 }
 
-const clusterColor = index => {
-  return ["#ADD8E6", "#FFFF00", "#00FF00"][index];
-};
+// from https://stackoverflow.com/questions/5736398/how-to-calculate-the-svg-path-for-an-arc-of-a-circle#18473154
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  var angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
 
-export function appendCircle(g) {
-  // add new circles and set their attr/class/behavior
-  g.append("svg:rect")
-    .attr("class", "cluster")
-    .attr("width", "180")
-    .attr("height", "280")
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians)
+  };
+}
+
+function describeArc(x, y, radius, startAngle, endAngle) {
+  var start = polarToCartesian(x, y, radius, endAngle);
+  var end = polarToCartesian(x, y, radius, startAngle);
+
+  var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+  var d = [
+    "M",
+    start.x,
+    start.y,
+    "A",
+    radius,
+    radius,
+    0,
+    largeArcFlag,
+    0,
+    end.x,
+    end.y
+  ].join(" ");
+
+  return d;
+}
+
+export function appendCloud(g) {
+  g.append("svg:path")
+    .attr("class", "cloud")
     .attr(
-      "style",
-      d =>
-        `fill: ${clusterColor(d.index)}; stroke: ${d3
-          .rgb(clusterColor(d.index))
-          .darker()}`
+      "d",
+      "M 25,60 a 20,20 1 0,0 0,40 h 50 a 20,20 1 0,0 0,-40 a 10,10 1 0,0 -15,-10 a 15,15 1 0,0 -35,10 z"
     );
-
   g.append("svg:text")
-    .attr("class", "cluster")
-    .attr("x", "60")
-    .attr("y", "20")
-    .text(d => d.properties.cluster);
+    .attr("class", "cloud")
+    .attr("x", 50)
+    .attr("y", 80)
+    .attr("dominant-baseline", "middle")
+    .attr("text-anchor", "middle")
+    .text(d => d.name);
 
-  const gNamespace = g
-    .append("svg:g")
-    .attr("class", "namespace")
-    .attr("transform", "translate(20, 40)");
-  gNamespace
-    .append("svg:rect")
-    .attr("class", "namespace")
-    .attr("width", 140)
-    .attr("height", 200);
-  gNamespace
-    .append("svg:text")
-    .attr("class", "namespace")
-    .attr("x", "5")
-    .attr("y", "15")
-    .text(d => d.properties.namespace); //d.namespaces[0].text)
-
-  /*
-    const gService = gNamespace
-    .append("svg:g")
-    .attr("class", "service")
-    .attr("transform", "translate(20,30)");
-  gService
-    .append("svg:rect")
-    .attr("class", "service")
-    .attr("width", "100")
-    .attr("height", 40)
-    .attr("rx", 5)
-    .attr("ry", 5);
-  gService
-    .append("svg:text")
-    .attr("class", "service")
-    .attr("x", 4)
-    .attr("y", 24)
-    .text(d => "service name");
-*/
-  const gSkupper = gNamespace
-    .append("svg:g")
-    .attr("class", "skupper")
-    .attr("transform", "translate(64, 120)");
-  gSkupper
-    .append("svg:circle")
-    .attr("class", "skupper")
-    .attr("r", 4);
-  /*
-    gSkupper
-    .append("svg:text")
-    .attr("class", "skupper")
-    .attr("x", 18)
-    .attr("y", 24)
-    .text(d => "Skupper");
-    */
   return g;
 }
 
@@ -272,3 +244,75 @@ function addStyles(stend, stateColor, radii) {
     }
   }
 }
+/*
+export function getData(type, service) {
+  let nodeInfo = {};
+
+  if (type === "network") {
+    //nodeInfo = service.management.topology.nodeInfo();
+    clusters.forEach((cluster, clusterIndex) => {
+      const results = [];
+      const targetCluster =
+        clusterIndex === clusters.length - 1 ? 0 : clusterIndex + 1;
+      results.push([
+        `connection-${clusterIndex}`,
+        clusters[targetCluster].location,
+        "inter-router",
+        "host",
+        "user",
+        false,
+        `clusterId-${clusterIndex}`,
+        "both",
+        {}
+      ]);
+      const clusterNamespaces = namespaces
+        .filter(ns => ns.cluster === clusterIndex)
+        .map(fns => fns.name);
+      cluster.namespaces = clusterNamespaces;
+      nodeInfo[utils.idFromName(cluster.location, "_topo")] = {
+        router: {
+          attributeNames: ["metaData"],
+          results: [[cluster]]
+        },
+        connection: {
+          attributeNames: ConnectionAttributeNames,
+          results: results
+        }
+      };
+    });
+  } else if (type === "application") {
+    const application = applications[0];
+    serviceTypes.forEach((st, stIndex) => {
+      const results = [];
+      application.connections.forEach(conn => {
+        if (serviceInstances[conn.serviceInstance].serviceType === stIndex) {
+          conn.addresses.forEach(address => {
+            results.push([
+              st.addresses[address],
+              "",
+              "normal",
+              "host",
+              "user",
+              false,
+              `addr${stIndex}-${address}`,
+              "both",
+              {}
+            ]);
+          });
+        }
+      });
+      nodeInfo[utils.idFromName(st.name, "_topo")] = {
+        router: {
+          attributeNames: ["metaData"],
+          results: [[{}]]
+        },
+        connection: {
+          attributeNames: ConnectionAttributeNames,
+          results: results
+        }
+      };
+    });
+  }
+  return nodeInfo;
+}
+*/

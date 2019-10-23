@@ -51,8 +51,24 @@ class ConnectForm extends React.Component {
   }
 
   handleConnect = () => {
-    this.toggleDrawerHide();
-    this.props.handleConnect(this.props.fromPath);
+    //this.toggleDrawerHide();
+
+    if (this.props.isConnected) {
+      console.log("disconnecting");
+      this.props.service.disconnect();
+      this.props.handleConnect(this.props.fromPath, false);
+    } else {
+      this.props.service
+        .connect({ address: "localhost", port: 5673, reconnect: true })
+        .then(
+          r => {
+            this.props.handleConnect(this.props.fromPath, true);
+          },
+          e => {
+            console.log(e);
+          }
+        );
+    }
   };
 
   toggleDrawerHide = () => {

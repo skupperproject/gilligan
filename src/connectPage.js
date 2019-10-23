@@ -6,6 +6,7 @@ import {
   TextContent,
   Text
 } from "@patternfly/react-core";
+import { withRouter } from "react-router-dom";
 import ConnectForm from "./connect-form";
 const avatarImg = require("./assets/pug.png");
 
@@ -18,13 +19,10 @@ class ConnectPage extends React.Component {
   handleConnectCancel = () => {
     this.setState({ showForm: false });
   };
+
   render() {
     const { showForm } = this.state;
     const { from } = this.props.location.state || { from: { pathname: "/" } };
-    console.log(
-      `connectPage from.pathname is ${from.pathname} and showForm is ${showForm}`
-    );
-    console.log(this.props.location.history);
     return (
       <PageSection variant={PageSectionVariants.light} className="connect-page">
         {showForm ? (
@@ -32,7 +30,9 @@ class ConnectPage extends React.Component {
             prefix="form"
             handleConnect={this.props.handleConnect}
             handleConnectCancel={this.handleConnectCancel}
+            service={this.props.service}
             fromPath={from.pathname}
+            isConnected={this.props.isConnected}
           />
         ) : (
           <React.Fragment />
@@ -45,15 +45,19 @@ class ConnectPage extends React.Component {
           </TextContent>
           <TextContent>
             <Text component="p">
-              This console provides information about skupper installations
-              across multiple namespaces and/or cluster.
+              This tool will visualize a Skupper network.
+            </Text>
+            <Text component="p">
+              Log into the network with the host and port of a Skupper
+              installation in any of your cluster's namespaces.
             </Text>
           </TextContent>
-          <Brand src={avatarImg} alt="Patternfly Logo" />
+          <Brand src={avatarImg} alt="Skipper Logo" />
         </div>
       </PageSection>
     );
   }
 }
 
+withRouter(ConnectPage);
 export default ConnectPage;

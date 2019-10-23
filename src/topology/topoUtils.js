@@ -274,11 +274,216 @@ export function getSizes(topologyRef, log) {
   let topoWidth = topologyRef.offsetWidth;
   if (topoWidth < 768) legendWidth = 0;
   let width = topoWidth - gap - legendWidth;
-  let top = topologyRef.offsetTop;
-  let height = window.innerHeight - top - gap - 10;
+  let height = topologyRef.offsetHeight;
   if (width < 10 || height < 10) {
     log.log(`page width and height are abnormal w: ${width} h: ${height}`);
     return [0, 0];
   }
   return [width, height];
 }
+
+const serviceTypes = [
+  {
+    name: "Product Page",
+    protocol: "HTTP",
+    cluster: 0,
+    namespace: 0
+  },
+  {
+    name: "Info",
+    protocol: "HTTP",
+    cluster: 1,
+    namespace: 0
+  },
+  {
+    name: "Reviews",
+    protocol: "HTTP",
+    cluster: 1,
+    namespace: 0
+  },
+  {
+    name: "Ratings",
+    protocol: "HTTP",
+    cluster: 1,
+    namespace: 0
+  },
+  {
+    name: "DB",
+    protocol: "TCP",
+    cluster: 2,
+    namespace: 0
+  }
+];
+const clusters = [
+  {
+    name: "Web Server",
+    location: "Westford",
+    zone: "US-East",
+    provider: "OpenStack",
+    namespaces: ["web-site"]
+  },
+  {
+    name: "App Server",
+    location: "Galway",
+    zone: "EU-West",
+    provider: "Azure",
+    namespaces: ["backend"]
+  },
+  {
+    name: "DB Server",
+    location: "Redding",
+    zone: "US-West",
+    provider: "AWS",
+    namespaces: ["mongo"]
+  }
+];
+
+const serviceInstances = [
+  {
+    source: 0,
+    target: 1,
+    address: "/info",
+    stats: { rate: 123, total: 12345, latency: 10 },
+    description: "Connects ProductPage to Info"
+  },
+  {
+    source: 0,
+    target: 2,
+    address: "/reviews",
+    stats: { rate: 234, total: 23456, latency: 11 },
+    description: "Connects ProductPage to Reviews"
+  },
+  {
+    source: 2,
+    target: 3,
+    address: "/ratings",
+    stats: { rate: 345, total: 34567, latency: 12 },
+    description: "Connects Reviews to Ratings"
+  },
+  {
+    source: 3,
+    target: 4,
+    address: "/fetch/ratings",
+    stats: { rate: 456, total: 45678, latency: 13 },
+    description: "Connects Ratings to DB"
+  },
+  {
+    source: 2,
+    target: 4,
+    address: "/fetch/reviews",
+    stats: { rate: 567, total: 56789, latency: 13 },
+    description: "Connects Reviews to DB"
+  },
+  {
+    source: 1,
+    target: 4,
+    address: "/fetch/info",
+    stats: { rate: 678, total: 67890, latency: 14 },
+    description: "Connects Info to DB"
+  }
+];
+
+export const reality = {
+  clusters,
+  serviceTypes,
+  serviceInstances
+};
+
+export const getPosition = (
+  name,
+  width,
+  height,
+  localStorage,
+  index,
+  length,
+  yInit,
+  animate
+) => {
+  let found = true;
+  let position = localStorage[name]
+    ? JSON.parse(localStorage[name])
+    : undefined;
+  if (!position) {
+    found = false;
+    animate = true;
+    position = {
+      x: Math.round(width / 4 + (width / 2 / length) * index),
+      y: Math.round(
+        height / 2 + (Math.sin(index / (Math.PI * 2.0)) * height) / 4
+      ),
+      fixed: false
+    };
+  }
+  if (position.y > height) {
+    position.y = 200 - yInit;
+    yInit *= -1;
+  }
+  return { position, yInit, animate, found };
+};
+
+export const adjustPositions = ({
+  nodes,
+  links,
+  width,
+  height,
+  BoxWidth,
+  BoxHeight
+}) => {
+  // now that we have the links, set the initial x,y pos of each node
+  // loop through all the links and calculate a score
+  links.links.forEach(l => {
+    nodes.nodes[l.source].score += 10;
+    nodes.nodes[l.target].score -= 10;
+  });
+
+  // get list of nodes that need x,y positions
+  const needOrder = nodes.nodes.filter(n => typeof n.x === "undefined");
+  // order the nodes by score
+  needOrder.sort((a, b) => {
+    if (a.score < b.score) return 1;
+    if (a.score > b.score) return -1;
+    return 0;
+  });
+  // assign column by score
+  let currentColumn = -1;
+  let currentColScore = Number.MAX_SAFE_INTEGER;
+  needOrder.forEach(n => {
+    n.column = n.score < currentColScore ? ++currentColumn : currentColumn;
+    currentColScore = n.score;
+    n.row = 0;
+  });
+
+  let maxColumn = 0;
+  // adjust column by target
+  needOrder.forEach((n, nodeIndex) => {
+    links.links.forEach(l => {
+      if (l.source === nodeIndex) {
+        nodes.nodes[l.target].column = n.column + 1;
+        nodes.nodes[l.source].targets.push(nodes.nodes[l.target]);
+        maxColumn = Math.max(maxColumn, nodes.nodes[l.target].column);
+      }
+    });
+  });
+
+  let minRow = Number.MAX_SAFE_INTEGER;
+  let maxRow = Number.MIN_SAFE_INTEGER;
+  // adjust row by targets
+  needOrder.forEach(n => {
+    const span = Math.floor(n.targets.length / 2);
+    const mid = n.targets.length / 2;
+    const even = n.targets.length % 2 === 0;
+    n.targets.forEach((t, i) => {
+      t.row = n.row + (i - span) + (even && i >= mid ? 1 : 0);
+      minRow = Math.min(minRow, t.row);
+      maxRow = Math.max(maxRow, t.row);
+    });
+  });
+  const leftGap = BoxWidth / 2;
+  const topGap = BoxHeight;
+  const xPerCol = (width - BoxWidth - leftGap) / (maxColumn + 1);
+  const yPerRow = (height - BoxHeight - topGap) / (maxRow - minRow + 1);
+  needOrder.forEach(n => {
+    n.x = leftGap + n.column * xPerCol;
+    n.y = topGap + (n.row - minRow) * yPerRow;
+  });
+};
