@@ -268,7 +268,7 @@ class TopologyPage extends Component {
       addGradient(this.svg);
     }
 
-    if (this.props.type !== "application") {
+    if (this.props.type !== "application" && this.props.type !== "service") {
       // handles to link and node element groups
       this.path = this.svg
         .append("svg:g")
@@ -289,7 +289,6 @@ class TopologyPage extends Component {
         .attr("class", "links")
         .selectAll("g");
     }
-    this.svg.append("svg:g").attr("class", "service-links");
 
     this.cloud = this.svg
       .append("svg:g")
@@ -329,7 +328,8 @@ class TopologyPage extends Component {
       this.forceData.nodes,
       this.forceData.links,
       this.width,
-      this.height
+      this.height,
+      this.props.serviceTypeName
     );
 
     // init D3 force layout
@@ -446,29 +446,22 @@ class TopologyPage extends Component {
       })
       .classed("highlighted", function(d) {
         return d.highlighted;
-      })
-      .classed("unknown", function(d) {
-        return !d.right && !d.left;
       });
+    //.classed("unknown", d => d.cls === "target");
 
     // reset the markers based on current highlighted/selected
-    if (
-      !this.state.legendOptions.traffic.open ||
-      !this.state.legendOptions.traffic.congestion
-    ) {
-      this.path
-        .select(".link")
-        .attr("marker-end", d => {
-          if (!this.showMarker(d)) return null;
-          return d.right ? `url(#end${d.markerId("end")})` : null;
-        })
-        .attr("marker-start", d => {
-          if (!this.showMarker(d)) return null;
-          return d.left || (!d.left && !d.right)
-            ? `url(#start${d.markerId("start")})`
-            : null;
-        });
-    }
+    this.path
+      .select(".link")
+      .attr("marker-end", d => {
+        return d.cls !== "network" && d.right
+          ? `url(#end${d.markerId("end")})`
+          : null;
+      })
+      .attr("marker-start", d => {
+        return d.cls !== "network" && (d.left || (!d.left && !d.right))
+          ? `url(#start${d.markerId("start")})`
+          : null;
+      });
     // add new links. if a link with a new uid is found in the data, add a new path
     let enterpath = this.path
       .enter()
@@ -536,12 +529,12 @@ class TopologyPage extends Component {
       .append("path")
       .attr("class", "link")
       .attr("marker-end", d => {
-        if (!this.showMarker(d)) return null;
-        return d.right ? `url(#end${d.markerId("end")})` : null;
+        return d.right && d.cls !== "network"
+          ? `url(#end${d.markerId("end")})`
+          : null;
       })
       .attr("marker-start", d => {
-        if (!this.showMarker(d)) return null;
-        return d.left || (!d.left && !d.right)
+        return d.cls !== "network" && (d.left || (!d.left && !d.right))
           ? `url(#start${d.markerId("start")})`
           : null;
       })
@@ -549,10 +542,8 @@ class TopologyPage extends Component {
         const si = d.source.uid();
         const ti = d.target.uid();
         return ["path", si, ti].join("-");
-      })
-      .classed("unknown", function(d) {
-        return !d.right && !d.left;
       });
+    //.classed("unknown", d => d.cls === "target");
 
     enterpath
       .append("path")
@@ -758,15 +749,20 @@ class TopologyPage extends Component {
     this.cloud.attr("transform", d => `translate(${d.x},${d.y})`);
 
     // draw lines from node centers
-    this.path.selectAll("path").attr("d", function(d) {
+    this.path.selectAll("path").attr("d", d => {
       const sxoff =
         typeof d.source.sxpos === "undefined" ? d.source.xpos : d.source.sxpos;
-      const txoff =
+      let txoff =
         typeof d.target.txpos === "undefined" ? d.target.xpos : d.target.txpos;
-      const syoff = d.source.ypos;
-      const tyoff = d.target.ypos;
-      return `M${d.source.x +
-        sxoff},${d.source.y + syoff}L${d.target.x + txoff},${d.target.y + tyoff}`;
+      let syoff = d.source.ypos;
+      let tyoff = d.target.ypos;
+      if (typeof d.targetIndex !== "undefined") {
+        syoff = 110;
+        txoff = 35;
+        tyoff = 110 + d.targetIndex * 45;
+      }
+      return `M${d.source.x + sxoff},${d.source.y + syoff}L${d.target.x +
+        txoff},${d.target.y + tyoff}`;
     });
   };
 

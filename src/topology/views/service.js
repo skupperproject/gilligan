@@ -77,7 +77,7 @@ class Service {
   };
 
   // create a link between clusters
-  initLinks = (nodes, links, width, height) => {
+  initLinks = (nodes, links, width, height, serviceTypeName) => {
     links.reset();
     reality.serviceInstances.forEach(si => {
       const sourceCluster = reality.serviceTypes[si.source].cluster;
@@ -95,9 +95,28 @@ class Service {
     // if the nodes don't already have saved positions,
     // set a good starting position based on each node's links
     adjustPositions({ nodes, links, width, height, BoxWidth, BoxHeight });
-
+    links.reset();
     // create links between the source service and its targets
-    nodes.nodes.forEach(n => {});
+    const targets = {};
+    reality.serviceInstances.forEach((si, index) => {
+      const sourceType = reality.serviceTypes[si.source];
+      const targetType = reality.serviceTypes[si.target];
+      if (sourceType.name === serviceTypeName) {
+        links.addLink({
+          source: sourceType.cluster,
+          target: targetType.cluster,
+          dir: "out",
+          cls: "target",
+          uid: `${nodes.get(sourceType.cluster).uid()}-${nodes
+            .get(targetType.cluster)
+            .uid()}-${index}`
+        });
+        const link = links.links[links.links.length - 1];
+        if (!targets[targetType.cluster]) targets[targetType.cluster] = 0;
+        link.targetIndex = targets[targetType.cluster]++;
+        if (sourceType.cluster === targetType.cluster) ++link.targetIndex;
+      }
+    });
   };
 
   createGraph = g => {
@@ -116,7 +135,10 @@ class Service {
 
     g.append("svg:text")
       .attr("class", "cluster-name")
-      .attr("x", d => (d.xpos = BoxWidth / 2))
+      .attr("x", d => {
+        d.sxpos = BoxWidth - 40;
+        return BoxWidth / 2;
+      })
       .attr("y", d => (d.ypos = 15))
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
@@ -163,6 +185,13 @@ class Service {
       .attr("text-anchor", "middle")
       .text(d => d.name);
 
+    serviceTypesEnter
+      .append("svg:circle")
+      .attr("class", "end-point source")
+      .attr("r", 5)
+      .attr("cx", 120)
+      .attr("cy", 20);
+
     const targetTypes = g.selectAll("g.target-type").data(d =>
       d.properties.targetServiceTypes
         ? d.properties.targetServiceTypes.map(t => ({
@@ -196,6 +225,13 @@ class Service {
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
       .text(d => d.t.name);
+
+    targetTypesEnter
+      .append("svg:circle")
+      .attr("class", "end-point target")
+      .attr("r", 5)
+      .attr("cx", 15)
+      .attr("cy", 20);
 
     return g;
   };

@@ -72,10 +72,11 @@ class Application {
       links.getLink(
         si.source,
         si.target,
-        "both",
+        "out",
         "",
         `${nodes.get(si.source).uid()}-${nodes.get(si.target).uid()}`
       );
+      links.links[links.links.length - 1].address = si.address;
     });
     adjustPositions({ nodes, links, width, height, BoxWidth, BoxHeight });
   };

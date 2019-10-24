@@ -72,8 +72,8 @@ class Network {
         links.getLink(
           sourceCluster,
           targetCluster,
-          "both",
           "",
+          "network",
           `${nodes.get(sourceCluster).uid()}-${nodes.get(targetCluster).uid()}`
         );
       }

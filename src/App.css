@@ -984,6 +984,12 @@ rect.namespace {
   fill: transparent;
 }
 
+/*
+circle.end-point.target {
+  fill: gray;
+}
+*/
+
 rect.application.normal {
   fill-opacity: 0.6;
 }

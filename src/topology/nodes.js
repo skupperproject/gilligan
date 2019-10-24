@@ -147,7 +147,7 @@ const nodeProperties = {
   "inter-router": {
     radius: 28,
     refX: {
-      end: 32,
+      end: 12,
       start: -19
     },
     linkDistance: [150, 70],
@@ -166,7 +166,7 @@ const nodeProperties = {
   normal: {
     radius: 15,
     refX: {
-      end: 20,
+      end: 12,
       start: -7
     },
     linkDistance: [250, 250],

@@ -342,42 +342,42 @@ const serviceInstances = [
   {
     source: 0,
     target: 1,
-    address: "/info",
+    address: "getInfoForProduct",
     stats: { rate: 123, total: 12345, latency: 10 },
     description: "Connects ProductPage to Info"
   },
   {
     source: 0,
     target: 2,
-    address: "/reviews",
+    address: "getReviewForProduct",
     stats: { rate: 234, total: 23456, latency: 11 },
     description: "Connects ProductPage to Reviews"
   },
   {
     source: 2,
     target: 3,
-    address: "/ratings",
+    address: "getRatingsForReview",
     stats: { rate: 345, total: 34567, latency: 12 },
     description: "Connects Reviews to Ratings"
   },
   {
     source: 3,
     target: 4,
-    address: "/fetch/ratings",
+    address: "db/getRatings",
     stats: { rate: 456, total: 45678, latency: 13 },
     description: "Connects Ratings to DB"
   },
   {
     source: 2,
     target: 4,
-    address: "/fetch/reviews",
+    address: "db/getReviews",
     stats: { rate: 567, total: 56789, latency: 13 },
     description: "Connects Reviews to DB"
   },
   {
     source: 1,
     target: 4,
-    address: "/fetch/info",
+    address: "db/getInfo",
     stats: { rate: 678, total: 67890, latency: 14 },
     description: "Connects Info to DB"
   }

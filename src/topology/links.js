@@ -35,18 +35,20 @@ class Link {
       ? "selected"
       : "";
     if (selhigh === "" && (!this.left && !this.right)) selhigh = "unknown";
+    //if (this.cls === "target") selhigh = "unknown";
     return `-${selhigh}-${
       end === "end" ? this.target.radius() : this.source.radius()
     }`;
   }
   toolTip(event) {
     return new Promise(resolve => {
-      resolve(
-        `Address: ${this.target.name.toLowerCase()}/get${this.source.name.replace(
-          " ",
-          ""
-        )}`
-      );
+      const tt = this.address
+        ? this.address
+        : `Address: ${this.target.name.toLowerCase()}/get${this.source.name.replace(
+            " ",
+            ""
+          )}`;
+      resolve(tt);
     });
   }
 }
@@ -64,6 +66,10 @@ export class Links {
       if (this.links[i].target === nodesIndex) return i;
     }
     return -1;
+  }
+
+  addLink({ source, target, dir, cls, uid }) {
+    this.links.push(new Link(source, target, dir, cls, uid));
   }
   getLink(_source, _target, dir, cls, uid) {
     for (let i = 0; i < this.links.length; i++) {
