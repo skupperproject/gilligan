@@ -20,6 +20,10 @@ under the License.
 import * as d3 from "d3";
 import { utils } from "../amqp/utilities.js";
 import { getPosition } from "./topoUtils";
+import TooltipTable from "../tooltipTable";
+
+var React = require("react");
+
 export class Node {
   constructor(
     id,
@@ -73,58 +77,42 @@ export class Node {
     }
   }
   toolTip(topology, verbose) {
-    return new Promise(
-      function(resolve) {
-        if (this.nodeType === "normal" || this.nodeType === "edge") {
-          resolve(this.clientTooltip());
-        } else
-          this.routerTooltip(topology, verbose).then(function(toolTip) {
-            resolve(toolTip);
-          });
-      }.bind(this)
-    );
+    return new Promise(resolve => {
+      if (this.nodeType === "normal" || this.nodeType === "edge") {
+        resolve(this.clientTooltip());
+      } else
+        this.routerTooltip(topology, verbose).then(toolTip => {
+          resolve(toolTip);
+        });
+    });
   }
 
   clientTooltip() {
-    let type = this.title(true);
-    let title = "";
-    title += `<table class="popupTable"><tr><td>Type</td><td>${type}</td></tr>`;
-    if (!this.normals || this.normals.length < 2) {
-      title += `<tr><td>Host</td><td>${this.host}</td></tr>`;
-      title += `<tr><td>${this.row}</td><td>${this.column}</td></tr>`;
-    } else {
-      title += `<tr><td>Count</td><td>${this.normals.length}</td></tr>`;
-    }
-    if (!this.isConsole && !this.isArtemis)
-      title +=
-        '<tr><td colspan=2 class="more-info">Click circle for more info</td></tr></table>';
-    return title;
+    const rows = [];
+    rows.push(["Service", this.name]);
+    return <TooltipTable rows={rows} />;
   }
 
   routerTooltip(topology, verbose) {
     return new Promise(resolve => {
-      let HTML = "";
+      const rows = [];
       if (this.dataType === "network") {
-        HTML += "<table class='skipper-table network'>";
-        HTML += `<tr><td>Provider</td><td>${this.properties.cluster.provider}</td></tr>`;
-        HTML += `<tr><td>Zone</td><td>${this.properties.cluster.zone}</td></tr>`;
+        rows.push(["Provider", this.properties.cluster.provider]);
+        rows.push(["Zone", this.properties.cluster.zone]);
         if (this.properties.cluster.namespaces.length > 1) {
-          HTML += `<tr><td>Namespaces</td><td>`;
-          HTML += "<ul>";
-          this.properties.cluster.namespaces.forEach(ns => {
-            HTML += `<li>${ns}</li>`;
-          });
-          HTML += "</ul>";
+          rows.push([
+            "Namespaces",
+            <ul>
+              {this.properties.cluster.namespaces.map(ns => (
+                <li>{ns}</li>
+              ))}
+            </ul>
+          ]);
         } else {
-          HTML += `<tr><td>Namespace</td><td>`;
-          HTML += this.properties.cluster.namespaces[0];
+          rows.push(["Namespace", this.properties.cluster.namespaces[0]]);
         }
-        HTML += `</td></tr>`;
-        HTML += "</table>";
-      } else if (this.dataType === "application") {
-        HTML += "<p>Hi</p>";
       }
-      resolve(HTML);
+      resolve(<TooltipTable className="skipper-table network" rows={rows} />);
     });
   }
   radius() {

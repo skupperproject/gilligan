@@ -19,7 +19,6 @@ under the License.
 
 import React, { Component } from "react";
 import * as d3 from "d3";
-import QDRPopup from "../qdrPopup";
 import { Traffic } from "./traffic.js";
 import { separateAddresses } from "../chord/filters.js";
 import { Nodes } from "./nodes.js";
@@ -471,8 +470,8 @@ class TopologyPage extends Component {
         let event = d3.event;
         d.selected = true;
         this.popupCancelled = false;
-        d.toolTip().then(function(toolTip) {
-          self.showToolTip(toolTip, event);
+        d.toolTip().then(toolTip => {
+          this.showToolTip(toolTip, event);
         });
 
         /*
@@ -844,9 +843,9 @@ class TopologyPage extends Component {
     this.setState({ showClientInfo: false });
   };
 
-  showToolTip = (title, event) => {
+  showToolTip = (tip, event) => {
     // show the tooltip
-    this.setState({ popupContent: title });
+    this.setState({ popupContent: tip });
     this.displayTooltip(event);
   };
 
@@ -1023,7 +1022,7 @@ class TopologyPage extends Component {
             className={this.state.showPopup ? "qdrPopup" : "qdrPopup hidden"}
             ref={el => (this.popupRef = el)}
           >
-            <QDRPopup content={this.state.popupContent}></QDRPopup>
+            {this.state.popupContent}
           </div>
         </div>
         {this.state.showRouterInfo ? (

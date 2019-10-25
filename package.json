@@ -24,6 +24,7 @@
     "case-sensitive-paths-webpack-plugin": "2.2.0",
     "css-loader": "2.1.1",
     "d3-queue": "^3.0.7",
+    "d3-sankey": "^0.12.3",
     "dotenv": "6.2.0",
     "dotenv-expand": "4.2.0",
     "eslint": "^5.16.0",

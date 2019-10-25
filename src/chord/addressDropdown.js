@@ -1,9 +1,8 @@
 import React from "react";
 import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
-import { reality } from "./topoUtils.js";
-import { utils } from "../amqp/utilities";
+import { reality } from "../topology/topoUtils.js";
 
-class serviceDropdown extends React.Component {
+class AddressDropdown extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -15,27 +14,27 @@ class serviceDropdown extends React.Component {
       });
     };
     this.onSelect = event => {
-      this.props.handleChangeService(event.target.textContent);
+      this.props.handleChangeAddress(event.target.textContent);
       this.setState({
         isOpen: !this.state.isOpen
       });
     };
-    this.services = [];
-    reality.serviceTypes.forEach(st => {
-      this.services.push(st.name);
+    this.addresses = [];
+    reality.serviceInstances.forEach(si => {
+      this.addresses.push(si.address);
     });
   }
 
-  handleHoverService = event => {
-    this.props.handleChangeService(event.target.textContent);
+  handleHoverAddress = event => {
+    this.props.handleChangeAddress(event.target.textContent);
   };
 
   render() {
     const { isOpen } = this.state;
-    const dropdownItems = this.services.map(service => (
-      <DropdownItem key={service}>
-        <div value={service} onMouseOver={this.handleHoverService}>
-          {service}
+    const dropdownItems = this.addresses.map(address => (
+      <DropdownItem key={address}>
+        <div value={address} onMouseOver={this.handleHoverAddress}>
+          {address}
         </div>
       </DropdownItem>
     ));
@@ -44,8 +43,8 @@ class serviceDropdown extends React.Component {
       <Dropdown
         onSelect={this.onSelect}
         toggle={
-          <DropdownToggle onToggle={this.onToggle}>
-            {`${utils.Icap(this.props.service)}`}
+          <DropdownToggle className="address-dropdown" onToggle={this.onToggle}>
+            {this.props.address}
           </DropdownToggle>
         }
         isOpen={isOpen}
@@ -56,4 +55,4 @@ class serviceDropdown extends React.Component {
   }
 }
 
-export default serviceDropdown;
+export default AddressDropdown;

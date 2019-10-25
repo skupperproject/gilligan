@@ -50,7 +50,7 @@ import { css } from "@patternfly/react-styles";
 import { BellIcon, PowerOffIcon } from "@patternfly/react-icons";
 import ConnectPage from "./connectPage";
 import TopologyPage from "./topology/topologyPage";
-import MessageFlowPage from "./chord/qdrChord";
+import AddressPage from "./chord/addressView";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
 const avatarImg = require("./assets/img_avatar.svg");
@@ -68,7 +68,7 @@ class PageLayout extends React.Component {
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
-    this.views = ["Network", "Application", "Service", "Address", "Reality"];
+    this.views = ["Network", "Application", "Service", "Address"];
   }
 
   setLocation = where => {
@@ -311,12 +311,7 @@ class PageLayout extends React.Component {
             <PrivateRoute
               path="/address"
               type="address"
-              component={MessageFlowPage}
-            />
-            <PrivateRoute
-              path="/reality"
-              type="reality"
-              component={TopologyPage}
+              component={AddressPage}
             />
             <Route
               path="/login"

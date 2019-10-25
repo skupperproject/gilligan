@@ -42,15 +42,10 @@ class TopologyPage extends Component {
     };
   }
 
-  handleChangeService = service => {
-    reality.serviceTypes.some(st => {
-      if (st.name === service) {
-        this.setState({ serviceTypeName: st.name });
-        return true;
-      }
-      return false;
-    });
+  handleChangeService = serviceTypeName => {
+    this.setState({ serviceTypeName });
   };
+
   render() {
     return (
       <PageSection

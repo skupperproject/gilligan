@@ -18,7 +18,10 @@ under the License.
 */
 
 import { utils } from "../amqp/utilities.js";
-import { getPosition } from "./topoUtils";
+import TooltipTable from "../tooltipTable";
+
+var React = require("react");
+
 class Link {
   constructor(source, target, dir, cls, uid) {
     this.source = source;
@@ -42,13 +45,16 @@ class Link {
   }
   toolTip(event) {
     return new Promise(resolve => {
-      const tt = this.address
-        ? this.address
-        : `Address: ${this.target.name.toLowerCase()}/get${this.source.name.replace(
+      const rows = [];
+      if (this.address)
+        rows.push([
+          "Address",
+          `${this.target.name.toLowerCase()}/get${this.source.name.replace(
             " ",
             ""
-          )}`;
-      resolve(tt);
+          )}`
+        ]);
+      resolve(<TooltipTable rows={rows} />);
     });
   }
 }
