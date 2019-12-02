@@ -67,12 +67,22 @@ class AddressPage extends Component {
         address: si.address
       }))
     };
-    this.setState({ data: graph, width, height });
+    this.setState({ data: graph, width, height }, () => {
+      this.sankey = new SankeyComponent();
+      this.sankey.init({
+        data: graph,
+        width,
+        height,
+        address: this.state.addressName,
+        handleChangeAddress: this.handleChangeAddress
+      });
+    });
   }
 
   componentWillUnmount() {
     // stop updated the data
     clearInterval(this.interval);
+    this.sankey.stop();
   }
 
   init = () => {};
@@ -105,20 +115,12 @@ class AddressPage extends Component {
               <CardBody>
                 <div ref={el => (this.chordRef = el)} className="qdrChord">
                   {this.state.width && (
-                    <svg
-                      width={this.state.width - 30}
-                      height={this.state.height}
-                    >
-                      <g transform="translate(15,15)">
-                        <SankeyComponent
-                          data={this.state.data}
-                          width={this.state.width - 45}
-                          height={this.state.height - 30}
-                          address={this.state.addressName}
-                          handleChangeAddress={this.handleChangeAddress}
-                        />
-                      </g>
-                    </svg>
+                    <React.Fragment>
+                      <canvas
+                        width={this.state.width}
+                        height={this.state.height}
+                      />
+                    </React.Fragment>
                   )}
                 </div>
               </CardBody>

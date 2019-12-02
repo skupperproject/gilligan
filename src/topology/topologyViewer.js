@@ -23,12 +23,7 @@ import { Traffic } from "./traffic.js";
 import { separateAddresses } from "../chord/filters.js";
 import { Nodes } from "./nodes.js";
 import { Links } from "./links.js";
-import {
-  nextHop,
-  connectionPopupHTML,
-  getSizes,
-  reality
-} from "./topoUtils.js";
+import { nextHop, connectionPopupHTML, getSizes } from "./topoUtils.js";
 import { BackgroundMap } from "./map.js";
 import { utils } from "../amqp/utilities.js";
 //import { Legend } from "./legend.js";
@@ -36,14 +31,7 @@ import { utils } from "../amqp/utilities.js";
 import RouterInfoComponent from "./routerInfoComponent";
 import ClientInfoComponent from "./clientInfoComponent";
 import ContextMenuComponent from "../contextMenuComponent";
-import {
-  appendCircle,
-  appendCloud,
-  appendContent,
-  addGradient,
-  addDefs,
-  updateState
-} from "./svgUtils.js";
+import { appendCloud, addGradient, addDefs } from "./svgUtils.js";
 import { QDRLogger } from "../qdrGlobals";
 import { graphView } from "./views/views";
 const TOPOOPTIONSKEY = "topoLegendOptions";
@@ -153,7 +141,7 @@ class TopologyPage extends Component {
       "connection"
     ]);
     // poll the routers for their latest entities (set to connection above)
-    this.props.service.management.topology.startUpdating();
+    //this.props.service.management.topology.startUpdating();
 
     // create the svg
     this.init();

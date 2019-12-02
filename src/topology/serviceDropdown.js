@@ -21,6 +21,7 @@ class serviceDropdown extends React.Component {
       });
     };
     this.services = [];
+    this.services.push("All");
     reality.serviceTypes.forEach(st => {
       this.services.push(st.name);
     });

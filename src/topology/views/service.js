@@ -24,55 +24,67 @@ const BoxWidth = 180;
 const BoxHeight = 180;
 
 class Service {
-  initNodes = (nodes, width, height, serviceTypeName) => {
+  initNodes = (nodes, width, height, typeName) => {
     nodes.reset();
     const clusters = reality.clusters;
     let yInit = 0;
     let animate = true;
-    clusters.forEach((cluster, clusterIndex) => {
-      const id = utils.idFromName(cluster.location, "_topo");
-      const name = cluster.location;
-      let { position, newyInit, newanimate, found } = getPosition(
-        name,
-        width,
-        height,
-        localStorage,
-        nodes.length,
-        clusters.length,
-        yInit,
-        animate
-      );
-      if (!found) {
-        position = { x: undefined, y: undefined, fixed: true };
-      }
+    let typeNames = [typeName];
+    if (typeName === "All") {
+      typeNames = reality.serviceTypes.map(st => st.name);
+    }
+    typeNames.forEach(serviceTypeName => {
+      console.log(serviceTypeName);
+      clusters.forEach((cluster, clusterIndex) => {
+        const id = utils.idFromName(cluster.location, "_topo");
+        const name = cluster.location;
+        console.log(`cluster ${name}`);
+        let { position, newyInit, newanimate, found } = getPosition(
+          name,
+          width,
+          height,
+          localStorage,
+          nodes.length,
+          clusters.length,
+          yInit,
+          animate
+        );
+        if (!found) {
+          position = { x: undefined, y: undefined, fixed: true };
+        }
+        console.log(`found ${found}`);
 
-      yInit = newyInit;
-      animate = newanimate;
-      const serviceTypes = reality.serviceTypes.filter((st, stIndex) => {
-        st.index = stIndex;
-        return st.cluster === clusterIndex && st.name === serviceTypeName;
+        yInit = newyInit;
+        animate = newanimate;
+        const serviceTypes = reality.serviceTypes.filter((st, stIndex) => {
+          st.index = stIndex;
+          return st.cluster === clusterIndex && st.name === serviceTypeName;
+        });
+        const targetServiceTypes = reality.serviceInstances
+          .filter(si => {
+            return (
+              reality.serviceTypes[si.source].name === serviceTypeName &&
+              reality.serviceTypes[si.target].cluster === clusterIndex
+            );
+          })
+          .map(si => reality.serviceTypes[si.target]);
+
+        console.log(
+          `adding serviceTypes: ${serviceTypes.length} targetServiceTypes: ${targetServiceTypes.length}`
+        );
+        nodes.addUsing(
+          id,
+          name,
+          "_topo",
+          nodes.length,
+          position.x,
+          position.y,
+          name,
+          undefined,
+          position.fixed,
+          { cluster, serviceTypes, targetServiceTypes }
+        ).dataType = "network";
       });
-      const targetServiceTypes = reality.serviceInstances
-        .filter(si => {
-          return (
-            reality.serviceTypes[si.source].name === serviceTypeName &&
-            reality.serviceTypes[si.target].cluster === clusterIndex
-          );
-        })
-        .map(si => reality.serviceTypes[si.target]);
-
-      nodes.addUsing(
-        id,
-        name,
-        "_topo",
-        nodes.length,
-        position.x,
-        position.y,
-        name,
-        undefined,
-        position.fixed,
-        { cluster, serviceTypes, targetServiceTypes }
-      ).dataType = "network";
     });
   };
 

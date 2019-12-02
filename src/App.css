@@ -1223,14 +1223,19 @@ path.external {
 
 .sankey-link path {
   fill: none;
-  stroke-opacity: 0.2;
+  stroke-opacity: 0.6;
 }
 
 .sankey-link path.highlighted,
 .sankey-link path.highlighted:hover {
-  stroke-opacity: 0.8;
+  stroke-opacity: 1;
 }
 
 .sankey-link path:hover {
-  stroke-opacity: 0.5;
+  stroke-opacity: 1;
+}
+
+canvas {
+  position: absolute;
+  pointer-events: none;
 }

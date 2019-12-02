@@ -308,7 +308,7 @@ const serviceTypes = [
     namespace: 0
   },
   {
-    name: "DB",
+    name: "Database",
     protocol: "TCP",
     cluster: 2,
     namespace: 0
@@ -342,42 +342,42 @@ const serviceInstances = [
   {
     source: 0,
     target: 1,
-    address: "getInfoForProduct",
+    address: "ProductToInfo",
     stats: { rate: 123, total: 12345, latency: 10 },
     description: "Connects ProductPage to Info"
   },
   {
     source: 0,
     target: 2,
-    address: "getReviewForProduct",
+    address: "ProductToReviews",
     stats: { rate: 234, total: 23456, latency: 11 },
     description: "Connects ProductPage to Reviews"
   },
   {
     source: 2,
     target: 3,
-    address: "getRatingsForReview",
+    address: "ReviewsToRatings",
     stats: { rate: 345, total: 34567, latency: 12 },
     description: "Connects Reviews to Ratings"
   },
   {
     source: 3,
     target: 4,
-    address: "db/getRatings",
+    address: "RatingsToDatabase",
     stats: { rate: 456, total: 45678, latency: 13 },
     description: "Connects Ratings to DB"
   },
   {
     source: 2,
     target: 4,
-    address: "db/getReviews",
+    address: "ReviewsToDatabase",
     stats: { rate: 567, total: 56789, latency: 13 },
     description: "Connects Reviews to DB"
   },
   {
     source: 1,
     target: 4,
-    address: "db/getInfo",
+    address: "InfoToDatabase",
     stats: { rate: 678, total: 67890, latency: 14 },
     description: "Connects Info to DB"
   }
@@ -418,7 +418,7 @@ export const getPosition = (
     position.y = 200 - yInit;
     yInit *= -1;
   }
-  return { position, yInit, animate, found };
+  return { position, newyInit: yInit, newanimate: animate, found };
 };
 
 export const adjustPositions = ({

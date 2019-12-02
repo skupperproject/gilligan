@@ -340,11 +340,20 @@ export class Nodes {
         this.nodes[i].name === name ||
         this.nodes[i].container === connectionContainer
       ) {
-        if (properties.product) this.nodes[i].properties = properties;
         return this.nodes[i];
       }
     }
     return undefined;
+  }
+  mergeServiceTypes(ar1, ar2) {
+    if (ar2.serviceTypes) {
+      ar2.serviceTypes.forEach(pst => {
+        const existed = ar1.find(st => st.name === pst.name);
+        if (!existed) {
+          ar1.push(pst);
+        }
+      });
+    }
   }
   getOrCreateNode(
     id,
@@ -361,6 +370,14 @@ export class Nodes {
     properties = properties || {};
     let gotNode = this.find(connectionContainer, properties, name);
     if (gotNode) {
+      this.mergeServiceTypes(
+        properties.serviceTypes,
+        gotNode.properties.serviceTypes
+      );
+      this.mergeServiceTypes(
+        properties.targetServiceTypes,
+        gotNode.properties.targetServiceTypes
+      );
       return gotNode;
     }
     let routerId = utils.nameFromId(id);
