@@ -60,9 +60,8 @@ class Link {
 }
 
 export class Links {
-  constructor(logger) {
+  constructor() {
     this.links = [];
-    this.logger = logger;
   }
   reset() {
     this.links.length = 0;
@@ -93,7 +92,6 @@ export class Links {
         return -i;
       }
     }
-    //this.logger.debug("creating new link (" + (links.length) + ") between " + nodes[_source].name + " and " + nodes[_target].name);
     if (
       this.links.some(function(l) {
         return l.uid === uid;

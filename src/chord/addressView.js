@@ -30,8 +30,8 @@ import {
   TextVariants
 } from "@patternfly/react-core";
 import SankeyComponent from "./sankeyComponent";
-import AddressDropdown from "./addressDropdown";
 import { reality } from "../topology/topoUtils";
+//import AddressDropdown from "./addressDropdown";
 
 class AddressPage extends Component {
   constructor(props) {
@@ -97,11 +97,7 @@ class AddressPage extends Component {
           <StackItem className="overview-header">
             <TextContent>
               <Text className="overview-title" component={TextVariants.h1}>
-                {`${this.props.type} view`}{" "}
-                <AddressDropdown
-                  address={this.state.addressName}
-                  handleChangeAddress={this.handleChangeAddress}
-                />
+                {"Traffic view"}
               </Text>
               <Text className="overview-loading" component={TextVariants.pre}>
                 {`Updated ${this.props.service.utilities.strDate(
@@ -117,7 +113,7 @@ class AddressPage extends Component {
                   {this.state.width && (
                     <React.Fragment>
                       <canvas
-                        width={this.state.width}
+                        width={this.state.width - 30}
                         height={this.state.height}
                       />
                     </React.Fragment>

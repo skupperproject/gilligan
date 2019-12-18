@@ -156,7 +156,7 @@ class TopologyPage extends Component {
   componentDidUpdate = nextProps => {
     if (nextProps.serviceTypeName !== this.props.serviceTypeName) {
       console.log(
-        `componentDidUpdate serviceTypeName changed to ${nextProps.serviceTypeName}. calling init`
+        `componentDidUpdate serviceTypeName changed to ${this.props.serviceTypeName} from ${nextProps.serviceTypeName}. calling init`
       );
       this.init();
     }
@@ -215,6 +215,7 @@ class TopologyPage extends Component {
 
   // initialize the nodes and links array from the QDRService.topology._nodeInfo object
   init = () => {
+    console.log(`********** init called with ${this.props.type} ***********`);
     let sizes = getSizes(this.topologyRef, this.QDRLog);
     this.width = sizes[0];
     this.height = sizes[1];
@@ -299,19 +300,8 @@ class TopologyPage extends Component {
     // mouse event vars
     this.mousedown_node = null;
 
-    // initialize the list of nodes
-    this.view.initNodes(
-      this.forceData.nodes,
-      this.width,
-      this.height,
-      this.props.serviceTypeName
-    );
-    let nodeCount = this.forceData.nodes.nodes.length;
-    this.forceData.nodes.savePositions();
-
-    // initialize the list of links
-    let unknowns = [];
-    this.view.initLinks(
+    // initialize the list of nodes and links
+    let nodeCount = this.view.initNodesAndLinks(
       this.forceData.nodes,
       this.forceData.links,
       this.width,
@@ -348,11 +338,7 @@ class TopologyPage extends Component {
 
     // app starts here
 
-    unknowns = [];
-    if (unknowns.length === 0) this.restart();
-    // the legend
-    //this.legend = new Legend(this.forceData.nodes, this.QDRLog);
-    //this.updateLegend();
+    this.restart();
 
     if (this.oldSelectedNode) {
       d3.selectAll("circle.inter-router").classed("selected", d => {

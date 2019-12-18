@@ -20,10 +20,11 @@ under the License.
 import { clusterColor, darkerColor } from "./clusterColors";
 import { reality, getPosition, adjustPositions } from "../topoUtils";
 import { utils } from "../../amqp/utilities";
+import ViewBase from "./viewBase";
 const BoxWidth = 180;
 const BoxHeight = 80;
 
-class Network {
+class Network extends ViewBase {
   initNodes = (nodes, width, height) => {
     nodes.reset();
     const clusters = reality.clusters;

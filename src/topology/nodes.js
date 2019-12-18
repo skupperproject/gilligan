@@ -172,9 +172,8 @@ nodeProperties["on-demand"] = nodeProperties["normal"];
 nodeProperties["route-container"] = nodeProperties["normal"];
 
 export class Nodes {
-  constructor(logger) {
+  constructor() {
     this.nodes = [];
-    this.logger = logger;
   }
   static radius(type) {
     if (nodeProperties[type].radius) return nodeProperties[type].radius;
@@ -246,7 +245,7 @@ export class Nodes {
     if (index < this.getLength()) {
       return this.nodes[index];
     }
-    this.logger.error(
+    console.log(
       `Attempted to get node[${index}] but there were only ${this.getLength()} nodes`
     );
     return undefined;

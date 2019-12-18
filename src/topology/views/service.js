@@ -20,25 +20,52 @@ under the License.
 import { clusterColor, darkerColor } from "./clusterColors";
 import { reality, getPosition, adjustPositions } from "../topoUtils";
 import { utils } from "../../amqp/utilities";
+import { Nodes } from "../nodes";
+import { Links } from "../links";
+import ViewBase from "./viewBase";
 const BoxWidth = 180;
 const BoxHeight = 180;
 
-class Service {
-  initNodes = (nodes, width, height, typeName) => {
+class Service extends ViewBase {
+  initNodesAndLinks = (nodes, links, width, height, typeName) => {
     nodes.reset();
-    const clusters = reality.clusters;
-    let yInit = 0;
-    let animate = true;
-    let typeNames = [typeName];
+    links.reset();
     if (typeName === "All") {
-      typeNames = reality.serviceTypes.map(st => st.name);
-    }
-    typeNames.forEach(serviceTypeName => {
-      console.log(serviceTypeName);
-      clusters.forEach((cluster, clusterIndex) => {
+      const typeNames = reality.serviceTypes.map(st => st.name);
+      const allNodes = [];
+      const allLinks = [];
+      typeNames.forEach(typeName => {
+        const thisNodes = new Nodes();
+        const thisLinks = new Links();
+        this.initNodes(thisNodes, width, height, typeName);
+        this.initLinks(thisNodes, thisLinks, width, height, typeName);
+        allNodes.push(thisNodes);
+        allLinks.push(thisLinks);
+      });
+      // combine the nodes and links
+      const servicesPerCluster = {};
+      allNodes.forEach(aNode => {
+        aNode.nodes.forEach(n => {
+          if (!servicesPerCluster[n.properties.cluster.name]) {
+            servicesPerCluster[n.properties.cluster.name] = [];
+          }
+          servicesPerCluster[n.properties.cluster.name] = [
+            ...new Set([
+              ...servicesPerCluster[n.properties.cluster.name],
+              ...n.properties.serviceTypes,
+              ...n.properties.targetServiceTypes
+            ])
+          ];
+        });
+      });
+      // nodesPerCluster now has the serviceTypes.
+      let yInit = 0;
+      let animate = true;
+      const clusters = reality.clusters;
+      clusters.forEach(cluster => {
+        const services = servicesPerCluster[cluster.name];
         const id = utils.idFromName(cluster.location, "_topo");
         const name = cluster.location;
-        console.log(`cluster ${name}`);
         let { position, newyInit, newanimate, found } = getPosition(
           name,
           width,
@@ -52,26 +79,8 @@ class Service {
         if (!found) {
           position = { x: undefined, y: undefined, fixed: true };
         }
-        console.log(`found ${found}`);
-
         yInit = newyInit;
         animate = newanimate;
-        const serviceTypes = reality.serviceTypes.filter((st, stIndex) => {
-          st.index = stIndex;
-          return st.cluster === clusterIndex && st.name === serviceTypeName;
-        });
-        const targetServiceTypes = reality.serviceInstances
-          .filter(si => {
-            return (
-              reality.serviceTypes[si.source].name === serviceTypeName &&
-              reality.serviceTypes[si.target].cluster === clusterIndex
-            );
-          })
-          .map(si => reality.serviceTypes[si.target]);
-
-        console.log(
-          `adding serviceTypes: ${serviceTypes.length} targetServiceTypes: ${targetServiceTypes.length}`
-        );
         nodes.addUsing(
           id,
           name,
@@ -82,15 +91,95 @@ class Service {
           name,
           undefined,
           position.fixed,
-          { cluster, serviceTypes, targetServiceTypes }
+          { cluster, serviceTypes: services, targetServiceTypes: [] }
         ).dataType = "network";
       });
+      // nodes now has correct services
+
+      // Reconcile the links
+      allLinks.forEach(serviceLinks => {
+        serviceLinks.links.forEach(link => {
+          const source = nodes.find(link.source.container);
+          const target = nodes.find(link.target.container);
+          links.addLink({
+            source,
+            target,
+            dir: "out",
+            cls: link.cls,
+            uid: link.uid
+          });
+          const newLink = links.links[links.links.length - 1];
+          newLink.targetIndex = link.targetIndex;
+          newLink.sourceIndex = 0;
+        });
+      });
+    } else {
+      this.initNodes(nodes, width, height, typeName);
+      this.initLinks(nodes, links, width, height, typeName);
+    }
+    nodes.savePositions();
+    return nodes.nodes.length;
+  };
+
+  initNodes = (nodes, width, height, typeName) => {
+    const clusters = reality.clusters;
+    let yInit = 0;
+    let animate = true;
+    console.log(`processing ${typeName}`);
+    clusters.forEach((cluster, clusterIndex) => {
+      const id = utils.idFromName(cluster.location, "_topo");
+      const name = cluster.location;
+      console.log(`cluster ${name}`);
+      let { position, newyInit, newanimate, found } = getPosition(
+        name,
+        width,
+        height,
+        localStorage,
+        nodes.length,
+        clusters.length,
+        yInit,
+        animate
+      );
+      if (!found) {
+        position = { x: undefined, y: undefined, fixed: true };
+      }
+      console.log(`found ${found}`);
+
+      yInit = newyInit;
+      animate = newanimate;
+      const serviceTypes = reality.serviceTypes.filter((st, stIndex) => {
+        st.index = stIndex;
+        return st.cluster === clusterIndex && st.name === typeName;
+      });
+      const targetServiceTypes = reality.serviceInstances
+        .filter(si => {
+          return (
+            reality.serviceTypes[si.source].name === typeName &&
+            reality.serviceTypes[si.target].cluster === clusterIndex
+          );
+        })
+        .map(si => reality.serviceTypes[si.target]);
+
+      console.log(
+        `adding serviceTypes: ${serviceTypes.length} targetServiceTypes: ${targetServiceTypes.length}`
+      );
+      nodes.addUsing(
+        id,
+        name,
+        "_topo",
+        nodes.length,
+        position.x,
+        position.y,
+        name,
+        undefined,
+        position.fixed,
+        { cluster, serviceTypes, targetServiceTypes }
+      ).dataType = "network";
     });
   };
 
   // create a link between clusters
   initLinks = (nodes, links, width, height, serviceTypeName) => {
-    links.reset();
     reality.serviceInstances.forEach(si => {
       const sourceCluster = reality.serviceTypes[si.source].cluster;
       const targetCluster = reality.serviceTypes[si.target].cluster;
@@ -115,8 +204,8 @@ class Service {
       const targetType = reality.serviceTypes[si.target];
       if (sourceType.name === serviceTypeName) {
         links.addLink({
-          source: sourceType.cluster,
-          target: targetType.cluster,
+          source: nodes.get(sourceType.cluster),
+          target: nodes.get(targetType.cluster),
           dir: "out",
           cls: "target",
           uid: `${nodes.get(sourceType.cluster).uid()}-${nodes

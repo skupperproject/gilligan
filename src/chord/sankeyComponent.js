@@ -80,7 +80,7 @@ class SankeyComponent {
 
   tick = elapsed => {
     this.particles = this.particles.filter(
-      d => d.current < d.path.getTotalLength()
+      d => d.current < d.path.getTotalLength() - 15
     );
 
     const self = this;
@@ -130,7 +130,7 @@ class SankeyComponent {
         this.particles[x].current / this.particles[x].path.getTotalLength()
       );
       context.arc(
-        currentPos.x + 10,
+        currentPos.x + 20,
         currentPos.y + this.particles[x].offset,
         this.particles[x].size,
         //this.particles[x].link.particleSize,
@@ -215,7 +215,6 @@ class SankeyComponent {
       );
 
     const enterNode = svg
-      .append("g")
       .selectAll(".sankey-node")
       .data(nodes)
       .enter()
