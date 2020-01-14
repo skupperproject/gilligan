@@ -18,13 +18,26 @@ under the License.
 */
 
 import React, { Component } from "react";
+import {
+  TopologyView,
+  TopologyControlBar,
+  createTopologyControlButtons,
+  TopologySideBar
+} from "@patternfly/react-topology";
+import GraphToolbar from "./graphToolbar";
+import LegendComponent from "./legendComponent";
+
 import * as d3 from "d3";
 import { Traffic } from "./traffic.js";
 import { separateAddresses } from "../chord/filters.js";
 import { Nodes } from "./nodes.js";
 import { Links } from "./links.js";
-import { nextHop, connectionPopupHTML, getSizes } from "./topoUtils.js";
-import { BackgroundMap } from "./map.js";
+import {
+  nextHop,
+  connectionPopupHTML,
+  getSizes,
+  reality
+} from "./topoUtils.js";
 import { utils } from "../amqp/utilities.js";
 //import { Legend } from "./legend.js";
 //import LegendComponent from "./legendComponent";
@@ -33,7 +46,7 @@ import ClientInfoComponent from "./clientInfoComponent";
 import ContextMenuComponent from "../contextMenuComponent";
 import { appendCloud, addGradient, addDefs } from "./svgUtils.js";
 import { QDRLogger } from "../qdrGlobals";
-import { graphView } from "./views/views";
+import Graph from "./graph";
 const TOPOOPTIONSKEY = "topoLegendOptions";
 
 class TopologyPage extends Component {
@@ -51,10 +64,6 @@ class TopologyPage extends Component {
       legend: {
         open: true
       },
-      map: {
-        open: false,
-        show: false
-      },
       arrows: {
         open: false,
         routerArrows: false,
@@ -64,6 +73,7 @@ class TopologyPage extends Component {
     this.state = {
       popupContent: "",
       showPopup: false,
+      showLegend: false,
       legendOptions: savedOptions,
       showRouterInfo: false,
       showClientInfo: false,
@@ -89,22 +99,6 @@ class TopologyPage extends Component {
       this.forceData,
       ["dots", "congestion"].filter(t => this.state.legendOptions.traffic[t])
     );
-    this.backgroundMap = new BackgroundMap(
-      this,
-      this.state.legendOptions.map,
-      // notify: called each time a pan/zoom is performed
-      () => {
-        if (this.state.legendOptions.map.show) {
-          // set all the nodes' x,y position based on their saved lon,lat
-          this.forceData.nodes.setXY(this.backgroundMap);
-          this.forceData.nodes.savePositions();
-          // redraw the nodes in their x,y position and let non-fixed nodes bungie
-          this.force.start();
-          this.clearPopups();
-        }
-      }
-    );
-    this.state.mapOptions = this.backgroundMap.mapOptions;
 
     this.contextMenuItems = [
       {
@@ -129,7 +123,8 @@ class TopologyPage extends Component {
         enabled: data => !this.isSelected(data)
       }
     ];
-    this.view = new graphView[this.props.type]();
+    this.view = new Graph();
+    this.currentScale = 1;
   }
 
   // called only once when the component is initialized
@@ -213,18 +208,19 @@ class TopologyPage extends Component {
   };
   clearPopups = () => {};
 
+  zoomed = () => {
+    this.svg.attr(
+      "transform",
+      `translate(${this.zoom.translate()}) scale(${this.zoom.scale()})`
+    );
+  };
+
   // initialize the nodes and links array from the QDRService.topology._nodeInfo object
   init = () => {
     console.log(`********** init called with ${this.props.type} ***********`);
     let sizes = getSizes(this.topologyRef, this.QDRLog);
     this.width = sizes[0];
     this.height = sizes[1];
-    if (this.width < 768) {
-      const legendOptions = this.state.legendOptions;
-      legendOptions.map.open = false;
-      legendOptions.map.show = false;
-      this.setState({ legendOptions });
-    }
     //let nodeInfo = getData(this.props.type, this.props.service);
     //let nodeCount = Object.keys(nodeInfo).length;
 
@@ -233,6 +229,12 @@ class TopologyPage extends Component {
 
     this.forceData.nodes.reset();
     this.forceData.links.reset();
+
+    this.zoom = d3.behavior
+      .zoom()
+      .scaleExtent([1, 8])
+      .on("zoom", this.zoomed);
+
     d3.select("#SVG_ID").remove();
     //d3.select("#SVG_ID .links").remove();
     //d3.select("#SVG_ID .nodes").remove();
@@ -244,44 +246,35 @@ class TopologyPage extends Component {
         .attr("id", "SVG_ID")
         .attr("width", this.width)
         .attr("height", this.height)
+        .append("g")
+        .call(this.zoom)
         .on("click", this.clearPopups);
-      // read the map data from the data file and build the map layer
-      this.backgroundMap
-        .init(this, this.svg, this.width, this.height)
-        .then(() => {
-          this.forceData.nodes.saveLonLat(this.backgroundMap);
-          this.backgroundMap.setMapOpacity(this.state.legendOptions.map.show);
-        });
+
       addDefs(this.svg);
       addGradient(this.svg);
+
+      /*
+      this.svg.call(zoom).on("mousemove", function() {
+        const m = d3.mouse(this);
+        // apply the translate buffer so mousewheel zooms on the correct point after dragging the graph
+        const pt = [
+          m[0] + self.translateBuffer[0],
+          m[1] + self.translateBuffer[1]
+        ];
+        zoom.center(pt);
+      });
+      */
     }
 
-    if (this.props.type !== "application" && this.props.type !== "service") {
-      // handles to link and node element groups
-      this.path = this.svg
-        .append("svg:g")
-        .attr("class", "links")
-        .selectAll("g");
-      this.circle = this.svg
-        .append("svg:g")
-        .attr("class", "clusters")
-        .selectAll("g.cluster");
-    } else {
-      // handles to link and node element groups
-      this.circle = this.svg
-        .append("svg:g")
-        .attr("class", "clusters")
-        .selectAll("g.cluster");
-      this.path = this.svg
-        .append("svg:g")
-        .attr("class", "links")
-        .selectAll("g");
-    }
-
-    this.cloud = this.svg
+    // handles to link and node element groups
+    this.circle = this.svg
       .append("svg:g")
-      .attr("class", "clouds")
-      .selectAll("g.cloud");
+      .attr("class", "clusters")
+      .selectAll("g.cluster");
+    this.path = this.svg
+      .append("svg:g")
+      .attr("class", "links")
+      .selectAll("g");
 
     this.traffic.remove();
     if (this.state.legendOptions.traffic.dots)
@@ -313,7 +306,7 @@ class TopologyPage extends Component {
     this.force = d3.layout
       .force()
       .nodes(this.forceData.nodes.nodes)
-      .links(this.forceData.links.links)
+      .links([])
       .size([this.width, this.height])
       .linkDistance(d => {
         return this.forceData.nodes.linkDistance(d, nodeCount);
@@ -328,16 +321,11 @@ class TopologyPage extends Component {
       .on("tick", this.tick)
       .on("end", () => {
         this.forceData.nodes.savePositions();
-        this.forceData.nodes.saveLonLat(this.backgroundMap);
-      })
-      .start();
-    for (let i = 0; i < this.forceData.nodes.nodes.length; i++) {
-      this.forceData.nodes.nodes[i].sx = this.forceData.nodes.nodes[i].x;
-      this.forceData.nodes.nodes[i].sy = this.forceData.nodes.nodes[i].y;
-    }
+      });
+    this.force.stop();
+    this.force.start();
 
     // app starts here
-
     this.restart();
 
     if (this.oldSelectedNode) {
@@ -397,12 +385,158 @@ class TopologyPage extends Component {
     }
   };
 
+  highlightConnection = (highlight, link, d, self) => {
+    this.blurAll(highlight, d);
+    this.highlightLink(highlight, link, d);
+
+    link.selectAll("text").attr("font-weight", highlight ? "bold" : "unset");
+    //.style("display", highlight ? "block" : "none");
+  };
+
+  highlightLink = (highlight, link, d) => {
+    link.selectAll("path").attr("opacity", 1);
+    link.selectAll("text.stats").style("stroke", null);
+    const services = d3
+      .select("#SVG_ID")
+      .selectAll("g.service-type")
+      .filter(d1 => d1.key === d.source.key || d1.key === d.target.key)
+      .attr("opacity", 1);
+
+    services.selectAll("rect").style("stroke-width", highlight ? "2px" : "1px");
+    services
+      .selectAll("text")
+      .attr("font-weight", highlight ? "bold" : "normal");
+
+    services
+      .selectAll("circle.end-point")
+      .filter(
+        d1 =>
+          d1.key === d.source.key &&
+          d1.targets.some(t => t.key === d.target.key)
+      )
+      .attr("opacity", 1);
+
+    services
+      .selectAll("rect.end-point")
+      .filter(
+        d1 =>
+          d1.key === d.target.key &&
+          d1.sources.some(t => t.key === d.source.key)
+      )
+      .attr("opacity", 1);
+  };
+
+  highlightServiceType = (highlight, st, d, self) => {
+    this.blurAll(highlight, d);
+    const links = d3
+      .select("#SVG_ID")
+      .selectAll("g.links g")
+      .filter(d1 => d1.source.key === d.key || d1.target.key === d.key);
+    links.each(function(d1) {
+      self.highlightLink(highlight, d3.select(this), d1);
+    });
+  };
+
+  highlightNamespace = (highlight, nsBox, d, self) => {
+    this.blurAll(highlight, d);
+    d.highlighted = highlight;
+    // highlight all the services
+    nsBox.selectAll(".cluster-rects").attr("opacity", 1);
+    nsBox.selectAll("g.service-type").attr("opacity", 1);
+  };
+
+  blurAll = (blur, d) => {
+    const opacity = blur ? 0.5 : 1;
+    const pathOpacity = blur ? 0.25 : 1;
+    const svg = d3.select("#SVG_ID");
+    svg.selectAll(".cluster-rects").attr("opacity", opacity);
+    svg
+      .selectAll("g.service-type")
+      .attr("opacity", opacity)
+      .selectAll("rect")
+      .style("stroke-width", "1px");
+    svg
+      .selectAll("path.link")
+      .attr("opacity", d1 => (d1.uid !== d.uid ? pathOpacity : 1));
+    svg.selectAll("circle.end-point").attr("opacity", pathOpacity);
+    svg.selectAll("rect.end-point").attr("opacity", pathOpacity);
+    svg.selectAll("text").attr("font-weight", "normal");
+    svg
+      .selectAll("text.stats")
+      .style("stroke", blur ? "#CCCCCC" : null)
+      .attr("font-weight", "unset");
+  };
+
+  setLinkStat = () => {
+    this.path.selectAll("text").text(d => {
+      const which =
+        this.props.options.link.stat === "security"
+          ? "security"
+          : this.props.options.link.stat === "protocol"
+          ? "protocol"
+          : this.props.options.link.stat === "throughput"
+          ? "throughput"
+          : this.props.options.link.stat === "latency"
+          ? "latency"
+          : "unknown";
+      if (which === "unknown") {
+        console.log(`options were unknown`);
+        console.log(this.props.options);
+      }
+      return d.stats[which];
+    });
+  };
+
+  expandNode = (d, node) => {
+    if (!d.expanded) {
+      d.expanded = true;
+      node
+        .select("g.extra-info")
+        .transition()
+        .duration(250)
+        .attr("opacity", 1);
+
+      node
+        .select("rect.service-type")
+        .transition()
+        .duration(250)
+        .attr("height", 70);
+
+      this.svg
+        .transition()
+        .duration(250)
+        .attr("transform", d1 => {
+          console.log(
+            `translate(${d.X(this.tried)},${d.Y(this.tried)}) scale(1.5)`
+          );
+          return `translate(${d.X(this.tried)},${d.Y(this.tried)}) scale(1.5)`;
+        });
+    } else {
+      d.expanded = false;
+      node
+        .select("g.extra-info")
+        .transition()
+        .duration(250)
+        .attr("opacity", 0);
+
+      node
+        .select("rect.service-type")
+        .transition()
+        .duration(250)
+        .attr("height", 40);
+
+      this.svg
+        .transition()
+        .duration(250)
+        .attr("transform", "scale(1) translate(0,0)");
+    }
+  };
+
   // Takes the forceData.nodes and forceData.links array and creates svg elements
   // Also updates any existing svg elements based on the updated values in forceData.nodes
   // and forceData.links
   restart = () => {
     this.circle.call(this.force.drag);
-    this.cloud.call(this.force.drag);
 
     // path is a selection of all g elements under the g.links svg:group
     // here we associate the links.links array with the {g.links g} selection
@@ -439,15 +573,17 @@ class TopologyPage extends Component {
     let enterpath = this.path
       .enter()
       .append("g")
-      .on("mouseover", d => {
+      .on("mouseover", function(d) {
         // mouse over a path
         let event = d3.event;
         d.selected = true;
-        this.popupCancelled = false;
+        self.highlightConnection(true, d3.select(this), d, self);
+        self.popupCancelled = false;
+        /*
         d.toolTip().then(toolTip => {
           this.showToolTip(toolTip, event);
         });
-
+*/
         /*
         let updateTooltip = () => {
           if (d.selected) {
@@ -485,11 +621,12 @@ class TopologyPage extends Component {
         // just show the tooltip with whatever data we have
         updateTooltip();
 */
-        this.restart();
+        self.restart();
       })
-      .on("mouseout", d => {
-        this.handleMouseOutPath(d);
-        this.restart();
+      .on("mouseout", function(d) {
+        self.handleMouseOutPath(d);
+        self.highlightConnection(false, d3.select(this), d, self);
+        self.restart();
       })
       // left click a path
       .on("click", () => {
@@ -511,10 +648,10 @@ class TopologyPage extends Component {
           ? `url(#start${d.markerId("start")})`
           : null;
       })
-      .attr("id", function(d) {
+      .attr("id", function(d, i) {
         const si = d.source.uid();
         const ti = d.target.uid();
-        return ["path", si, ti].join("-");
+        return ["path", si, ti, i].join("-");
       });
     //.classed("unknown", d => d.cls === "target");
 
@@ -523,23 +660,26 @@ class TopologyPage extends Component {
       .attr("class", "hittarget")
       .attr("id", d => `hitpath-${d.source.uid()}-${d.target.uid()}`);
 
+    enterpath
+      .append("text")
+      .attr("class", "stats")
+      .attr("dominant-baseline", "middle")
+      .attr("text-anchor", "middle")
+      .attr(
+        "x",
+        d => Math.abs(d.source.parentNode.x - d.target.parentNode.x) / 2
+      )
+      .attr(
+        "y",
+        d => Math.abs(d.source.parentNode.y - d.target.parentNode.y) / 2 - 15
+      )
+      .attr("font-size", "12px")
+      .attr("font-weight", "bold");
+    //.style("display", "none");
+
+    this.setLinkStat();
     // remove old links
     this.path.exit().remove();
-
-    this.cloud = d3
-      .select("g.clouds")
-      .selectAll("g.cloud")
-      .data(this.forceData.nodes.nodes.filter(n => n.nodeType === "cloud"), d =>
-        d.uid()
-      );
-
-    this.cloud.exit().remove();
-    let enterCloud = this.cloud
-      .enter()
-      .append("svg:g")
-      .attr("class", "cloud");
-
-    appendCloud(enterCloud);
 
     // circle (node) group
     // one svg:g with class "clusters" to contain them all
@@ -552,9 +692,6 @@ class TopologyPage extends Component {
           return d.uid();
         }
       );
-
-    // update existing nodes visual states
-    //updateState(this.circle);
 
     // add new circle nodes
     // add an svg:g with class "cluster" for each node in the data
@@ -569,23 +706,32 @@ class TopologyPage extends Component {
     // for each node in the data, add sub elements like circles, rects, text
     //appendCircle(enterCircle, this.props.type, this.svg)
     this.view
-      .createGraph(enterCircle)
+      .createGraph(
+        enterCircle,
+        this.forceData.nodes.nodes,
+        this.forceData.links.links
+      )
       .on("mouseover", function(d) {
-        // mouseover a circle
+        // mouseover a namespace box
         self.current_node = d;
+        console.log(`moused over namespace ${d.name}`);
+        // highlight the namespace box
+        self.highlightNamespace(true, d3.select(this), d, self);
+        /*
         if (!self.mousedown_node) {
           let e = d3.event;
           self.popupCancelled = false;
-          d.toolTip(self.props.service.management.topology).then(function(
-            toolTip
-          ) {
+          d.toolTip(self.props.service.management.topology).then(toolTip => {
             self.showToolTip(toolTip, e);
           });
         }
+        */
+        self.restart();
       })
-      .on("mouseout", function() {
+      .on("mouseout", function(d) {
         // mouse out for a circle
         self.current_node = null;
+        self.highlightNamespace(false, d3.select(this), d, self);
         // unenlarge target node
         self.setState({ showPopup: false });
         self.popupCancelled = true;
@@ -595,7 +741,6 @@ class TopologyPage extends Component {
       })
       .on("mousedown", d => {
         // mouse down for circle
-        this.backgroundMap.cancelZoom();
         this.current_node = d;
         if (d3.event.button !== 0) {
           // ignore all but left button
@@ -610,7 +755,6 @@ class TopologyPage extends Component {
       })
       .on("mouseup", function(d) {
         // mouse up for circle
-        self.backgroundMap.restartZoom();
         if (!self.mousedown_node) return;
 
         // check for drag
@@ -624,7 +768,6 @@ class TopologyPage extends Component {
         ) {
           self.forceData.nodes.setFixed(d, true);
           self.forceData.nodes.savePositions();
-          self.forceData.nodes.saveLonLat(this.backgroundMap);
           self.resetMouseVars();
           self.restart();
           self.mousedown_node = null;
@@ -677,9 +820,45 @@ class TopologyPage extends Component {
         }
         d3.event.stopPropagation();
       });
+    d3.selectAll("g.service-type")
+      .on("mousedown", d => {
+        d.dragpos = [d3.event.pageX, d3.event.pageY];
+        d.dragxy = [d.x, d.y];
+        if (this.tried) {
+          d3.event.stopPropagation();
+        }
+      })
+      .on("mousemove", function(d) {
+        if (self.tried && d.dragpos) {
+          d.x = d.dragxy[0] + d3.event.pageX - d.dragpos[0];
+          d.y = d.dragxy[1] + d3.event.pageY - d.dragpos[1];
+          d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
+          self.drawPath(1);
+          d3.event.stopPropagation();
+        }
+      })
+      .on("mouseover", function(d) {
+        // highlight this service-type and it's connected service-types
+        self.highlightServiceType(true, d3.select(this), d, self);
+        d3.event.stopPropagation();
+      })
+      .on("mouseup", function(d) {
+        if (d.dragpos) {
+          // they clicked without moving the mouse
+          if (
+            d3.event.pageX === d.dragpos[0] &&
+            d3.event.pageY === d.dragpos[1]
+          ) {
+            self.mousedown_node = null;
+            self.expandNode(d, d3.select(this));
+          }
+          d.dragpos = undefined;
+        }
+      });
 
     //appendContent(enterCircle);
 
+    this.circle.classed("highlighted", d => d.highlighted);
     // remove old nodes
     this.circle.exit().remove();
 
@@ -706,37 +885,40 @@ class TopologyPage extends Component {
   tick = () => {
     // move the circles
     this.circle.attr("transform", d => {
-      if (isNaN(d.x) || isNaN(d.px)) {
-        d.x = d.px = d.sx;
-        d.y = d.py = d.sy;
+      if (this.tried) {
+        return `translate(0,0)`;
       }
-      /*
-      // don't let the edges of the circle go beyond the edges of the svg
-      let r = Nodes.radius(d.nodeType);
-      d.x = Math.max(Math.min(d.x, this.width - r), r);
-      d.y = Math.max(Math.min(d.y, this.height - r), r);
-      */
       return `translate(${d.x},${d.y})`;
     });
 
-    this.cloud.attr("transform", d => `translate(${d.x},${d.y})`);
+    if (this.tried) {
+      d3.selectAll("g.service-type").attr("transform", d => {
+        return `translate(${d.x},${d.y})`;
+      });
+    }
 
-    // draw lines from node centers
+    // draw lines between services
+    const t = this.tried ? 1 : 0;
+    this.drawPath(t);
+    this.force.stop();
+  };
+
+  drawPath = t => {
     this.path.selectAll("path").attr("d", d => {
-      const sxoff =
-        typeof d.source.sxpos === "undefined" ? d.source.xpos : d.source.sxpos;
-      let txoff =
-        typeof d.target.txpos === "undefined" ? d.target.xpos : d.target.txpos;
-      let syoff = d.source.ypos;
-      let tyoff = d.target.ypos;
-      if (typeof d.targetIndex !== "undefined") {
-        syoff = 110;
-        txoff = 35;
-        tyoff = 110 + d.targetIndex * 45;
-      }
-      return `M${d.source.x + sxoff},${d.source.y + syoff}L${d.target.x +
-        txoff},${d.target.y + tyoff}`;
+      const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(t);
+      return `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty + tyoff}`;
     });
+
+    this.path
+      .selectAll("text")
+      .attr("x", d => {
+        const { sx, tx, sxoff, txoff } = d.endpoints(t);
+        return Math.abs(sx + sxoff + tx + txoff) / 2;
+      })
+      .attr("y", d => {
+        const { sy, ty, syoff, tyoff } = d.endpoints(t);
+        return Math.abs(sy + syoff + ty + tyoff) / 2 - 5;
+      });
   };
 
   nextHopHighlight = (selected_node, d) => {
@@ -946,10 +1128,6 @@ class TopologyPage extends Component {
       this.handleLegendOptionsChange(legendOptions);
     }
   };
-  handleUpdateMapColor = (which, color) => {
-    let mapOptions = this.backgroundMap.updateMapColor(which, color);
-    this.setState({ mapOptions });
-  };
 
   // the mouse was hovered over one of the addresses in the legend
   handleHoverAddress = (address, over) => {
@@ -961,35 +1139,113 @@ class TopologyPage extends Component {
     }
   };
 
-  handleUpdateMapShown = checked => {
-    const { legendOptions } = this.state;
-    legendOptions.map.show = checked;
-    this.setState({ legendOptions }, () => {
-      this.backgroundMap.setMapOpacity(checked);
-      this.backgroundMap.setBackgroundColor();
-      this.saveLegendOptions(legendOptions);
-    });
-  };
-
   handleContextHide = () => {
     this.setState({ showContextMenu: false });
   };
 
+  translateFn = dir => d => t => {
+    if (dir === "ns") t = 1 - t;
+    this.drawPath(t);
+    return `translate(${d.orgx + (d.x - d.orgx) * t},${d.orgy +
+      (d.y - d.orgy) * t})`;
+  };
+
+  toApplication = () => {
+    this.tried = true;
+
+    d3.selectAll(".cluster-rects")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 0)
+      .transition()
+      .duration(0)
+      .style("display", "none");
+
+    d3.selectAll(".cluster")
+      .transition()
+      .duration(1000)
+      .attr("transform", "translate(0,0)");
+
+    d3.selectAll("g.service-type")
+      .transition()
+      .duration(1000)
+      .attrTween("transform", this.translateFn("app"));
+  };
+
+  toNamespace = () => {
+    this.tried = false;
+    d3.selectAll(".cluster-rects").style("display", "block");
+
+    d3.selectAll(".cluster-rects")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 1);
+
+    d3.selectAll(".cluster")
+      .transition()
+      .duration(1000)
+      .attr("transform", d => `translate(${d.x},${d.y})`);
+
+    d3.selectAll("g.service-type")
+      .transition()
+      .duration(1000)
+      .attrTween("transform", this.translateFn("ns"));
+  };
+
+  // clicked on the Legend button in the control bar
+  handleLegendClick = id => {
+    this.setState({ showLegend: !this.state.showLegend });
+  };
+
+  // clicked on the x button on the legend
+  handleCloseLegend = () => {
+    this.setState({ showLegend: false });
+  };
+
+  scaleSVG = () => {
+    this.svg.attr("transform", `scale(${this.currentScale})`);
+  };
+  zoomInCallback = () => {
+    this.currentScale += 0.1;
+    this.scaleSVG();
+  };
+
+  zoomOutCallback = () => {
+    this.currentScale -= 0.1;
+    this.scaleSVG();
+  };
+
+  resetViewCallback = () => {
+    this.currentScale = 1;
+    this.scaleSVG();
+  };
+
   render() {
+    const controlButtons = createTopologyControlButtons({
+      zoomInCallback: this.zoomInCallback,
+      zoomOutCallback: this.zoomOutCallback,
+      resetViewCallback: this.resetViewCallback,
+      fitToScreenHidden: true,
+      legendCallback: this.handleLegendClick,
+      legendAriaLabel: "topology-legend"
+    });
+
     return (
-      <div className="qdrTopology">
+      <TopologyView
+        aria-label="topology-viewer"
+        viewToolbar={
+          <GraphToolbar
+            handleChangeView={this.props.handleChangeView}
+            handleChangeOption={this.props.handleChangeOption}
+            options={this.props.options}
+          />
+        }
+        controlBar={<TopologyControlBar controlButtons={controlButtons} />}
+        sideBar={<TopologySideBar show={false}></TopologySideBar>}
+        sideBarOpen={false}
+        className="qdrTopology"
+      >
         <div className="diagram">
-          {this.state.showContextMenu ? (
-            <ContextMenuComponent
-              ref={el => (this.contextRef = el)}
-              contextEventPosition={this.contextEventPosition}
-              contextEventData={this.contextEventData}
-              handleContextHide={this.handleContextHide}
-              menuItems={this.contextMenuItems}
-            />
-          ) : (
-            <React.Fragment />
-          )}
           <div ref={el => (this.topologyRef = el)} id="topology"></div>
           <div
             id="popover-div"
@@ -999,6 +1255,13 @@ class TopologyPage extends Component {
             {this.state.popupContent}
           </div>
         </div>
+        {this.state.showLegend && (
+          <LegendComponent
+            nodes={this.forceData.nodes}
+            handleCloseLegend={this.handleCloseLegend}
+          />
+        )}
+
         {this.state.showRouterInfo ? (
           <RouterInfoComponent
             d={this.d}
@@ -1017,7 +1280,7 @@ class TopologyPage extends Component {
         ) : (
           <div />
         )}
-      </div>
+      </TopologyView>
     );
   }
 }

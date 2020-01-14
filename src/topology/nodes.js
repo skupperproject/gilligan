@@ -54,7 +54,9 @@ export class Node {
     this.isArtemis = utils.isArtemis(this);
     this.score = 0;
     this.targets = [];
+    this.sources = [];
     this.links = [];
+    this.expanded = false;
   }
   title(hide) {
     let x = "";
@@ -129,6 +131,12 @@ export class Node {
   isFixed() {
     return this.fixed & 1 ? true : false;
   }
+  X(app) {
+    return app ? this.x : this.orgx;
+  }
+  Y(app) {
+    return app ? this.y : this.orgy;
+  }
 }
 const nodeProperties = {
   // router types
@@ -154,7 +162,7 @@ const nodeProperties = {
   normal: {
     radius: 15,
     refX: {
-      end: 12,
+      end: 10,
       start: -7
     },
     linkDistance: [250, 250],

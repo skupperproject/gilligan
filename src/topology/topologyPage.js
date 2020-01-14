@@ -30,20 +30,45 @@ import {
   TextVariants
 } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
-import ServiceDropdown from "./serviceDropdown";
-import { reality } from "./topoUtils.js";
 
 class TopologyPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       lastUpdated: new Date(),
-      serviceTypeName: reality.serviceTypes[0].name
+      serviceTypeName: "All",
+      options: {
+        graph: {
+          traffic: false,
+          utilization: false
+        },
+        link: { stat: "protocol" }
+      }
     };
   }
 
   handleChangeService = serviceTypeName => {
     this.setState({ serviceTypeName });
+  };
+
+  handleChangeView = key => {
+    if (key === "application") {
+      this.graphRef.toApplication();
+    } else {
+      this.graphRef.toNamespace();
+    }
+  };
+
+  handleChangeOption = option => {
+    const { options } = this.state;
+    if (option === "traffic" || option === "utilization") {
+      options.graph[option] = !options.graph[option];
+    } else {
+      options.link.stat = options.link.stat === option ? null : option;
+    }
+    this.setState({ options }, () => {
+      this.graphRef.setLinkStat();
+    });
   };
 
   render() {
@@ -56,15 +81,7 @@ class TopologyPage extends Component {
           <StackItem className="overview-header">
             <TextContent>
               <Text className="overview-title" component={TextVariants.h1}>
-                {`${this.props.type} view`}{" "}
-                {this.props.type === "service" ? (
-                  <ServiceDropdown
-                    service={this.state.serviceTypeName}
-                    handleChangeService={this.handleChangeService}
-                  />
-                ) : (
-                  <React.Fragment />
-                )}
+                Graph view
               </Text>
               <Text className="overview-loading" component={TextVariants.pre}>
                 {`Updated ${this.props.service.utilities.strDate(
@@ -74,15 +91,15 @@ class TopologyPage extends Component {
             </TextContent>
           </StackItem>
           <StackItem className="overview-table">
-            <Card>
-              <CardBody>
-                <TopologyViewer
-                  type={this.props.type}
-                  service={this.props.service}
-                  serviceTypeName={this.state.serviceTypeName}
-                />
-              </CardBody>
-            </Card>
+            <TopologyViewer
+              ref={el => (this.graphRef = el)}
+              type={this.props.type}
+              service={this.props.service}
+              serviceTypeName={this.state.serviceTypeName}
+              options={this.state.options}
+              handleChangeView={this.handleChangeView}
+              handleChangeOption={this.handleChangeOption}
+            />
           </StackItem>
         </Stack>
       </PageSection>

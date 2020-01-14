@@ -8,7 +8,7 @@ import {
 } from "@patternfly/react-core";
 import { withRouter } from "react-router-dom";
 import ConnectForm from "./connect-form";
-const avatarImg = require("./assets/pug.png");
+const avatarImg = require("./assets/skupper.svg");
 
 class ConnectPage extends React.Component {
   constructor(props) {
@@ -52,7 +52,7 @@ class ConnectPage extends React.Component {
               installation in any of your cluster's namespaces.
             </Text>
           </TextContent>
-          <Brand src={avatarImg} alt="Skipper Logo" />
+          <div className="skupper-logo" />
         </div>
       </PageSection>
     );

@@ -59,16 +59,16 @@ class PageLayout extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      connected: true,
+      connected: false,
       connectPath: "",
       isDropdownOpen: false,
-      activeItem: "network",
+      activeItem: "graph",
       isConnectFormOpen: false,
       username: ""
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
-    this.views = ["Network", "Service", "Application", "Traffic"];
+    this.views = ["Graph", "List"];
   }
 
   setLocation = where => {
@@ -295,29 +295,10 @@ class PageLayout extends React.Component {
             <PrivateRoute
               path="/"
               exact
-              type="network"
+              type="graph"
               component={TopologyPage}
             />
-            <PrivateRoute
-              path="/network"
-              type="network"
-              component={TopologyPage}
-            />
-            <PrivateRoute
-              path="/application"
-              type="application"
-              component={TopologyPage}
-            />
-            <PrivateRoute
-              path="/service"
-              type="service"
-              component={TopologyPage}
-            />
-            <PrivateRoute
-              path="/traffic"
-              type="address"
-              component={AddressPage}
-            />
+            <PrivateRoute path="/graph" type="graph" component={TopologyPage} />
             <Route
               path="/login"
               render={props => (

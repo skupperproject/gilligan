@@ -182,6 +182,7 @@ export function addDefs(svg) {
     })
     .attr("viewBox", "0 -5 10 10")
     .attr("refX", function(d) {
+      console.log(d);
       return Nodes.refX(d.sten, d.r);
     })
     .attr("markerWidth", 14)

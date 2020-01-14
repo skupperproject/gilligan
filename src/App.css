@@ -367,18 +367,13 @@ div.state-container button.pf-c-clipboard-copy__group-copy {
 .overview-title::first-letter {
   text-transform: uppercase;
 }
-.overview-charts-page,
-.overview-table {
-  background-color: #eaeaea !important;
-  padding: 3em;
-}
 
 .overview-table-page {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
 .overview-header {
-  padding: 2em;
+  padding: 1em;
   text-align: left;
 }
 .overview-header.details {
@@ -388,6 +383,7 @@ div.state-container button.pf-c-clipboard-copy__group-copy {
   font-size: 1.125em;
   margin-bottom: 1em;
 }
+
 .fill-card {
   width: 100%;
 }
@@ -1098,6 +1094,14 @@ path.external {
   height: 100%;
 }
 
+.diagram {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-color: white;
+}
+
 .topology-page .pf-c-card__body,
 .topology-page .pf-c-card__body:first-child {
   padding: 0;
@@ -1238,4 +1242,43 @@ path.external {
 canvas {
   position: absolute;
   pointer-events: none;
+}
+
+.overview-header .pf-c-content ul li a.selected {
+  background-color: #0066cc;
+  color: white;
+  font-weight: bold;
+}
+
+.cluster rect.network {
+  stroke: transparent;
+}
+.cluster.highlighted rect.network {
+  stroke: #0066cc;
+}
+
+rect.end-point.source {
+  stroke-width: 2px;
+  fill: white;
+  stroke: black;
+}
+
+circle.end-point.source {
+  stroke-width: 2px;
+  stroke: black;
+  fill: white;
+}
+
+.skupper-logo {
+  background-image: url("./assets/skupper.svg");
+  background-repeat: no-repeat;
+  opacity: 1;
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  background-position-x: center;
+}
+
+.graph-toolbar {
+  border-bottom: 1px solid #cccccc;
 }

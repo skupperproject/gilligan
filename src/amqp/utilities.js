@@ -1,21 +1,23 @@
 /*
- * Copyright 2018 Red Hat Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-/* global d3 Uint8Array */
-var ddd = typeof window === "undefined" ? require("d3") : d3;
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
+import * as d3 from "d3";
 
 var utils = {
   isAConsole: function(properties, connectionId, nodeType, key) {
@@ -36,14 +38,16 @@ var utils = {
   isArtemis: function(d) {
     return (
       (d.nodeType === "route-container" || d.nodeType === "on-demand") &&
-      (d.properties && d.properties.product === "apache-activemq-artemis")
+      d.properties &&
+      d.properties.product === "apache-activemq-artemis"
     );
   },
 
   isQpid: function(d) {
     return (
       (d.nodeType === "route-container" || d.nodeType === "on-demand") &&
-      (d.properties && d.properties.product === "qpid-cpp")
+      d.properties &&
+      d.properties.product === "qpid-cpp"
     );
   },
 
@@ -115,7 +119,7 @@ var utils = {
     return t.replace(".", " ");
   },
   pretty: function(v, format = ",") {
-    var formatComma = ddd.format(format);
+    var formatComma = d3.format(format);
     if (!isNaN(parseFloat(v)) && isFinite(v)) return formatComma(v);
     return v;
   },
@@ -170,6 +174,12 @@ var utils = {
     let parts = ["amqp:", type, name, "$management"];
     if (type === "_topo") parts.splice(2, 0, "0");
     return parts.join("/");
+  },
+
+  typeFromId: function(id) {
+    var parts = id.split("/");
+    if (parts.length > 1) return parts[1];
+    return "unknown";
   },
 
   // calculate the average rate of change per second for a list of fields on the given obj

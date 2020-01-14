@@ -57,6 +57,29 @@ class Link {
       resolve(<TooltipTable rows={rows} />);
     });
   }
+  endpoints(t) {
+    let sx =
+      this.source.orgx +
+      (this.source.x - this.source.orgx) * t +
+      this.source.parentNode.x * (1 - t);
+    let sy =
+      this.source.orgy +
+      (this.source.y - this.source.orgy) * t +
+      this.source.parentNode.y * (1 - t);
+    let tx =
+      this.target.orgx +
+      (this.target.x - this.target.orgx) * t +
+      this.target.parentNode.x * (1 - t);
+    let ty =
+      this.target.orgy +
+      (this.target.y - this.target.orgy) * t +
+      this.target.parentNode.y * (1 - t);
+    const sxoff = 130;
+    const syoff = 20;
+    const txoff = 0;
+    const tyoff = 20;
+    return { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff };
+  }
 }
 
 export class Links {

@@ -343,42 +343,78 @@ const serviceInstances = [
     source: 0,
     target: 1,
     address: "ProductToInfo",
-    stats: { rate: 123, total: 12345, latency: 10 },
+    stats: {
+      throughput: 123,
+      protocol: "TCP",
+      latency: "10ms",
+      utilization: 0.5,
+      security: "TLS"
+    },
     description: "Connects ProductPage to Info"
   },
   {
     source: 0,
     target: 2,
     address: "ProductToReviews",
-    stats: { rate: 234, total: 23456, latency: 11 },
+    stats: {
+      throughput: 234,
+      protocol: "TCP",
+      latency: "11ms",
+      utilization: 0.5,
+      security: "TLS"
+    },
     description: "Connects ProductPage to Reviews"
   },
   {
     source: 2,
     target: 3,
     address: "ReviewsToRatings",
-    stats: { rate: 345, total: 34567, latency: 12 },
+    stats: {
+      throughput: 345,
+      protocol: "TCP",
+      latency: "12ms",
+      utilization: 0.5,
+      security: "TLS"
+    },
     description: "Connects Reviews to Ratings"
   },
   {
     source: 3,
     target: 4,
     address: "RatingsToDatabase",
-    stats: { rate: 456, total: 45678, latency: 13 },
+    stats: {
+      throughput: 456,
+      protocol: "HTTP",
+      latency: "13ms",
+      utilization: 0.5,
+      security: "None"
+    },
     description: "Connects Ratings to DB"
   },
   {
     source: 2,
     target: 4,
     address: "ReviewsToDatabase",
-    stats: { rate: 567, total: 56789, latency: 13 },
+    stats: {
+      throughput: 567,
+      protocol: "HTTP",
+      latency: "14ms",
+      utilization: 0.5,
+      security: "None"
+    },
     description: "Connects Reviews to DB"
   },
   {
     source: 1,
     target: 4,
     address: "InfoToDatabase",
-    stats: { rate: 678, total: 67890, latency: 14 },
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
     description: "Connects Info to DB"
   }
 ];
@@ -460,6 +496,7 @@ export const adjustPositions = ({
       if (l.source === nodeIndex) {
         nodes.nodes[l.target].column = n.column + 1;
         nodes.nodes[l.source].targets.push(nodes.nodes[l.target]);
+        nodes.nodes[l.target].sources.push(nodes.nodes[l.source]);
         maxColumn = Math.max(maxColumn, nodes.nodes[l.target].column);
       }
     });
