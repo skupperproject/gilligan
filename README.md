@@ -22,6 +22,7 @@ git clone https://github.com/skupperproject/skipper.git
 
 In the skipper directory:
 
+> `$yarn install`
 > `$yarn start`
 
 Yarn will compile the code and start a browser pointing to localhost:3000.
