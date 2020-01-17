@@ -1282,3 +1282,8 @@ circle.end-point.source {
 .graph-toolbar {
   border-bottom: 1px solid #cccccc;
 }
+
+a.selected.pf-c-dropdown__menu-item {
+  background-color: #0066cc;
+  color: white;
+}

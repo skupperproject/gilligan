@@ -22,7 +22,7 @@ import TooltipTable from "../tooltipTable";
 
 var React = require("react");
 
-class Link {
+export class Link {
   constructor(source, target, dir, cls, uid) {
     this.source = source;
     this.target = target;
@@ -74,7 +74,7 @@ class Link {
       this.target.orgy +
       (this.target.y - this.target.orgy) * t +
       this.target.parentNode.y * (1 - t);
-    const sxoff = 130;
+    const sxoff = Math.max(this.source.width(), 130);
     const syoff = 20;
     const txoff = 0;
     const tyoff = 20;

@@ -42,7 +42,7 @@ class TopologyPage extends Component {
           traffic: false,
           utilization: false
         },
-        link: { stat: "protocol" }
+        link: { stat: "" }
       }
     };
   }

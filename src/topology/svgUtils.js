@@ -181,10 +181,7 @@ export function addDefs(svg) {
       return [d.sten, d.state, d.r].join("-");
     })
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", function(d) {
-      console.log(d);
-      return Nodes.refX(d.sten, d.r);
-    })
+    .attr("refX", d => Nodes.refX(d.sten, d.r))
     .attr("markerWidth", 14)
     .attr("markerHeight", 14)
     .attr("markerUnits", "userSpaceOnUse")

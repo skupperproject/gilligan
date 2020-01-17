@@ -312,6 +312,60 @@ const serviceTypes = [
     protocol: "TCP",
     cluster: 2,
     namespace: 0
+  },
+  {
+    name: "TaxPrep",
+    protocol: "TCP",
+    cluster: 3,
+    namespace: 0
+  },
+  {
+    name: "Calc",
+    protocol: "TCP",
+    cluster: 4,
+    namespace: 0
+  },
+  {
+    name: "Multiply",
+    protocol: "TCP",
+    cluster: 5,
+    namespace: 0
+  },
+  {
+    name: "Divide",
+    protocol: "TCP",
+    cluster: 6,
+    namespace: 0
+  },
+  {
+    name: "Add",
+    protocol: "TCP",
+    cluster: 7,
+    namespace: 0
+  },
+  {
+    name: "Subtract",
+    protocol: "TCP",
+    cluster: 7,
+    namespace: 0
+  },
+  {
+    name: "Tax Advice",
+    protocol: "TCP",
+    cluster: 0,
+    namespace: 0
+  },
+  {
+    name: "State Tax Rules",
+    protocol: "TCP",
+    cluster: 2,
+    namespace: 0
+  },
+  {
+    name: "This is the Homework Helper Service",
+    protocol: "HTTP",
+    cluster: 0,
+    namespace: 0
   }
 ];
 const clusters = [
@@ -335,6 +389,41 @@ const clusters = [
     zone: "US-West",
     provider: "AWS",
     namespaces: ["mongo"]
+  },
+  {
+    name: "Extra 1",
+    location: "Canton",
+    zone: "US-Midwest",
+    provider: "Ministack",
+    namespaces: ["myproject"]
+  },
+  {
+    name: "Extra 2",
+    location: "Knox",
+    zone: "US-Midwest",
+    provider: "Ministack",
+    namespaces: ["myproject"]
+  },
+  {
+    name: "Extra 3",
+    location: "Plymouth",
+    zone: "US-Midwest",
+    provider: "Ministack",
+    namespaces: ["myproject"]
+  },
+  {
+    name: "Extra 4",
+    location: "Ann Arbor",
+    zone: "US-Midwest",
+    provider: "Ministack",
+    namespaces: ["myproject"]
+  },
+  {
+    name: "Extra 5",
+    location: "Manchester",
+    zone: "US-Midwest",
+    provider: "Ministack",
+    namespaces: ["myproject"]
   }
 ];
 
@@ -416,6 +505,110 @@ const serviceInstances = [
       security: "None"
     },
     description: "Connects Info to DB"
+  },
+  {
+    source: 11,
+    target: 5,
+    address: "Advice2Prep",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Advice to Prep"
+  },
+  {
+    source: 5,
+    target: 6,
+    address: "Tax2Calc",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Tax to Calc"
+  },
+  {
+    source: 6,
+    target: 7,
+    address: "Calc2Multiply",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Calc to Mult"
+  },
+  {
+    source: 6,
+    target: 8,
+    address: "Calc2Divide",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Calc to Divide"
+  },
+  {
+    source: 6,
+    target: 9,
+    address: "Calc2Add",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Calc to Add"
+  },
+  {
+    source: 6,
+    target: 10,
+    address: "Calc2Sub",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Calc to Sub"
+  },
+  {
+    source: 5,
+    target: 12,
+    address: "Calc2Rules",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Calc to State rules"
+  },
+  {
+    source: 13,
+    target: 6,
+    address: "HomeWork2Calc",
+    stats: {
+      throughput: 678,
+      protocol: "HTTP",
+      latency: "15ms",
+      utilization: 0.5,
+      security: "None"
+    },
+    description: "Connects Homework to Calc"
   }
 ];
 
@@ -465,62 +658,134 @@ export const adjustPositions = ({
   BoxWidth,
   BoxHeight
 }) => {
-  // now that we have the links, set the initial x,y pos of each node
-  // loop through all the links and calculate a score
+  console.log("----------------");
+  console.log(nodes.nodes);
+  console.log(links.links);
+
+  nodes.nodes.forEach(n => {
+    n.sources = [];
+    n.targets = [];
+  });
+
+  // for all the nodes, construct 2 lists: souce nodes, and target nodes
   links.links.forEach(l => {
-    nodes.nodes[l.source].score += 10;
-    nodes.nodes[l.target].score -= 10;
+    nodes.nodes[l.source].targets.push(nodes.nodes[l.target]);
+    nodes.nodes[l.target].sources.push(nodes.nodes[l.source]);
   });
 
-  // get list of nodes that need x,y positions
-  const needOrder = nodes.nodes.filter(n => typeof n.x === "undefined");
-  // order the nodes by score
-  needOrder.sort((a, b) => {
-    if (a.score < b.score) return 1;
-    if (a.score > b.score) return -1;
-    return 0;
-  });
-  // assign column by score
-  let currentColumn = -1;
-  let currentColScore = Number.MAX_SAFE_INTEGER;
-  needOrder.forEach(n => {
-    n.column = n.score < currentColScore ? ++currentColumn : currentColumn;
-    currentColScore = n.score;
-    n.row = 0;
-  });
+  // find node(s) with fewest number of sources
+  let minSources = Number.MAX_SAFE_INTEGER;
+  nodes.nodes.forEach(
+    n => (minSources = Math.min(minSources, n.sources.length))
+  );
+  const parents = nodes.nodes.filter(n => n.sources.length === minSources);
 
-  let maxColumn = 0;
-  // adjust column by target
-  needOrder.forEach((n, nodeIndex) => {
-    links.links.forEach(l => {
-      if (l.source === nodeIndex) {
-        nodes.nodes[l.target].column = n.column + 1;
-        nodes.nodes[l.source].targets.push(nodes.nodes[l.target]);
-        nodes.nodes[l.target].sources.push(nodes.nodes[l.source]);
-        maxColumn = Math.max(maxColumn, nodes.nodes[l.target].column);
+  // put parents in 1st column
+  parents.forEach(n => (n.col = 0));
+
+  let colNodes = parents;
+  while (colNodes.length > 0) {
+    let foundNodes = [];
+    console.log("-- looping through new parent list");
+    console.log(colNodes.map(n => n.name));
+    colNodes.forEach(p => {
+      nodes.nodes.forEach(n => {
+        console.log(`checking if ${n.name} is a target of ${p.name}`);
+        if (p.targets.includes(n)) {
+          console.log(
+            `   yes. ${p.name}.targets includes ${n.name}  so ${
+              n.name
+            }.col = ${p.col + 1}`
+          );
+          n.col = p.col + 1;
+          foundNodes.push(n);
+          console.log(`pushing nextCol node of ${n.name}`);
+        } else {
+          console.log(`   not a target`);
+        }
+      });
+    });
+    colNodes = foundNodes;
+  }
+
+  // adjust parents' cols
+  nodes.nodes
+    .slice()
+    .reverse()
+    .forEach(n => {
+      n.sources.forEach(p => {
+        if (p.sources.length === 0) {
+          p.col = n.col - 1;
+        }
+      });
+    });
+
+  let cols = 0;
+  nodes.nodes.forEach(n => {
+    cols = Math.max(cols, n.col);
+  });
+  cols += 1; // cols are 0 based, so number of cols is last col number + 1
+
+  const minGap = 10;
+  let vheight = height;
+  let vwidth = width;
+
+  const colWidths = [];
+  for (let col = 0; col < cols; col++) {
+    colNodes = nodes.nodes.filter(n => n.col === col);
+    let nodesHeight = 0;
+    colNodes.forEach(n => (nodesHeight += n.height()));
+    const gaps = colNodes.length + 1;
+    let gapHeight = (height - nodesHeight) / gaps;
+    if (gapHeight < minGap) {
+      gapHeight = minGap;
+      vheight = Math.max(vheight, nodesHeight + gapHeight * gaps);
+      // keep aspect ratio the same
+      vwidth = (width * vheight) / height;
+    }
+    let curY = gapHeight;
+    colWidths[col] = 0;
+    colNodes.forEach(n => {
+      colWidths[col] = Math.max(colWidths[col], n.width(BoxWidth));
+      n.y = curY;
+      curY += n.height() + gapHeight;
+    });
+  }
+
+  let nodesWidth = 0;
+  colWidths.forEach(c => {
+    nodesWidth += c;
+  });
+  let hGap = (vwidth - nodesWidth) / (cols + 1);
+  if (hGap < minGap) {
+    hGap = minGap;
+    vwidth = Math.max(vwidth, nodesWidth + hGap * (cols + 1));
+    vheight = (height * vwidth) / width;
+  }
+  let curX = hGap;
+  for (let col = 0; col < cols; col++) {
+    nodes.nodes.forEach(n => {
+      if (n.col === col) {
+        n.x = curX;
       }
     });
-  });
+    curX += colWidths[col] + hGap;
+  }
+  /*
+  console.log(`adjust positions cols ${cols}`);
 
-  let minRow = Number.MAX_SAFE_INTEGER;
-  let maxRow = Number.MIN_SAFE_INTEGER;
-  // adjust row by targets
-  needOrder.forEach(n => {
-    const span = Math.floor(n.targets.length / 2);
-    const mid = n.targets.length / 2;
-    const even = n.targets.length % 2 === 0;
-    n.targets.forEach((t, i) => {
-      t.row = n.row + (i - span) + (even && i >= mid ? 1 : 0);
-      minRow = Math.min(minRow, t.row);
-      maxRow = Math.max(maxRow, t.row);
-    });
+  let leftX = width / (cols + 1) - BoxWidth / 2;
+  if (leftX < minGap) {
+    // make virtual width big enough to contain all nodes
+    vwidth = minGap + (BoxWidth + minGap) * cols;
+    // keep aspect ratio the same
+    vheight = (height * vwidth) / width;
+  }
+  console.log(`vwidth ${vwidth} vheight ${vheight}`);
+  nodes.nodes.forEach((n, i) => {
+    n.x = ((n.col + 1) * vwidth) / (cols + 1) - BoxWidth / 2;
+    console.log(`${i}: n.x ${n.x} n.y ${n.y}`);
   });
-  const leftGap = BoxWidth / 2;
-  const topGap = BoxHeight;
-  const xPerCol = (width - BoxWidth - leftGap) / (maxColumn + 1);
-  const yPerRow = (height - BoxHeight - topGap) / (maxRow - minRow + 1);
-  needOrder.forEach(n => {
-    n.x = leftGap + n.column * xPerCol;
-    n.y = topGap + (n.row - minRow) * yPerRow;
-  });
+  */
+  return { width: vwidth, height: vheight };
 };

@@ -32,19 +32,14 @@ import { Traffic } from "./traffic.js";
 import { separateAddresses } from "../chord/filters.js";
 import { Nodes } from "./nodes.js";
 import { Links } from "./links.js";
-import {
-  nextHop,
-  connectionPopupHTML,
-  getSizes,
-  reality
-} from "./topoUtils.js";
+import { nextHop, connectionPopupHTML, getSizes } from "./topoUtils.js";
 import { utils } from "../amqp/utilities.js";
 //import { Legend } from "./legend.js";
 //import LegendComponent from "./legendComponent";
 import RouterInfoComponent from "./routerInfoComponent";
 import ClientInfoComponent from "./clientInfoComponent";
 import ContextMenuComponent from "../contextMenuComponent";
-import { appendCloud, addGradient, addDefs } from "./svgUtils.js";
+import { addDefs } from "./svgUtils.js";
 import { QDRLogger } from "../qdrGlobals";
 import Graph from "./graph";
 const TOPOOPTIONSKEY = "topoLegendOptions";
@@ -124,7 +119,7 @@ class TopologyPage extends Component {
       }
     ];
     this.view = new Graph();
-    this.currentScale = 1;
+    this.resetScale = 1;
   }
 
   // called only once when the component is initialized
@@ -217,7 +212,6 @@ class TopologyPage extends Component {
 
   // initialize the nodes and links array from the QDRService.topology._nodeInfo object
   init = () => {
-    console.log(`********** init called with ${this.props.type} ***********`);
     let sizes = getSizes(this.topologyRef, this.QDRLog);
     this.width = sizes[0];
     this.height = sizes[1];
@@ -232,7 +226,7 @@ class TopologyPage extends Component {
 
     this.zoom = d3.behavior
       .zoom()
-      .scaleExtent([1, 8])
+      .scaleExtent([0.25, 4])
       .on("zoom", this.zoomed);
 
     d3.select("#SVG_ID").remove();
@@ -246,12 +240,12 @@ class TopologyPage extends Component {
         .attr("id", "SVG_ID")
         .attr("width", this.width)
         .attr("height", this.height)
-        .append("g")
         .call(this.zoom)
+        .append("g")
+        .append("g")
         .on("click", this.clearPopups);
 
       addDefs(this.svg);
-      addGradient(this.svg);
 
       /*
       this.svg.call(zoom).on("mousemove", function() {
@@ -271,6 +265,9 @@ class TopologyPage extends Component {
       .append("svg:g")
       .attr("class", "clusters")
       .selectAll("g.cluster");
+
+    this.services = this.svg.selectAll("g.service-type");
+
     this.path = this.svg
       .append("svg:g")
       .attr("class", "links")
@@ -294,13 +291,16 @@ class TopologyPage extends Component {
     this.mousedown_node = null;
 
     // initialize the list of nodes and links
-    let nodeCount = this.view.initNodesAndLinks(
+    const { nodeCount, size } = this.view.initNodesAndLinks(
       this.forceData.nodes,
       this.forceData.links,
       this.width,
       this.height,
       this.props.serviceTypeName
     );
+    this.resetScale = this.width / size.width;
+    this.zoom.scale(this.resetScale);
+    this.zoomed();
 
     // init D3 force layout
     this.force = d3.layout
@@ -324,6 +324,22 @@ class TopologyPage extends Component {
       });
     this.force.stop();
     this.force.start();
+
+    // don't pan while dragging
+    this.clusterDrag = this.force
+      .drag()
+      .on("drag", d => {
+        if (this.tried) {
+          d.x = d.px;
+          d.y = d.py;
+          this.services.attr("transform", d => {
+            return `translate(${d.x},${d.y})`;
+          });
+        }
+      })
+      .on("dragstart", () => {
+        d3.event.sourceEvent.stopPropagation();
+      });
 
     // app starts here
     this.restart();
@@ -457,7 +473,7 @@ class TopologyPage extends Component {
       .style("stroke-width", "1px");
     svg
       .selectAll("path.link")
-      .attr("opacity", d1 => (d1.uid !== d.uid ? pathOpacity : 1));
+      .attr("opacity", d1 => (d && d1.uid !== d.uid ? pathOpacity : 1));
     svg.selectAll("circle.end-point").attr("opacity", pathOpacity);
     svg.selectAll("rect.end-point").attr("opacity", pathOpacity);
     svg.selectAll("text").attr("font-weight", "normal");
@@ -479,10 +495,6 @@ class TopologyPage extends Component {
           : this.props.options.link.stat === "latency"
           ? "latency"
           : "unknown";
-      if (which === "unknown") {
-        console.log(`options were unknown`);
-        console.log(this.props.options);
-      }
       return d.stats[which];
     });
   };
@@ -506,9 +518,6 @@ class TopologyPage extends Component {
         .transition()
         .duration(250)
         .attr("transform", d1 => {
-          console.log(
-            `translate(${d.X(this.tried)},${d.Y(this.tried)}) scale(1.5)`
-          );
           return `translate(${d.X(this.tried)},${d.Y(this.tried)}) scale(1.5)`;
         });
     } else {
@@ -536,7 +545,13 @@ class TopologyPage extends Component {
   // Also updates any existing svg elements based on the updated values in forceData.nodes
   // and forceData.links
   restart = () => {
-    this.circle.call(this.force.drag);
+    if (this.tried) {
+      this.circle.on("mousedown.drag", null);
+      this.services.call(this.clusterDrag);
+    } else {
+      this.circle.call(this.clusterDrag);
+      this.services.on("mousedown.drag", null);
+    }
 
     // path is a selection of all g elements under the g.links svg:group
     // here we associate the links.links array with the {g.links g} selection
@@ -575,11 +590,11 @@ class TopologyPage extends Component {
       .append("g")
       .on("mouseover", function(d) {
         // mouse over a path
-        let event = d3.event;
         d.selected = true;
         self.highlightConnection(true, d3.select(this), d, self);
         self.popupCancelled = false;
         /*
+        let event = d3.event;
         d.toolTip().then(toolTip => {
           this.showToolTip(toolTip, event);
         });
@@ -693,6 +708,18 @@ class TopologyPage extends Component {
         }
       );
 
+    this.services = d3.selectAll("g.service-type");
+
+    let self = this;
+    let enterShadow = this.circle
+      .enter()
+      .append("g")
+      .attr("class", "shadow")
+      .attr("id", d => `shadow-${d.index}`);
+    // for each node in the data, add sub elements like circles, rects, text
+    //appendCircle(enterCircle, this.props.type, this.svg)
+    this.view.createGraph(enterShadow, null, true);
+
     // add new circle nodes
     // add an svg:g with class "cluster" for each node in the data
     let enterCircle = this.circle
@@ -700,21 +727,15 @@ class TopologyPage extends Component {
       .append("g")
       .attr("class", "cluster")
       .attr("id", function(d) {
-        return (d.nodeType !== "normal" ? "router" : "client") + "-" + d.index;
+        return (d.nodeType !== "normal" ? "cluster" : "client") + "-" + d.index;
       });
-    let self = this;
     // for each node in the data, add sub elements like circles, rects, text
     //appendCircle(enterCircle, this.props.type, this.svg)
     this.view
-      .createGraph(
-        enterCircle,
-        this.forceData.nodes.nodes,
-        this.forceData.links.links
-      )
+      .createGraph(enterCircle, this.forceData.links.links, false)
       .on("mouseover", function(d) {
         // mouseover a namespace box
         self.current_node = d;
-        console.log(`moused over namespace ${d.name}`);
         // highlight the namespace box
         self.highlightNamespace(true, d3.select(this), d, self);
         /*
@@ -820,43 +841,17 @@ class TopologyPage extends Component {
         }
         d3.event.stopPropagation();
       });
+
     d3.selectAll("g.service-type")
-      .on("mousedown", d => {
-        d.dragpos = [d3.event.pageX, d3.event.pageY];
-        d.dragxy = [d.x, d.y];
-        if (this.tried) {
-          d3.event.stopPropagation();
-        }
-      })
-      .on("mousemove", function(d) {
-        if (self.tried && d.dragpos) {
-          d.x = d.dragxy[0] + d3.event.pageX - d.dragpos[0];
-          d.y = d.dragxy[1] + d3.event.pageY - d.dragpos[1];
-          d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
-          self.drawPath(1);
-          d3.event.stopPropagation();
-        }
-      })
       .on("mouseover", function(d) {
         // highlight this service-type and it's connected service-types
         self.highlightServiceType(true, d3.select(this), d, self);
         d3.event.stopPropagation();
       })
-      .on("mouseup", function(d) {
-        if (d.dragpos) {
-          // they clicked without moving the mouse
-          if (
-            d3.event.pageX === d.dragpos[0] &&
-            d3.event.pageY === d.dragpos[1]
-          ) {
-            self.mousedown_node = null;
-            self.expandNode(d, d3.select(this));
-          }
-          d.dragpos = undefined;
-        }
+      .on("mouseout", function(d) {
+        self.highlightServiceType(false, d3.select(this), d, self);
+        d3.event.stopPropagation();
       });
-
-    //appendContent(enterCircle);
 
     this.circle.classed("highlighted", d => d.highlighted);
     // remove old nodes
@@ -890,13 +885,6 @@ class TopologyPage extends Component {
       }
       return `translate(${d.x},${d.y})`;
     });
-
-    if (this.tried) {
-      d3.selectAll("g.service-type").attr("transform", d => {
-        return `translate(${d.x},${d.y})`;
-      });
-    }
-
     // draw lines between services
     const t = this.tried ? 1 : 0;
     this.drawPath(t);
@@ -1151,21 +1139,35 @@ class TopologyPage extends Component {
   };
 
   toApplication = () => {
+    // Note: all the transitions happen concurrently
     this.tried = true;
 
-    d3.selectAll(".cluster-rects")
-      .transition()
-      .duration(1000)
-      .attr("opacity", 0)
-      .transition()
-      .duration(0)
-      .style("display", "none");
+    // show the shadow rects and then fade them out
+    this.forceData.nodes.nodes.forEach(d => {
+      d3.select(`#shadow-${d.index}`)
+        .attr("transform", `translate(${d.x},${d.y})`)
+        .select(".shadow-rects")
+        .attr("opacity", 1)
+        .style("display", "block")
+        .transition()
+        .duration(1000)
+        .attr("opacity", 0)
+        .each("end", function() {
+          d3.select(this).style("display", "none");
+        });
+    });
 
+    // hide the real cluster rects
+    d3.selectAll(".cluster-rects").style("display", "none");
+
+    // make the cluster container start at the left of the svg
+    // in order to move the services to their correct locations
     d3.selectAll(".cluster")
       .transition()
       .duration(1000)
       .attr("transform", "translate(0,0)");
 
+    // move the service rects to their full-page locations
     d3.selectAll("g.service-type")
       .transition()
       .duration(1000)
@@ -1174,18 +1176,38 @@ class TopologyPage extends Component {
 
   toNamespace = () => {
     this.tried = false;
-    d3.selectAll(".cluster-rects").style("display", "block");
 
-    d3.selectAll(".cluster-rects")
-      .transition()
-      .duration(1000)
-      .attr("opacity", 1);
+    // fade in the shadow rects and then hide them
+    this.forceData.nodes.nodes.forEach(d => {
+      d3.select(`#shadow-${d.index}`)
+        .select(".shadow-rects")
+        .style("display", "block")
+        .attr("opacity", 0)
+        .transition()
+        .duration(1000)
+        .attr("opacity", 1)
+        .each("end", function() {
+          d3.select(this)
+            .attr("opacity", 0)
+            .style("display", "none");
+        });
+    });
 
+    // while the above is happening, transition the containers to their proper position
     d3.selectAll(".cluster")
       .transition()
       .duration(1000)
-      .attr("transform", d => `translate(${d.x},${d.y})`);
+      .attr("transform", d => `translate(${d.x},${d.y})`)
+      .each("end", function() {
+        d3.select(this)
+          .style("display", "block")
+          .attr("opacity", 1)
+          .select(".cluster-rects")
+          .attr("opacity", 1)
+          .style("display", "block");
+      });
 
+    // and also move the service rects to their proper position within the container
     d3.selectAll("g.service-type")
       .transition()
       .duration(1000)
@@ -1202,22 +1224,20 @@ class TopologyPage extends Component {
     this.setState({ showLegend: false });
   };
 
-  scaleSVG = () => {
-    this.svg.attr("transform", `scale(${this.currentScale})`);
-  };
   zoomInCallback = () => {
-    this.currentScale += 0.1;
-    this.scaleSVG();
+    this.zoom.scale(this.zoom.scale() * 1.1);
+    this.zoomed();
   };
 
   zoomOutCallback = () => {
-    this.currentScale -= 0.1;
-    this.scaleSVG();
+    this.zoom.scale(this.zoom.scale() * 0.9);
+    this.zoomed();
   };
 
   resetViewCallback = () => {
-    this.currentScale = 1;
-    this.scaleSVG();
+    this.zoom.scale(this.resetScale);
+    this.zoom.translate([0, 0]);
+    this.zoomed();
   };
 
   render() {

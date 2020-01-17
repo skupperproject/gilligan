@@ -18,59 +18,55 @@ under the License.
 */
 
 import { clusterColor, darkerColor } from "./clusterColors";
-import { reality, getPosition, adjustPositions } from "./topoUtils";
+import { reality, adjustPositions } from "./topoUtils";
 import { utils } from "../amqp/utilities";
 import { Node } from "./nodes";
+import { Link } from "./links";
 
-const BoxWidth = 180;
-const BoxHeight = 180;
-const ServiceWidth = 150;
+const ServiceWidth = 130;
 const ServiceHeight = 40;
+const ServiceGap = 5;
+const ServiceStart = 80;
+const ServiceBottomGap = 15;
+const BoxWidth = ServiceWidth + ServiceGap * 2;
+const BoxHeight = 180;
 
 class Graph {
   initNodesAndLinks = (nodes, links, width, height, typeName) => {
     nodes.reset();
     links.reset();
     this.initNodes(nodes, width, height);
-    this.initLinks(nodes, links, width, height);
-    console.log(nodes);
-    console.log(links);
+    const vsize = this.initLinks(nodes, links, width, height);
     nodes.savePositions();
-    return nodes.nodes.length;
+    return { nodeCount: nodes.nodes.length, size: vsize };
   };
 
+  clusterHeight = n => {
+    return Math.max(
+      BoxHeight,
+      ServiceStart +
+        n.properties.subNodes.length * (ServiceHeight + ServiceGap) +
+        ServiceBottomGap
+    );
+  };
   initNodes = (nodes, width, height) => {
     const clusters = reality.clusters;
-    let yInit = 0;
     clusters.forEach((cluster, clusterIndex) => {
       const id = utils.idFromName(cluster.location, "_topo");
       const name = cluster.location;
-      let { position, newyInit, found } = getPosition(
-        name,
-        width,
-        height,
-        localStorage,
-        nodes.length,
-        clusters.length,
-        yInit,
-        false
-      );
-      if (!found) {
-        position = { x: width / 2, y: height / 2, fixed: true };
-      }
 
-      yInit = newyInit;
       const clusterNode = nodes.addUsing(
         id,
         name,
         "_topo",
         nodes.length,
-        position.x,
-        position.y,
+        undefined,
+        undefined,
         name,
         undefined,
         true,
-        { subNodes: [], cluster }
+        { subNodes: [], cluster },
+        this.clusterHeight
       );
       clusterNode.dataType = "cluster";
       reality.serviceTypes.forEach(st => {
@@ -82,21 +78,21 @@ class Graph {
             {},
             clusterNode.name,
             20,
-            90 + clusterNode.properties.subNodes.length * 45,
+            ServiceStart +
+              clusterNode.properties.subNodes.length *
+                (ServiceHeight + ServiceGap),
             clusterNode.properties.subNodes.length,
             0,
             true,
-            clusterNode.name
+            clusterNode.name,
+            () => ServiceHeight
           );
           subNode.orgx = subNode.x;
           subNode.orgy = subNode.y;
-          subNode.x = undefined;
-          subNode.y = undefined;
+          subNode.index = clusterNode.properties.subNodes.length;
+          subNode.gap = 0;
           clusterNode.properties.subNodes.push(subNode);
           subNode.parentNode = clusterNode;
-          console.log(
-            `creating node with key ${subNode.key} x ${subNode.x} y ${subNode.y}`
-          );
         }
       });
     });
@@ -104,6 +100,41 @@ class Graph {
 
   // create a link between services
   initLinks = (nodes, links, width, height) => {
+    // links between clusters
+    const clusterLinks = [];
+    reality.serviceInstances.forEach(si => {
+      const sourceCluster = reality.serviceTypes[si.source].cluster;
+      const targetCluster = reality.serviceTypes[si.target].cluster;
+      if (sourceCluster !== targetCluster) {
+        if (
+          !clusterLinks.some(
+            cl =>
+              (cl.source === sourceCluster && cl.target === targetCluster) ||
+              (cl.target === sourceCluster && cl.source === targetCluster)
+          )
+        ) {
+          clusterLinks.push(
+            new Link(
+              sourceCluster,
+              targetCluster,
+              "both",
+              "cluster",
+              `Link-${sourceCluster}-${targetCluster}`
+            )
+          );
+        }
+      }
+    });
+    const vsize = adjustPositions({
+      nodes,
+      links: { links: clusterLinks },
+      width,
+      height,
+      BoxWidth,
+      BoxHeight,
+      topGap: BoxHeight / 2
+    });
+
     const subNodes = [];
     const subLinks = [];
     reality.serviceInstances.forEach(si => {
@@ -140,47 +171,41 @@ class Graph {
       });
       links.links[links.links.length - 1].stats = si.stats;
     });
-
-    adjustPositions({
+    return adjustPositions({
       nodes: { nodes: subNodes },
       links: { links: subLinks },
-      width,
-      height,
+      width: vsize.width,
+      height: vsize.height,
       BoxWidth: ServiceWidth,
-      BoxHeight: ServiceHeight
+      BoxHeight: ServiceHeight,
+      topGap: ServiceHeight
     });
   };
 
-  createGraph = (g, nodes, links) => {
-    // add new rects and set their attr/class/behavior
+  createRects = (g, shadow) => {
     const rects = g
       .append("svg:g")
-      .attr("class", "cluster-rects")
-      .attr("opacity", 1);
+      .attr("class", `${shadow ? "shadow" : "cluster"}-rects`)
+      .attr("opacity", shadow ? 0 : 1);
 
     rects
       .append("svg:rect")
       .attr("class", "network")
-      .attr("width", BoxWidth)
-      .attr("height", (d, i) => {
-        return Math.max(BoxHeight, 90 + d.properties.subNodes.length * 45);
-      })
+      .attr("width", d => d.width(BoxWidth))
+      .attr("height", d => this.clusterHeight(d))
       .attr("style", d => `fill: ${clusterColor(d.index)}`);
 
     rects
       .append("svg:rect")
       .attr("class", "cluster-header")
-      .attr("width", BoxWidth)
+      .attr("width", d => d.width(BoxWidth))
       .attr("height", 30)
       .attr("style", d => `fill: ${darkerColor(d.index)}`);
 
     rects
       .append("svg:text")
       .attr("class", "cluster-name")
-      .attr("x", d => {
-        d.sxpos = BoxWidth - 40;
-        return BoxWidth / 2;
-      })
+      .attr("x", d => d.width(BoxWidth) / 2)
       .attr("y", d => (d.ypos = 15))
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
@@ -189,7 +214,7 @@ class Graph {
     rects
       .append("svg:text")
       .attr("class", "location")
-      .attr("x", BoxWidth / 2)
+      .attr("x", d => d.width(BoxWidth) / 2)
       .attr("y", 50)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
@@ -198,29 +223,35 @@ class Graph {
         d => `fill: ${darkerColor(d.index)}; stroke: ${darkerColor(d.index)}`
       )
       .text(d => d.properties.cluster.name);
+  };
 
-    let serviceTypes = g
-      .selectAll("g.service-type")
-      .data(
-        d => d.properties.subNodes || [],
-        d => `${d.parentNode.uuid}-${d.id}`
-      );
+  createGraph = (g, links, shadow) => {
+    // add new rects and set their attr/class/behavior
 
-    this.appendServices(serviceTypes, links);
+    this.createRects(g, shadow);
+
+    if (!shadow) {
+      let serviceTypes = g
+        .selectAll("g.service-type")
+        .data(
+          d => d.properties.subNodes || [],
+          d => `${d.parentNode.uuid}-${d.id}`
+        );
+
+      this.appendServices(serviceTypes, links);
+    }
     return g;
   };
 
-  appendServices = (serviceTypes, links, parent) => {
+  appendServices = (serviceTypes, links) => {
     serviceTypes.exit().remove();
     const serviceTypesEnter = serviceTypes
       .enter()
       .append("svg:g")
       .attr("class", "service-type")
       .attr("transform", (d, i) => {
-        const xoff = parent ? d.parentNode.x : 0;
-        const yoff = parent ? d.parentNode.y : 0;
-        const I = parent ? d.id : i;
-        return `translate(${20 + xoff}, ${yoff + 90 + I * 45})`;
+        return `translate(20, ${ServiceStart +
+          i * (ServiceHeight + ServiceGap)})`;
       });
 
     serviceTypesEnter
@@ -228,17 +259,21 @@ class Graph {
       .attr("class", "service-type")
       .attr("rx", 10)
       .attr("ry", 10)
-      .attr("width", 130)
-      .attr("height", 40);
+      .attr("width", d => Math.max(ServiceWidth, d.width()))
+      .attr("height", ServiceHeight);
 
     serviceTypesEnter
       .append("svg:text")
       .attr("class", "service-type")
-      .attr("x", 65)
+      .attr("x", d => Math.max(ServiceWidth, d.width()) / 2)
       .attr("y", 20)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
-      .text(d => d.name);
+      .text(d =>
+        d.name.length > 15
+          ? d.name.substr(0, 8) + "..." + d.name.substr(d.name.length - 5)
+          : d.name
+      );
 
     // draw circle on right if this serviceType
     // is a source of a link
@@ -249,10 +284,10 @@ class Graph {
       .append("svg:circle")
       .attr("class", "end-point source")
       .attr("r", 6)
-      .attr("cx", 130)
+      .attr("cx", d => Math.max(ServiceWidth, d.width()))
       .attr("cy", 20);
 
-    // draw circle on left if this serviceType
+    // draw diamond on left if this serviceType
     // is a target of a link
     serviceTypesEnter
       .filter(d => {

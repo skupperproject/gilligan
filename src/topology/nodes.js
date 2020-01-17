@@ -19,7 +19,6 @@ under the License.
 
 import * as d3 from "d3";
 import { utils } from "../amqp/utilities.js";
-import { getPosition } from "./topoUtils";
 import TooltipTable from "../tooltipTable";
 
 var React = require("react");
@@ -36,7 +35,8 @@ export class Node {
     nodeIndex,
     resultIndex,
     fixed,
-    connectionContainer
+    connectionContainer,
+    heightFn
   ) {
     this.key = id; // the router uri for this node (or group of clients) like: amqp:/_topo/0/<router id>/$management
     this.name = name; // the router id portion of the key
@@ -57,6 +57,8 @@ export class Node {
     this.sources = [];
     this.links = [];
     this.expanded = false;
+    this.heightFn = heightFn;
+    this.gap = 20;
   }
   title(hide) {
     let x = "";
@@ -136,6 +138,19 @@ export class Node {
   }
   Y(app) {
     return app ? this.y : this.orgy;
+  }
+  height() {
+    return this.heightFn ? this.heightFn(this) : 40;
+  }
+  width(min) {
+    min = min || 130;
+    let width = Math.max(min, Math.min(this.name.length, 15) * 8);
+    if (this.properties && this.properties.subNodes) {
+      this.properties.subNodes.forEach(n => {
+        width = Math.max(width, this.gap * 2 + n.width());
+      });
+    }
+    return width;
   }
 }
 const nodeProperties = {
@@ -372,7 +387,8 @@ export class Nodes {
     connectionContainer,
     resultIndex,
     fixed,
-    properties
+    properties,
+    heightFn
   ) {
     properties = properties || {};
     let gotNode = this.find(connectionContainer, properties, name);
@@ -399,7 +415,8 @@ export class Nodes {
       nodeIndex,
       resultIndex,
       fixed,
-      connectionContainer
+      connectionContainer,
+      heightFn
     );
   }
   add(obj) {
@@ -416,7 +433,8 @@ export class Nodes {
     connectContainer,
     resultIndex,
     fixed,
-    properties
+    properties,
+    heightFn
   ) {
     let obj = this.getOrCreateNode(
       id,
@@ -428,7 +446,8 @@ export class Nodes {
       connectContainer,
       resultIndex,
       fixed,
-      properties
+      properties,
+      heightFn
     );
     return this.add(obj);
   }
@@ -436,117 +455,5 @@ export class Nodes {
     for (let i = 0; i < this.nodes.length; ++i) {
       this.nodes[i].highlighted = false;
     }
-  }
-
-  addClusters = (clusters, width, height, yInit, animate, type, extra) => {
-    clusters.forEach(cluster => {
-      const id = utils.idFromName(cluster.location, "_topo");
-      const name = cluster.location;
-      const metaData = { cluster, extra: JSON.parse(JSON.stringify(extra)) };
-      let { position, newyInit, newanimate } = getPosition(
-        name,
-        width,
-        height,
-        localStorage,
-        this.nodes.length,
-        clusters.length,
-        yInit,
-        animate
-      );
-      yInit = newyInit;
-      animate = newanimate;
-      this.addUsing(
-        id,
-        name,
-        "_topo",
-        this.nodes.length,
-        position.x,
-        position.y,
-        name,
-        undefined,
-        position.fixed,
-        metaData
-      ).dataType = type;
-    });
-  };
-  initialize(reality, width, height, localStorage, type, extra) {
-    let yInit = 50;
-    let animate = false;
-    // for "network", nodes are the clusters
-    if (type === "network" || type === "reality") {
-      const clusters = reality.clusters;
-      this.addClusters(clusters, width, height, yInit, animate, type, extra);
-
-      if (type === "reality") {
-        reality.applications.forEach(application => {
-          const id = utils.idFromName(application.name, "_topo");
-          this.addUsing(
-            id,
-            application.name,
-            "cloud",
-            this.nodes.length,
-            0,
-            0,
-            application.name,
-            undefined,
-            false,
-            { application }
-          ).dataType = type;
-        });
-      }
-    }
-    // for "application", nodes are service types
-    if (type === "application") {
-      const serviceTypes = {};
-      extra.connections.forEach(connection => {
-        const serviceTypeName = connection.serviceInstance.serviceType.name;
-        serviceTypes[serviceTypeName] = connection.serviceInstance.serviceType;
-      });
-      for (const serviceTypeName in serviceTypes) {
-        const id = utils.idFromName(serviceTypeName, "_topo");
-        const metaData = serviceTypes[serviceTypeName].addresses;
-        let { position, newyInit, newanimate } = getPosition(
-          serviceTypeName,
-          width,
-          height,
-          localStorage,
-          Object.keys(serviceTypes).length,
-          yInit,
-          animate
-        );
-        yInit = newyInit;
-        animate = newanimate;
-        this.addUsing(
-          id,
-          serviceTypeName,
-          "_topo",
-          this.nodes.length,
-          position.x,
-          position.y,
-          serviceTypeName,
-          undefined,
-          position.fixed,
-          metaData
-        ).dataType = type;
-      }
-    }
-    if (type === "service") {
-      const serviceTypeName = extra.name;
-      // add a cluster if it contains extra.serviceType
-      const clusters = [];
-      reality.serviceInstances.forEach(serviceInstance => {
-        if (serviceInstance.serviceType.name === serviceTypeName) {
-          if (
-            !clusters.find(
-              cluster => cluster.name === serviceInstance.cluster.name
-            )
-          ) {
-            clusters.push(serviceInstance.cluster);
-          }
-        }
-      });
-      this.addClusters(clusters, width, height, yInit, animate, type, extra);
-    }
-    return animate;
   }
 }
