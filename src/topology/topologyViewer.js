@@ -143,15 +143,6 @@ class TopologyPage extends Component {
     });
   };
 
-  componentDidUpdate = nextProps => {
-    if (nextProps.serviceTypeName !== this.props.serviceTypeName) {
-      console.log(
-        `componentDidUpdate serviceTypeName changed to ${this.props.serviceTypeName} from ${nextProps.serviceTypeName}. calling init`
-      );
-      this.init();
-    }
-  };
-
   componentWillUnmount = () => {
     this.props.service.management.topology.setUpdateEntities([]);
     this.props.service.management.topology.stopUpdating();
@@ -230,9 +221,6 @@ class TopologyPage extends Component {
       .on("zoom", this.zoomed);
 
     d3.select("#SVG_ID").remove();
-    //d3.select("#SVG_ID .links").remove();
-    //d3.select("#SVG_ID .nodes").remove();
-    //d3.select("#SVG_ID circle.flow").remove();
     if (d3.select("#SVG_ID").empty()) {
       this.svg = d3
         .select("#topology")
@@ -243,6 +231,7 @@ class TopologyPage extends Component {
         .call(this.zoom)
         .append("g")
         .append("g")
+        .attr("class", "zoom")
         .on("click", this.clearPopups);
 
       addDefs(this.svg);
@@ -514,11 +503,17 @@ class TopologyPage extends Component {
         .duration(250)
         .attr("height", 70);
 
+      const mouse = d3.mouse(this.svg.node());
+      mouse[0] = -mouse[0];
+      mouse[1] = -mouse[1];
       this.svg
         .transition()
         .duration(250)
-        .attr("transform", d1 => {
-          return `translate(${d.X(this.tried)},${d.Y(this.tried)}) scale(1.5)`;
+        .attr("transform", `translate(${mouse}) scale(2)`)
+        .each("end", () => {
+          this.zoom.scale(2);
+          this.zoom.translate(mouse);
+          this.zoomed();
         });
     } else {
       d.expanded = false;
@@ -533,11 +528,6 @@ class TopologyPage extends Component {
         .transition()
         .duration(250)
         .attr("height", 40);
-
-      this.svg
-        .transition()
-        .duration(250)
-        .attr("transform", "scale(1) translate(0,0)");
     }
   };
 
@@ -797,12 +787,6 @@ class TopologyPage extends Component {
 
         self.clearAllHighlights();
         self.mousedown_node = null;
-        // handle clicking on nodes that represent multiple sub-nodes
-        if (d.normals && !d.isArtemis && !d.isQpid) {
-          self.doDialog(d, "client");
-        } else if (d.nodeType === "_topo") {
-          self.doDialog(d, "router");
-        }
         // apply any data changes to the interface
         self.restart();
       })
@@ -825,20 +809,8 @@ class TopologyPage extends Component {
       })
       .on("click", d => {
         // circle
-        if (!this.mouseup_node) return;
-        // clicked on a circle
         this.clearPopups();
-        // circle was a broker
-        if (utils.isArtemis(d)) {
-          const host = d.container === "0.0.0.0" ? "localhost" : d.container;
-          const artemis = `${window.location.protocol()}://${host}:8161/console`;
-          window.open(
-            artemis,
-            "artemis",
-            "fullscreen=yes, toolbar=yes,location = yes, directories = yes, status = yes, menubar = yes, scrollbars = yes, copyhistory = yes, resizable = yes"
-          );
-          return;
-        }
+        self.doDialog(d, "router");
         d3.event.stopPropagation();
       });
 
@@ -851,6 +823,12 @@ class TopologyPage extends Component {
       .on("mouseout", function(d) {
         self.highlightServiceType(false, d3.select(this), d, self);
         d3.event.stopPropagation();
+      })
+      .on("click", function(d) {
+        if (d3.event.defaultPrevented) return; // click suppressed
+        self.expandNode(d, d3.select(this));
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
       });
 
     this.circle.classed("highlighted", d => d.highlighted);
