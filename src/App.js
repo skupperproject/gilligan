@@ -1,8 +1,11 @@
 import React, { Component } from "react";
+import { HashRouter as Router, Route } from "react-router-dom";
 import "@patternfly/patternfly/patternfly.css";
 import "@patternfly/patternfly/patternfly-addons.css";
 
 import "patternfly/dist/css/patternfly.css";
+import "patternfly/dist/css/patternfly-additions.css";
+
 import "@patternfly/patternfly/components/Nav/nav.css";
 import "./App.css";
 import PageLayout from "./layout";
@@ -12,9 +15,11 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <PageLayout />
-      </div>
+      <Router>
+        <div className="App pf-m-redhat-font">
+          <Route path="/" render={props => <PageLayout {...props} />} />
+        </div>
+      </Router>
     );
   }
 }

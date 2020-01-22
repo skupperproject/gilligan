@@ -242,6 +242,15 @@ function addStyles(stend, stateColor, radii) {
     }
   }
 }
+
+export function scaledMouse(node, event) {
+  const rect = node.getBoundingClientRect();
+  return [
+    event.clientX - rect.left - node.clientLeft,
+    event.clientY - rect.top - node.clientTop
+  ];
+}
+
 /*
 export function getData(type, service) {
   let nodeInfo = {};
@@ -283,7 +292,7 @@ export function getData(type, service) {
     serviceTypes.forEach((st, stIndex) => {
       const results = [];
       application.connections.forEach(conn => {
-        if (serviceInstances[conn.serviceInstance].serviceType === stIndex) {
+        if (serviceConnections[conn.serviceInstance].serviceType === stIndex) {
           conn.addresses.forEach(address => {
             results.push([
               st.addresses[address],

@@ -30,44 +30,35 @@ class ConnectForm extends React.Component {
     super(props);
 
     this.state = {
-      value: "please choose",
-      value1: "",
-      value2: "",
-      value3: "",
-      value4: ""
-    };
-    this.handleTextInputChange1 = value1 => {
-      this.setState({ value1 });
-    };
-    this.handleTextInputChange2 = value2 => {
-      this.setState({ value2 });
-    };
-    this.handleTextInputChange3 = value3 => {
-      this.setState({ value3 });
-    };
-    this.handleTextInputChange4 = value4 => {
-      this.setState({ value4 });
+      address: "localhost",
+      port: "5673",
+      username: "",
+      password: ""
     };
   }
 
-  handleConnect = () => {
-    //this.toggleDrawerHide();
+  handleTextInputChange = (value, event) => {
+    const newState = {};
+    newState[event.target.name] = value;
+    this.setState(newState);
+  };
 
+  handleConnect = () => {
     if (this.props.isConnected) {
       console.log("disconnecting");
       this.props.service.disconnect();
       this.props.handleConnect(this.props.fromPath, false);
     } else {
-      this.props.service
-        .connect({ address: "localhost", port: 5673, reconnect: true })
-        .then(
-          r => {
-            this.props.handleConnect(this.props.fromPath, true);
-          },
-          e => {
-            console.log(e);
-          }
-        );
+      const options = JSON.parse(JSON.stringify(this.state));
+      options.reconnect = true;
+      this.props.service.connect(options).then(
+        r => {
+          this.props.handleConnect(this.props.fromPath, true);
+        },
+        e => {
+          console.log(e);
+        }
+      );
     }
   };
 
@@ -76,7 +67,7 @@ class ConnectForm extends React.Component {
   };
 
   render() {
-    const { value1, value2, value3, value4 } = this.state;
+    const { address, port, username, password } = this.state;
 
     return (
       <div>
@@ -96,13 +87,13 @@ class ConnectForm extends React.Component {
                 fieldId={`form-address-${this.props.prefix}`}
               >
                 <TextInput
-                  value={value1}
+                  value={address}
                   isRequired
                   type="text"
                   id={`form-address-${this.props.prefix}`}
                   aria-describedby="horizontal-form-address-helper"
-                  name="form-address"
-                  onChange={this.handleTextInputChange1}
+                  name="address"
+                  onChange={this.handleTextInputChange}
                 />
               </FormGroup>
               <FormGroup
@@ -111,12 +102,12 @@ class ConnectForm extends React.Component {
                 fieldId={`form-port-${this.props.prefix}`}
               >
                 <TextInput
-                  value={value2}
-                  onChange={this.handleTextInputChange2}
+                  value={port}
+                  onChange={this.handleTextInputChange}
                   isRequired
                   type="number"
                   id={`form-port-${this.props.prefix}`}
-                  name="form-port"
+                  name="port"
                 />
               </FormGroup>
               <FormGroup
@@ -124,11 +115,11 @@ class ConnectForm extends React.Component {
                 fieldId={`form-user-${this.props.prefix}`}
               >
                 <TextInput
-                  value={value3}
-                  onChange={this.handleTextInputChange3}
+                  value={username}
+                  onChange={this.handleTextInputChange}
                   isRequired
                   id={`form-user-${this.props.prefix}`}
-                  name="form-user"
+                  name="username"
                 />
               </FormGroup>
               <FormGroup
@@ -136,11 +127,11 @@ class ConnectForm extends React.Component {
                 fieldId={`form-password-${this.props.prefix}`}
               >
                 <TextInput
-                  value={value4}
-                  onChange={this.handleTextInputChange4}
+                  value={password}
+                  onChange={this.handleTextInputChange}
                   type="password"
                   id={`form-password-${this.props.prefix}`}
-                  name="form-password"
+                  name="password"
                 />
               </FormGroup>
               <ActionGroup>

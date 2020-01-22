@@ -38,10 +38,10 @@ import {
 } from "@patternfly/react-core";
 
 import {
-  BrowserRouter as Router,
-  Link,
+  HashRouter as Router,
   Switch,
   Route,
+  Link,
   Redirect
 } from "react-router-dom";
 
@@ -50,7 +50,6 @@ import { css } from "@patternfly/react-styles";
 import { BellIcon, PowerOffIcon } from "@patternfly/react-icons";
 import ConnectPage from "./connectPage";
 import TopologyPage from "./topology/topologyPage";
-import AddressPage from "./chord/addressView";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
 const avatarImg = require("./assets/img_avatar.svg");
@@ -87,23 +86,27 @@ class PageLayout extends React.Component {
     });
   };
 
-  handleConnect = (connectPath, connected) => {
-    if (!connected) {
-      this.setState({
-        connected: false
+  handleConnect = connectPath => {
+    if (this.state.connected) {
+      this.setState({ connected: false }, () => {
+        this.handleConnectCancel();
+        this.service.disconnect();
       });
     } else {
       if (
         connectPath === undefined ||
-        connectPath === "/login" ||
-        connectPath === "/"
+        connectPath === "/" ||
+        connectPath === "/login"
       )
-        connectPath = "/network";
+        connectPath = "/graph";
+      const activeItem = connectPath.split("/").pop();
+      this.props.history.replace(connectPath);
       this.setState({
-        connected: true,
-        connectPath,
         username: "Alan Hale Jr.",
-        activeItem: connectPath.slice(1)
+        activeItem,
+        connectPath,
+        connected: true,
+        isConnectFormOpen: false
       });
     }
   };
@@ -292,13 +295,8 @@ class PageLayout extends React.Component {
         >
           {connectForm()}
           <Switch>
-            <PrivateRoute
-              path="/"
-              exact
-              type="graph"
-              component={TopologyPage}
-            />
-            <PrivateRoute path="/graph" type="graph" component={TopologyPage} />
+            <PrivateRoute path="/" exact component={TopologyPage} />
+            <PrivateRoute path="/graph" component={TopologyPage} />
             <Route
               path="/login"
               render={props => (

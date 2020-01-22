@@ -692,7 +692,7 @@ path.empty {
   font-size: 14px;
 }
 
-#popover-div {
+#_popover-div {
   position: absolute;
   z-index: 200;
   border-radius: 4px;

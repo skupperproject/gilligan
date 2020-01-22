@@ -41,7 +41,7 @@ class AddressPage extends Component {
       height: 0,
       data: null,
       lastUpdated: new Date(),
-      addressName: reality.serviceInstances[0].address
+      addressName: reality.serviceConnections[0].address
     };
   }
 
@@ -60,7 +60,7 @@ class AddressPage extends Component {
 
     const graph = {
       nodes: reality.serviceTypes.map((st, i) => ({ node: i, name: st.name })),
-      links: reality.serviceInstances.map((si, i) => ({
+      links: reality.serviceConnections.map((si, i) => ({
         source: si.source,
         target: si.target,
         value: si.stats.total,

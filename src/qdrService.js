@@ -19,6 +19,7 @@ Licensed to the Apache Software Foundation (ASF) under one
 
 import { Management as dm } from "./amqp/management.js";
 import { utils } from "./amqp/utilities.js";
+import RESTService from "./restService";
 
 import { QDR_LAST_LOCATION } from "./qdrGlobals.js";
 
@@ -51,17 +52,12 @@ export class QDRService {
             "disconnected",
             self.onDisconnect.bind(self)
           );
-
-          self.management.getSchema().then(schema => {
-            //console.log("got schema after connection");
-            //console.log(schema);
-            self.management.topology.setUpdateEntities([]);
-            //console.log("requesting a topology");
-            self.management.topology
-              .get() // gets the list of routers
-              .then(t => {
-                resolve(r);
-              });
+          const rs = new RESTService();
+          rs.getVAN().then(VAN => {
+            console.log("service got VAN");
+            console.log(VAN);
+            this.VAN = VAN;
+            resolve(VAN);
           });
         },
         e => {

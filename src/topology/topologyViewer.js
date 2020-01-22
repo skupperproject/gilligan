@@ -39,7 +39,7 @@ import { utils } from "../amqp/utilities.js";
 import RouterInfoComponent from "./routerInfoComponent";
 import ClientInfoComponent from "./clientInfoComponent";
 import ContextMenuComponent from "../contextMenuComponent";
-import { addDefs } from "./svgUtils.js";
+import { addDefs, scaledMouse } from "./svgUtils.js";
 import { QDRLogger } from "../qdrGlobals";
 import Graph from "./graph";
 const TOPOOPTIONSKEY = "topoLegendOptions";
@@ -118,7 +118,7 @@ class TopologyPage extends Component {
         enabled: data => !this.isSelected(data)
       }
     ];
-    this.view = new Graph();
+    this.view = new Graph(this.props.service);
     this.resetScale = 1;
   }
 
@@ -490,6 +490,7 @@ class TopologyPage extends Component {
 
   expandNode = (d, node) => {
     if (!d.expanded) {
+      /*
       d.expanded = true;
       node
         .select("g.extra-info")
@@ -502,7 +503,8 @@ class TopologyPage extends Component {
         .transition()
         .duration(250)
         .attr("height", 70);
-
+*/
+      /*
       const mouse = d3.mouse(this.svg.node());
       mouse[0] = -mouse[0];
       mouse[1] = -mouse[1];
@@ -515,8 +517,10 @@ class TopologyPage extends Component {
           this.zoom.translate(mouse);
           this.zoomed();
         });
+        */
     } else {
       d.expanded = false;
+      /*
       node
         .select("g.extra-info")
         .transition()
@@ -528,6 +532,7 @@ class TopologyPage extends Component {
         .transition()
         .duration(250)
         .attr("height", 40);
+        */
     }
   };
 
@@ -730,10 +735,10 @@ class TopologyPage extends Component {
         self.highlightNamespace(true, d3.select(this), d, self);
         /*
         if (!self.mousedown_node) {
-          let e = d3.event;
+          const mouse = scaledMouse(self.svg.node(), d3.event);
           self.popupCancelled = false;
           d.toolTip(self.props.service.management.topology).then(toolTip => {
-            self.showToolTip(toolTip, e);
+            self.showToolTip(toolTip, mouse);
           });
         }
         */
@@ -810,6 +815,7 @@ class TopologyPage extends Component {
       .on("click", d => {
         // circle
         this.clearPopups();
+        if (d3.event.defaultPrevented) return; // click suppressed
         self.doDialog(d, "router");
         d3.event.stopPropagation();
       });
@@ -819,6 +825,13 @@ class TopologyPage extends Component {
         // highlight this service-type and it's connected service-types
         self.highlightServiceType(true, d3.select(this), d, self);
         d3.event.stopPropagation();
+        /*
+        const mouse = scaledMouse(self.svg.node(), d3.event);
+        self.popupCancelled = false;
+        d.toolTip(self.props.service.management.topology).then(toolTip => {
+          self.showToolTip(toolTip, mouse);
+        });
+        */
       })
       .on("mouseout", function(d) {
         self.highlightServiceType(false, d3.select(this), d, self);
@@ -826,7 +839,8 @@ class TopologyPage extends Component {
       })
       .on("click", function(d) {
         if (d3.event.defaultPrevented) return; // click suppressed
-        self.expandNode(d, d3.select(this));
+        self.doDialog(d, "client");
+        //self.expandNode(d, d3.select(this));
         d3.event.stopPropagation();
         d3.event.preventDefault();
       });
@@ -962,16 +976,17 @@ class TopologyPage extends Component {
     this.setState({ showRouterInfo: false });
   };
   handleCloseClientInfo = () => {
-    this.setState({ showClientInfo: false });
+    this.setState({ showClientInfo: false, showRouterInfo: false });
   };
 
-  showToolTip = (tip, event) => {
+  showToolTip = (tip, mouse) => {
     // show the tooltip
-    this.setState({ popupContent: tip });
-    this.displayTooltip(event);
+    this.setState({ popupContent: tip, showPopup: true }, () => {
+      this.displayTooltip(mouse);
+    });
   };
 
-  displayTooltip = event => {
+  displayTooltip = mouse => {
     if (this.popupCancelled) {
       this.setState({ showPopup: false });
       return;
@@ -979,15 +994,21 @@ class TopologyPage extends Component {
     let width = this.topologyRef.offsetWidth;
     // position the popup
     d3.select("#popover-div")
-      .style("left", event.pageX + 5 + "px")
-      .style("top", event.pageY + "px");
+      .style("left", `${mouse[0] + 5}px`)
+      .style("top", `${mouse[1]}px`);
     // show popup
     let pwidth = this.popupRef.offsetWidth;
+    console.log(
+      `displayTooltip width is ${pwidth} mouse[0] ${mouse[0]} mouse[1] ${
+        mouse[1]
+      }`
+    );
     this.setState({ showPopup: true }, () =>
       d3
         .select("#popover-div")
-        .style("left", Math.min(width - pwidth, event.pageX + 5) + "px")
+        .style("left", `${Math.min(width - pwidth, mouse[0])}px`)
         .on("mouseout", () => {
+          console.log(`popover-div mouseout`);
           this.setState({ showPopup: false });
         })
     );
@@ -1259,17 +1280,7 @@ class TopologyPage extends Component {
             handleCloseLegend={this.handleCloseLegend}
           />
         )}
-
-        {this.state.showRouterInfo ? (
-          <RouterInfoComponent
-            d={this.d}
-            topology={this.props.service.management.topology}
-            handleCloseRouterInfo={this.handleCloseRouterInfo}
-          />
-        ) : (
-          <div />
-        )}
-        {this.state.showClientInfo ? (
+        {this.state.showClientInfo || this.state.showRouterInfo ? (
           <ClientInfoComponent
             d={this.d}
             topology={this.props.service.management.topology}

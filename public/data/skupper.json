@@ -1,0 +1,346 @@
+{
+  "serviceTypes": [
+    {
+      "name": "Product Page",
+      "protocol": "HTTP",
+      "cluster": 0,
+      "namespace": 0
+    },
+    {
+      "name": "Info",
+      "protocol": "HTTP",
+      "cluster": 1,
+      "namespace": 0
+    },
+    {
+      "name": "Reviews",
+      "protocol": "HTTP",
+      "cluster": 1,
+      "namespace": 0
+    },
+    {
+      "name": "Ratings",
+      "protocol": "HTTP",
+      "cluster": 1,
+      "namespace": 0
+    },
+    {
+      "name": "Database",
+      "protocol": "TCP",
+      "cluster": 2,
+      "namespace": 0
+    },
+    {
+      "name": "TaxPrep",
+      "protocol": "TCP",
+      "cluster": 3,
+      "namespace": 0
+    },
+    {
+      "name": "Calc",
+      "protocol": "TCP",
+      "cluster": 4,
+      "namespace": 0
+    },
+    {
+      "name": "Multiply",
+      "protocol": "TCP",
+      "cluster": 5,
+      "namespace": 0
+    },
+    {
+      "name": "Divide",
+      "protocol": "TCP",
+      "cluster": 6,
+      "namespace": 0
+    },
+    {
+      "name": "Add",
+      "protocol": "TCP",
+      "cluster": 7,
+      "namespace": 0
+    },
+    {
+      "name": "Subtract",
+      "protocol": "TCP",
+      "cluster": 7,
+      "namespace": 0
+    },
+    {
+      "name": "Tax Advice",
+      "protocol": "TCP",
+      "cluster": 0,
+      "namespace": 0
+    },
+    {
+      "name": "State Tax Rules",
+      "protocol": "TCP",
+      "cluster": 2,
+      "namespace": 0
+    },
+    {
+      "name": "This is the Homework Helper Service",
+      "protocol": "HTTP",
+      "cluster": 0,
+      "namespace": 0
+    },
+    {
+      "name": "Product Page 2",
+      "protocol": "HTTP",
+      "cluster": 8,
+      "namespace": 0,
+      "description": "Alternate web server for EU",
+      "version": "1.0.0",
+      "percent": 100
+    }
+  ],
+  "clusters": [
+    {
+      "name": "Web Server",
+      "location": "Westford",
+      "zone": "US-East",
+      "provider": "OpenStack",
+      "namespaces": ["web-site"]
+    },
+    {
+      "name": "App Server",
+      "location": "Galway",
+      "zone": "EU-West",
+      "provider": "Azure",
+      "namespaces": ["backend"]
+    },
+    {
+      "name": "DB Server",
+      "location": "Redding",
+      "zone": "US-West",
+      "provider": "AWS",
+      "namespaces": ["mongo"]
+    },
+    {
+      "name": "Extra 1",
+      "location": "Canton",
+      "zone": "US-Midwest",
+      "provider": "Ministack",
+      "namespaces": ["myproject"]
+    },
+    {
+      "name": "Extra 2",
+      "location": "Knox",
+      "zone": "US-Midwest",
+      "provider": "Ministack",
+      "namespaces": ["myproject"]
+    },
+    {
+      "name": "Extra 3",
+      "location": "Plymouth",
+      "zone": "US-Midwest",
+      "provider": "Ministack",
+      "namespaces": ["myproject"]
+    },
+    {
+      "name": "Extra 4",
+      "location": "Ann Arbor",
+      "zone": "US-Midwest",
+      "provider": "Ministack",
+      "namespaces": ["myproject"]
+    },
+    {
+      "name": "Extra 5",
+      "location": "Manchester",
+      "zone": "US-Midwest",
+      "provider": "Ministack",
+      "namespaces": ["myproject"]
+    },
+    {
+      "name": "Alt Web Server",
+      "location": "Galway",
+      "zone": "EU-East",
+      "provider": "Ministack",
+      "namespaces": ["frontend"]
+    }
+  ],
+  "serviceConnections": [
+    {
+      "source": 0,
+      "target": 1,
+      "address": "ProductToInfo",
+      "stats": {
+        "throughput": 123,
+        "protocol": "TCP",
+        "latency": "10ms",
+        "utilization": 0.5,
+        "security": "TLS"
+      },
+      "description": "Connects ProductPage to Info"
+    },
+    {
+      "source": 0,
+      "target": 2,
+      "address": "ProductToReviews",
+      "stats": {
+        "throughput": 234,
+        "protocol": "TCP",
+        "latency": "11ms",
+        "utilization": 0.5,
+        "security": "TLS"
+      },
+      "description": "Connects ProductPage to Reviews"
+    },
+    {
+      "source": 2,
+      "target": 3,
+      "address": "ReviewsToRatings",
+      "stats": {
+        "throughput": 345,
+        "protocol": "TCP",
+        "latency": "12ms",
+        "utilization": 0.5,
+        "security": "TLS"
+      },
+      "description": "Connects Reviews to Ratings"
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "address": "RatingsToDatabase",
+      "stats": {
+        "throughput": 456,
+        "protocol": "HTTP",
+        "latency": "13ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Ratings to DB"
+    },
+    {
+      "source": 2,
+      "target": 4,
+      "address": "ReviewsToDatabase",
+      "stats": {
+        "throughput": 567,
+        "protocol": "HTTP",
+        "latency": "14ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Reviews to DB"
+    },
+    {
+      "source": 1,
+      "target": 4,
+      "address": "InfoToDatabase",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Info to DB"
+    },
+    {
+      "source": 11,
+      "target": 5,
+      "address": "Advice2Prep",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Advice to Prep"
+    },
+    {
+      "source": 5,
+      "target": 6,
+      "address": "Tax2Calc",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Tax to Calc"
+    },
+    {
+      "source": 6,
+      "target": 7,
+      "address": "Calc2Multiply",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Calc to Mult"
+    },
+    {
+      "source": 6,
+      "target": 8,
+      "address": "Calc2Divide",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Calc to Divide"
+    },
+    {
+      "source": 6,
+      "target": 9,
+      "address": "Calc2Add",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Calc to Add"
+    },
+    {
+      "source": 6,
+      "target": 10,
+      "address": "Calc2Sub",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Calc to Sub"
+    },
+    {
+      "source": 5,
+      "target": 12,
+      "address": "Calc2Rules",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Calc to State rules"
+    },
+    {
+      "source": 13,
+      "target": 6,
+      "address": "HomeWork2Calc",
+      "stats": {
+        "throughput": 678,
+        "protocol": "HTTP",
+        "latency": "15ms",
+        "utilization": 0.5,
+        "security": "None"
+      },
+      "description": "Connects Homework to Calc"
+    }
+  ]
+}

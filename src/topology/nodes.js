@@ -82,10 +82,12 @@ export class Node {
   }
   toolTip(topology, verbose) {
     return new Promise(resolve => {
+      console.log("showing tooltip for");
+      console.log(this);
       if (this.nodeType === "normal" || this.nodeType === "edge") {
         resolve(this.clientTooltip());
       } else
-        this.routerTooltip(topology, verbose).then(toolTip => {
+        this.clusterTooltip(topology, verbose).then(toolTip => {
           resolve(toolTip);
         });
     });
@@ -93,14 +95,17 @@ export class Node {
 
   clientTooltip() {
     const rows = [];
-    rows.push(["Service", this.name]);
+    for (const prop in this.properties) {
+      rows.push([prop, this.properties[prop]]);
+    }
     return <TooltipTable rows={rows} />;
   }
 
-  routerTooltip(topology, verbose) {
+  clusterTooltip(topology, verbose) {
     return new Promise(resolve => {
       const rows = [];
-      if (this.dataType === "network") {
+      console.log(`clusterTooltip dataType ${this.dataType}`);
+      if (this.dataType === "cluster") {
         rows.push(["Provider", this.properties.cluster.provider]);
         rows.push(["Zone", this.properties.cluster.zone]);
         if (this.properties.cluster.namespaces.length > 1) {
@@ -116,6 +121,8 @@ export class Node {
           rows.push(["Namespace", this.properties.cluster.namespaces[0]]);
         }
       }
+      console.log(`cluster tooltip content is `);
+      console.log(rows);
       resolve(<TooltipTable className="skipper-table network" rows={rows} />);
     });
   }
@@ -392,6 +399,7 @@ export class Nodes {
   ) {
     properties = properties || {};
     let gotNode = this.find(connectionContainer, properties, name);
+    /*
     if (gotNode) {
       this.mergeServiceTypes(
         properties.serviceTypes,
@@ -403,6 +411,7 @@ export class Nodes {
       );
       return gotNode;
     }
+    */
     let routerId = utils.nameFromId(id);
     return new Node(
       id,

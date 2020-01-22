@@ -20,7 +20,7 @@ class AddressDropdown extends React.Component {
       });
     };
     this.addresses = [];
-    reality.serviceInstances.forEach(si => {
+    reality.serviceConnections.forEach(si => {
       this.addresses.push(si.address);
     });
   }

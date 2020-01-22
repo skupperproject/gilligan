@@ -18,7 +18,7 @@ under the License.
 */
 
 import { clusterColor, darkerColor } from "./clusterColors";
-import { reality, adjustPositions } from "./topoUtils";
+import { adjustPositions } from "./topoUtils";
 import { utils } from "../amqp/utilities";
 import { Node } from "./nodes";
 import { Link } from "./links";
@@ -32,6 +32,9 @@ const BoxWidth = ServiceWidth + ServiceGap * 2;
 const BoxHeight = 180;
 
 class Graph {
+  constructor(service) {
+    this.reality = service.VAN;
+  }
   initNodesAndLinks = (nodes, links, width, height, typeName) => {
     nodes.reset();
     links.reset();
@@ -50,7 +53,7 @@ class Graph {
     );
   };
   initNodes = (nodes, width, height) => {
-    const clusters = reality.clusters;
+    const clusters = this.reality.clusters;
     clusters.forEach((cluster, clusterIndex) => {
       const id = utils.idFromName(cluster.location, "_topo");
       const name = cluster.location;
@@ -69,7 +72,7 @@ class Graph {
         this.clusterHeight
       );
       clusterNode.dataType = "cluster";
-      reality.serviceTypes.forEach(st => {
+      this.reality.serviceTypes.forEach(st => {
         if (st.cluster === clusterIndex) {
           const subNode = new Node(
             st.name,
@@ -89,6 +92,7 @@ class Graph {
           );
           subNode.orgx = subNode.x;
           subNode.orgy = subNode.y;
+          subNode.properties = st;
           subNode.index = clusterNode.properties.subNodes.length;
           subNode.gap = 0;
           clusterNode.properties.subNodes.push(subNode);
@@ -102,9 +106,9 @@ class Graph {
   initLinks = (nodes, links, width, height) => {
     // links between clusters
     const clusterLinks = [];
-    reality.serviceInstances.forEach(si => {
-      const sourceCluster = reality.serviceTypes[si.source].cluster;
-      const targetCluster = reality.serviceTypes[si.target].cluster;
+    this.reality.serviceConnections.forEach(si => {
+      const sourceCluster = this.reality.serviceTypes[si.source].cluster;
+      const targetCluster = this.reality.serviceTypes[si.target].cluster;
       if (sourceCluster !== targetCluster) {
         if (
           !clusterLinks.some(
@@ -137,13 +141,13 @@ class Graph {
 
     const subNodes = [];
     const subLinks = [];
-    reality.serviceInstances.forEach(si => {
+    this.reality.serviceConnections.forEach(si => {
       let source, target;
       let sourceIndex = -1;
       let targetIndex = -1;
       nodes.nodes.forEach(n =>
         n.properties.subNodes.forEach(sn => {
-          if (sn.name === reality.serviceTypes[si.source].name) {
+          if (sn.name === this.reality.serviceTypes[si.source].name) {
             source = sn;
             sourceIndex = subNodes.findIndex(n => n.name === source.name);
             if (sourceIndex === -1) {
@@ -151,7 +155,7 @@ class Graph {
               subNodes.push(source);
             }
           }
-          if (sn.name === reality.serviceTypes[si.target].name) {
+          if (sn.name === this.reality.serviceTypes[si.target].name) {
             target = sn;
             targetIndex = subNodes.findIndex(n => n.name === target.name);
             if (targetIndex === -1) {
@@ -300,23 +304,6 @@ class Graph {
       .attr("width", 10)
       .attr("height", 10)
       .attr("transform", "translate(0,13) rotate(45)");
-
-    const extra = serviceTypesEnter
-      .append("g")
-      .attr("class", "extra-info")
-      .attr("opacity", 0)
-      .attr("transform", "translate(30, 40)");
-
-    extra
-      .append("text")
-      .attr("x", 0)
-      .attr("y", 5)
-      .text("Extra info");
-    extra
-      .append("text")
-      .attr("x", 0)
-      .attr("y", 20)
-      .text("Extraer info");
   };
 }
 
