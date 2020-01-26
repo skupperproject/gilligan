@@ -71,14 +71,13 @@ class ConnectForm extends React.Component {
 
     return (
       <div>
-        <div className="connect-modal">
+        <div className="_connect-modal">
           <div className="">
             <Form isHorizontal>
               <TextContent className="connect-title">
                 <Text component={TextVariants.h1}>Connect</Text>
                 <Text component={TextVariants.p}>
-                  Enter the address and an HTTP-enabled port of a qpid dispatch
-                  router.
+                  Enter the address and port of a skupper stats server.
                 </Text>
               </TextContent>
               <FormGroup

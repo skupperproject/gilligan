@@ -4,21 +4,21 @@ class RESTService {
     this.latest = [];
   }
 
-  getVAN = () =>
-    new Promise(resolve => {
+  getVAN = options =>
+    new Promise((resolve, reject) => {
       fetch("/data/skupper.json")
         .then(res => res.json())
         .then(VAN => {
-          console.log(VAN);
           resolve(VAN);
         })
         .catch(error => {
           console.log("/data/skupper.json not found.");
+          reject(error);
         });
     });
 
   /*
-  getVAN = () =>
+  getVAN = (options) =>
     new Promise((resolve, reject) => {
       this.latest = [];
       const strategy = { "200": "resolve", "404": "resolve", "500": "reject" };

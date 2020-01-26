@@ -282,7 +282,14 @@ export function getSizes(topologyRef, log) {
   return [width, height];
 }
 
-export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
+export const adjustPositions = ({
+  nodes,
+  links,
+  width,
+  height,
+  BoxWidth,
+  xypath
+}) => {
   nodes.nodes.forEach(n => {
     n.sources = [];
     n.targets = [];
@@ -374,11 +381,12 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
   }
   let curX = hGap;
   for (let col = 0; col < cols; col++) {
-    nodes.nodes.forEach(n => {
+    for (let i = 0; i < nodes.nodes.length; i++) {
+      const n = nodes.nodes[i];
       if (n.col === col) {
         n.x = curX;
       }
-    });
+    }
     curX += colWidths[col] + hGap;
   }
   return { width: vwidth, height: vheight };

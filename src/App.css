@@ -258,6 +258,7 @@ table.edge-table td[data-label="State"] svg {
 }
 
 .logo-text {
+  padding-left: 1em;
   text-decoration: none;
   color: white;
   font-weight: bold;
@@ -1270,13 +1271,15 @@ circle.end-point.source {
 }
 
 .skupper-logo {
-  background-image: url("./assets/skupper.svg");
+  background-image: url("./assets/gilligan.png");
   background-repeat: no-repeat;
   opacity: 1;
   position: absolute;
+  top: 25%;
   width: 50%;
-  height: 50%;
+  height: 100%;
   background-position-x: center;
+  background-position-y: top;
 }
 
 .graph-toolbar {
@@ -1286,4 +1289,42 @@ circle.end-point.source {
 a.selected.pf-c-dropdown__menu-item {
   background-color: #0066cc;
   color: white;
+}
+
+/* List page */
+.card-cluster-header span {
+  padding-left: 1em;
+}
+
+.card-health {
+  padding-right: 1em;
+}
+.health-ok {
+  color: #33cc33;
+}
+
+.health-bad {
+  color: #ff3333;
+}
+
+.list-card {
+  border-top: 2px solid white;
+}
+.list-card:hover {
+  border-top: 2px solid #0066ff;
+}
+
+.radio-button-selected {
+  background-color: #f0f0f0;
+}
+
+.body-line span {
+  width: 50%;
+}
+.body-line-prompt {
+  font-weight: bold;
+}
+.body-line-prompt:after {
+  content: ":";
+  padding-right: 1em;
 }

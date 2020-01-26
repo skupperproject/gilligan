@@ -100,63 +100,72 @@
       "location": "Westford",
       "zone": "US-East",
       "provider": "OpenStack",
-      "namespaces": ["web-site"]
+      "namespaces": ["web-site"],
+      "health": "ok"
     },
     {
       "name": "App Server",
       "location": "Galway",
       "zone": "EU-West",
       "provider": "Azure",
-      "namespaces": ["backend"]
+      "namespaces": ["backend"],
+      "health": "ok"
     },
     {
       "name": "DB Server",
       "location": "Redding",
       "zone": "US-West",
       "provider": "AWS",
-      "namespaces": ["mongo"]
+      "namespaces": ["mongo"],
+      "health": "ok"
     },
     {
-      "name": "Extra 1",
+      "name": "Math 1",
       "location": "Canton",
       "zone": "US-Midwest",
       "provider": "Ministack",
-      "namespaces": ["myproject"]
+      "namespaces": ["myproject"],
+      "health": "ok"
     },
     {
-      "name": "Extra 2",
+      "name": "Math 2",
       "location": "Knox",
       "zone": "US-Midwest",
       "provider": "Ministack",
-      "namespaces": ["myproject"]
+      "namespaces": ["myproject"],
+      "health": "ok"
     },
     {
-      "name": "Extra 3",
+      "name": "Math 3",
       "location": "Plymouth",
       "zone": "US-Midwest",
       "provider": "Ministack",
-      "namespaces": ["myproject"]
+      "namespaces": ["myproject"],
+      "health": "ok"
     },
     {
-      "name": "Extra 4",
+      "name": "Math 4",
       "location": "Ann Arbor",
       "zone": "US-Midwest",
       "provider": "Ministack",
-      "namespaces": ["myproject"]
+      "namespaces": ["myproject"],
+      "health": "ok"
     },
     {
-      "name": "Extra 5",
+      "name": "Math 5",
       "location": "Manchester",
       "zone": "US-Midwest",
       "provider": "Ministack",
-      "namespaces": ["myproject"]
+      "namespaces": ["myproject"],
+      "health": "ok"
     },
     {
       "name": "Alt Web Server",
       "location": "Galway",
       "zone": "EU-East",
       "provider": "Ministack",
-      "namespaces": ["frontend"]
+      "namespaces": ["frontend"],
+      "health": "ok"
     }
   ],
   "serviceConnections": [

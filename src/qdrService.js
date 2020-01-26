@@ -43,26 +43,14 @@ export class QDRService {
     this.management.connection.on("connected", this.onReconnect.bind(this));
   }
   connect(connectOptions) {
-    let self = this;
     return new Promise((resolve, reject) => {
-      self.management.connection.connect(connectOptions).then(
-        r => {
-          // if we are ever disconnected, show the connect page and wait for a reconnect
-          self.management.connection.on(
-            "disconnected",
-            self.onDisconnect.bind(self)
-          );
-          const rs = new RESTService();
-          rs.getVAN().then(VAN => {
-            console.log("service got VAN");
-            console.log(VAN);
-            this.VAN = VAN;
-            resolve(VAN);
-          });
+      const rs = new RESTService();
+      rs.getVAN(connectOptions).then(
+        VAN => {
+          this.VAN = VAN;
+          resolve(VAN);
         },
-        e => {
-          reject(e);
-        }
+        error => reject(error)
       );
     });
   }

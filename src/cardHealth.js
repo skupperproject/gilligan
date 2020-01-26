@@ -18,46 +18,27 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { Modal } from "@patternfly/react-core";
+import { Tooltip, TooltipPosition } from "@patternfly/react-core";
 
-class ClientInfoComponent extends Component {
+class CardHealth extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      toolTip: null
-    };
+    this.state = {};
   }
 
-  componentDidMount = () => {
-    this.timer = setInterval(this.getTooltip, 5000);
-    this.getTooltip();
-  };
-
-  componentWillUnmount = () => {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-  };
-  getTooltip = () => {
-    this.props.d.toolTip(this.props.topology, true).then(toolTip => {
-      this.setState({ toolTip });
-    });
-  };
-
   render() {
-    const { toolTip } = this.state;
     return (
-      <Modal
-        isSmall
-        title={`Details for ${this.props.d.name}`}
-        isOpen={true}
-        onClose={this.props.handleCloseClientInfo}
-      >
-        {toolTip || ""}
-      </Modal>
+      <Tooltip content={<div>{`Health is ${this.props.cluster.health}`}</div>}>
+        <span className="card-health">
+          {this.props.cluster.health === "ok" ? (
+            <i className="health-ok pf-icon pf-icon-ok" />
+          ) : (
+            <i className="health-bad pf-icon pf-icon-error-circle-o" />
+          )}
+        </span>
+      </Tooltip>
     );
   }
 }
 
-export default ClientInfoComponent;
+export default CardHealth;

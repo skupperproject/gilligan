@@ -16,7 +16,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-
+import * as d3 from "d3";
+import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import { clusterColor, darkerColor } from "./clusterColors";
 import { adjustPositions } from "./topoUtils";
 import { utils } from "../amqp/utilities";
@@ -90,6 +91,7 @@ class Graph {
             clusterNode.name,
             () => ServiceHeight
           );
+          // save the x,y for the subnodes for the namespace view
           subNode.orgx = subNode.x;
           subNode.orgy = subNode.y;
           subNode.properties = st;
@@ -129,9 +131,12 @@ class Graph {
         }
       }
     });
-    const vsize = adjustPositions({
+    // get the starting x,y for the clusters when using the namespace view
+    let vsize = adjustPositions({
       nodes,
-      links: { links: clusterLinks },
+      links: {
+        links: clusterLinks
+      },
       width,
       height,
       BoxWidth,
@@ -139,6 +144,7 @@ class Graph {
       topGap: BoxHeight / 2
     });
 
+    // get the links between services (subNodes) for the application view
     const subNodes = [];
     const subLinks = [];
     this.reality.serviceConnections.forEach(si => {
@@ -165,7 +171,10 @@ class Graph {
           }
         })
       );
-      subLinks.push({ source: sourceIndex, target: targetIndex });
+      subLinks.push({
+        source: sourceIndex,
+        target: targetIndex
+      });
       links.addLink({
         source,
         target,
@@ -175,7 +184,8 @@ class Graph {
       });
       links.links[links.links.length - 1].stats = si.stats;
     });
-    return adjustPositions({
+    // get the starting x,y for the subnodes when using the application view
+    vsize = adjustPositions({
       nodes: { nodes: subNodes },
       links: { links: subLinks },
       width: vsize.width,
@@ -184,6 +194,60 @@ class Graph {
       BoxHeight: ServiceHeight,
       topGap: ServiceHeight
     });
+
+    const graph = {
+      nodes: subNodes.map((sn, i) => ({
+        node: i,
+        name: sn.name
+      })),
+      links: this.reality.serviceConnections.map(si => ({
+        source: si.source,
+        target: si.target,
+        value: si.stats.throughput,
+        address: si.address
+      }))
+    };
+    console.log("sankey nodes");
+    // get the links between services for use with the traffic view
+    const { snodes, slinks } = this.initSankey(graph, width, height);
+    subNodes.forEach(sn => {
+      const snode = snodes.find(skn => skn.name === sn.name);
+      console.log(snode);
+      sn.sankeyNode = snode;
+      sn.sankeyX = snode.x0;
+      sn.sankeyY = snode.y0;
+      sn.sankeyWidth = snode.x1 - snode.x0;
+      sn.sankeyHeight = snode.y1 - snode.y0;
+      sn.x0 = snode.x0;
+      sn.x1 = snode.x1;
+      sn.y0 = snode.y0;
+      sn.y1 = snode.y1;
+      sn.sourceLinks = snode.sourceLinks;
+      sn.targetLinks = snode.targetLinks;
+      sn.node = snode.node;
+      sn.value = snode.value;
+      sn.depth = snode.depth;
+      sn.height = snode.height;
+      sn.layer = snode.layer;
+      sn.index = snode.index;
+    });
+    console.log("sankey links");
+    console.log(slinks);
+    links.links.forEach(l => {
+      l.sankeyLink = slinks.find(
+        sl =>
+          sl.source.name === l.source.name && sl.target.name === l.target.name
+      );
+    });
+    return vsize;
+  };
+
+  initSankey = (graph, width, height) => {
+    const { nodes, links } = sankey()
+      .nodeWidth(15)
+      .nodePadding(20)
+      .extent([[1, 1], [width - 1, height - 5]])(graph);
+    return { snodes: nodes, slinks: links };
   };
 
   createRects = (g, shadow) => {

@@ -19,8 +19,6 @@ under the License.
 
 import React, { Component } from "react";
 import {
-  Card,
-  CardBody,
   PageSection,
   PageSectionVariants,
   Stack,
@@ -45,6 +43,7 @@ class TopologyPage extends Component {
         link: { stat: "" }
       }
     };
+    this.initialView = "namespace";
   }
 
   handleChangeService = serviceTypeName => {
@@ -54,8 +53,10 @@ class TopologyPage extends Component {
   handleChangeView = key => {
     if (key === "application") {
       this.graphRef.toApplication();
-    } else {
+    } else if (key === "namespace") {
       this.graphRef.toNamespace();
+    } else if (key === "traffic") {
+      this.graphRef.toTraffic();
     }
   };
 
@@ -81,7 +82,7 @@ class TopologyPage extends Component {
           <StackItem className="overview-header">
             <TextContent>
               <Text className="overview-title" component={TextVariants.h1}>
-                Graph view
+                Mesh view
               </Text>
               <Text className="overview-loading" component={TextVariants.pre}>
                 {`Updated ${this.props.service.utilities.strDate(
@@ -97,6 +98,7 @@ class TopologyPage extends Component {
               service={this.props.service}
               serviceTypeName={this.state.serviceTypeName}
               options={this.state.options}
+              initialView={this.initialView}
               handleChangeView={this.handleChangeView}
               handleChangeOption={this.handleChangeOption}
             />

@@ -27,14 +27,6 @@ class LegendComponent extends Component {
     //this.legend = new Legend(this.props.nodes);
   }
 
-  componentDidMount = () => {
-    //this.legend.update();
-  };
-
-  componentDidUpdate = () => {
-    console.log("legend did update");
-  };
-
   render() {
     return (
       <div

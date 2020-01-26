@@ -20,6 +20,7 @@ under the License.
 import React from "react";
 import {
   Avatar,
+  Brand,
   Button,
   ButtonVariant,
   Dropdown,
@@ -50,8 +51,10 @@ import { css } from "@patternfly/react-styles";
 import { BellIcon, PowerOffIcon } from "@patternfly/react-icons";
 import ConnectPage from "./connectPage";
 import TopologyPage from "./topology/topologyPage";
+import ListPage from "./listPage";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
+const gilliganImg = require("./assets/gilligan.png");
 const avatarImg = require("./assets/img_avatar.svg");
 
 class PageLayout extends React.Component {
@@ -61,13 +64,13 @@ class PageLayout extends React.Component {
       connected: false,
       connectPath: "",
       isDropdownOpen: false,
-      activeItem: "graph",
+      activeItem: "mesh",
       isConnectFormOpen: false,
       username: ""
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
-    this.views = ["Graph", "List"];
+    this.views = ["Mesh", "Cards"];
   }
 
   setLocation = where => {
@@ -98,11 +101,11 @@ class PageLayout extends React.Component {
         connectPath === "/" ||
         connectPath === "/login"
       )
-        connectPath = "/graph";
+        connectPath = "/mesh";
       const activeItem = connectPath.split("/").pop();
       this.props.history.replace(connectPath);
       this.setState({
-        username: "Alan Hale Jr.",
+        username: "Bob Denver",
         activeItem,
         connectPath,
         connected: true,
@@ -214,9 +217,12 @@ class PageLayout extends React.Component {
       <PageHeader
         className="topology-header"
         logo={
-          <span className="logo-text">
-            Skipper - A tool to visualize a Skupper network
-          </span>
+          <React.Fragment>
+            <Brand src={gilliganImg} alt="Gilligan Logo" />
+            <span className="logo-text">
+              Gilligan - A tool to visualize a Skupper network
+            </span>
+          </React.Fragment>
         }
         toolbar={PageToolbar}
         avatar={<Avatar src={avatarImg} alt="Avatar image" />}
@@ -296,7 +302,8 @@ class PageLayout extends React.Component {
           {connectForm()}
           <Switch>
             <PrivateRoute path="/" exact component={TopologyPage} />
-            <PrivateRoute path="/graph" component={TopologyPage} />
+            <PrivateRoute path="/mesh" component={TopologyPage} />
+            <PrivateRoute path="/cards" component={ListPage} />
             <Route
               path="/login"
               render={props => (

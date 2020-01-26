@@ -82,8 +82,6 @@ export class Node {
   }
   toolTip(topology, verbose) {
     return new Promise(resolve => {
-      console.log("showing tooltip for");
-      console.log(this);
       if (this.nodeType === "normal" || this.nodeType === "edge") {
         resolve(this.clientTooltip());
       } else
@@ -95,8 +93,18 @@ export class Node {
 
   clientTooltip() {
     const rows = [];
+
     for (const prop in this.properties) {
-      rows.push([prop, this.properties[prop]]);
+      if (prop === "cluster") {
+        rows.push(["Cluster", this.parentNode.properties.cluster.name]);
+      } else if (prop === "namespace") {
+        rows.push([
+          "Namespace",
+          this.parentNode.properties.cluster.namespaces[this.properties[prop]]
+        ]);
+      } else {
+        rows.push([prop, this.properties[prop]]);
+      }
     }
     return <TooltipTable rows={rows} />;
   }
@@ -104,7 +112,6 @@ export class Node {
   clusterTooltip(topology, verbose) {
     return new Promise(resolve => {
       const rows = [];
-      console.log(`clusterTooltip dataType ${this.dataType}`);
       if (this.dataType === "cluster") {
         rows.push(["Provider", this.properties.cluster.provider]);
         rows.push(["Zone", this.properties.cluster.zone]);
@@ -121,8 +128,6 @@ export class Node {
           rows.push(["Namespace", this.properties.cluster.namespaces[0]]);
         }
       }
-      console.log(`cluster tooltip content is `);
-      console.log(rows);
       resolve(<TooltipTable className="skipper-table network" rows={rows} />);
     });
   }

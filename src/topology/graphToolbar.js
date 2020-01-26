@@ -35,8 +35,22 @@ class GraphToolbar extends Component {
     super(props);
     this.state = {};
     this.dropdownItems = [
-      { key: "application", description: "Application" },
-      { key: "namespace", description: "Network (VAN)", selected: true }
+      {
+        key: "application",
+        description: "Application",
+        selected: this.props.initialView === "application"
+      },
+      {
+        key: "namespace",
+        description: "Network (VAN)",
+        selected: this.props.initialView === "namespace"
+      }
+      /*,
+      {
+        key: "traffic",
+        description: "Relative traffic",
+        selected: this.props.initialView === "traffic"
+      }*/
     ];
   }
 

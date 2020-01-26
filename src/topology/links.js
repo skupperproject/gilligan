@@ -17,7 +17,6 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import { utils } from "../amqp/utilities.js";
 import TooltipTable from "../tooltipTable";
 
 var React = require("react");
