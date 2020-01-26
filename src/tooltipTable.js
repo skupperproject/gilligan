@@ -8,7 +8,7 @@ class TooltipTable extends React.Component {
 
   render() {
     return (
-      <table className="skipper-table network">
+      <table className="gilligan-table network">
         <tbody>
           {this.props.rows.map((row, i) => (
             <tr key={`row-${i}`}>

@@ -1,6 +1,6 @@
-# Skipper installation
+# Gilligan installation
 
-How to install Skipper - the demo console for skupper
+How to install Gilligan - the demo console for skupper
 
 - [Prerequisites](#prerequisites)
 - [Step 1: Clone the repository](#step-1-clone)
@@ -16,14 +16,13 @@ How to install Skipper - the demo console for skupper
 
 ## Step 1: Clone
 
-git clone https://github.com/skupperproject/skipper.git
+git clone https://github.com/skupperproject/gilligan.git
 
 ## Step 2: Start the console
 
-In the skipper directory:
+In the gilligan directory:
 
-> `$yarn install`
-> `$yarn start`
+> `$yarn install` > `$yarn start`
 
 Yarn will compile the code and start a browser pointing to localhost:3000.
 

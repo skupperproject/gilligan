@@ -128,7 +128,7 @@ export class Node {
           rows.push(["Namespace", this.properties.cluster.namespaces[0]]);
         }
       }
-      resolve(<TooltipTable className="skipper-table network" rows={rows} />);
+      resolve(<TooltipTable className="gilligan-table network" rows={rows} />);
     });
   }
   radius() {
