@@ -18,112 +18,183 @@ under the License.
 */
 
 import React from "react";
-import {
-  PageSection,
-  PageSectionVariants,
-  TextContent,
-  Text
-} from "@patternfly/react-core";
+import { PageSection, PageSectionVariants } from "@patternfly/react-core";
 
 import {
   Card,
   CardBody,
   CardHead,
-  CardHeader,
   Gallery,
-  GalleryItem
+  GalleryItem,
+  Stack,
+  StackItem,
+  Text,
+  TextContent,
+  TextVariants
 } from "@patternfly/react-core";
-import { CubesIcon } from "@patternfly/react-icons";
 import CardHealth from "./cardHealth";
-import avatarImg from "./assets/skupper.svg";
 import { safePlural } from "./qdrGlobals";
 import ListToolbar from "./listToolbar";
-import { utils } from "./amqp/utilities";
+import { Icap, strDate } from "./qdrGlobals";
 
 // make sure you've installed @patternfly/patternfly
 class ListPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      cardSize: "compact"
+      cardSize: "compact",
+      lastUpdated: new Date()
+    };
+    this.cardAttributes = {
+      cluster: {
+        compact: ["provider"],
+        expanded: ["location", "zone", "health"]
+      },
+      service: {
+        compact: ["protocol", { title: "site(s)", getFn: this.getSites }],
+        expanded: [
+          { title: "requests_handled", getFn: this.getRequestsHandled }
+        ]
+      }
     };
   }
 
-  subNodes = cluster =>
-    this.props.service.VAN.serviceTypes.filter(st => st.cluster === cluster)
-      .length;
+  subNodes = cluster => cluster.services.length;
 
+  getSites = service =>
+    service.targets.map(
+      site =>
+        this.props.service.VAN.sites.find(
+          VANSite => VANSite.site_id === site.site_id
+        ).site_name
+    );
+
+  getRequestsHandled = service => {};
   handleChangeSize = event => {
     this.setState({ cardSize: event.target.id });
   };
 
-  bodyLine = (expanded, prop, cluster) => (
-    <div className="body-line">
-      {expanded ? (
-        <span className="body-line-prompt">{utils.Icap(prop)}</span>
-      ) : (
-        ""
-      )}
-      <span className="body-line-value">{cluster[prop]}</span>
-    </div>
-  );
+  bodyLine = (expanded, prop, cluster) => {
+    const property = prop.getFn ? prop.getFn(cluster) : cluster[prop];
+    const title = prop.title ? prop.title : prop;
+    return (
+      <div className="body-line">
+        {expanded ? (
+          <span className="body-line-prompt">{Icap(title)}</span>
+        ) : (
+          ""
+        )}
+        <span className="body-line-value">{property}</span>
+      </div>
+    );
+  };
 
-  cardBodies = cluster => {
+  siteBodies = cluster => {
     const expanded = this.state.cardSize === "expanded";
-    const bodies = [
-      <CardBody key="location">
-        {this.bodyLine(expanded, "location", cluster)}
-      </CardBody>,
-      <CardBody key="provider">
-        {this.bodyLine(expanded, "provider", cluster)}
-      </CardBody>
-    ];
+    let bodies = this.cardAttributes.cluster.compact.map(attr => (
+      <CardBody key={attr}>{this.bodyLine(expanded, attr, cluster)}</CardBody>
+    ));
     if (expanded) {
-      bodies.push(
-        <CardBody key="zone">
-          {this.bodyLine(expanded, "zone", cluster)}
-        </CardBody>
-      );
-      bodies.push(
-        <CardBody key="namespaces">
-          {this.bodyLine(expanded, "namespaces", cluster)}
-        </CardBody>
-      );
+      bodies = [
+        ...bodies,
+        ...this.cardAttributes.cluster.expanded.map(attr => (
+          <CardBody key={attr}>
+            {this.bodyLine(expanded, attr, cluster)}
+          </CardBody>
+        ))
+      ];
     }
+
+    return bodies;
+  };
+
+  serviceBodies = service => {
+    const expanded = this.state.cardSize === "expanded";
+    let bodies = this.cardAttributes.service.compact.map(attr => {
+      return (
+        <CardBody key={typeof attr === "string" ? attr : attr.title}>
+          {this.bodyLine(expanded, attr, service)}
+        </CardBody>
+      );
+    });
+    if (expanded) {
+      bodies = [
+        ...bodies,
+        ...this.cardAttributes.service.expanded.map(attr => (
+          <CardBody key={attr}>
+            {this.bodyLine(expanded, attr, service)}
+          </CardBody>
+        ))
+      ];
+    }
+
     return bodies;
   };
   render() {
-    const { clusters } = this.props.service.VAN;
+    const { sites, services } = this.props.service.VAN;
     const { cardSize } = this.state;
     return (
       <React.Fragment>
-        <PageSection variant={PageSectionVariants.light}>
-          <ListToolbar
-            size={cardSize}
-            handleChangeSize={this.handleChangeSize}
-          />
+        <PageSection variant={PageSectionVariants.light} className="list-page">
+          <Stack>
+            <StackItem className="overview-header">
+              <TextContent>
+                <Text className="overview-title" component={TextVariants.h1}>
+                  Card view
+                </Text>
+                <Text className="overview-loading" component={TextVariants.pre}>
+                  {`Updated ${strDate(this.state.lastUpdated)}`}
+                </Text>
+              </TextContent>
+            </StackItem>
+            <StackItem>
+              <ListToolbar
+                size={cardSize}
+                handleChangeSize={this.handleChangeSize}
+              />
+            </StackItem>
+          </Stack>
         </PageSection>
         <PageSection className="list-section">
           <Gallery gutter="md">
-            {clusters.map((c, i) => (
-              <GalleryItem key={i}>
-                <Card isHoverable isCompact className="list-card">
-                  <CardHead>
-                    <div className="card-cluster-header">
-                      <i className="pf-icon pf-icon-cluster"></i>
-                      <span>
-                        <CardHealth cluster={c} />
-                        {c.name}
-                      </span>
-                    </div>
-                  </CardHead>
-                  <CardBody>
-                    {this.subNodes(i)} {safePlural(this.subNodes(i), "service")}
-                  </CardBody>
-                  {this.cardBodies(c)}
-                </Card>
-              </GalleryItem>
-            ))}
+            <React.Fragment>
+              {sites.map((c, i) => (
+                <GalleryItem key={c.site_id}>
+                  <Card isHoverable isCompact className="list-card">
+                    <CardHead>
+                      <div className="card-cluster-header">
+                        <i className="pf-icon pf-icon-cluster"></i>
+                        <span>{c.site_name}</span>
+                      </div>
+                    </CardHead>
+                    <CardBody>
+                      Health <CardHealth cluster={c} />
+                    </CardBody>
+                    <CardBody>
+                      {this.subNodes(c)}{" "}
+                      {safePlural(this.subNodes(c), "service")}
+                    </CardBody>
+                    {this.siteBodies(c)}
+                  </Card>
+                </GalleryItem>
+              ))}
+              {services.map((s, i) => (
+                <GalleryItem key={s.address}>
+                  <Card isHoverable isCompact className="list-card">
+                    <CardHead>
+                      <div className="card-cluster-header">
+                        <i className="pf-icon pficon-container-node"></i>
+                        <span>{s.address}</span>
+                      </div>
+                    </CardHead>
+                    <CardBody>
+                      Health <CardHealth cluster={s} />
+                    </CardBody>
+                    {this.serviceBodies(s)}
+                  </Card>
+                </GalleryItem>
+              ))}
+            </React.Fragment>
           </Gallery>
         </PageSection>
       </React.Fragment>

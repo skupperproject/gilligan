@@ -16,13 +16,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import { clusterColor, darkerColor } from "./clusterColors";
-import { adjustPositions } from "./topoUtils";
-import { utils } from "../amqp/utilities";
+import { adjustPositions } from "../qdrGlobals";
 import { Node } from "./nodes";
-import { Link } from "./links";
 
 const ServiceWidth = 130;
 const ServiceHeight = 40;
@@ -34,7 +31,9 @@ const BoxHeight = 180;
 
 class Graph {
   constructor(service) {
-    this.reality = service.VAN;
+    this.VAN = service.adapter.data;
+    this.adapter = service.adapter;
+    this.sankeyLinkHorizontal = sankeyLinkHorizontal();
   }
   initNodesAndLinks = (nodes, links, width, height, typeName) => {
     nodes.reset();
@@ -49,57 +48,42 @@ class Graph {
     return Math.max(
       BoxHeight,
       ServiceStart +
-        n.properties.subNodes.length * (ServiceHeight + ServiceGap) +
+        n.subNodes.length * (ServiceHeight + ServiceGap) +
         ServiceBottomGap
     );
   };
   initNodes = (nodes, width, height) => {
-    const clusters = this.reality.clusters;
+    const clusters = this.VAN.sites;
     clusters.forEach((cluster, clusterIndex) => {
-      const id = utils.idFromName(cluster.location, "_topo");
-      const name = cluster.location;
+      const name = cluster.site_name;
 
-      const clusterNode = nodes.addUsing(
-        id,
+      const clusterNode = nodes.addUsing({
         name,
-        "_topo",
-        nodes.length,
-        undefined,
-        undefined,
-        name,
-        undefined,
-        true,
-        { subNodes: [], cluster },
-        this.clusterHeight
-      );
-      clusterNode.dataType = "cluster";
-      this.reality.serviceTypes.forEach(st => {
-        if (st.cluster === clusterIndex) {
-          const subNode = new Node(
-            st.name,
-            st.name,
-            "normal",
-            {},
-            clusterNode.name,
-            20,
-            ServiceStart +
-              clusterNode.properties.subNodes.length *
-                (ServiceHeight + ServiceGap),
-            clusterNode.properties.subNodes.length,
-            0,
-            true,
-            clusterNode.name,
-            () => ServiceHeight
-          );
-          // save the x,y for the subnodes for the namespace view
-          subNode.orgx = subNode.x;
-          subNode.orgy = subNode.y;
-          subNode.properties = st;
-          subNode.index = clusterNode.properties.subNodes.length;
-          subNode.gap = 0;
-          clusterNode.properties.subNodes.push(subNode);
-          subNode.parentNode = clusterNode;
-        }
+        nodeType: "cluster",
+        x: undefined,
+        y: undefined,
+        fixed: true,
+        heightFn: this.clusterHeight
+      });
+      clusterNode.mergeWith(cluster);
+      clusterNode.subNodes = [];
+
+      cluster.services.forEach((service, i) => {
+        const subNode = new Node({
+          name: service.address,
+          nodeType: "service",
+          x: 20,
+          y: ServiceStart + i * (ServiceHeight + ServiceGap),
+          fixed: true,
+          heightFn: () => ServiceHeight
+        });
+        subNode.mergeWith(service);
+        // save the x,y for the subnodes for the namespace view
+        subNode.orgx = subNode.x;
+        subNode.orgy = subNode.y;
+        subNode.gap = 0;
+        subNode.parentNode = clusterNode;
+        clusterNode.subNodes.push(subNode);
       });
     });
   };
@@ -107,36 +91,23 @@ class Graph {
   // create a link between services
   initLinks = (nodes, links, width, height) => {
     // links between clusters
-    const clusterLinks = [];
-    this.reality.serviceConnections.forEach(si => {
-      const sourceCluster = this.reality.serviceTypes[si.source].cluster;
-      const targetCluster = this.reality.serviceTypes[si.target].cluster;
-      if (sourceCluster !== targetCluster) {
-        if (
-          !clusterLinks.some(
-            cl =>
-              (cl.source === sourceCluster && cl.target === targetCluster) ||
-              (cl.target === sourceCluster && cl.source === targetCluster)
-          )
-        ) {
-          clusterLinks.push(
-            new Link(
-              sourceCluster,
-              targetCluster,
-              "both",
-              "cluster",
-              `Link-${sourceCluster}-${targetCluster}`
-            )
-          );
-        }
-      }
+    this.VAN.sites.forEach((site, i) => {
+      const source = i;
+      site.connected.forEach(targetSite => {
+        const target = this.VAN.sites.findIndex(s => s.site_id === targetSite);
+        links.getLink(
+          source,
+          target,
+          "both",
+          "cluster",
+          `Link-${source}-${target}`
+        );
+      });
     });
     // get the starting x,y for the clusters when using the namespace view
     let vsize = adjustPositions({
       nodes,
-      links: {
-        links: clusterLinks
-      },
+      links,
       width,
       height,
       BoxWidth,
@@ -144,50 +115,41 @@ class Graph {
       topGap: BoxHeight / 2
     });
 
-    // get the links between services (subNodes) for the application view
+    links.reset();
     const subNodes = [];
-    const subLinks = [];
-    this.reality.serviceConnections.forEach(si => {
-      let source, target;
-      let sourceIndex = -1;
-      let targetIndex = -1;
-      nodes.nodes.forEach(n =>
-        n.properties.subNodes.forEach(sn => {
-          if (sn.name === this.reality.serviceTypes[si.source].name) {
-            source = sn;
-            sourceIndex = subNodes.findIndex(n => n.name === source.name);
-            if (sourceIndex === -1) {
-              sourceIndex = subNodes.length;
-              subNodes.push(source);
-            }
-          }
-          if (sn.name === this.reality.serviceTypes[si.target].name) {
-            target = sn;
-            targetIndex = subNodes.findIndex(n => n.name === target.name);
-            if (targetIndex === -1) {
-              targetIndex = subNodes.length;
-              subNodes.push(target);
-            }
-          }
-        })
-      );
-      subLinks.push({
-        source: sourceIndex,
-        target: targetIndex
+    // get the links between services for the application view
+    nodes.nodes.forEach(node => {
+      node.subNodes.forEach((subNode, i) => {
+        subNode.index = i;
+        subNodes.push(subNode);
       });
-      links.addLink({
-        source,
-        target,
-        dir: "out",
-        cls: "link",
-        uid: `${source.key}-${target.key}`
-      });
-      links.links[links.links.length - 1].stats = si.stats;
     });
+    subNodes.forEach((subNode, source) => {
+      subNode.targetServices.forEach(targetService => {
+        const target = subNodes.findIndex(
+          sn => sn.address === targetService.address
+        );
+        links.getLink(
+          source,
+          target,
+          "out",
+          "link",
+          `Link-${source}-${target}`
+        );
+        const link = links.links[links.links.length - 1];
+        link.request = this.adapter.linkRequest(
+          subNode.address,
+          subNodes[target]
+        );
+        link.value = link.request.bytes_out;
+        link.sankeyLinkHorizontal = this.sankeyLinkHorizontal;
+      });
+    });
+
     // get the starting x,y for the subnodes when using the application view
     vsize = adjustPositions({
       nodes: { nodes: subNodes },
-      links: { links: subLinks },
+      links,
       width: vsize.width,
       height: vsize.height,
       BoxWidth: ServiceWidth,
@@ -196,60 +158,51 @@ class Graph {
     });
 
     const graph = {
-      nodes: subNodes.map((sn, i) => ({
-        node: i,
-        name: sn.name
-      })),
-      links: this.reality.serviceConnections.map(si => ({
-        source: si.source,
-        target: si.target,
-        value: si.stats.throughput,
-        address: si.address
-      }))
+      nodes: subNodes,
+      links: links.links
     };
-    console.log("sankey nodes");
     // get the links between services for use with the traffic view
-    const { snodes, slinks } = this.initSankey(graph, width, height);
-    subNodes.forEach(sn => {
-      const snode = snodes.find(skn => skn.name === sn.name);
-      console.log(snode);
-      sn.sankeyNode = snode;
-      sn.sankeyX = snode.x0;
-      sn.sankeyY = snode.y0;
-      sn.sankeyWidth = snode.x1 - snode.x0;
-      sn.sankeyHeight = snode.y1 - snode.y0;
-      sn.x0 = snode.x0;
-      sn.x1 = snode.x1;
-      sn.y0 = snode.y0;
-      sn.y1 = snode.y1;
-      sn.sourceLinks = snode.sourceLinks;
-      sn.targetLinks = snode.targetLinks;
-      sn.node = snode.node;
-      sn.value = snode.value;
-      sn.depth = snode.depth;
-      sn.height = snode.height;
-      sn.layer = snode.layer;
-      sn.index = snode.index;
-    });
-    console.log("sankey links");
-    console.log(slinks);
-    links.links.forEach(l => {
-      l.sankeyLink = slinks.find(
-        sl =>
-          sl.source.name === l.source.name && sl.target.name === l.target.name
-      );
-    });
+    this.initSankey(graph, width, height);
+    this.mergeLinks(subNodes, links.links);
     return vsize;
   };
 
   initSankey = (graph, width, height) => {
-    const { nodes, links } = sankey()
-      .nodeWidth(15)
-      .nodePadding(20)
-      .extent([[1, 1], [width - 1, height - 5]])(graph);
-    return { snodes: nodes, slinks: links };
+    if (graph.links.length > 0) {
+      const { nodes, links } = sankey()
+        .nodeWidth(ServiceWidth)
+        .nodePadding(ServiceGap)
+        .extent([[1, 1], [width - 1, height - 5]])(graph);
+      return { snodes: nodes, slinks: links };
+    } else {
+      return { snodes: graph.nodes, slinks: graph.links };
+    }
   };
 
+  mergeLinks = (subNodes, subLinks) => {
+    subNodes.forEach(sn => {
+      const sourceLinks = [];
+      sn.sourceLinks.forEach(sl => {
+        const sourceLink = subLinks.find(
+          subL =>
+            subL.source.address === sl.source.address &&
+            subL.target.address === sl.target.address
+        );
+        sourceLinks.push(sourceLink);
+      });
+      sn.sourceLinks = sourceLinks;
+      const targetLinks = [];
+      sn.targetLinks.forEach(sl => {
+        const targetLink = subLinks.find(
+          subL =>
+            subL.source.address === sl.source.address &&
+            subL.target.address === sl.target.address
+        );
+        targetLinks.push(targetLink);
+      });
+      sn.targetLinks = targetLinks;
+    });
+  };
   createRects = (g, shadow) => {
     const rects = g
       .append("svg:g")
@@ -277,8 +230,8 @@ class Graph {
       .attr("y", d => (d.ypos = 15))
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
-      .text(d => d.properties.cluster.location);
-
+      .text(d => d.name);
+    /*
     rects
       .append("svg:text")
       .attr("class", "location")
@@ -290,7 +243,8 @@ class Graph {
         "style",
         d => `fill: ${darkerColor(d.index)}; stroke: ${darkerColor(d.index)}`
       )
-      .text(d => d.properties.cluster.name);
+      .text(d => d.site_id);
+      */
   };
 
   createGraph = (g, links, shadow) => {
@@ -301,10 +255,7 @@ class Graph {
     if (!shadow) {
       let serviceTypes = g
         .selectAll("g.service-type")
-        .data(
-          d => d.properties.subNodes || [],
-          d => `${d.parentNode.uuid}-${d.id}`
-        );
+        .data(d => d.subNodes || [], d => `${d.parentNode.uuid}-${d.address}`);
 
       this.appendServices(serviceTypes, links);
     }
@@ -318,8 +269,7 @@ class Graph {
       .append("svg:g")
       .attr("class", "service-type")
       .attr("transform", (d, i) => {
-        return `translate(20, ${ServiceStart +
-          i * (ServiceHeight + ServiceGap)})`;
+        return `translate(${d.orgx},${d.orgy})`;
       });
 
     serviceTypesEnter
@@ -339,7 +289,7 @@ class Graph {
       .attr("text-anchor", "middle")
       .text(d =>
         d.name.length > 15
-          ? d.name.substr(0, 8) + "..." + d.name.substr(d.name.length - 5)
+          ? d.name.substr(0, 7) + "..." + d.name.substr(d.name.length - 4)
           : d.name
       );
 

@@ -1,13 +1,14 @@
 import React from "react";
 import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
-import { utils } from "../amqp/utilities";
+import { Icap } from "../qdrGlobals";
 
 class LinkOptions extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOptionsOpen: false
+      isOptionsOpen: false,
+      linkOptions: this.props.adapter.requestAttributes()
     };
   }
 
@@ -29,34 +30,13 @@ class LinkOptions extends React.Component {
   };
 
   render() {
-    const { isOptionsOpen } = this.state;
+    const { isOptionsOpen, linkOptions } = this.state;
     const { stat } = this.props.options;
-    const dropdownItems = [
-      <DropdownItem
-        key="protocol"
-        className={stat === "protocol" ? "selected" : ""}
-      >
-        Protocol
-      </DropdownItem>,
-      <DropdownItem
-        key="security"
-        className={stat === "security" ? "selected" : ""}
-      >
-        Security
-      </DropdownItem>,
-      <DropdownItem
-        key="throughput"
-        className={stat === "throughput" ? "selected" : ""}
-      >
-        Throughput
-      </DropdownItem>,
-      <DropdownItem
-        key="latency"
-        className={stat === "latency" ? "selected" : ""}
-      >
-        Latency
+    const dropdownItems = linkOptions.map((option, i) => (
+      <DropdownItem key={option} className={stat === option ? "selected" : ""}>
+        {option}
       </DropdownItem>
-    ];
+    ));
 
     return (
       <Dropdown
@@ -67,9 +47,7 @@ class LinkOptions extends React.Component {
             onToggle={this.onToggle}
             iconComponent={CaretDownIcon}
           >
-            {this.props.options.stat
-              ? utils.Icap(this.props.options.stat)
-              : "Show"}
+            {this.props.options.stat ? Icap(this.props.options.stat) : "Show"}
           </DropdownToggle>
         }
         isOpen={isOptionsOpen}

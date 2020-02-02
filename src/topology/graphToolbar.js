@@ -27,7 +27,6 @@ import {
   ToolbarGroup,
   ToolbarItem
 } from "@patternfly/react-core";
-import GraphOptions from "./graphOptions";
 import LinkOptions from "./linkOptions";
 
 class GraphToolbar extends Component {
@@ -44,13 +43,12 @@ class GraphToolbar extends Component {
         key: "namespace",
         description: "Network (VAN)",
         selected: this.props.initialView === "namespace"
-      }
-      /*,
+      },
       {
         key: "traffic",
         description: "Relative traffic",
         selected: this.props.initialView === "traffic"
-      }*/
+      }
     ];
   }
 
@@ -112,11 +110,8 @@ class GraphToolbar extends Component {
         <ToolbarGroup>
           <ToolbarItem className="pf-u-mr-md">
             {this.buildDropdown()}{" "}
-            <GraphOptions
-              options={this.props.options.graph}
-              handleChangeOption={this.props.handleChangeOption}
-            />{" "}
             <LinkOptions
+              adapter={this.props.service.adapter}
               options={this.props.options.link}
               handleChangeOption={this.props.handleChangeOption}
             />

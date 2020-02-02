@@ -1,70 +1,9 @@
 import React from "react";
-import brandImg from "./assets/gilligan.png";
-import {
-  LoginFooterItem,
-  LoginPage,
-  BackgroundImageSrc,
-  ListItem
-} from "@patternfly/react-core";
+import brandImg from "./assets/skupper.svg";
+import { LoginPage, BackgroundImageSrc } from "@patternfly/react-core";
 
-import {
-  Brand,
-  PageSection,
-  PageSectionVariants,
-  TextContent,
-  Text
-} from "@patternfly/react-core";
 import { withRouter } from "react-router-dom";
-import ConnectForm from "./connect-form";
-const avatarImg = require("./assets/skupper.svg");
-
-class _ConnectPage extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { showForm: true };
-  }
-
-  handleConnectCancel = () => {
-    this.setState({ showForm: false });
-  };
-
-  render() {
-    const { showForm } = this.state;
-    const { from } = this.props.location.state || { from: { pathname: "/" } };
-    return (
-      <PageSection variant={PageSectionVariants.light} className="connect-page">
-        {showForm ? (
-          <ConnectForm
-            prefix="form"
-            handleConnect={this.props.handleConnect}
-            handleConnectCancel={this.handleConnectCancel}
-            service={this.props.service}
-            fromPath={from.pathname}
-            isConnected={this.props.isConnected}
-          />
-        ) : (
-          <React.Fragment />
-        )}
-        <div className="left-content">
-          <TextContent>
-            <Text component="h1" className="console-banner">
-              Gilligan
-            </Text>
-          </TextContent>
-          <TextContent>
-            <Text component="p">
-              This tool will visualize a Skupper network.
-            </Text>
-            <Text component="p">
-              Log into the network with the host and port of a Skupper
-              installation in any of your cluster's namespaces.
-            </Text>
-          </TextContent>
-        </div>
-      </PageSection>
-    );
-  }
-}
+import PleaseWait from "./pleaseWait";
 
 class ConnectPage extends React.Component {
   constructor(props) {
@@ -93,45 +32,25 @@ class ConnectPage extends React.Component {
   };
 
   render() {
-    const { from } = this.props.location.state || { from: { pathname: "/" } };
-
-    const listItem = (
-      <React.Fragment>
-        <ListItem>
-          <LoginFooterItem href="#">Terms of Use </LoginFooterItem>
-        </ListItem>
-        <ListItem>
-          <LoginFooterItem href="#">Help</LoginFooterItem>
-        </ListItem>
-        <ListItem>
-          <LoginFooterItem href="#">Privacy Policy</LoginFooterItem>
-        </ListItem>
-      </React.Fragment>
-    );
-
-    const loginForm = (
-      <ConnectForm
-        prefix="form"
-        handleConnect={this.props.handleConnect}
-        handleConnectCancel={this.handleConnectCancel}
-        service={this.props.service}
-        fromPath={from.pathname}
-        isConnected={this.props.isConnected}
-      />
-    );
+    const loginForm = <PleaseWait />;
 
     const images = {
-      [BackgroundImageSrc.lg]: "./assets/gilligan.png"
+      [BackgroundImageSrc.lg]: "./assets/skupper.svg",
+      [BackgroundImageSrc.sm]: "./assets/skupper.svg",
+      [BackgroundImageSrc.sm2x]: "./assets/skupper.svg",
+      [BackgroundImageSrc.xs]: "./assets/skupper.svg",
+      [BackgroundImageSrc.xs2x]: "./assets/skupper.svg"
     };
 
     return (
       <LoginPage
+        loginTitle="Connect"
         footerListVariants="inline"
         brandImgSrc={brandImg}
         brandImgAlt="Gilligan logo"
         backgroundImgSrc={images}
         backgroundImgAlt="Images"
-        textContent="Gilligan is a skupper network management/visualization tool."
+        textContent="A skupper network management/visualization tool."
       >
         {loginForm}
       </LoginPage>

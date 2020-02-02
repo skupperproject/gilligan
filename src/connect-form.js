@@ -75,7 +75,6 @@ class ConnectForm extends React.Component {
           <div className="">
             <Form isHorizontal>
               <TextContent className="connect-title">
-                <Text component={TextVariants.h1}>Connect</Text>
                 <Text component={TextVariants.p}>
                   Enter the address and port of a skupper stats server.
                 </Text>

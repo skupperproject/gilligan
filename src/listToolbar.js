@@ -20,10 +20,6 @@ under the License.
 import React, { Component } from "react";
 import {
   Button,
-  Dropdown,
-  DropdownPosition,
-  DropdownToggle,
-  DropdownItem,
   Toolbar,
   ToolbarGroup,
   ToolbarItem

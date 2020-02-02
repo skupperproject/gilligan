@@ -264,6 +264,7 @@ table.edge-table td[data-label="State"] svg {
   font-weight: bold;
   letter-spacing: 0.2em;
   font-size: 18px;
+  width: 30em;
 }
 
 .state-copy input {
@@ -317,6 +318,10 @@ div.state-container button.pf-c-clipboard-copy__group-copy {
   right: 1em;
 }
 
+/* connect page */
+main.pf-c-login__main {
+  height: 530px;
+}
 .connect-modal {
   width: 40em !important;
   position: absolute !important;
@@ -359,6 +364,89 @@ div.state-container button.pf-c-clipboard-copy__group-copy {
   padding: 6em;
   text-align: left;
 }
+.spinning-clockwise {
+  -webkit-animation: spinc 4s linear infinite;
+  -moz-animation: spinc 4s linear infinite;
+  animation: spinc 4s linear infinite;
+}
+@-moz-keyframes spinc {
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes spinc {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spinc {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+.spinning-cclockwise {
+  -webkit-animation: spincc 4s linear infinite;
+  -moz-animation: spincc 4s linear infinite;
+  animation: spincc 4s linear infinite;
+}
+@-moz-keyframes spincc {
+  100% {
+    -moz-transform: rotate(-360deg);
+  }
+}
+@-webkit-keyframes spincc {
+  100% {
+    -webkit-transform: rotate(-360deg);
+  }
+}
+@keyframes spincc {
+  100% {
+    -webkit-transform: rotate(-360deg);
+    transform: rotate(-360deg);
+  }
+}
+
+#CogWrapper {
+  position: relative;
+  margin: auto;
+  width: 5.5em;
+  height: 5em;
+}
+
+#CogMain {
+  width: 4em;
+  height: 4em;
+  position: absolute;
+  top: 0.5em;
+  left: 0;
+}
+
+#CogUpper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2em;
+  height: 2em;
+}
+#CogLower {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 2em;
+  height: 2em;
+}
+
+.creating-wrapper {
+  /* min-width: 66em; */
+  margin-top: 6em;
+  text-align: center;
+}
+
+.creating-message {
+  margin-top: 2em;
+}
+/*    end of connect page */
 
 .console-banner {
   text-transform: uppercase;
@@ -464,7 +552,7 @@ path.link.selected:not(.traffic) {
 path.link {
   fill: #000;
   /* stroke: #000; */
-  stroke-width: 2.5px;
+  /* stroke-width: 2.5px; */
   cursor: default;
 }
 
@@ -1108,7 +1196,8 @@ path.external {
   padding: 0;
 }
 
-.topology-page.pf-c-page__main-section {
+.topology-page.pf-c-page__main-section,
+.list-page.pf-c-page__main-section {
   padding: 0;
 }
 

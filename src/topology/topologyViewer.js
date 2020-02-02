@@ -28,19 +28,15 @@ import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
 
 import * as d3 from "d3";
-import { sankeyLinkHorizontal } from "d3-sankey";
-
-import { Traffic } from "./traffic.js";
-import { separateAddresses } from "../chord/filters.js";
 import { Nodes } from "./nodes.js";
 import { Links } from "./links.js";
-import { nextHop, connectionPopupHTML, getSizes } from "./topoUtils.js";
 //import { Legend } from "./legend.js";
 //import LegendComponent from "./legendComponent";
 import ClientInfoComponent from "./clientInfoComponent";
 import { addDefs } from "./svgUtils.js";
-import { QDRLogger } from "../qdrGlobals";
+import { QDRLogger, getSizes } from "../qdrGlobals";
 import Graph from "./graph";
+import Transitions from "./transitions";
 const TOPOOPTIONSKEY = "topoLegendOptions";
 
 class TopologyPage extends Component {
@@ -85,15 +81,6 @@ class TopologyPage extends Component {
     };
 
     this.force = null;
-    this.traffic = new Traffic(
-      this,
-      this.props.service,
-      separateAddresses,
-      Nodes.radius("inter-router"),
-      this.forceData,
-      ["dots", "congestion"].filter(t => this.state.legendOptions.traffic[t])
-    );
-
     this.contextMenuItems = [
       {
         title: "Freeze in place",
@@ -120,34 +107,18 @@ class TopologyPage extends Component {
     this.graph = new Graph(this.props.service);
     this.view = this.props.initialView;
     this.resetScale = 1;
+    this.transitions = new Transitions(this.drawPath);
   }
 
   // called only once when the component is initialized
   componentDidMount = () => {
     window.addEventListener("resize", this.resize);
-    // we only need to update connections during steady-state
-    this.props.service.management.topology.setUpdateEntities([
-      "router",
-      "connection"
-    ]);
-    // poll the routers for their latest entities (set to connection above)
-    //this.props.service.management.topology.startUpdating();
 
     // create the svg
     this.init();
-
-    // get notified when a router is added/dropped and when
-    // the number of connections for a router changes
-    this.props.service.management.topology.addChangedAction("topology", () => {
-      this.init();
-    });
   };
 
   componentWillUnmount = () => {
-    this.props.service.management.topology.setUpdateEntities([]);
-    this.props.service.management.topology.stopUpdating();
-    this.props.service.management.topology.delChangedAction("topology");
-    this.traffic.remove();
     this.forceData.nodes.savePositions();
     window.removeEventListener("resize", this.resize);
     d3.select(".pf-c-page__main").style("background-color", "white");
@@ -262,20 +233,6 @@ class TopologyPage extends Component {
       .attr("class", "links")
       .selectAll("g");
 
-    this.traffic.remove();
-    if (this.state.legendOptions.traffic.dots)
-      this.traffic.addAnimationType(
-        "dots",
-        separateAddresses,
-        Nodes.radius("inter-router")
-      );
-    if (this.state.legendOptions.traffic.congestion)
-      this.traffic.addAnimationType(
-        "congestion",
-        separateAddresses,
-        Nodes.radius("inter-router")
-      );
-
     // mouse event vars
     this.mousedown_node = null;
 
@@ -332,35 +289,6 @@ class TopologyPage extends Component {
 
     // app starts here
     this.restart();
-
-    if (this.oldSelectedNode) {
-      d3.selectAll("circle.inter-router").classed("selected", d => {
-        if (d.key === this.oldSelectedNode.key) {
-          this.selected_node = d;
-          return true;
-        }
-        return false;
-      });
-    }
-    if (this.oldMouseoverNode && this.selected_node) {
-      d3.selectAll("circle.inter-router").each(d => {
-        if (d.key === this.oldMouseoverNode.key) {
-          this.mouseover_node = d;
-          this.props.service.management.topology.ensureAllEntities(
-            [
-              {
-                entity: "router.node",
-                attrs: ["id", "nextHop"]
-              }
-            ],
-            () => {
-              this.nextHopHighlight(this.selected_node, d);
-              this.restart();
-            }
-          );
-        }
-      });
-    }
   };
 
   resetMouseVars = () => {
@@ -372,12 +300,8 @@ class TopologyPage extends Component {
   handleMouseOutPath = d => {
     // mouse out of a path
     this.popupCancelled = true;
-    this.props.service.management.topology.delUpdatedAction(
-      "connectionPopupHTML"
-    );
     this.setState({ showPopup: false });
     d.selected = false;
-    connectionPopupHTML();
   };
 
   showMarker = d => {
@@ -395,16 +319,19 @@ class TopologyPage extends Component {
     this.highlightLink(highlight, link, d);
 
     link.selectAll("text").attr("font-weight", highlight ? "bold" : "unset");
-    //.style("display", highlight ? "block" : "none");
   };
 
   highlightLink = (highlight, link, d) => {
-    link.selectAll("path").attr("opacity", 1);
+    link
+      .selectAll("path")
+      .attr("opacity", highlight || this.view !== "traffic" ? 1 : 0.25);
     link.selectAll("text.stats").style("stroke", null);
     const services = d3
       .select("#SVG_ID")
       .selectAll("g.service-type")
-      .filter(d1 => d1.key === d.source.key || d1.key === d.target.key)
+      .filter(
+        d1 => d1.address === d.source.address || d1.address === d.target.address
+      )
       .attr("opacity", 1);
 
     services.selectAll("rect").style("stroke-width", highlight ? "2px" : "1px");
@@ -416,8 +343,8 @@ class TopologyPage extends Component {
       .selectAll("circle.end-point")
       .filter(
         d1 =>
-          d1.key === d.source.key &&
-          d1.targets.some(t => t.key === d.target.key)
+          d1.address === d.source.address &&
+          d1.targetNodes.some(t => t.address === d.target.address)
       )
       .attr("opacity", 1);
 
@@ -425,8 +352,8 @@ class TopologyPage extends Component {
       .selectAll("rect.end-point")
       .filter(
         d1 =>
-          d1.key === d.target.key &&
-          d1.sources.some(t => t.key === d.source.key)
+          d1.address === d.target.address &&
+          d1.sourceNodes.some(t => t.address === d.source.address)
       )
       .attr("opacity", 1);
   };
@@ -436,7 +363,9 @@ class TopologyPage extends Component {
     const links = d3
       .select("#SVG_ID")
       .selectAll("g.links g")
-      .filter(d1 => d1.source.key === d.key || d1.target.key === d.key);
+      .filter(
+        d1 => d1.source.address === d.address || d1.target.address === d.address
+      );
     links.each(function(d1) {
       self.highlightLink(highlight, d3.select(this), d1);
     });
@@ -452,7 +381,7 @@ class TopologyPage extends Component {
 
   blurAll = (blur, d) => {
     const opacity = blur ? 0.5 : 1;
-    const pathOpacity = blur ? 0.25 : 1;
+    const pathOpacity = blur || this.view === "traffic" ? 0.25 : 1;
     const svg = d3.select("#SVG_ID");
     svg.selectAll(".cluster-rects").attr("opacity", opacity);
     svg
@@ -474,66 +403,8 @@ class TopologyPage extends Component {
 
   setLinkStat = () => {
     this.path.selectAll("text").text(d => {
-      const which =
-        this.props.options.link.stat === "security"
-          ? "security"
-          : this.props.options.link.stat === "protocol"
-          ? "protocol"
-          : this.props.options.link.stat === "throughput"
-          ? "throughput"
-          : this.props.options.link.stat === "latency"
-          ? "latency"
-          : "unknown";
-      return d.stats[which];
+      return d.request[this.props.options.link.stat];
     });
-  };
-
-  expandNode = (d, node) => {
-    if (!d.expanded) {
-      /*
-      d.expanded = true;
-      node
-        .select("g.extra-info")
-        .transition()
-        .duration(250)
-        .attr("opacity", 1);
-
-      node
-        .select("rect.service-type")
-        .transition()
-        .duration(250)
-        .attr("height", 70);
-*/
-      /*
-      const mouse = d3.mouse(this.svg.node());
-      mouse[0] = -mouse[0];
-      mouse[1] = -mouse[1];
-      this.svg
-        .transition()
-        .duration(250)
-        .attr("transform", `translate(${mouse}) scale(2)`)
-        .each("end", () => {
-          this.zoom.scale(2);
-          this.zoom.translate(mouse);
-          this.zoomed();
-        });
-        */
-    } else {
-      d.expanded = false;
-      /*
-      node
-        .select("g.extra-info")
-        .transition()
-        .duration(250)
-        .attr("opacity", 0);
-
-      node
-        .select("rect.service-type")
-        .transition()
-        .duration(250)
-        .attr("height", 40);
-        */
-    }
   };
 
   // Takes the forceData.nodes and forceData.links array and creates svg elements
@@ -588,49 +459,6 @@ class TopologyPage extends Component {
         d.selected = true;
         self.highlightConnection(true, d3.select(this), d, self);
         self.popupCancelled = false;
-        /*
-        let event = d3.event;
-        d.toolTip().then(toolTip => {
-          this.showToolTip(toolTip, event);
-        });
-*/
-        /*
-        let updateTooltip = () => {
-          if (d.selected) {
-            this.setState({
-              popupContent: connectionPopupHTML(
-                d,
-                this.props.service.management.topology._nodeInfo
-              )
-            });
-            this.displayTooltip(event);
-          } else {
-            this.handleMouseOutPath(d);
-          }
-        };
-        */
-        /*
-        // update the contents of the popup tooltip each time the data is polled
-        this.props.service.management.topology.addUpdatedAction(
-          "connectionPopupHTML",
-          updateTooltip
-        );
-        // request the data and update the tooltip as soon as it arrives
-        this.props.service.management.topology.ensureAllEntities(
-          [
-            {
-              entity: "router.link",
-              force: true
-            },
-            {
-              entity: "connection"
-            }
-          ],
-          updateTooltip
-        );
-        // just show the tooltip with whatever data we have
-        updateTooltip();
-*/
         self.restart();
       })
       .on("mouseout", function(d) {
@@ -732,16 +560,6 @@ class TopologyPage extends Component {
         // mouseover a namespace box
         self.current_node = d;
         // highlight the namespace box
-        self.highlightNamespace(true, d3.select(this), d, self);
-        /*
-        if (!self.mousedown_node) {
-          const mouse = scaledMouse(self.svg.node(), d3.event);
-          self.popupCancelled = false;
-          d.toolTip(self.props.service.management.topology).then(toolTip => {
-            self.showToolTip(toolTip, mouse);
-          });
-        }
-        */
         self.restart();
       })
       .on("mouseout", function(d) {
@@ -825,13 +643,6 @@ class TopologyPage extends Component {
         // highlight this service-type and it's connected service-types
         self.highlightServiceType(true, d3.select(this), d, self);
         d3.event.stopPropagation();
-        /*
-        const mouse = scaledMouse(self.svg.node(), d3.event);
-        self.popupCancelled = false;
-        d.toolTip(self.props.service.management.topology).then(toolTip => {
-          self.showToolTip(toolTip, mouse);
-        });
-        */
       })
       .on("mouseout", function(d) {
         self.highlightServiceType(false, d3.select(this), d, self);
@@ -840,7 +651,6 @@ class TopologyPage extends Component {
       .on("click", function(d) {
         if (d3.event.defaultPrevented) return; // click suppressed
         self.doDialog(d, "client");
-        //self.expandNode(d, d3.select(this));
         d3.event.stopPropagation();
         d3.event.preventDefault();
       });
@@ -878,23 +688,27 @@ class TopologyPage extends Component {
       return `translate(${d.x},${d.y})`;
     });
     // draw lines between services
-    const t = this.view === "application" ? 1 : 0;
-    this.drawPath(t);
+    this.drawPath(this.view === "application" ? 1 : 0);
     this.force.stop();
   };
 
   drawPath = t => {
-    this.path.selectAll("path").attr("d", (d, i) => {
-      if (this.view === "traffic") {
-        return sankeyLinkHorizontal()(d, i);
-      } else {
-        //console.log(`if it were traffic d would be `);
-        //console.log(d);
-        //console.log(sankeyLinkHorizontal()(d.sankeyLink, i));
-        const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(t);
-        return `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty + tyoff}`;
-      }
-    });
+    this.path
+      .selectAll("path")
+      .attr("d", (d, i) => {
+        if (this.view === "traffic") {
+          return d.sankeyLinkHorizontal(d, i);
+        } else {
+          const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(t);
+          return `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty + tyoff}`;
+        }
+      })
+      .attr("stroke-width", d => {
+        if (this.view === "traffic") {
+          return d.width;
+        }
+        return 2.5;
+      });
 
     this.path
       .selectAll("text")
@@ -906,68 +720,6 @@ class TopologyPage extends Component {
         const { sy, ty, syoff, tyoff } = d.endpoints(t);
         return Math.abs(sy + syoff + ty + tyoff) / 2 - 5;
       });
-  };
-
-  nextHopHighlight = (selected_node, d) => {
-    selected_node.highlighted = true;
-    d.highlighted = true;
-    // if the selected node isn't a router,
-    // find the router to which it is connected
-    if (selected_node.nodeType !== "_topo") {
-      let connected_node = this.forceData.nodes.find(
-        selected_node.routerId,
-        {},
-        selected_node.routerId
-      );
-      // push the link between the selected_node and the router
-      let link = this.forceData.links.linkFor(selected_node, connected_node);
-      if (link) {
-        link.highlighted = true;
-        d3.select(`path[id='hitpath-${link.uid}']`).classed(
-          "highlighted",
-          true
-        );
-      }
-      // start at the router
-      selected_node = connected_node;
-    }
-    if (d.nodeType !== "_topo") {
-      let connected_node = this.forceData.nodes.find(
-        d.routerId,
-        {},
-        d.routerId
-      );
-      // push the link between the target_node and its router
-      let link = this.forceData.links.linkFor(d, connected_node);
-      if (link) {
-        link.highlighted = true;
-        d3.select(`path[id='hitpath-${link.uid}']`).classed(
-          "highlighted",
-          true
-        );
-      }
-      // end at the router
-      d = connected_node;
-    }
-    nextHop(
-      selected_node,
-      d,
-      this.forceData.nodes,
-      this.forceData.links,
-      this.props.service.management.topology.nodeInfo(),
-      selected_node,
-      (link, fnode, tnode) => {
-        link.highlighted = true;
-        d3.select(`path[id='hitpath-${link.uid}']`).classed(
-          "highlighted",
-          true
-        );
-        fnode.highlighted = true;
-        tnode.highlighted = true;
-      }
-    );
-    let hnode = this.forceData.nodes.nodeFor(d.name);
-    hnode.highlighted = true;
   };
 
   // show the details dialog for a client or group of clients
@@ -1048,217 +800,8 @@ class TopologyPage extends Component {
     this.handleLegendOptionsChange(legendOptions);
   };
 
-  // checking and unchecking of which traffic animation to show
-  handleChangeTrafficAnimation = (checked, event) => {
-    const { legendOptions } = this.state;
-    const name = event.target.name;
-    legendOptions.traffic[name] = checked;
-    if (!checked) {
-      this.traffic.remove(name);
-    } else {
-      this.traffic.addAnimationType(
-        name,
-        separateAddresses,
-        Nodes.radius("inter-router")
-      );
-    }
-    this.handleLegendOptionsChange(legendOptions);
-  };
-
-  handleChangeTrafficFlowAddress = (address, checked) => {
-    const { legendOptions } = this.state;
-    legendOptions.traffic.addresses[address] = checked;
-    this.handleLegendOptionsChange(legendOptions, this.addressFilterChanged);
-  };
-
-  // called from traffic
-  // the list of addresses has changed. set new addresses to true
-  handleUpdatedAddresses = addresses => {
-    const { legendOptions } = this.state;
-    let changed = false;
-    // set any new keys to the passed in value
-    Object.keys(addresses).forEach(address => {
-      if (typeof legendOptions.traffic.addresses[address] === "undefined") {
-        legendOptions.traffic.addresses[address] = addresses[address];
-        changed = true;
-      }
-    });
-    // remove any old keys that were not passed in
-    Object.keys(legendOptions.traffic.addresses).forEach(address => {
-      if (typeof addresses[address] === "undefined") {
-        delete legendOptions.traffic.addresses[address];
-        changed = true;
-      }
-    });
-    if (changed) {
-      this.handleLegendOptionsChange(legendOptions, this.addressFilterChanged);
-    }
-  };
-
-  handleUpdateAddressColors = addressColors => {
-    const { legendOptions } = this.state;
-    let changed = false;
-    // set any new keys to the passed in value
-    Object.keys(addressColors).forEach(address => {
-      if (typeof legendOptions.traffic.addressColors[address] === "undefined") {
-        legendOptions.traffic.addressColors[address] = addressColors[address];
-        changed = true;
-      }
-    });
-    // remove any old keys that were not passed in
-    Object.keys(legendOptions.traffic.addressColors).forEach(address => {
-      if (typeof addressColors[address] === "undefined") {
-        delete legendOptions.traffic.addressColors[address];
-        changed = true;
-      }
-    });
-    if (changed) {
-      this.handleLegendOptionsChange(legendOptions);
-    }
-  };
-
-  // the mouse was hovered over one of the addresses in the legend
-  handleHoverAddress = (address, over) => {
-    // this.enterLegend and this.leaveLegend are defined in traffic.js
-    if (over) {
-      this.enterLegend(address);
-    } else {
-      this.leaveLegend();
-    }
-  };
-
   handleContextHide = () => {
     this.setState({ showContextMenu: false });
-  };
-
-  translateFn = dir => d => t => {
-    if (dir === "ns") t = 1 - t;
-    this.drawPath(t);
-    return `translate(${d.orgx + (d.x - d.orgx) * t},${d.orgy +
-      (d.y - d.orgy) * t})`;
-  };
-
-  translateFnTraffic = () => d => t => {
-    this.drawPath(t);
-    return `translate(${d.sankeyX + (d.x - d.sankeyX) * t},${d.sankeyY +
-      (d.y - d.sankeyY) * t})`;
-  };
-
-  toApplication = () => {
-    // Note: all the transitions happen concurrently
-    if (this.view === "namespace") {
-      this.view = "application";
-
-      // show the shadow rects and then fade them out
-      this.forceData.nodes.nodes.forEach(d => {
-        d3.select(`#shadow-${d.index}`)
-          .attr("transform", `translate(${d.x},${d.y})`)
-          .select(".shadow-rects")
-          .attr("opacity", 1)
-          .style("display", "block")
-          .transition()
-          .duration(1000)
-          .attr("opacity", 0)
-          .each("end", function() {
-            d3.select(this).style("display", "none");
-          });
-      });
-
-      // hide the real cluster rects
-      d3.selectAll(".cluster-rects").style("display", "none");
-
-      // make the cluster container start at the left of the svg
-      // in order to move the services to their correct locations
-      d3.selectAll(".cluster")
-        .transition()
-        .duration(1000)
-        .attr("transform", "translate(0,0)");
-
-      // move the service rects to their full-page locations
-      d3.selectAll("g.service-type")
-        .transition()
-        .duration(1000)
-        .attrTween("transform", this.translateFn("app"));
-    }
-  };
-
-  toNamespace = () => {
-    if (this.view === "application") {
-      this.view = "namespace";
-
-      // fade in the shadow rects and then hide them
-      this.forceData.nodes.nodes.forEach(d => {
-        d3.select(`#shadow-${d.index}`)
-          .select(".shadow-rects")
-          .style("display", "block")
-          .attr("opacity", 0)
-          .transition()
-          .duration(1000)
-          .attr("opacity", 1)
-          .each("end", function() {
-            d3.select(this)
-              .attr("opacity", 0)
-              .style("display", "none");
-          });
-      });
-
-      // while the above is happening, transition the containers to their proper position
-      d3.selectAll(".cluster")
-        .transition()
-        .duration(1000)
-        .attr("transform", d => `translate(${d.x},${d.y})`)
-        .each("end", function() {
-          d3.select(this)
-            .style("display", "block")
-            .attr("opacity", 1)
-            .select(".cluster-rects")
-            .attr("opacity", 1)
-            .style("display", "block");
-        });
-
-      // and also move the service rects to their proper position within the container
-      d3.selectAll("g.service-type")
-        .transition()
-        .duration(1000)
-        .attrTween("transform", this.translateFn("ns"));
-    }
-  };
-
-  toTraffic = () => {
-    if (this.view === "namespace") {
-      this.view = "traffic";
-
-      // show the shadow rects and then fade them out
-      this.forceData.nodes.nodes.forEach(d => {
-        d3.select(`#shadow-${d.index}`)
-          .attr("transform", `translate(${d.x},${d.y})`)
-          .select(".shadow-rects")
-          .attr("opacity", 1)
-          .style("display", "block")
-          .transition()
-          .duration(1000)
-          .attr("opacity", 0)
-          .each("end", function() {
-            d3.select(this).style("display", "none");
-          });
-      });
-
-      // hide the real cluster rects
-      d3.selectAll(".cluster-rects").style("display", "none");
-
-      // make the cluster container start at the left of the svg
-      // in order to move the services to their correct locations
-      d3.selectAll(".cluster")
-        .transition()
-        .duration(1000)
-        .attr("transform", "translate(0,0)");
-
-      // move the service rects to their traffic locations
-      d3.selectAll("g.service-type")
-        .transition()
-        .duration(1000)
-        .attrTween("transform", this.translateFnTraffic());
-    }
   };
 
   // clicked on the Legend button in the control bar
@@ -1287,6 +830,36 @@ class TopologyPage extends Component {
     this.zoomed();
   };
 
+  toApplication = () => {
+    const previousView = this.view;
+    this.view = "application";
+    this.transitions.toApplication(
+      previousView,
+      this.forceData.nodes.nodes,
+      this.path
+    );
+  };
+
+  toNamespace = () => {
+    const previousView = this.view;
+    this.view = "namespace";
+    this.transitions.toNamespace(
+      previousView,
+      this.forceData.nodes.nodes,
+      this.path
+    );
+  };
+
+  toTraffic = () => {
+    const previousView = this.view;
+    this.view = "traffic";
+    this.transitions.toTraffic(
+      previousView,
+      this.forceData.nodes.nodes,
+      this.path
+    );
+  };
+
   render() {
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,
@@ -1302,6 +875,7 @@ class TopologyPage extends Component {
         aria-label="topology-viewer"
         viewToolbar={
           <GraphToolbar
+            service={this.props.service}
             handleChangeView={this.props.handleChangeView}
             handleChangeOption={this.props.handleChangeOption}
             options={this.props.options}
@@ -1332,7 +906,6 @@ class TopologyPage extends Component {
         {this.state.showClientInfo || this.state.showRouterInfo ? (
           <ClientInfoComponent
             d={this.d}
-            topology={this.props.service.management.topology}
             handleCloseClientInfo={this.handleCloseClientInfo}
           />
         ) : (

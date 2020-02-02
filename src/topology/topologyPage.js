@@ -28,6 +28,7 @@ import {
   TextVariants
 } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
+import { Icap, strDate } from "../qdrGlobals";
 
 class TopologyPage extends Component {
   constructor(props) {
@@ -51,13 +52,7 @@ class TopologyPage extends Component {
   };
 
   handleChangeView = key => {
-    if (key === "application") {
-      this.graphRef.toApplication();
-    } else if (key === "namespace") {
-      this.graphRef.toNamespace();
-    } else if (key === "traffic") {
-      this.graphRef.toTraffic();
-    }
+    this.graphRef[`to${Icap(key)}`]();
   };
 
   handleChangeOption = option => {
@@ -85,9 +80,7 @@ class TopologyPage extends Component {
                 Mesh view
               </Text>
               <Text className="overview-loading" component={TextVariants.pre}>
-                {`Updated ${this.props.service.utilities.strDate(
-                  this.state.lastUpdated
-                )}`}
+                {`Updated ${strDate(this.state.lastUpdated)}`}
               </Text>
             </TextContent>
           </StackItem>

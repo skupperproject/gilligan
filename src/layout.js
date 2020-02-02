@@ -23,9 +23,6 @@ import {
   Brand,
   Button,
   ButtonVariant,
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
   Page,
   PageHeader,
   SkipToContent,
@@ -48,13 +45,13 @@ import {
 
 import accessibleStyles from "@patternfly/patternfly/utilities/Accessibility/accessibility.css";
 import { css } from "@patternfly/react-styles";
-import { BellIcon, PowerOffIcon } from "@patternfly/react-icons";
+import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./connectPage";
 import TopologyPage from "./topology/topologyPage";
 import ListPage from "./listPage";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
-const gilliganImg = require("./assets/gilligan.png");
+const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
 
 class PageLayout extends React.Component {
@@ -63,7 +60,6 @@ class PageLayout extends React.Component {
     this.state = {
       connected: false,
       connectPath: "",
-      isDropdownOpen: false,
       activeItem: "mesh",
       isConnectFormOpen: false,
       username: ""
@@ -73,20 +69,23 @@ class PageLayout extends React.Component {
     this.views = ["Mesh", "Cards"];
   }
 
+  componentDidMount = () => {
+    this.doConnect();
+  };
+
   setLocation = where => {
     //this.setState({ connectPath: where })
   };
 
-  onDropdownToggle = isDropdownOpen => {
-    this.setState({
-      isDropdownOpen
-    });
-  };
-
-  onDropdownSelect = event => {
-    this.setState({
-      isDropdownOpen: !this.state.isDropdownOpen
-    });
+  doConnect = () => {
+    this.service.connect().then(
+      r => {
+        this.handleConnect(this.props.fromPath, true);
+      },
+      e => {
+        console.log(e);
+      }
+    );
   };
 
   handleConnect = connectPath => {
@@ -133,7 +132,7 @@ class PageLayout extends React.Component {
   toL = s => s[0].toLowerCase() + s.slice(1);
 
   render() {
-    const { isDropdownOpen, activeItem } = this.state;
+    const { activeItem } = this.state;
 
     const PageNav = () => {
       return (
@@ -156,11 +155,6 @@ class PageLayout extends React.Component {
         </Nav>
       );
     };
-    const userDropdownItems = [
-      <DropdownItem component="button" key="action">
-        Logout
-      </DropdownItem>
-    ];
     const PageToolbar = (
       <Toolbar>
         <ToolbarGroup
@@ -171,43 +165,12 @@ class PageLayout extends React.Component {
         >
           <ToolbarItem>
             <Button
-              id="connectButton"
-              onClick={this.toggleConnectForm}
-              aria-label="Toggle Connect Form"
-              variant={ButtonVariant.plain}
-            >
-              <PowerOffIcon />
-            </Button>
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button
               id="default-example-uid-01"
               aria-label="Notifications actions"
               variant={ButtonVariant.plain}
             >
               <BellIcon />
             </Button>
-          </ToolbarItem>
-        </ToolbarGroup>
-        <ToolbarGroup>
-          <ToolbarItem
-            className={css(
-              accessibleStyles.screenReader,
-              accessibleStyles.visibleOnMd
-            )}
-          >
-            <Dropdown
-              isPlain
-              position="right"
-              onSelect={this.onDropdownSelect}
-              isOpen={isDropdownOpen}
-              toggle={
-                <DropdownToggle onToggle={this.onDropdownToggle}>
-                  {this.state.username}
-                </DropdownToggle>
-              }
-              dropdownItems={userDropdownItems}
-            />
           </ToolbarItem>
         </ToolbarGroup>
       </Toolbar>
@@ -220,7 +183,7 @@ class PageLayout extends React.Component {
           <React.Fragment>
             <Brand src={gilliganImg} alt="Gilligan Logo" />
             <span className="logo-text">
-              Gilligan - A tool to visualize a Skupper network
+              A tool to visualize a Skupper network
             </span>
           </React.Fragment>
         }

@@ -17,47 +17,27 @@ Licensed to the Apache Software Foundation (ASF) under one
   under the License.
 */
 
-import { Management as dm } from "./amqp/management.js";
-import { utils } from "./amqp/utilities.js";
 import RESTService from "./restService";
-
-import { QDR_LAST_LOCATION } from "./qdrGlobals.js";
+import Adapter from "./adapter";
 
 // number of milliseconds between topology updates
-const DEFAULT_INTERVAL = 5000;
 export class QDRService {
   constructor(hooks) {
-    const url = utils.getUrlParts(window.location);
-    this.management = new dm(url.protocol, DEFAULT_INTERVAL);
-    this.utilities = utils;
     this.hooks = hooks;
   }
 
-  onReconnect() {
-    this.management.connection.on("disconnected", this.onDisconnect.bind(this));
-    let org = localStorage[QDR_LAST_LOCATION] || "charts";
-    this.hooks.setLocation(org);
-  }
-  onDisconnect() {
-    this.hooks.setLocation("connect");
-    this.management.connection.on("connected", this.onReconnect.bind(this));
-  }
-  connect(connectOptions) {
+  connect() {
     return new Promise((resolve, reject) => {
-      const rs = new RESTService();
-      rs.getVAN(connectOptions).then(
-        VAN => {
-          this.VAN = VAN;
-          resolve(VAN);
+      this.rest = new RESTService();
+      this.rest.getData().then(
+        data => {
+          this.adapter = new Adapter(data);
+          this.VAN = data;
+          resolve(data);
         },
         error => reject(error)
       );
     });
-  }
-  disconnect() {
-    this.management.connection.disconnect();
-    delete this.management;
-    this.management = new dm(window.location.protocol, DEFAULT_INTERVAL);
   }
 }
 

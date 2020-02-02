@@ -1,0 +1,230 @@
+{
+  "sites": [
+    {
+      "site_name": "foo",
+      "site_id": "BHFgwBDE8M",
+      "connected": [
+        "OAxXdS7rUR"
+      ]
+    },
+    {
+      "site_name": "bar",
+      "site_id": "OAxXdS7rUR",
+      "connected": [
+        "BHFgwBDE8M"
+      ]
+    }
+  ],
+  "services": [
+    {
+      "address": "reviews",
+      "protocol": "http",
+      "requests_received": [
+        {
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "site_id": "BHFgwBDE8M",
+          "by_client": {}
+        },
+        {
+          "requests": 4,
+          "bytes_in": 0,
+          "bytes_out": 1500,
+          "details": {
+            "GET:200": 4
+          },
+          "site_id": "OAxXdS7rUR",
+          "by_client": {
+            "productpage-v1-559d864879-t75zw": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 1500,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 903
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "requests": 4,
+          "bytes_in": 0,
+          "bytes_out": 1500,
+          "details": {
+            "GET:200": 4
+          },
+          "site_id": "BHFgwBDE8M",
+          "by_server": {
+            "reviews-v3-6b76f48d8b-vp4vc": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 1500,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 889
+            }
+          }
+        },
+        {
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "site_id": "OAxXdS7rUR",
+          "by_server": {}
+        }
+      ],
+      "targets": [
+        {
+          "name": "reviews-v3-6b76f48d8b-vp4vc",
+          "site_id": "BHFgwBDE8M"
+        }
+      ]
+    },
+    {
+      "address": "ratings",
+      "protocol": "http",
+      "requests_received": [
+        {
+          "requests": 4,
+          "bytes_in": 0,
+          "bytes_out": 192,
+          "details": {
+            "GET:200": 4
+          },
+          "site_id": "BHFgwBDE8M",
+          "by_client": {
+            "reviews-v3-6b76f48d8b-vp4vc": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 192,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 36
+            }
+          }
+        },
+        {
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "site_id": "OAxXdS7rUR",
+          "by_client": {}
+        }
+      ],
+      "requests_handled": [
+        {
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "site_id": "BHFgwBDE8M",
+          "by_server": {}
+        },
+        {
+          "requests": 4,
+          "bytes_in": 0,
+          "bytes_out": 192,
+          "details": {
+            "GET:200": 4
+          },
+          "site_id": "OAxXdS7rUR",
+          "by_server": {
+            "ratings-v1-6d684fc4fc-5m4kc": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 192,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 19
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "name": "ratings-v1-6d684fc4fc-5m4kc",
+          "site_id": "OAxXdS7rUR"
+        }
+      ]
+    },
+    {
+      "address": "details",
+      "protocol": "http",
+      "requests_received": [
+        {
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "site_id": "BHFgwBDE8M",
+          "by_client": {}
+        },
+        {
+          "requests": 4,
+          "bytes_in": 0,
+          "bytes_out": 712,
+          "details": {
+            "GET:200": 4
+          },
+          "site_id": "OAxXdS7rUR",
+          "by_client": {
+            "productpage-v1-559d864879-t75zw": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 712,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 26
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "requests": 4,
+          "bytes_in": 0,
+          "bytes_out": 712,
+          "details": {
+            "GET:200": 4
+          },
+          "site_id": "BHFgwBDE8M",
+          "by_server": {
+            "details-v1-85dc45d497-l9x4f": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 712,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 11
+            }
+          }
+        },
+        {
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "site_id": "OAxXdS7rUR",
+          "by_server": {}
+        }
+      ],
+      "targets": [
+        {
+          "name": "details-v1-85dc45d497-l9x4f",
+          "site_id": "BHFgwBDE8M"
+        }
+      ]
+    }
+  ]
+}

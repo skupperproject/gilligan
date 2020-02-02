@@ -40,7 +40,7 @@ class ClientInfoComponent extends Component {
     }
   };
   getTooltip = () => {
-    this.props.d.toolTip(this.props.topology, true).then(toolTip => {
+    this.props.d.toolTip(true).then(toolTip => {
       this.setState({ toolTip });
     });
   };

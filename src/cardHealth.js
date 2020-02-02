@@ -18,7 +18,7 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { Tooltip, TooltipPosition } from "@patternfly/react-core";
+import { Tooltip } from "@patternfly/react-core";
 
 class CardHealth extends Component {
   constructor(props) {
