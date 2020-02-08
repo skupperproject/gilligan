@@ -23,7 +23,7 @@ import TooltipTable from "../tooltipTable";
 var React = require("react");
 
 export class Node {
-  constructor({ name, nodeType, x, y, fixed, heightFn }) {
+  constructor({ name, nodeType, x, y, fixed, heightFn, widthFn }) {
     this.name = name;
     this.nodeType = nodeType; // cluster || service || client
     this.x = x;
@@ -33,6 +33,7 @@ export class Node {
     this.score = 0;
     this.expanded = false;
     this.heightFn = heightFn;
+    this.widthFn = widthFn;
     this.gap = 20;
     this.sourceNodes = [];
     this.targetNodes = [];
@@ -110,19 +111,9 @@ export class Node {
   radius() {
     return nodeProperties[this.nodeType].radius;
   }
-  getHeight() {
-    return this.heightFn ? this.heightFn(this) : 40;
-  }
-  width(min) {
-    min = min || 130;
-    let width = Math.max(min, Math.min(this.name.length, 15) * 8);
-    if (this.subNodes) {
-      this.subNodes.forEach(n => {
-        width = Math.max(width, this.gap * 2 + n.width());
-      });
-    }
-    return width;
-  }
+  getHeight = expanded => this.heightFn(this, expanded);
+  getWidth = expanded => this.widthFn(this, expanded);
+
   mergeWith(obj) {
     for (const key in obj) {
       this[key] = obj[key];
@@ -264,8 +255,8 @@ export class Nodes {
     });
   }
 
-  getOrCreateNode({ name, nodeType, x, y, fixed, heightFn }) {
-    return new Node({ name, nodeType, x, y, fixed, heightFn });
+  getOrCreateNode({ name, nodeType, x, y, fixed, heightFn, widthFn }) {
+    return new Node({ name, nodeType, x, y, fixed, heightFn, widthFn });
   }
 
   add(obj) {
@@ -273,14 +264,15 @@ export class Nodes {
     return obj;
   }
 
-  addUsing({ name, nodeType, x, y, fixed, heightFn }) {
+  addUsing({ name, nodeType, x, y, fixed, heightFn, widthFn }) {
     let obj = this.getOrCreateNode({
       name,
       nodeType,
       x,
       y,
       fixed,
-      heightFn
+      heightFn,
+      widthFn
     });
     return this.add(obj);
   }

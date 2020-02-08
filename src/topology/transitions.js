@@ -1,32 +1,23 @@
 import * as d3 from "d3";
 import { interpolatePath } from "d3-interpolate-path";
+import { ServiceStart, ServiceGap } from "./graph";
 
 class Transitions {
   constructor(drawPath) {
     this.drawPath = drawPath;
-    this.view = "namespace";
   }
-
-  translateFn = (backwards, draw) => d => t => {
-    if (backwards) t = 1 - t;
-    if (draw) this.drawPath(t);
-
-    return `translate(${d.orgx + (d.x - d.orgx) * t},${d.orgy +
-      (d.y - d.orgy) * t})`;
-  };
-
-  translateFnTraffic = backwards => d => t => {
-    if (backwards) t = 1 - t;
-    return `translate(${d.x0 + (d.x - d.x0) * t},${d.y0 + (d.y - d.y0) * t})`;
-  };
 
   toApplication = (previousView, nodes, path) => {
     // Note: all the transitions happen concurrently
-    this.view = "application";
     if (previousView === "namespace") this.fromNamespace(nodes);
-    if (previousView === "traffic") this.fromTraffic(path);
+    if (previousView === "traffic") this.fromTraffic(path, "application");
 
+    this.hideSiteLinks();
+    this.showLinks();
+    this.showEndpoints();
+    this.hideExtraServices();
     // move the service rects to their full-page locations
+
     d3.selectAll("g.service-type")
       .transition()
       .duration(1000)
@@ -36,25 +27,29 @@ class Transitions {
       );
   };
 
-  toNamespace = (previousView, nodes, path) => {
-    this.view = "namespace";
-    if (previousView === "traffic") this.fromTraffic(path);
+  toNamespace = (previousView, nodes, path, initial) => {
+    if (previousView === "traffic") this.fromTraffic(path, "namespace");
 
+    this.showSiteLinks();
+    this.hideLinks();
+    this.hideEndpoints();
+    this.showExtraServices();
     // fade in the shadow rects and then hide them
-    nodes.forEach(d => {
-      d3.select(`#shadow-${d.index}`)
-        .select(".shadow-rects")
-        .style("display", "block")
-        .attr("opacity", 0)
-        .transition()
-        .duration(1000)
-        .attr("opacity", 1)
-        .each("end", function() {
-          d3.select(this)
-            .attr("opacity", 0)
-            .style("display", "none");
-        });
-    });
+    if (!initial)
+      nodes.forEach(d => {
+        d3.select(`#shadow-${d.index}`)
+          .select(".shadow-rects")
+          .style("display", "block")
+          .attr("opacity", 0)
+          .transition()
+          .duration(1000)
+          .attr("opacity", 1)
+          .each("end", function() {
+            d3.select(this)
+              .attr("opacity", 0)
+              .style("display", "none");
+          });
+      });
 
     // while the above is happening, transition the containers to their proper position
     d3.selectAll(".cluster")
@@ -81,9 +76,12 @@ class Transitions {
   };
 
   toTraffic = (previousView, nodes, path) => {
-    this.view = "traffic";
     if (previousView === "namespace") this.fromNamespace(nodes);
 
+    this.hideSiteLinks();
+    this.showLinks();
+    this.hideEndpoints();
+    this.hideExtraServices();
     // move the service rects to their traffic locations
     d3.selectAll("g.service-type")
       .transition()
@@ -119,8 +117,7 @@ class Transitions {
       });
   };
 
-  fromTraffic = path => {
-    const self = this;
+  fromTraffic = (path, view) => {
     // contract services to smaller height
     d3.selectAll("rect.service-type")
       .transition()
@@ -145,7 +142,7 @@ class Transitions {
       .attrTween("d", function(d) {
         const previous = d3.select(this).attr("d");
         const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(
-          self.view === "application" ? 1 : 0
+          view === "application" ? 1 : 0
         );
         const current = `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty +
           tyoff}`;
@@ -159,7 +156,7 @@ class Transitions {
       .attr("opacity", 1)
       .attr("d", d => {
         const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(
-          this.view === "application" ? 1 : 0
+          view === "application" ? 1 : 0
         );
         return `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty + tyoff}`;
       });
@@ -191,6 +188,173 @@ class Transitions {
       .transition()
       .duration(1000)
       .attr("transform", "translate(0,0)");
+  };
+
+  hideSiteLinks = () => {
+    d3.selectAll("g.siteLinks")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 0);
+  };
+
+  showSiteLinks = () => {
+    d3.selectAll("g.siteLinks")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 1);
+  };
+
+  hideLinks = () => {
+    d3.selectAll("g.links")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 0)
+      .each("end", function() {
+        d3.select(this).style("display", "none");
+      });
+  };
+
+  showLinks = () => {
+    d3.selectAll("g.links")
+      .style("display", "block")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 1);
+  };
+
+  hideEndpoints = () => {
+    d3.selectAll(".end-point")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 0);
+  };
+
+  showEndpoints = () => {
+    d3.selectAll(".end-point")
+      .transition()
+      .duration(1000)
+      .attr("opacity", 1);
+  };
+
+  hideExtraServices = () => {
+    d3.selectAll("g.extra").style("display", "none");
+  };
+  showExtraServices = () => {
+    d3.selectAll("g.extra").style("display", "block");
+  };
+
+  recalcY = nodes => {
+    nodes.forEach(n => {
+      let curY = ServiceStart;
+      n.subNodes.forEach(s => {
+        s.expandY = curY;
+        curY += s.getHeight() + ServiceGap;
+      });
+    });
+  };
+
+  expandCluster = (service, view) => {
+    // select all the cluster boxes
+    const sites = d3.selectAll("g.site");
+
+    // change size of all namespace boxes
+    sites
+      .select("rect.network")
+      .transition()
+      .duration(500)
+      .attr("height", d => d.getHeight())
+      .attr("width", d => d.getWidth());
+
+    // change width of the headers
+    sites
+      .select("rect.cluster-header")
+      .transition()
+      .duration(500)
+      .attr("width", d => d.getWidth());
+
+    // move the title to the middle of the new width
+    sites
+      .select("text.cluster-name")
+      .transition()
+      .duration(500)
+      .attr("x", d => d.getWidth() / 2);
+
+    // move the service groups to their correct position
+    sites
+      .selectAll("g.service-type")
+      .transition()
+      .duration(500)
+      .attrTween("transform", this.tweenService(view));
+
+    // show the versions for the selected service
+    sites
+      .selectAll("g.service-versions")
+      .attr("opacity", d => (d.address === service.address ? 0 : 1))
+      .style("display", d => (d.expanded ? "block" : "none"));
+
+    // fade the versions in
+    // Note: the non-expanded version groups will be display:none so
+    // this will have no affect on them
+    sites
+      .selectAll("g.service-versions")
+      .transition()
+      .duration(500)
+      .attr("opacity", 1);
+
+    // change the service rect sizes
+    sites
+      .selectAll("rect.service-type")
+      .transition()
+      .duration(500)
+      .attr("height", d => d.getHeight())
+      .attr("width", d => d.getWidth());
+
+    sites
+      .selectAll("text.service-type")
+      .transition()
+      .duration(500)
+      .attr("y", d => d.getHeight() / 2);
+
+    // move the circle on the right to the correct position
+    sites
+      .selectAll("circle.source")
+      .transition()
+      .duration(500)
+      .attr("cx", d => d.getWidth());
+  };
+
+  tweenService = view => d => {
+    const starty = d.orgy;
+    return t => {
+      d.orgy = starty + (d.expandY - starty) * t;
+      if (view === "namespace") {
+        this.drawPath(0);
+        return `translate(${d.orgx},${d.orgy})`;
+      } else if (view === "application") {
+        this.drawPath(1);
+        return `translate(${d.x}, ${d.y})`;
+      } else {
+        return `translate(${d.x0},${d.y0})`;
+      }
+    };
+  };
+
+  translateFn = (backwards, draw) => d => t => {
+    if (backwards) t = 1 - t;
+    if (draw) this.drawPath(t);
+    return `translate(${d.orgx + (d.x - d.orgx) * t},${d.orgy +
+      (d.y - d.orgy) * t})`;
+  };
+
+  translateFnTraffic = backwards => d => t => {
+    if (backwards) t = 1 - t;
+    return `translate(${d.x0 + (d.x - d.x0) * t},${d.y0 + (d.y - d.y0) * t})`;
+  };
+
+  expandService = (d, nodes, view) => {
+    d.expanded = !d.expanded;
+    this.recalcY(nodes);
+    this.expandCluster(d, view);
   };
 }
 

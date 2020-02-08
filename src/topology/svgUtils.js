@@ -159,6 +159,31 @@ export function addDefs(svg) {
         ? "M 0 -5 L 10 0 L 0 5 z"
         : "M 10 -5 L 0 0 L 10 5 z";
     });
+  svg
+    .select("defs.marker-defs")
+    .append("marker")
+    .attr("id", "site-end")
+    .attr("viewBox", "0 -10 20 20")
+    .attr("refX", 0)
+    .attr("markerWidth", 20)
+    .attr("markerHeight", 20)
+    .attr("markerUnits", "userSpaceOnUse")
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", `M 0 -10 L 10 0 L 0 10 z`);
+  svg
+    .select("defs.marker-defs")
+    .append("marker")
+    .attr("id", "site-start")
+    .attr("viewBox", "0 -10 20 20")
+    .attr("refX", 0)
+    .attr("markerWidth", 20)
+    .attr("markerHeight", 20)
+    .attr("markerUnits", "userSpaceOnUse")
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", `M 10 -10 L 10 10 L 0 0 z`);
+
   addStyles(
     sten,
     {
@@ -169,6 +194,45 @@ export function addDefs(svg) {
     radii
   );
 }
+
+// draw line between centers of source and target rectangles
+// find the point on the source rect (sx,sy) that the line intersects
+// find the point on the target rect (tx,ty) that the line intersects
+export const midPoints = (source, target) => {
+  return {
+    sx: source.x + source.getWidth() / 2,
+    sy: source.y + source.getHeight() / 2,
+    tx: target.x + target.getWidth() / 2,
+    ty: target.y + target.getHeight() / 2
+  };
+  /*
+  // get center of source and target rects
+  const sxc = source.x + source.getWidth() / 2;
+  const syc = source.y + source.getHeight() / 2;
+  const txc = target.x + target.getWidth() / 2;
+  const tyc = target.y + target.getHeight() / 2;
+
+  const x = txc - sxc; // length of triangle base
+  const y = syc - tyc; // length of triangle side
+
+  const sx = sxc - source.x; // source similar triangle base
+  const sy = (y / x) * sx; // source similar triangle side
+
+  const tx = txc - target.x; // target similar triangle base
+  const ty = (y / x) * tx; // target similar triangle side
+
+  console.log(`${source.name} - ${target.name}`);
+  console.log(`source center (${sxc},${syc}) target center (${txc},${tyc}) `);
+  console.log(`x ${x} y ${y}`);
+  console.log(`sx ${sx} sy ${sy}  tx ${tx} ty ${ty}`);
+  console.log(
+    `source intersect (${sxc + sx},${syc - sy}) target intersect (${txc -
+      tx},${tyc + ty})`
+  );
+  return { sx: sxc + sx, sy: syc - sy, tx: txc - tx, ty: tyc + ty };
+  */
+};
+
 export function addGradient(svg) {
   // gradient for sender/receiver client
   let grad = svg

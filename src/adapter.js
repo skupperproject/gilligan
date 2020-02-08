@@ -3,7 +3,9 @@ class Adapter {
     this.data = data;
     this.addSendersServices();
     this.addServicesToClusters();
+    this.addServersToSites();
     this.addSourcesTargets();
+    this.addVersions();
   }
 
   // add a service for each client that sends requests but
@@ -85,15 +87,24 @@ class Adapter {
   // add a list of resident services to each cluster
   addServicesToClusters = () => {
     this.data.sites.forEach(site => {
-      site.services = this.services(site.site_id);
+      site.services = this.data.services.filter(service =>
+        service.targets.some(target => target.site_id === site.site_id)
+      );
     });
   };
 
-  // return a list of services resident in this site_id
-  services = id =>
-    this.data.services.filter(service =>
-      service.targets.some(target => target.site_id === id)
-    );
+  addServersToSites = () => {
+    this.data.sites.forEach(site => {
+      site.servers = [];
+      this.data.services.forEach(service => {
+        service.targets.forEach(target => {
+          if (target.site_id === site.site_id) {
+            site.servers.push(target.name);
+          }
+        });
+      });
+    });
+  };
 
   // add source and target list for each service
   addSourcesTargets = () => {
@@ -118,6 +129,15 @@ class Adapter {
           source.targetServices = [];
         }
         source.targetServices.push(service);
+      });
+    });
+  };
+
+  // add a list of version info to each service
+  addVersions = () => {
+    this.data.sites.forEach(site => {
+      site.services.forEach(service => {
+        service.versions = this.getVersions(service, site.site_id);
       });
     });
   };
@@ -167,11 +187,16 @@ class Adapter {
     }
   };
 
-  // assuming a key will look like name-xxx-xxx-xxx
+  // assuming a key will look like name-v##-xxx-xxx
   // and that the name could contain dashes
   serviceNameFromId = server_key => {
     const parts = server_key.split("-");
     return parts.slice(0, Math.max(parts.length - 3), 1).join("-");
+  };
+
+  versionFromId = server_key => {
+    const parts = server_key.split("-");
+    return parts[1];
   };
 
   // is the address a valid ip address?
@@ -181,6 +206,51 @@ class Adapter {
     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
       address
     );
+
+  getVersions = (service, site_id) => {
+    const versions = service.requests_sent
+      ? this.getProducerVersions(service, site_id)
+      : this.getHandlerVersions(service, site_id);
+    return versions.sort((a, b) =>
+      a.version < b.version ? -1 : a.version > b.version ? 1 : 0
+    );
+  };
+
+  getHandlerVersions = (handlerService, site_id) => {
+    const versions = [];
+    handlerService.requests_handled.forEach(request => {
+      if (request.site_id === site_id) {
+        Object.keys(request.by_server).forEach(key => {
+          versions.push({
+            version: this.versionFromId(key),
+            request: request.by_server[key],
+            handlerService
+          });
+        });
+      }
+    });
+    return versions;
+  };
+
+  getProducerVersions = (producerService, site_id) => {
+    const versions = [];
+    this.data.services.forEach(service => {
+      service.requests_received.forEach(request => {
+        if (request.site_id === site_id) {
+          Object.keys(request.by_client).forEach(key => {
+            if (this.serviceNameFromId(key) === producerService.address) {
+              versions.push({
+                version: this.versionFromId(key),
+                request: request.by_client[key],
+                service: producerService
+              });
+            }
+          });
+        }
+      });
+    });
+    return versions;
+  };
 }
 
 export default Adapter;

@@ -62,12 +62,14 @@ class ListPage extends React.Component {
   subNodes = cluster => cluster.services.length;
 
   getSites = service =>
-    service.targets.map(
-      site =>
-        this.props.service.VAN.sites.find(
-          VANSite => VANSite.site_id === site.site_id
-        ).site_name
-    );
+    service.targets
+      .map(
+        site =>
+          this.props.service.VAN.sites.find(
+            VANSite => VANSite.site_id === site.site_id
+          ).site_name
+      )
+      .join(", ");
 
   getRequestsHandled = service => {};
   handleChangeSize = event => {

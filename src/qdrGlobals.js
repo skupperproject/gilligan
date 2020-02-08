@@ -19,21 +19,6 @@ under the License.
 
 import * as d3 from "d3";
 
-export var QDRFolder = (function() {
-  function Folder(title) {
-    this.title = title;
-    this.children = [];
-    this.folder = true;
-  }
-  return Folder;
-})();
-export var QDRLeaf = (function() {
-  function Leaf(title) {
-    this.title = title;
-  }
-  return Leaf;
-})();
-
 export class QDRLogger {
   constructor(log, source) {
     this.log = function(msg) {
@@ -107,24 +92,38 @@ export const getSizes = component => {
   return [width, height];
 };
 
-export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
-  nodes.nodes.forEach(n => {
+// vertically space nodes over the given height
+export const adjustY = ({ nodes, height, yAttr }) => {
+  let nodesHeight = 0;
+  const minGap = 10;
+  nodes.forEach(n => (nodesHeight += n.getHeight()));
+  const gaps = nodes.length + 1;
+  let gapHeight = (height - nodesHeight) / gaps;
+  gapHeight = Math.max(minGap, gapHeight);
+  let curY = gapHeight;
+  nodes.forEach(n => {
+    n[yAttr] = curY;
+    curY += n.getHeight() + gapHeight;
+  });
+  return curY;
+};
+
+export const adjustPositions = ({ nodes, links, width, height }) => {
+  nodes.forEach(n => {
     n.sourceNodes = [];
     n.targetNodes = [];
   });
 
   // for all the nodes, construct 2 lists: souce nodes, and target nodes
-  links.links.forEach(l => {
-    nodes.nodes[l.source].targetNodes.push(nodes.nodes[l.target]);
-    nodes.nodes[l.target].sourceNodes.push(nodes.nodes[l.source]);
+  links.forEach(l => {
+    nodes[l.source].targetNodes.push(nodes[l.target]);
+    nodes[l.target].sourceNodes.push(nodes[l.source]);
   });
 
   // find node(s) with fewest number of sources
   let minSources = Number.MAX_SAFE_INTEGER;
-  nodes.nodes.forEach(
-    n => (minSources = Math.min(minSources, n.sourceNodes.length))
-  );
-  const parents = nodes.nodes.filter(n => n.sourceNodes.length === minSources);
+  nodes.forEach(n => (minSources = Math.min(minSources, n.sourceNodes.length)));
+  const parents = nodes.filter(n => n.sourceNodes.length === minSources);
 
   // put parents in 1st column
   parents.forEach(n => (n.col = 0));
@@ -133,7 +132,7 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
   while (colNodes.length > 0) {
     let foundNodes = [];
     colNodes.forEach(p => {
-      nodes.nodes.forEach(n => {
+      nodes.forEach(n => {
         if (p.targetNodes.includes(n)) {
           n.col = p.col + 1;
           foundNodes.push(n);
@@ -144,7 +143,7 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
   }
 
   // adjust parents' cols
-  nodes.nodes
+  nodes
     .slice()
     .reverse()
     .forEach(n => {
@@ -156,7 +155,7 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
     });
 
   let cols = 0;
-  nodes.nodes.forEach(n => {
+  nodes.forEach(n => {
     cols = Math.max(cols, n.col);
   });
   cols += 1; // cols are 0 based, so number of cols is last col number + 1
@@ -167,7 +166,7 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
 
   const colWidths = [];
   for (let col = 0; col < cols; col++) {
-    colNodes = nodes.nodes.filter(n => n.col === col);
+    colNodes = nodes.filter(n => n.col === col);
     let nodesHeight = 0;
     colNodes.forEach(n => (nodesHeight += n.getHeight()));
     const gaps = colNodes.length + 1;
@@ -181,7 +180,7 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
     let curY = gapHeight;
     colWidths[col] = 0;
     colNodes.forEach(n => {
-      colWidths[col] = Math.max(colWidths[col], n.width(BoxWidth));
+      colWidths[col] = Math.max(colWidths[col], n.getWidth());
       n.y = curY;
       curY += n.getHeight() + gapHeight;
     });
@@ -199,13 +198,14 @@ export const adjustPositions = ({ nodes, links, width, height, BoxWidth }) => {
   }
   let curX = hGap;
   for (let col = 0; col < cols; col++) {
-    for (let i = 0; i < nodes.nodes.length; i++) {
-      const n = nodes.nodes[i];
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
       if (n.col === col) {
         n.x = curX;
       }
     }
     curX += colWidths[col] + hGap;
   }
+
   return { width: vwidth, height: vheight };
 };

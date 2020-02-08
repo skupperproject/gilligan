@@ -560,6 +560,14 @@ path.link.unknown {
   stroke-dasharray: 4 3;
   stroke: #888888;
 }
+
+path.siteLink:not(.traffic) {
+  cursor: default;
+  /* stroke-width: 20; */
+  stroke-width: 2;
+  stroke: #000;
+}
+
 path:not(.traffic) {
   stroke: #000;
 }
@@ -588,6 +596,10 @@ path.link.highlighted:not(.traffic) {
 marker {
   fill: #000;
   stroke-width: 0;
+}
+#site-start,
+#site-end {
+  fill: #eaeaea;
 }
 path.link.dragline {
   pointer-events: none;
@@ -1070,12 +1082,6 @@ rect.namespace {
   fill: transparent;
 }
 
-/*
-circle.end-point.target {
-  fill: gray;
-}
-*/
-
 rect.application.normal {
   fill-opacity: 0.6;
 }
@@ -1353,7 +1359,7 @@ rect.end-point.source {
   stroke: black;
 }
 
-circle.end-point.source {
+circle.end-point {
   stroke-width: 2px;
   stroke: black;
   fill: white;

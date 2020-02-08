@@ -16,26 +16,45 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
+
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import { clusterColor, darkerColor } from "./clusterColors";
-import { adjustPositions } from "../qdrGlobals";
+import { adjustPositions, adjustY } from "../qdrGlobals";
 import { Node } from "./nodes";
 
 const ServiceWidth = 130;
 const ServiceHeight = 40;
-const ServiceGap = 5;
-const ServiceStart = 80;
+export const ServiceGap = 5;
+export const ServiceStart = 80;
 const ServiceBottomGap = 15;
-const BoxWidth = ServiceWidth + ServiceGap * 2;
-const BoxHeight = 180;
+const ClusterPadding = 20;
+const BoxWidth = ClusterPadding + ServiceWidth + ClusterPadding;
 
-class Graph {
-  constructor(service) {
+export class Graph {
+  constructor(service, drawPath) {
     this.VAN = service.adapter.data;
     this.adapter = service.adapter;
+    this.drawPath = drawPath;
     this.sankeyLinkHorizontal = sankeyLinkHorizontal();
   }
-  initNodesAndLinks = (nodes, links, width, height, typeName) => {
+
+  initSiteLinks = (nodes, links) => {
+    this.VAN.sites.forEach((site, i) => {
+      const source = nodes.nodes.find(n => n.site_id === site.site_id);
+      site.connected.forEach(targetSite => {
+        const target = nodes.nodes.find(s => s.site_id === targetSite);
+        links.getLink(
+          source,
+          target,
+          "both",
+          "cluster",
+          `Link-${source.name}-${target.name}`
+        );
+      });
+    });
+  };
+
+  initNodesAndLinks = (nodes, links, width, height) => {
     nodes.reset();
     links.reset();
     this.initNodes(nodes, width, height);
@@ -44,14 +63,6 @@ class Graph {
     return { nodeCount: nodes.nodes.length, size: vsize };
   };
 
-  clusterHeight = n => {
-    return Math.max(
-      BoxHeight,
-      ServiceStart +
-        n.subNodes.length * (ServiceHeight + ServiceGap) +
-        ServiceBottomGap
-    );
-  };
   initNodes = (nodes, width, height) => {
     const clusters = this.VAN.sites;
     clusters.forEach((cluster, clusterIndex) => {
@@ -63,7 +74,8 @@ class Graph {
         x: undefined,
         y: undefined,
         fixed: true,
-        heightFn: this.clusterHeight
+        heightFn: this.clusterHeight,
+        widthFn: this.clusterWidth
       });
       clusterNode.mergeWith(cluster);
       clusterNode.subNodes = [];
@@ -75,9 +87,20 @@ class Graph {
           x: 20,
           y: ServiceStart + i * (ServiceHeight + ServiceGap),
           fixed: true,
-          heightFn: () => ServiceHeight
+          heightFn: this.serviceHeight,
+          widthFn: this.serviceWidth
         });
         subNode.mergeWith(service);
+        //subNode.versions = this.adapter.getVersions(subNode, cluster.site_id);
+        subNode.versions.forEach(version => {
+          version.getWidth = () => version.version.length * 8;
+          version.getHeight = () => 15;
+        });
+        subNode.expandedHeight = adjustY({
+          nodes: subNode.versions,
+          height: subNode.getHeight(true),
+          yAttr: "y"
+        });
         // save the x,y for the subnodes for the namespace view
         subNode.orgx = subNode.x;
         subNode.orgy = subNode.y;
@@ -88,7 +111,7 @@ class Graph {
     });
   };
 
-  // create a link between services
+  // create links
   initLinks = (nodes, links, width, height) => {
     // links between clusters
     this.VAN.sites.forEach((site, i) => {
@@ -106,13 +129,10 @@ class Graph {
     });
     // get the starting x,y for the clusters when using the namespace view
     let vsize = adjustPositions({
-      nodes,
-      links,
+      nodes: nodes.nodes,
+      links: links.links,
       width,
-      height,
-      BoxWidth,
-      BoxHeight,
-      topGap: BoxHeight / 2
+      height
     });
 
     links.reset();
@@ -124,6 +144,7 @@ class Graph {
         subNodes.push(subNode);
       });
     });
+
     subNodes.forEach((subNode, source) => {
       subNode.targetServices.forEach(targetService => {
         const target = subNodes.findIndex(
@@ -148,13 +169,10 @@ class Graph {
 
     // get the starting x,y for the subnodes when using the application view
     vsize = adjustPositions({
-      nodes: { nodes: subNodes },
-      links,
+      nodes: subNodes,
+      links: links.links,
       width: vsize.width,
-      height: vsize.height,
-      BoxWidth: ServiceWidth,
-      BoxHeight: ServiceHeight,
-      topGap: ServiceHeight
+      height: vsize.height
     });
 
     const graph = {
@@ -203,6 +221,22 @@ class Graph {
       sn.targetLinks = targetLinks;
     });
   };
+
+  createGraph = (g, links, shadow) => {
+    // add new rects and set their attr/class/behavior
+
+    this.createRects(g, shadow);
+
+    if (!shadow) {
+      const serviceTypes = g
+        .selectAll("g.service-type")
+        .data(d => d.subNodes || [], d => `${d.parentNode.uuid}-${d.address}`);
+
+      this.appendServices(serviceTypes, links);
+    }
+    return g;
+  };
+
   createRects = (g, shadow) => {
     const rects = g
       .append("svg:g")
@@ -212,21 +246,21 @@ class Graph {
     rects
       .append("svg:rect")
       .attr("class", "network")
-      .attr("width", d => d.width(BoxWidth))
+      .attr("width", d => d.getWidth())
       .attr("height", d => this.clusterHeight(d))
       .attr("style", d => `fill: ${clusterColor(d.index)}`);
 
     rects
       .append("svg:rect")
       .attr("class", "cluster-header")
-      .attr("width", d => d.width(BoxWidth))
+      .attr("width", d => d.getWidth())
       .attr("height", 30)
       .attr("style", d => `fill: ${darkerColor(d.index)}`);
 
     rects
       .append("svg:text")
       .attr("class", "cluster-name")
-      .attr("x", d => d.width(BoxWidth) / 2)
+      .attr("x", d => d.getWidth() / 2)
       .attr("y", d => (d.ypos = 15))
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
@@ -235,7 +269,7 @@ class Graph {
     rects
       .append("svg:text")
       .attr("class", "location")
-      .attr("x", d => d.width(BoxWidth) / 2)
+      .attr("x", d => d.getWidth() / 2)
       .attr("y", 50)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
@@ -247,28 +281,17 @@ class Graph {
       */
   };
 
-  createGraph = (g, links, shadow) => {
-    // add new rects and set their attr/class/behavior
-
-    this.createRects(g, shadow);
-
-    if (!shadow) {
-      let serviceTypes = g
-        .selectAll("g.service-type")
-        .data(d => d.subNodes || [], d => `${d.parentNode.uuid}-${d.address}`);
-
-      this.appendServices(serviceTypes, links);
-    }
-    return g;
-  };
-
   appendServices = (serviceTypes, links) => {
     serviceTypes.exit().remove();
     const serviceTypesEnter = serviceTypes
       .enter()
       .append("svg:g")
       .attr("class", "service-type")
-      .attr("transform", (d, i) => {
+      .classed(
+        "extra",
+        d => d.sourceNodes.length === 0 && d.targetNodes.length === 0
+      )
+      .attr("transform", d => {
         return `translate(${d.orgx},${d.orgy})`;
       });
 
@@ -277,14 +300,14 @@ class Graph {
       .attr("class", "service-type")
       .attr("rx", 10)
       .attr("ry", 10)
-      .attr("width", d => Math.max(ServiceWidth, d.width()))
-      .attr("height", ServiceHeight);
+      .attr("width", d => Math.max(ServiceWidth, d.getWidth()))
+      .attr("height", d => d.getHeight());
 
     serviceTypesEnter
       .append("svg:text")
       .attr("class", "service-type")
-      .attr("x", d => Math.max(ServiceWidth, d.width()) / 2)
-      .attr("y", 20)
+      .attr("x", d => Math.max(ServiceWidth, d.getWidth()) / 2)
+      .attr("y", d => d.getHeight() / 2)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
       .text(d =>
@@ -302,7 +325,7 @@ class Graph {
       .append("svg:circle")
       .attr("class", "end-point source")
       .attr("r", 6)
-      .attr("cx", d => Math.max(ServiceWidth, d.width()))
+      .attr("cx", d => Math.max(ServiceWidth, d.getWidth()))
       .attr("cy", 20);
 
     // draw diamond on left if this serviceType
@@ -318,7 +341,87 @@ class Graph {
       .attr("width", 10)
       .attr("height", 10)
       .attr("transform", "translate(0,13) rotate(45)");
+
+    const versionsG = serviceTypesEnter
+      .append("svg:g")
+      .attr("class", "service-versions")
+      .attr("transform", d => `translate(${d.getWidth(true) - 40},0)`)
+      .style("display", "none");
+
+    const versions = versionsG
+      .selectAll("g.service-version")
+      .data(d => d.versions, d => (d ? d.version : "v0"));
+
+    versions.exit().remove();
+    const versionsEnter = versions
+      .enter()
+      .append("svg:g")
+      .attr("class", "service-version");
+
+    versionsEnter
+      .append("svg:text")
+      .attr("class", "service-version")
+      .attr("x", d => 0)
+      .attr("y", d => d.y)
+      .attr("dominant-baseline", "hanging")
+      .attr("text-anchor", "left")
+      .text(d => d.version);
+    versionsEnter
+      .append("svg:circle")
+      .attr("class", "end-point version")
+      .attr("r", 6)
+      .attr("cx", d => 40)
+      .attr("cy", d => d.y + 10);
+  };
+
+  clusterHeight = n => {
+    let subHeights = 0;
+    if (n.subNodes) {
+      n.subNodes.forEach(s => {
+        subHeights += ServiceGap + s.getHeight();
+      });
+    }
+    return ServiceStart + subHeights + ServiceBottomGap;
+  };
+
+  clusterWidth = n => {
+    let clusterWidth = BoxWidth;
+    if (n.subNodes) {
+      n.subNodes.forEach(s => {
+        clusterWidth = Math.max(
+          clusterWidth,
+          s.getWidth() + ClusterPadding * 2
+        );
+      });
+    }
+    return clusterWidth;
+  };
+
+  serviceHeight = (n, expanded) => {
+    if (expanded === undefined) {
+      expanded = n.expanded;
+    }
+    if (expanded) {
+      return n.expandedHeight
+        ? n.expandedHeight
+        : Math.max(ServiceHeight, n.versions.length * 20);
+    }
+    return ServiceHeight;
+  };
+
+  serviceWidth = (node, expanded) => {
+    if (expanded === undefined) {
+      expanded = node.expanded;
+    }
+    if (expanded) {
+      return ServiceWidth + 60;
+    }
+    let width = Math.max(ServiceWidth, Math.min(node.name.length, 15) * 8);
+    if (node.subNodes) {
+      node.subNodes.forEach(n => {
+        width = Math.max(width, ServiceGap * 2 + n.getWidth());
+      });
+    }
+    return width;
   };
 }
-
-export default Graph;

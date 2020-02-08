@@ -73,7 +73,7 @@ export class Link {
       this.target.orgy +
       (this.target.y - this.target.orgy) * t +
       this.target.parentNode.y * (1 - t);
-    const sxoff = Math.max(this.source.width(), 130);
+    const sxoff = Math.max(this.source.getWidth(), 130);
     const syoff = 20;
     const txoff = 0;
     const tyoff = 20;
@@ -102,10 +102,6 @@ export class Links {
     for (let i = 0; i < this.links.length; i++) {
       let s = this.links[i].source,
         t = this.links[i].target;
-      if (typeof this.links[i].source === "object") {
-        s = s.id;
-        t = t.id;
-      }
       if (s === _source && t === _target) {
         return i;
       }
