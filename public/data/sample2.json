@@ -45,7 +45,7 @@
               "details": {
                 "GET:200": 1
               },
-              "latency_max": 903
+              "latency_max": 902
             },
             "productpage-v2-559d864879-t75zw": {
               "requests": 1,
@@ -79,19 +79,19 @@
       "requests_handled": [
         {
           "site_id": "fooid",
-          "requests": 1,
+          "requests": 2,
           "bytes_in": 0,
-          "bytes_out": 500,
+          "bytes_out": 1000,
           "details": {
-            "GET:200": 1
+            "GET:200": 2
           },
           "by_server": {
             "DB-v1-foo-uid": {
-              "requests": 1,
+              "requests": 2,
               "bytes_in": 0,
-              "bytes_out": 500,
+              "bytes_out": 1000,
               "details": {
-                "GET:200": 1
+                "GET:200": 2
               },
               "latency_max": 889
             }

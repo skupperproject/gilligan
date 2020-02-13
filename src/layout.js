@@ -60,13 +60,13 @@ class PageLayout extends React.Component {
     this.state = {
       connected: false,
       connectPath: "",
-      activeItem: "mesh",
+      activeItem: "graph",
       isConnectFormOpen: false,
       username: ""
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
-    this.views = ["Mesh", "Cards"];
+    this.views = ["Graph", "Cards"];
   }
 
   componentDidMount = () => {
@@ -100,7 +100,7 @@ class PageLayout extends React.Component {
         connectPath === "/" ||
         connectPath === "/login"
       )
-        connectPath = "/mesh";
+        connectPath = "/graph";
       const activeItem = connectPath.split("/").pop();
       this.props.history.replace(connectPath);
       this.setState({
@@ -265,7 +265,7 @@ class PageLayout extends React.Component {
           {connectForm()}
           <Switch>
             <PrivateRoute path="/" exact component={TopologyPage} />
-            <PrivateRoute path="/mesh" component={TopologyPage} />
+            <PrivateRoute path="/graph" component={TopologyPage} />
             <PrivateRoute path="/cards" component={ListPage} />
             <Route
               path="/login"

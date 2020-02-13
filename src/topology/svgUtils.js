@@ -201,9 +201,9 @@ export function addDefs(svg) {
 export const midPoints = (source, target) => {
   return {
     sx: source.x + source.getWidth() / 2,
-    sy: source.y + source.getHeight() / 2,
+    sy: source.y + 20,
     tx: target.x + target.getWidth() / 2,
-    ty: target.y + target.getHeight() / 2
+    ty: target.y + 20
   };
   /*
   // get center of source and target rects

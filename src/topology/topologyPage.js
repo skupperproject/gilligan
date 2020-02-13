@@ -77,7 +77,7 @@ class TopologyPage extends Component {
           <StackItem className="overview-header">
             <TextContent>
               <Text className="overview-title" component={TextVariants.h1}>
-                Mesh view
+                Graph view
               </Text>
               <Text className="overview-loading" component={TextVariants.pre}>
                 {`Updated ${strDate(this.state.lastUpdated)}`}

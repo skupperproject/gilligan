@@ -91,7 +91,6 @@ export class Graph {
           widthFn: this.serviceWidth
         });
         subNode.mergeWith(service);
-        //subNode.versions = this.adapter.getVersions(subNode, cluster.site_id);
         subNode.versions.forEach(version => {
           version.getWidth = () => version.version.length * 8;
           version.getHeight = () => 15;
@@ -181,7 +180,6 @@ export class Graph {
     };
     // get the links between services for use with the traffic view
     this.initSankey(graph, width, height);
-    this.mergeLinks(subNodes, links.links);
     return vsize;
   };
 
@@ -190,36 +188,11 @@ export class Graph {
       const { nodes, links } = sankey()
         .nodeWidth(ServiceWidth)
         .nodePadding(ServiceGap)
-        .extent([[1, 1], [width - 1, height - 5]])(graph);
+        .extent([[1, 1], [width - 1, height - ServiceGap]])(graph);
       return { snodes: nodes, slinks: links };
     } else {
       return { snodes: graph.nodes, slinks: graph.links };
     }
-  };
-
-  mergeLinks = (subNodes, subLinks) => {
-    subNodes.forEach(sn => {
-      const sourceLinks = [];
-      sn.sourceLinks.forEach(sl => {
-        const sourceLink = subLinks.find(
-          subL =>
-            subL.source.address === sl.source.address &&
-            subL.target.address === sl.target.address
-        );
-        sourceLinks.push(sourceLink);
-      });
-      sn.sourceLinks = sourceLinks;
-      const targetLinks = [];
-      sn.targetLinks.forEach(sl => {
-        const targetLink = subLinks.find(
-          subL =>
-            subL.source.address === sl.source.address &&
-            subL.target.address === sl.target.address
-        );
-        targetLinks.push(targetLink);
-      });
-      sn.targetLinks = targetLinks;
-    });
   };
 
   createGraph = (g, links, shadow) => {

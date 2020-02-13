@@ -62,6 +62,46 @@ class ListToolbar extends Component {
             </Button>
           </ToolbarItem>
         </ToolbarGroup>
+        <ToolbarGroup>
+          <ToolbarItem>
+            <Button
+              variant="control"
+              className={`radio-button${
+                this.props.show === "all"
+                  ? "-selected ws-core-box-shadow-box pf-u-box-shadow-inset"
+                  : ""
+              }`}
+              onClick={this.props.handleChangeShow}
+              id="all"
+            >
+              All
+            </Button>
+            <Button
+              variant="control"
+              className={`radio-button${
+                this.props.show === "sites"
+                  ? "-selected ws-core-box-shadow-box pf-u-box-shadow-inset"
+                  : ""
+              }`}
+              onClick={this.props.handleChangeShow}
+              id="sites"
+            >
+              Sites
+            </Button>
+            <Button
+              variant="control"
+              className={`radio-button${
+                this.props.show === "services"
+                  ? "-selected ws-core-box-shadow-box pf-u-box-shadow-inset"
+                  : ""
+              }`}
+              onClick={this.props.handleChangeShow}
+              id="services"
+            >
+              Services
+            </Button>
+          </ToolbarItem>
+        </ToolbarGroup>
       </Toolbar>
     );
   }

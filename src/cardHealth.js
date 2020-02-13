@@ -32,6 +32,8 @@ class CardHealth extends Component {
         <span className="card-health">
           {this.props.cluster.health === "ok" ? (
             <i className="health-ok pf-icon pf-icon-ok" />
+          ) : this.props.cluster.health === undefined ? (
+            <i className="health-unknown pf-icon pf-icon-help" />
           ) : (
             <i className="health-bad pf-icon pf-icon-error-circle-o" />
           )}

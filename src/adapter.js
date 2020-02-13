@@ -6,6 +6,7 @@ class Adapter {
     this.addServersToSites();
     this.addSourcesTargets();
     this.addVersions();
+    console.log(this.data);
   }
 
   // add a service for each client that sends requests but
@@ -38,13 +39,19 @@ class Adapter {
             );
           } else {
             // the service was already added.
-            // just add a new requests_sent section
+            // add a new requests_sent section
             const sender = this.data.services.find(
               s => s.address === clientName && s.requests_sent
             );
             if (sender) {
               // this service was already added, update its requests_sent
               this.addRequestSent(sender, clientKey, request, service.address);
+              // and targets
+              if (!sender.targets.some(t => t.name === clientKey))
+                sender.targets.push({
+                  name: clientKey,
+                  site_id: request.site_id
+                });
             }
           }
         }
@@ -61,7 +68,7 @@ class Adapter {
       } else {
         if (typeof source[attribute] === "object") {
           this.aggregateAttributes(source[attribute], target[attribute]);
-        } else {
+        } else if (!isNaN(source[attribute])) {
           target[attribute] += source[attribute];
         }
       }
@@ -137,7 +144,12 @@ class Adapter {
   addVersions = () => {
     this.data.sites.forEach(site => {
       site.services.forEach(service => {
-        service.versions = this.getVersions(service, site.site_id);
+        const versions = this.getVersions(service, site.site_id);
+        console.log(
+          `got version for service ${service.address} for site ${site.site_id} length ${versions.length}`
+        );
+        versions.forEach(v => console.log(v.version));
+        service.versions = versions;
       });
     });
   };
@@ -251,6 +263,79 @@ class Adapter {
     });
     return versions;
   };
+
+  serviceFromServer = (server, site_id) =>
+    this.data.services.find(service =>
+      service.targets.some(t => t.name === server && t.site_id === site_id)
+    );
+
+  siteNameFromId = site_id =>
+    this.data.sites.find(site => site.site_id === site_id).site_name;
+
+  matrix = (service, stat) => {
+    if (service.requests_sent) {
+      return this.matrixSender(service, stat);
+    } else {
+      return this.matrixReceiver(service, stat);
+    }
+  };
+  matrixReceiver = (service, stat) => {
+    //[{ingress: 'xxx', egress: 'xxx', address: 'xxx', messages: ###}...]
+    if (!stat) stat = "requests";
+    const matrix = [];
+    const toAddress = service.address;
+    service.requests_received.forEach(request => {
+      Object.keys(request.by_client).forEach(client => {
+        const fromAddress = this.serviceNameFromId(client);
+        const req = request.by_client[client];
+        const row = {
+          ingress: fromAddress,
+          egress: toAddress,
+          address: request.site_id,
+          messages: req[stat]
+        };
+        const record = matrix.find(
+          m => m.ingress === fromAddress && m.egress === toAddress
+        );
+        if (record) {
+          this.aggregateAttributes(row, record);
+        } else {
+          matrix.push(row);
+        }
+      });
+    });
+    return matrix;
+  };
+
+  matrixSender = (service, stat) => {
+    //[{ingress: 'xxx', egress: 'xxx', address: 'xxx', messages: ###}...]
+    if (!stat) stat = "requests";
+    const matrix = [];
+    const fromAddress = service.address;
+    service.requests_sent.forEach(request => {
+      Object.keys(request.by_receiver).forEach(client => {
+        const toAddress = client;
+        const req = request.by_receiver[client];
+        const row = {
+          ingress: fromAddress,
+          egress: toAddress,
+          address: request.site_id,
+          messages: req[stat]
+        };
+        const record = matrix.find(
+          m => m.ingress === fromAddress && m.egress === toAddress
+        );
+        if (record) {
+          this.aggregateAttributes(row, record);
+        } else {
+          matrix.push(row);
+        }
+      });
+    });
+    return matrix;
+  };
+
+  serviceNames = () => this.data.services.map(s => s.address);
 }
 
 export default Adapter;

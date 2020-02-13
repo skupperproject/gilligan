@@ -35,6 +35,7 @@ import LegendComponent from "./legendComponent";
 import ClientInfoComponent from "./clientInfoComponent";
 import { Graph } from "./graph";
 import Transitions from "./transitions";
+import ChordViewer from "../chord/chordViewer.js";
 
 class TopologyPage extends Component {
   constructor(props) {
@@ -43,9 +44,12 @@ class TopologyPage extends Component {
       popupContent: "",
       showPopup: false,
       showLegend: false,
+      showChord: true,
       showRouterInfo: false,
       showClientInfo: false,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
+      chordData: {},
+      chordSent: false
     };
     this.popupCancelled = true;
 
@@ -105,7 +109,7 @@ class TopologyPage extends Component {
   resize = () => {
     if (!this.svg) return;
     let sizes = getSizes(this.topologyRef);
-    this.width = sizes[0];
+    this.width = sizes[0] - 350;
     this.height = sizes[1];
     if (this.width > 0) {
       // set attrs and 'resume' force
@@ -143,17 +147,21 @@ class TopologyPage extends Component {
   };
   clearPopups = () => {};
 
-  zoomed = () => {
-    this.svg.attr(
-      "transform",
-      `translate(${this.zoom.translate()}) scale(${this.zoom.scale()})`
-    );
+  zoomed = duration => {
+    if (!duration) duration = 100;
+    this.svg
+      .transition()
+      .duration(duration)
+      .attr(
+        "transform",
+        `translate(${this.zoom.translate()}) scale(${this.zoom.scale()})`
+      );
   };
 
   // initialize the nodes and links array from the QDRService.topology._nodeInfo object
   init = () => {
     let sizes = getSizes(this.topologyRef);
-    this.width = sizes[0];
+    this.width = sizes[0] - 350; // - width of sidebar
     this.height = sizes[1];
     //let nodeInfo = getData(this.props.type, this.props.service);
     //let nodeCount = Object.keys(nodeInfo).length;
@@ -288,7 +296,6 @@ class TopologyPage extends Component {
       .selectAll("path")
       .attr("opacity", highlight || this.view !== "traffic" ? 1 : 0.25);
     link.selectAll("text.stats").style("stroke", null);
-    console.log(`highlight link called`);
     const services = d3
       .select("#SVG_ID")
       .selectAll("g.service-type")
@@ -341,7 +348,6 @@ class TopologyPage extends Component {
     d.highlighted = highlight;
     // highlight all the services
     nsBox.selectAll(".cluster-rects").attr("opacity", 1);
-    console.log(`highlightNamespace setting opacity to`);
     nsBox.selectAll("g.service-type").attr("opacity", 1);
   };
 
@@ -350,7 +356,6 @@ class TopologyPage extends Component {
     const pathOpacity = blur || this.view === "traffic" ? 0.25 : 1;
     const svg = d3.select("#SVG_ID");
     svg.selectAll(".cluster-rects").attr("opacity", opacity);
-    console.log(`bluring service-types to ${opacity}`);
     svg
       .selectAll("g.service-type")
       .attr("opacity", opacity)
@@ -382,7 +387,6 @@ class TopologyPage extends Component {
       this.circle.on("mousedown.drag", null);
       this.services.call(this.clusterDrag);
     } else {
-      console.log(`disabling drag on services ${this.view}`);
       this.circle.call(this.clusterDrag);
       this.services.on("mousedown.drag", null);
     }
@@ -627,12 +631,15 @@ class TopologyPage extends Component {
       })
       .on("click", function(d) {
         if (d3.event.defaultPrevented) return; // click suppressed
+        self.showChord(d);
         //self.doDialog(d, "client");
         if (self.view !== "traffic") {
           self.transitions.expandService(
             d,
             self.forceData.nodes.nodes,
-            self.view
+            self.view,
+            self.path,
+            self.width
           );
         }
         d3.event.stopPropagation();
@@ -660,6 +667,16 @@ class TopologyPage extends Component {
 
     // set the graph in motion
     this.force.start();
+  };
+
+  showChord = chordData => {
+    const chordSent = chordData.requests_sent !== undefined;
+    this.setState(
+      { showPopup: false, showChord: true, chordData, chordSent },
+      () => {
+        this.chordRef.doUpdate(chordData);
+      }
+    );
   };
 
   // update force layout (called automatically each iteration)
@@ -792,10 +809,10 @@ class TopologyPage extends Component {
     this.zoomed();
   };
 
-  resetViewCallback = () => {
+  resetViewCallback = duration => {
     this.zoom.scale(this.resetScale);
     this.zoom.translate([0, 0]);
-    this.zoomed();
+    this.zoomed(duration);
   };
 
   toApplication = () => {
@@ -804,7 +821,8 @@ class TopologyPage extends Component {
     this.transitions.toApplication(
       previousView,
       this.forceData.nodes.nodes,
-      this.path
+      this.path,
+      this.resetViewCallback
     );
     this.restart();
   };
@@ -816,6 +834,7 @@ class TopologyPage extends Component {
       previousView,
       this.forceData.nodes.nodes,
       this.path,
+      this.resetViewCallback,
       initial
     );
     this.restart();
@@ -827,9 +846,28 @@ class TopologyPage extends Component {
     this.transitions.toTraffic(
       previousView,
       this.forceData.nodes.nodes,
-      this.path
+      this.path,
+      this.zoom,
+      this.svg
     );
     this.restart();
+  };
+
+  toChord = () => {
+    const previousView = this.view;
+    this.view = "chord";
+    this.transitions.toChord(
+      previousView,
+      this.forceData.nodes.nodes,
+      this.path,
+      this.zoom,
+      this.svg
+    );
+    this.restart();
+  };
+
+  handleCloseSidebar = () => {
+    this.setState({ showChord: false });
   };
 
   render() {
@@ -855,8 +893,17 @@ class TopologyPage extends Component {
           />
         }
         controlBar={<TopologyControlBar controlButtons={controlButtons} />}
-        sideBar={<TopologySideBar show={false}></TopologySideBar>}
-        sideBarOpen={false}
+        sideBar={
+          <TopologySideBar show={this.state.showChord}>
+            <ChordViewer
+              ref={el => (this.chordRef = el)}
+              service={this.props.service}
+              data={this.state.chordData}
+              sent={this.state.chordSent}
+            />
+          </TopologySideBar>
+        }
+        sideBarOpen={this.state.showChord}
         className="qdrTopology"
       >
         <div className="diagram">
