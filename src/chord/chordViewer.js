@@ -25,6 +25,7 @@ import { separateAddresses, aggregateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
 import { qdrRibbon } from "./ribbon/ribbon.js";
 import { qdrlayoutChord } from "./layout/layout.js";
+import QDRPopup from "../qdrPopup";
 import * as d3 from "d3";
 import RoutersComponent from "./routersComponent";
 import PropTypes from "prop-types";
@@ -56,7 +57,7 @@ class ChordViewer extends Component {
     this.chordData = new ChordData(
       this.props.service,
       false,
-      separateAddresses
+      aggregateAddresses
     );
     this.chordData.setFilter(this.excludedAddresses);
     this.chordColors = {};
@@ -241,16 +242,17 @@ class ChordViewer extends Component {
   // if viewing aggregate, the color will be the router color of the largest chord ending
   fillChord = (matrixValues, d) => {
     // aggregate
-    //if (matrixValues.aggregate) {
-    //  return this.fillArc(matrixValues, d.source.index);
-    //}
+    if (matrixValues.aggregate) {
+      return this.fillArc(matrixValues, d.source.index);
+    }
     // by address
-    let addr = this.props.sent
+    /*let addr = this.props.sent
       ? matrixValues.rows[d.orgIndex].ingress
       : matrixValues.rows[d.orgIndex].ingress;
-    //let addr = matrixValues.getAddress(d.source.orgindex, d.source.orgsubindex);
-    return this.getArcColor(addr);
-    //return this.getChordColor(addr);
+      */
+    let addr = matrixValues.getAddress(d.source.orgindex, d.source.orgsubindex);
+    //return this.getArcColor(addr);
+    return this.getChordColor(addr);
   };
 
   emptyCircle = () => {
@@ -597,9 +599,11 @@ class ChordViewer extends Component {
       this.setState({ showPopup: false });
       return;
     }
+    const mouse = d3.mouse(d3.select("#chord").node());
     d3.select("#popover-div")
-      .style("left", `${event.pageX + 5}px`)
-      .style("top", `${event.pageY}px`);
+      .style("left", `${mouse[0] + 25}px`)
+      .style("top", `${mouse[1] + 50}px`);
+
     // show popup
     this.setState({ showPopup: true, popupContent: content });
   };
@@ -867,7 +871,7 @@ class ChordViewer extends Component {
       if (!this.props.data.address) {
         return "";
       }
-      return this.props.sent ? "requests sent from " : "requests received at ";
+      return "requests involving ";
     };
     return (
       <div id="chordContainer" className="qdrChord">
@@ -876,6 +880,14 @@ class ChordViewer extends Component {
           {this.props.data.address}
         </div>
         <div aria-label="chord-diagram" id="chord"></div>
+        <div
+          id="popover-div"
+          className={this.state.showPopup ? "" : "hidden"}
+          ref={el => (this.popupRef = el)}
+        >
+          <QDRPopup content={this.state.popupContent}></QDRPopup>
+        </div>
+
         <RoutersComponent
           arcColors={this.arcColors}
           handleHoverRouter={this.handleHoverRouter}

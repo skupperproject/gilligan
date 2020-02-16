@@ -272,64 +272,39 @@ class Adapter {
   siteNameFromId = site_id =>
     this.data.sites.find(site => site.site_id === site_id).site_name;
 
-  matrix = (service, stat) => {
-    if (service.requests_sent) {
-      return this.matrixSender(service, stat);
-    } else {
-      return this.matrixReceiver(service, stat);
-    }
-  };
-  matrixReceiver = (service, stat) => {
-    //[{ingress: 'xxx', egress: 'xxx', address: 'xxx', messages: ###}...]
+  matrix = (involvingService, stat) => {
     if (!stat) stat = "requests";
     const matrix = [];
-    const toAddress = service.address;
-    service.requests_received.forEach(request => {
-      Object.keys(request.by_client).forEach(client => {
-        const fromAddress = this.serviceNameFromId(client);
-        const req = request.by_client[client];
-        const row = {
-          ingress: fromAddress,
-          egress: toAddress,
-          address: request.site_id,
-          messages: req[stat]
-        };
-        const record = matrix.find(
-          m => m.ingress === fromAddress && m.egress === toAddress
-        );
-        if (record) {
-          this.aggregateAttributes(row, record);
-        } else {
-          matrix.push(row);
-        }
-      });
-    });
-    return matrix;
-  };
-
-  matrixSender = (service, stat) => {
-    //[{ingress: 'xxx', egress: 'xxx', address: 'xxx', messages: ###}...]
-    if (!stat) stat = "requests";
-    const matrix = [];
-    const fromAddress = service.address;
-    service.requests_sent.forEach(request => {
-      Object.keys(request.by_receiver).forEach(client => {
-        const toAddress = client;
-        const req = request.by_receiver[client];
-        const row = {
-          ingress: fromAddress,
-          egress: toAddress,
-          address: request.site_id,
-          messages: req[stat]
-        };
-        const record = matrix.find(
-          m => m.ingress === fromAddress && m.egress === toAddress
-        );
-        if (record) {
-          this.aggregateAttributes(row, record);
-        } else {
-          matrix.push(row);
-        }
+    this.data.services.forEach(service => {
+      service.requests_received.forEach(request => {
+        Object.keys(request.by_client).forEach(client => {
+          const clientAddress = this.serviceNameFromId(client);
+          const req = request.by_client[client];
+          let ingress, egress;
+          if (clientAddress === involvingService.address) {
+            ingress = clientAddress;
+            egress = service.address;
+          } else if (service.address === involvingService.address) {
+            ingress = clientAddress;
+            egress = service.address;
+          }
+          if (ingress) {
+            const row = {
+              ingress,
+              egress,
+              address: request.site_id,
+              messages: req[stat]
+            };
+            const found = matrix.find(
+              r => r.ingress === ingress && r.egress === egress
+            );
+            if (found) {
+              this.aggregateAttributes(row, found);
+            } else {
+              matrix.push(row);
+            }
+          }
+        });
       });
     });
     return matrix;

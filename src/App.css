@@ -822,6 +822,19 @@ path.empty {
   font-size: 14px;
 }
 
+#popover-div {
+  position: absolute;
+  z-index: 200;
+  border-radius: 4px;
+  border: 1px solid gray;
+  background-color: white;
+  color: black;
+  opacity: 1;
+  padding: 12px;
+  font-size: 16px;
+  box-shadow: var(--pf-global--BoxShadow--md);
+}
+
 #_popover-div {
   position: absolute;
   z-index: 200;

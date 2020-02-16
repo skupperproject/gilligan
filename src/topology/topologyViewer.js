@@ -109,7 +109,7 @@ class TopologyPage extends Component {
   resize = () => {
     if (!this.svg) return;
     let sizes = getSizes(this.topologyRef);
-    this.width = sizes[0] - 350;
+    this.width = sizes[0];
     this.height = sizes[1];
     if (this.width > 0) {
       // set attrs and 'resume' force
@@ -161,7 +161,7 @@ class TopologyPage extends Component {
   // initialize the nodes and links array from the QDRService.topology._nodeInfo object
   init = () => {
     let sizes = getSizes(this.topologyRef);
-    this.width = sizes[0] - 350; // - width of sidebar
+    this.width = sizes[0]; // - width of sidebar
     this.height = sizes[1];
     //let nodeInfo = getData(this.props.type, this.props.service);
     //let nodeCount = Object.keys(nodeInfo).length;
@@ -909,7 +909,7 @@ class TopologyPage extends Component {
         <div className="diagram">
           <div ref={el => (this.topologyRef = el)} id="topology"></div>
           <div
-            id="popover-div"
+            id="topo_popover-div"
             className={this.state.showPopup ? "qdrPopup" : "qdrPopup hidden"}
             ref={el => (this.popupRef = el)}
           >
