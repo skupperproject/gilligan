@@ -4,8 +4,9 @@ class RESTService {
     console.log(`default REST url is ${this.url}`);
   }
 
-  getData = () =>
+  getData = alt =>
     new Promise((resolve, reject) => {
+      if (!alt) alt = "ambiguous";
       // try from the window url
       this.fetchFrom(`${this.url}/DATA`)
         .then(resolve)
@@ -15,7 +16,7 @@ class RESTService {
           // TODO: remove this for production
           // this was only used to get the data when the console
           // was served by yarn start
-          this.fetchFrom("/data/sample2.json")
+          this.fetchFrom(`/data/${alt}.json`)
             .then(resolve)
             .catch(error => {
               console.log(error);

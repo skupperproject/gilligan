@@ -28,8 +28,8 @@ import {
 import * as d3 from "d3";
 import { Nodes } from "./nodes.js";
 import { Links } from "./links.js";
-import { addDefs, midPoints } from "./svgUtils.js";
-import { getSizes } from "../qdrGlobals";
+import { addDefs, midPoints, addGradient } from "./svgUtils.js";
+import { getSizes, serviceColor } from "../utilities";
 import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
 import ClientInfoComponent from "./clientInfoComponent";
@@ -48,8 +48,7 @@ class TopologyPage extends Component {
       showRouterInfo: false,
       showClientInfo: false,
       lastUpdated: new Date(),
-      chordData: {},
-      chordSent: false
+      chordData: null
     };
     this.popupCancelled = true;
 
@@ -57,8 +56,9 @@ class TopologyPage extends Component {
     //  - links is an array of connections between the services. these are the lines with arrows
     this.forceData = {
       nodes: new Nodes(),
-      links: new Links(),
-      site: new Links()
+      serviceLinks: new Links(),
+      routerLinks: new Links(),
+      siteTrafficLinks: new Links()
     };
 
     this.force = null;
@@ -88,7 +88,7 @@ class TopologyPage extends Component {
     this.graph = new Graph(this.props.service, this.drawViewPath);
     this.view = this.props.initialView;
     this.resetScale = 1;
-    this.transitions = new Transitions(this.drawPath);
+    this.transitions = new Transitions();
   }
 
   // called only once when the component is initialized
@@ -97,7 +97,7 @@ class TopologyPage extends Component {
 
     // create the svg
     this.init();
-    this.toNamespace(true);
+    this.toSite(true);
   };
 
   componentWillUnmount = () => {
@@ -163,14 +163,14 @@ class TopologyPage extends Component {
     let sizes = getSizes(this.topologyRef);
     this.width = sizes[0]; // - width of sidebar
     this.height = sizes[1];
-    //let nodeInfo = getData(this.props.type, this.props.service);
-    //let nodeCount = Object.keys(nodeInfo).length;
 
     this.mouseover_node = null;
     this.selected_node = null;
 
     this.forceData.nodes.reset();
-    this.forceData.links.reset();
+    this.forceData.serviceLinks.reset();
+    this.forceData.routerLinks.reset();
+    this.forceData.siteTrafficLinks.reset();
 
     this.zoom = d3.behavior
       .zoom()
@@ -193,7 +193,7 @@ class TopologyPage extends Component {
 
       addDefs(this.svg);
     }
-    this.links = this.svg
+    this.routerLinksSelection = this.svg
       .append("svg:g")
       .attr("class", "siteLinks")
       .selectAll("g");
@@ -206,9 +206,14 @@ class TopologyPage extends Component {
 
     this.services = this.svg.selectAll("g.service-type");
 
-    this.path = this.svg
+    this.serviceLinksSelection = this.svg
       .append("svg:g")
       .attr("class", "links")
+      .selectAll("g");
+
+    this.siteTrafficLinksSelection = this.svg
+      .append("svg:g")
+      .attr("class", "siteTrafficLinks")
       .selectAll("g");
 
     // mouse event vars
@@ -217,12 +222,22 @@ class TopologyPage extends Component {
     // initialize the list of nodes and links
     const { nodeCount, size } = this.graph.initNodesAndLinks(
       this.forceData.nodes,
-      this.forceData.links,
+      this.forceData.serviceLinks,
       this.width,
-      this.height,
-      this.props.serviceTypeName
+      this.height
     );
-    this.graph.initSiteLinks(this.forceData.nodes, this.forceData.site);
+    this.graph.initSiteLinks(
+      this.forceData.nodes,
+      this.forceData.routerLinks,
+      this.width,
+      this.height
+    );
+    this.graph.initSiteTrafficLinks(
+      this.forceData.nodes,
+      this.forceData.siteTrafficLinks,
+      this.width,
+      this.height
+    );
 
     this.resetScale = this.width / size.width;
     this.zoom.scale(this.resetScale);
@@ -232,7 +247,7 @@ class TopologyPage extends Component {
     this.force = d3.layout
       .force()
       .nodes(this.forceData.nodes.nodes)
-      .links([])
+      .links(this.forceData.routerLinks.links)
       .size([this.width, this.height])
       .linkDistance(d => {
         return this.forceData.nodes.linkDistance(d, nodeCount);
@@ -258,7 +273,7 @@ class TopologyPage extends Component {
         d3.event.sourceEvent.stopPropagation();
       })
       .on("drag", d => {
-        if (this.view === "application") {
+        if (this.view === "service") {
           d.x = d.px;
           d.y = d.py;
           this.services.attr("transform", d => {
@@ -285,6 +300,7 @@ class TopologyPage extends Component {
   };
 
   highlightConnection = (highlight, link, d, self) => {
+    if (this.transitioning) return;
     this.blurAll(highlight, d);
     this.highlightLink(highlight, link, d);
 
@@ -294,8 +310,10 @@ class TopologyPage extends Component {
   highlightLink = (highlight, link, d) => {
     link
       .selectAll("path")
-      .attr("opacity", highlight || this.view !== "traffic" ? 1 : 0.25);
+      .attr("opacity", highlight || this.view !== "servicesankey" ? 1 : 0.25);
     link.selectAll("text.stats").style("stroke", null);
+    link.selectAll("path.sankeyServiceLinkDir").attr("opacity", 1);
+
     const services = d3
       .select("#SVG_ID")
       .selectAll("g.service-type")
@@ -309,7 +327,7 @@ class TopologyPage extends Component {
       .selectAll("text")
       .attr("font-weight", highlight ? "bold" : "normal");
 
-    if (this.view === "application")
+    if (this.view === "service")
       services
         .selectAll("circle.end-point")
         .filter(
@@ -319,7 +337,7 @@ class TopologyPage extends Component {
         )
         .attr("opacity", 1);
 
-    if (this.view === "application")
+    if (this.view === "service")
       services
         .selectAll("rect.end-point")
         .filter(
@@ -331,6 +349,7 @@ class TopologyPage extends Component {
   };
 
   highlightServiceType = (highlight, st, d, self) => {
+    if (this.transitioning) return;
     this.blurAll(highlight, d);
     const links = d3
       .select("#SVG_ID")
@@ -344,6 +363,7 @@ class TopologyPage extends Component {
   };
 
   highlightNamespace = (highlight, nsBox, d, self) => {
+    if (this.transitioning) return;
     this.blurAll(highlight, d);
     d.highlighted = highlight;
     // highlight all the services
@@ -353,7 +373,7 @@ class TopologyPage extends Component {
 
   blurAll = (blur, d) => {
     const opacity = blur ? 0.5 : 1;
-    const pathOpacity = blur || this.view === "traffic" ? 0.25 : 1;
+    const pathOpacity = blur || this.view === "servicesankey" ? 0.25 : 1;
     const svg = d3.select("#SVG_ID");
     svg.selectAll(".cluster-rects").attr("opacity", opacity);
     svg
@@ -364,7 +384,7 @@ class TopologyPage extends Component {
     svg
       .selectAll("path.link")
       .attr("opacity", d1 => (d && d1.uid !== d.uid ? pathOpacity : 1));
-    if (this.view === "application")
+    if (this.view === "service")
       svg.selectAll(".end-point").attr("opacity", pathOpacity);
     svg.selectAll("text").attr("font-weight", "normal");
     svg
@@ -374,16 +394,16 @@ class TopologyPage extends Component {
   };
 
   setLinkStat = () => {
-    this.path.selectAll("text").text(d => {
+    this.serviceLinksSelection.selectAll("text").text(d => {
       return d.request[this.props.options.link.stat];
     });
   };
 
   // Takes the forceData.nodes and forceData.links array and creates svg elements
   // Also updates any existing svg elements based on the updated values in forceData.nodes
-  // and forceData.links
+  // and forceData.*Links
   restart = () => {
-    if (this.view === "application") {
+    if (this.view === "service") {
       this.circle.on("mousedown.drag", null);
       this.services.call(this.clusterDrag);
     } else {
@@ -391,24 +411,57 @@ class TopologyPage extends Component {
       this.services.on("mousedown.drag", null);
     }
 
-    this.links = this.links.data(this.forceData.site.links, d => d.uid);
-    this.links.exit().remove();
-    const enterLinks = this.links.enter().append("g");
-    enterLinks
+    this.routerLinksSelection = this.routerLinksSelection.data(
+      this.forceData.routerLinks.links,
+      d => d.uid
+    );
+    this.routerLinksSelection.exit().remove();
+    this.routerLinksSelection
+      .enter()
+      .append("g")
       .append("path")
-      .attr("class", "siteLink")
-      .attr("marker-end", `url(#site-end)`)
-      .attr("marker-start", `url(#site-start)`);
+      .attr("class", "siteLink");
 
-    // path is a selection of all g elements under the g.links svg:group
+    this.siteTrafficLinksSelection = this.siteTrafficLinksSelection.data(
+      this.forceData.siteTrafficLinks.links,
+      d => d.uid
+    );
+
+    this.siteTrafficLinksSelection.exit().remove();
+    const stlsEnter = this.siteTrafficLinksSelection
+      .enter()
+      .append("g")
+      .attr("class", "siteTrafficLink");
+
+    addGradient(stlsEnter);
+
+    stlsEnter
+      .append("path")
+      .attr("class", "siteTrafficLink")
+      .attr("stroke", d => `url(#${d.uid})`)
+      .attr("marker-end", d => (d.right ? `url(#site-end)` : null))
+      .attr("marker-start", d => (d.left ? `url(#site-start)` : null))
+      .classed("siteCall", true);
+    stlsEnter
+      .append("path")
+      .attr("class", "sankeySiteLinkDir")
+      .attr("marker-end", d => {
+        return d.right ? `url(#site-end)` : null;
+      })
+      .attr("marker-start", d => {
+        return d.left ? `url(#site-start)` : null;
+      });
+
+    // serviceLinksSelection is a selection of all g elements under the g.links svg:group
     // here we associate the links.links array with the {g.links g} selection
     // based on the link.uid
-    this.path = this.path.data(this.forceData.links.links, function(d) {
-      return d.uid;
-    });
+    this.serviceLinksSelection = this.serviceLinksSelection.data(
+      this.forceData.serviceLinks.links,
+      d => d.uid
+    );
 
     // update each existing {g.links g.link} element
-    this.path
+    this.serviceLinksSelection
       .select(".link")
       .classed("selected", function(d) {
         return d.selected;
@@ -416,10 +469,9 @@ class TopologyPage extends Component {
       .classed("highlighted", function(d) {
         return d.highlighted;
       });
-    //.classed("unknown", d => d.cls === "target");
 
     // reset the markers based on current highlighted/selected
-    this.path
+    this.serviceLinksSelection
       .select(".link")
       .attr("marker-end", d => {
         return d.cls !== "network" && d.right
@@ -432,9 +484,10 @@ class TopologyPage extends Component {
           : null;
       });
     // add new links. if a link with a new uid is found in the data, add a new path
-    let enterpath = this.path
+    let enterpath = this.serviceLinksSelection
       .enter()
       .append("g")
+      .style("mix-blend-mode", "multiply")
       .on("mouseover", function(d) {
         // mouse over a path
         d.selected = true;
@@ -453,10 +506,14 @@ class TopologyPage extends Component {
         this.clearPopups();
       });
 
+    addGradient(enterpath, serviceColor);
+
     // the d attribute of the following path elements is set in tick()
     enterpath
       .append("path")
       .attr("class", "link")
+      .classed("serviceCall", true)
+      .attr("stroke", d => `url(#${d.uid})`)
       .attr("marker-end", d => {
         return d.right && d.cls !== "network"
           ? `url(#end${d.markerId("end")})`
@@ -466,13 +523,24 @@ class TopologyPage extends Component {
         return d.cls !== "network" && (d.left || (!d.left && !d.right))
           ? `url(#start${d.markerId("start")})`
           : null;
-      })
+      });
+    /*
       .attr("id", function(d, i) {
         const si = d.source.uid();
         const ti = d.target.uid();
         return ["path", si, ti, i].join("-");
       });
-    //.classed("unknown", d => d.cls === "target");
+      */
+
+    enterpath
+      .append("path")
+      .attr("class", "sankeyServiceLinkDir")
+      .attr("marker-end", d => {
+        return d.right ? `url(#end${d.markerId("end")})` : null;
+      })
+      .attr("marker-start", d => {
+        return d.left ? `url(#start--undefined)` : null;
+      });
 
     enterpath
       .append("path")
@@ -498,7 +566,7 @@ class TopologyPage extends Component {
 
     this.setLinkStat();
     // remove old links
-    this.path.exit().remove();
+    this.serviceLinksSelection.exit().remove();
 
     // circle (node) group
     // one svg:g with class "clusters" to contain them all
@@ -521,7 +589,6 @@ class TopologyPage extends Component {
       .attr("class", "shadow site")
       .attr("id", d => `shadow-${d.index}`);
     // for each node in the data, add sub elements like circles, rects, text
-    //appendCircle(enterCircle, this.props.type, this.svg)
     this.graph.createGraph(enterShadow, null, true);
 
     // add new circle nodes
@@ -534,9 +601,8 @@ class TopologyPage extends Component {
         return (d.nodeType !== "normal" ? "cluster" : "client") + "-" + d.index;
       });
     // for each node in the data, add sub elements like circles, rects, text
-    //appendCircle(enterCircle, this.props.type, this.svg)
     this.graph
-      .createGraph(enterCircle, this.forceData.links.links, false)
+      .createGraph(enterCircle, this.forceData.serviceLinks.links, false)
       .on("mouseover", function(d) {
         // mouseover a namespace box
         self.current_node = d;
@@ -607,38 +673,44 @@ class TopologyPage extends Component {
         // circle
         this.clearPopups();
         if (d3.event.defaultPrevented) return; // click suppressed
-        self.doDialog(d, "router");
+        //self.doDialog(d, "router");
+        this.showChord(d);
         d3.event.stopPropagation();
       });
 
     d3.selectAll("g.service-type")
       .on("mousedown", d => {
-        if (this.view === "traffic") {
+        if (this.view === "servicesankey") {
           d3.event.stopPropagation();
           d3.event.preventDefault();
         }
       })
       .on("mouseover", function(d) {
         // highlight this service-type and it's connected service-types
-        if (this.view === "application")
+        if (self.view === "service" || self.view === "servicesankey") {
           self.highlightServiceType(true, d3.select(this), d, self);
+        }
         d3.event.stopPropagation();
       })
       .on("mouseout", function(d) {
-        if (this.view === "application")
+        if (self.view === "service" || self.view === "servicesankey")
           self.highlightServiceType(false, d3.select(this), d, self);
         d3.event.stopPropagation();
       })
       .on("click", function(d) {
         if (d3.event.defaultPrevented) return; // click suppressed
+        //if (self.view === "site" || self.view === "sitesankey") {
         self.showChord(d);
+        //} else {
+        //  self.showChord(d);
+        //}
         //self.doDialog(d, "client");
-        if (self.view !== "traffic") {
+        if (self.view !== "servicesankey") {
           self.transitions.expandService(
             d,
             self.forceData.nodes.nodes,
             self.view,
-            self.path,
+            self.serviceLinksSelection,
             self.width
           );
         }
@@ -670,20 +742,16 @@ class TopologyPage extends Component {
   };
 
   showChord = chordData => {
-    const chordSent = chordData.requests_sent !== undefined;
-    this.setState(
-      { showPopup: false, showChord: true, chordData, chordSent },
-      () => {
-        this.chordRef.doUpdate(chordData);
-      }
-    );
+    this.setState({ showPopup: false, showChord: true, chordData }, () => {
+      this.chordRef.doUpdate();
+    });
   };
 
   // update force layout (called automatically each iteration)
   tick = () => {
     // move the circles
     this.circle.attr("transform", d => {
-      if (this.view === "application") {
+      if (this.view === "service") {
         return `translate(0,0)`;
       }
       return `translate(${d.x},${d.y})`;
@@ -694,25 +762,32 @@ class TopologyPage extends Component {
   };
 
   drawViewPath = () => {
-    if (this.view === "namespace") {
-      this.drawSitePath();
+    if (this.view === "site") {
+      this.drawSitePath(this);
+    } else if (this.view === "sitesankey") {
+      this.drawSiteTrafficPath(this);
     } else {
-      this.drawPath(this.view === "application" ? 1 : 0);
+      this.drawPath(this.view === "service" ? 1 : 0, this);
     }
   };
-
-  drawSitePath = () => {
-    this.links.selectAll("path").attr("d", d => {
+  drawSiteTrafficPath = self => {
+    self.siteTrafficLinksSelection.selectAll("path").attr("d", d => {
+      const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(1);
+      return `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty + tyoff}`;
+    });
+  };
+  drawSitePath = self => {
+    self.routerLinksSelection.selectAll("path").attr("d", d => {
       const { sx, sy, tx, ty } = midPoints(d.source, d.target);
       return `M${sx},${sy}L${tx},${ty}`;
     });
   };
 
-  drawPath = t => {
-    this.path
+  drawPath = (t, self) => {
+    self.serviceLinksSelection
       .selectAll("path")
       .attr("d", (d, i) => {
-        if (this.view === "traffic") {
+        if (self.view === "servicesankey") {
           return d.sankeyLinkHorizontal(d, i);
         } else {
           const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(t);
@@ -720,13 +795,13 @@ class TopologyPage extends Component {
         }
       })
       .attr("stroke-width", d => {
-        if (this.view === "traffic") {
+        if (self.view === "servicesankey") {
           return d.width;
         }
         return 2.5;
       });
 
-    this.path
+    self.serviceLinksSelection
       .selectAll("text")
       .attr("x", d => {
         const { sx, tx, sxoff, txoff } = d.endpoints(t);
@@ -784,7 +859,7 @@ class TopologyPage extends Component {
   };
 
   clearAllHighlights = () => {
-    this.forceData.links.clearHighlighted();
+    this.forceData.serviceLinks.clearHighlighted();
     this.forceData.nodes.clearHighlighted();
     d3.selectAll(".hittarget").classed("highlighted", false);
   };
@@ -815,59 +890,86 @@ class TopologyPage extends Component {
     this.zoomed(duration);
   };
 
-  toApplication = () => {
+  toService = () => {
     const previousView = this.view;
-    this.view = "application";
-    this.transitions.toApplication(
-      previousView,
-      this.forceData.nodes.nodes,
-      this.path,
-      this.resetViewCallback
-    );
+    this.view = "service";
+    this.transitioning = true;
+    this.transitions
+      .toService(
+        previousView,
+        this.forceData.nodes.nodes,
+        this.serviceLinksSelection,
+        this.resetViewCallback
+      )
+      .then(() => {
+        this.transitioning = false;
+        this.serviceLinksSelection.select(".link").classed("serviceCall", true);
+      });
     this.restart();
+    if (previousView === "site" || previousView === "sitesankey")
+      this.showChord(null);
   };
 
-  toNamespace = initial => {
+  toSite = initial => {
     const previousView = this.view;
-    this.view = "namespace";
-    this.transitions.toNamespace(
-      previousView,
-      this.forceData.nodes.nodes,
-      this.path,
-      this.resetViewCallback,
-      initial
-    );
+    this.view = "site";
+    this.transitions
+      .toSite(
+        previousView,
+        this.forceData.nodes.nodes,
+        this.serviceLinksSelection,
+        this.resetViewCallback,
+        initial
+      )
+      .then(() => {
+        this.siteTrafficLinksSelection
+          .selectAll("path.siteTrafficLink")
+          .classed("siteCall", true);
+      });
     this.restart();
+    if (previousView === "service" || previousView === "servicesankey")
+      this.showChord(null);
   };
 
-  toTraffic = () => {
+  toServicesankey = () => {
     const previousView = this.view;
-    this.view = "traffic";
-    this.transitions.toTraffic(
+    this.view = "servicesankey";
+    this.serviceLinksSelection.select(".link").classed("serviceCall", false);
+    this.transitions.toServiceSankey(
       previousView,
       this.forceData.nodes.nodes,
-      this.path,
       this.zoom,
       this.svg
     );
     this.restart();
+    if (previousView === "site" || previousView === "sitesankey")
+      this.showChord(null);
   };
 
-  toChord = () => {
+  toSitesankey = () => {
     const previousView = this.view;
-    this.view = "chord";
-    this.transitions.toChord(
+    this.view = "sitesankey";
+    this.siteTrafficLinksSelection
+      .selectAll("path.siteTrafficLink")
+      .classed("siteCall", false);
+    this.transitions.toSiteSankey(
       previousView,
       this.forceData.nodes.nodes,
-      this.path,
+      this.serviceLinksSelection,
       this.zoom,
       this.svg
     );
     this.restart();
+    if (previousView === "service" || previousView === "servicesankey")
+      this.showChord(null);
   };
 
   handleCloseSidebar = () => {
     this.setState({ showChord: false });
+  };
+
+  handleShowAll = () => {
+    this.showChord(null);
   };
 
   render() {
@@ -899,7 +1001,8 @@ class TopologyPage extends Component {
               ref={el => (this.chordRef = el)}
               service={this.props.service}
               data={this.state.chordData}
-              sent={this.state.chordSent}
+              site={this.view === "site" || this.view === "sitesankey"}
+              handleShowAll={this.handleShowAll}
             />
           </TopologySideBar>
         }

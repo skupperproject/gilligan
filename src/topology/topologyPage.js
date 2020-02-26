@@ -28,7 +28,7 @@ import {
   TextVariants
 } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
-import { Icap, strDate } from "../qdrGlobals";
+import { Icap, strDate } from "../utilities";
 
 class TopologyPage extends Component {
   constructor(props) {
@@ -44,7 +44,7 @@ class TopologyPage extends Component {
         link: { stat: "" }
       }
     };
-    this.initialView = "namespace";
+    this.initialView = "site";
   }
 
   handleChangeService = serviceTypeName => {

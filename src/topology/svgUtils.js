@@ -163,26 +163,26 @@ export function addDefs(svg) {
     .select("defs.marker-defs")
     .append("marker")
     .attr("id", "site-end")
-    .attr("viewBox", "0 -10 20 20")
-    .attr("refX", 0)
-    .attr("markerWidth", 20)
-    .attr("markerHeight", 20)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8)
+    .attr("markerWidth", 14)
+    .attr("markerHeight", 14)
     .attr("markerUnits", "userSpaceOnUse")
     .attr("orient", "auto")
     .append("svg:path")
-    .attr("d", `M 0 -10 L 10 0 L 0 10 z`);
+    .attr("d", `M 0 -5 L 10 0 L 0 5 z`);
   svg
     .select("defs.marker-defs")
     .append("marker")
     .attr("id", "site-start")
-    .attr("viewBox", "0 -10 20 20")
-    .attr("refX", 0)
-    .attr("markerWidth", 20)
-    .attr("markerHeight", 20)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 2)
+    .attr("markerWidth", 14)
+    .attr("markerHeight", 14)
     .attr("markerUnits", "userSpaceOnUse")
     .attr("orient", "auto")
     .append("svg:path")
-    .attr("d", `M 10 -10 L 10 10 L 0 0 z`);
+    .attr("d", `M 10 -5 L 0 0 L 10 5 z`);
 
   addStyles(
     sten,
@@ -233,26 +233,6 @@ export const midPoints = (source, target) => {
   */
 };
 
-export function addGradient(svg) {
-  // gradient for sender/receiver client
-  let grad = svg
-    .append("svg:defs")
-    .append("linearGradient")
-    .attr("id", "half-circle")
-    .attr("x1", "0%")
-    .attr("x2", "0%")
-    .attr("y1", "100%")
-    .attr("y2", "0%");
-  grad
-    .append("stop")
-    .attr("offset", "50%")
-    .style("stop-color", "#C0F0C0");
-  grad
-    .append("stop")
-    .attr("offset", "50%")
-    .style("stop-color", "#F0F000");
-}
-
 function addStyles(stend, stateColor, radii) {
   // the <style>
   let element = document.querySelector("style");
@@ -282,75 +262,21 @@ export function scaledMouse(node, event) {
   ];
 }
 
-/*
-export function getData(type, service) {
-  let nodeInfo = {};
+export const addGradient = enterpath => {
+  const gradient = enterpath
+    .append("linearGradient")
+    .attr("id", d => d.uid)
+    .attr("gradientUnits", "userSpaceOnUse")
+    .attr("x1", d => d.source.x1)
+    .attr("x2", d => d.target.x0);
 
-  if (type === "network") {
-    //nodeInfo = service.management.topology.nodeInfo();
-    clusters.forEach((cluster, clusterIndex) => {
-      const results = [];
-      const targetCluster =
-        clusterIndex === clusters.length - 1 ? 0 : clusterIndex + 1;
-      results.push([
-        `connection-${clusterIndex}`,
-        clusters[targetCluster].location,
-        "inter-router",
-        "host",
-        "user",
-        false,
-        `clusterId-${clusterIndex}`,
-        "both",
-        {}
-      ]);
-      const clusterNamespaces = namespaces
-        .filter(ns => ns.cluster === clusterIndex)
-        .map(fns => fns.name);
-      cluster.namespaces = clusterNamespaces;
-      nodeInfo[utils.idFromName(cluster.location, "_topo")] = {
-        router: {
-          attributeNames: ["metaData"],
-          results: [[cluster]]
-        },
-        connection: {
-          attributeNames: ConnectionAttributeNames,
-          results: results
-        }
-      };
-    });
-  } else if (type === "application") {
-    const application = applications[0];
-    serviceTypes.forEach((st, stIndex) => {
-      const results = [];
-      application.connections.forEach(conn => {
-        if (serviceConnections[conn.serviceInstance].serviceType === stIndex) {
-          conn.addresses.forEach(address => {
-            results.push([
-              st.addresses[address],
-              "",
-              "normal",
-              "host",
-              "user",
-              false,
-              `addr${stIndex}-${address}`,
-              "both",
-              {}
-            ]);
-          });
-        }
-      });
-      nodeInfo[utils.idFromName(st.name, "_topo")] = {
-        router: {
-          attributeNames: ["metaData"],
-          results: [[{}]]
-        },
-        connection: {
-          attributeNames: ConnectionAttributeNames,
-          results: results
-        }
-      };
-    });
-  }
-  return nodeInfo;
-}
-*/
+  gradient
+    .append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", d => d.source.color);
+
+  gradient
+    .append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", d => d.target.color);
+};

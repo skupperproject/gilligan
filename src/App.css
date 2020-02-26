@@ -123,9 +123,6 @@ g.selected line {
   stroke-width: 4;
 }
 
-.link {
-  stroke: #000;
-}
 .topology-header path.link {
   stroke: #fff;
 }
@@ -551,8 +548,6 @@ path.link.selected:not(.traffic) {
 
 path.link {
   fill: #000;
-  /* stroke: #000; */
-  /* stroke-width: 2.5px; */
   cursor: default;
 }
 
@@ -563,14 +558,15 @@ path.link.unknown {
 
 path.siteLink:not(.traffic) {
   cursor: default;
-  /* stroke-width: 20; */
-  stroke-width: 2;
+}
+
+path.sankeySiteLinkDir,
+path.sankeyServiceLinkDir,
+path.serviceCall,
+path.siteCall {
   stroke: #000;
 }
 
-path:not(.traffic) {
-  stroke: #000;
-}
 svg:not(.active):not(.ctrl) path.link {
   cursor: pointer;
 }
@@ -599,7 +595,7 @@ marker {
 }
 #site-start,
 #site-end {
-  fill: #eaeaea;
+  fill: #000;
 }
 path.link.dragline {
   pointer-events: none;
@@ -607,6 +603,11 @@ path.link.dragline {
 
 path.link.hidden {
   stroke-width: 0;
+}
+
+path.siteLink {
+  stroke-dasharray: 1 5;
+  stroke: #999999;
 }
 
 circle.node {
@@ -762,22 +763,31 @@ circle.flow {
   top: 0.5em;
 }
 
+.chord-title {
+  text-align: center;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #eaeaea;
+  margin-bottom: 0.5em;
+}
+
 @media (min-width: 768px) {
   .qdrTopology .pf-topology-side-bar.shown {
     width: calc(100% - 180px);
-    max-width: 350px;
+    max-width: 360px;
   }
   .qdrTopology
     .pf-topology-container__with-sidebar.pf-topology-container__with-sidebar--open
     .pf-topology-content {
     width: 180px;
-    min-width: calc(100% - 350px);
+    min-width: calc(100% - 360px);
   }
 }
 
 path.chord {
-  fill-opacity: 0.67;
+  fill-opacity: 0.5;
+  mix-blend-mode: multiply;
 }
+
 #circle circle {
   fill: none;
   pointer-events: all;
@@ -1139,7 +1149,6 @@ rect.service {
 rect.service-type {
   stroke: black;
   stroke-width: 1px;
-  fill: white;
 }
 
 rect.service-type.proxy,
@@ -1475,4 +1484,65 @@ span.card-request-site {
 .body-line-prompt:after {
   content: ":";
   padding-right: 1em;
+}
+
+.toolbar-prompt {
+  padding-left: 1em;
+  display: inline-block;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  margin: 2px 0 0;
+  line-height: normal;
+}
+
+.chord-kebob {
+  position: absolute;
+  right: -1em;
+}
+
+.dropdown-icon-containter {
+  padding-right: 1em;
+  display: inline-block;
+}
+
+div.chord-kebob .dropdown-icon-containter svg {
+  cursor: pointer;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.site-card .pf-c-card__head:first-child {
+  background-color: #eeeeff;
+  padding-top: 10px;
+}
+.service-card .pf-c-card__head:first-child {
+  background-color: #eeffee;
+  padding-top: 10px;
+}
+
+.list-card.site-card {
+  border-top: 2px solid #eeeeff;
+}
+.list-card.site-card:hover {
+  border-top: 2px solid #3333ff;
+}
+
+.list-card.service-card {
+  border-top: 2px solid #eeffee;
+}
+.list-card.service-card:hover {
+  border-top: 2px solid #3333ff;
+}
+button#sites {
+  background-color: #eeeeff;
+}
+button#services {
+  background-color: #eeffee;
+}
+button#processes {
+  background-color: #ffffee;
 }

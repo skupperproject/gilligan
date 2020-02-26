@@ -19,6 +19,7 @@ under the License.
 
 import React, { Component } from "react";
 import {
+  Checkbox,
   Dropdown,
   DropdownPosition,
   DropdownToggle,
@@ -27,33 +28,39 @@ import {
   ToolbarGroup,
   ToolbarItem
 } from "@patternfly/react-core";
+
 import LinkOptions from "./linkOptions";
 
 class GraphToolbar extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      showSankey: false
+    };
     this.dropdownItems = [
       {
-        key: "namespace",
-        description: "Sites",
-        selected: this.props.initialView === "namespace"
+        key: "site",
+        description: "Site graph",
+        selected: this.props.initialView === "site",
+        sankeyView: "sitesankey"
       },
       {
-        key: "application",
-        description: "Application",
-        selected: this.props.initialView === "application"
+        key: "service",
+        description: "Service call graph",
+        selected: this.props.initialView === "serivce",
+        sankeyView: "servicesankey"
+      } /*,
+      {
+        key: "servicesankey",
+        description: "Serivce relative traffic",
+        selected: this.props.initialView === "servicesankey"
       },
       {
-        key: "traffic",
-        description: "Relative traffic",
-        selected: this.props.initialView === "traffic"
-      },
-      {
-        key: "chord",
-        description: "Message flow",
-        selected: this.props.initialView === "chord"
+        key: "sitesankey",
+        description: "Site relative traffic",
+        selected: this.props.initialView === "sitesankey"
       }
+      */
     ];
   }
 
@@ -71,9 +78,22 @@ class GraphToolbar extends Component {
     this.dropdownItems.forEach(item => {
       item.selected = item.description === desc;
     });
+    const selected = this.dropdownItems.find(item => item.selected);
     this.props.handleChangeView(
-      this.dropdownItems.find(item => item.selected === true).key
+      this.state.showSankey ? selected.sankeyView : selected.key
     );
+  };
+
+  // checkbox was checked
+  handleChange = (checked, event) => {
+    const target = event.target;
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const name = target.name;
+    const selected = this.dropdownItems.find(i => i.selected);
+    this.props.handleChangeView(
+      target.checked ? selected.sankeyView : selected.key
+    );
+    this.setState({ [name]: value });
   };
 
   onToggle = () => {
@@ -114,12 +134,17 @@ class GraphToolbar extends Component {
       <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
         <ToolbarGroup>
           <ToolbarItem className="pf-u-mr-md">
-            {this.buildDropdown()}{" "}
-            <LinkOptions
-              adapter={this.props.service.adapter}
-              options={this.props.options.link}
-              handleChangeOption={this.props.handleChangeOption}
-            />
+            View: {this.buildDropdown()}
+          </ToolbarItem>
+          <ToolbarItem>
+            <Checkbox
+              label="Show relative traffic"
+              isChecked={this.state.showSankey}
+              onChange={this.handleChange}
+              aria-label="show relative traffic"
+              id="showSankey"
+              name="showSankey"
+            />{" "}
           </ToolbarItem>
         </ToolbarGroup>
       </Toolbar>
@@ -128,3 +153,13 @@ class GraphToolbar extends Component {
 }
 
 export default GraphToolbar;
+
+/*          <ToolbarItem>
+            <div class="toolbar-prompt">Options:</div>
+            <LinkOptions
+              adapter={this.props.service.adapter}
+              options={this.props.options.link}
+              handleChangeOption={this.props.handleChangeOption}
+            />
+          </ToolbarItem>
+*/

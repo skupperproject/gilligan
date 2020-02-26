@@ -81,21 +81,51 @@ class ChordData {
     return new Promise(function(resolve, reject) {
       // get the router.node and router.link info
       // the raw data received from the routers
-      console.log(" --------- get Matrix d");
-      console.log(d);
       // for each router in the network
       const values = self.QDRService.adapter.matrix(d);
-      console.log(" --------- get Matrix values");
-      console.log(values);
       // values is an array of objects like [{ingress: 'xxx', egress: 'xxx', address: 'xxx', messages: ###}, ....]
       // convert the raw values array into a matrix object
       let matrix = convert(self, values);
-      console.log(" --------- get Matrix matrix");
-      console.log(matrix);
       // resolve the promise
       resolve(matrix);
     });
   }
+  getSiteMatrixForSite(d, converter) {
+    let self = this;
+    return new Promise(resolve => {
+      const values = self.QDRService.adapter.siteMatrixForSite(d);
+      const matrix = convert(self, values, converter);
+      resolve(matrix);
+    });
+  }
+
+  getAllServiceMatrix(converter) {
+    let self = this;
+    return new Promise(resolve => {
+      const values = self.QDRService.adapter.allServiceMatrix();
+      const matrix = convert(self, values, converter);
+      resolve(matrix);
+    });
+  }
+
+  getSiteMatrix(converter) {
+    let self = this;
+    return new Promise(resolve => {
+      const values = self.QDRService.adapter.siteMatrix();
+      const matrix = convert(self, values, converter);
+      resolve(matrix);
+    });
+  }
+
+  getSiteMatrixForService(d, converter) {
+    let self = this;
+    return new Promise(resolve => {
+      const values = self.QDRService.adapter.siteMatrixForService(d);
+      const matrix = convert(self, values, converter);
+      resolve(matrix);
+    });
+  }
+
   convertUsing(converter) {
     let values = this.isRate ? this.rateValues : this.last_values.values;
     // convert the values to a matrix using the requested converter and the current filter
@@ -167,7 +197,8 @@ let sortByKeys = function(values) {
     return a.key > b.key ? 1 : a.key < b.key ? -1 : 0;
   });
 };
-let convert = function(self, values) {
+let convert = function(self, values, converter) {
+  if (!converter) converter = self.converter;
   // sort the raw data by egress router name
   genKeys(values);
   sortByKeys(values);
@@ -182,7 +213,7 @@ let convert = function(self, values) {
     );
   }
   // convert the raw data to a matrix
-  let matrix = self.converter(values, self.filter);
+  let matrix = converter(values, self.filter);
   self.last_matrix = matrix;
 
   return matrix;

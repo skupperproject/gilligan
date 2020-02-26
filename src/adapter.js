@@ -6,6 +6,7 @@ class Adapter {
     this.addServersToSites();
     this.addSourcesTargets();
     this.addVersions();
+    this.addSiteConnected();
     console.log(this.data);
   }
 
@@ -145,10 +146,6 @@ class Adapter {
     this.data.sites.forEach(site => {
       site.services.forEach(service => {
         const versions = this.getVersions(service, site.site_id);
-        console.log(
-          `got version for service ${service.address} for site ${site.site_id} length ${versions.length}`
-        );
-        versions.forEach(v => console.log(v.version));
         service.versions = versions;
       });
     });
@@ -166,19 +163,13 @@ class Adapter {
     return serviceList;
   };
 
-  // find the request record between target service and sourceAddress
+  // return a request record for traffic between source and target services
   linkRequest = (sourceAddress, target) => {
-    for (let r = 0; r < target.requests_received.length; r++) {
-      const request = target.requests_received[r];
-      const keys = Object.keys(request.by_client);
-      for (let k = 0; k < keys.length; k++) {
-        const key = keys[k];
-        const address = this.serviceNameFromId(key);
-        if (address === sourceAddress) {
-          return request.by_client[key];
-        }
-      }
-    }
+    const matrix = this.allServiceMatrix();
+    const found = matrix.find(
+      r => r.ingress === sourceAddress && r.egress === target.address
+    );
+    if (found) return found.request;
   };
 
   // get list of attributes in requests.
@@ -272,6 +263,7 @@ class Adapter {
   siteNameFromId = site_id =>
     this.data.sites.find(site => site.site_id === site_id).site_name;
 
+  // gather raw data for all services that are involved with the given service
   matrix = (involvingService, stat) => {
     if (!stat) stat = "requests";
     const matrix = [];
@@ -280,23 +272,18 @@ class Adapter {
         Object.keys(request.by_client).forEach(client => {
           const clientAddress = this.serviceNameFromId(client);
           const req = request.by_client[client];
-          let ingress, egress;
-          if (clientAddress === involvingService.address) {
-            ingress = clientAddress;
-            egress = service.address;
-          } else if (service.address === involvingService.address) {
-            ingress = clientAddress;
-            egress = service.address;
-          }
-          if (ingress) {
+          if (
+            clientAddress === involvingService.address ||
+            service.address === involvingService.address
+          ) {
             const row = {
-              ingress,
-              egress,
+              ingress: clientAddress,
+              egress: service.address,
               address: request.site_id,
               messages: req[stat]
             };
             const found = matrix.find(
-              r => r.ingress === ingress && r.egress === egress
+              r => r.ingress === clientAddress && r.egress === service.address
             );
             if (found) {
               this.aggregateAttributes(row, found);
@@ -308,6 +295,147 @@ class Adapter {
       });
     });
     return matrix;
+  };
+
+  // get a matrix for sites involved with the given site
+  siteMatrixForSite = (site, stat) => {
+    if (!stat) stat = "requests";
+    const matrix = this.siteMatrix(stat);
+    for (let i = matrix.length - 1; i >= 0; --i) {
+      if (
+        matrix[i].ingress !== site.site_name &&
+        matrix[i].egress !== site.site_name
+      ) {
+        matrix.splice(i, 1);
+      }
+    }
+    return matrix;
+  };
+
+  siteMatrixForService = (service, stat) => {
+    if (!stat) stat = "requests";
+    const matrix = this.siteMatrix(stat);
+    for (let i = matrix.length - 1; i >= 0; --i) {
+      if (matrix[i].address !== service.address) {
+        matrix.splice(i, 1);
+      }
+    }
+    return matrix;
+  };
+
+  // gather matrix records between sites
+  siteMatrix = stat => {
+    const matrix = [];
+    if (!stat) stat = "requests";
+    this.data.services.forEach(service => {
+      service.requests_handled.forEach(request => {
+        Object.keys(request.by_originating_site).forEach(from_site_id => {
+          const req = request.by_originating_site[from_site_id];
+          matrix.push({
+            ingress: this.siteNameFromId(from_site_id),
+            egress: this.siteNameFromId(request.site_id),
+            address: service.address,
+            messages: req[stat]
+          });
+        });
+      });
+    });
+    return matrix;
+  };
+
+  allServiceMatrix = stat => {
+    const matrix = [];
+    if (!stat) stat = "requests";
+    this.data.services.forEach(service => {
+      service.requests_received.forEach(request => {
+        const clients = Object.keys(request.by_client);
+        clients.forEach(client_id => {
+          const ingress = this.serviceNameFromId(client_id);
+          const req = JSON.parse(JSON.stringify(request.by_client[client_id]));
+          const row = {
+            ingress,
+            egress: service.address,
+            address: "",
+            messages: req[stat],
+            request: req
+          };
+          const found = matrix.find(
+            r => r.ingress === ingress && r.egress === service.address
+          );
+          if (found) {
+            found.messages += req[stat];
+            this.aggregateAttributes(req, found.request);
+          } else {
+            matrix.push(row);
+          }
+        });
+      });
+    });
+    return matrix;
+  };
+
+  // get the cumulative stat for traffic between sites
+  siteToSite = (from, to, stat) => {
+    if (!stat) stat = "requests";
+    let value = null;
+    this.data.services.forEach(service => {
+      service.requests_handled.some(request => {
+        if (request.site_id === to.site_id) {
+          const originatingSiteIds = Object.keys(request.by_originating_site);
+          originatingSiteIds.some(originatingSiteId => {
+            if (originatingSiteId === from.site_id) {
+              if (!value) value = 0;
+              value += request.by_originating_site[originatingSiteId][stat];
+              return true;
+            }
+            return false;
+          });
+          return true;
+        }
+        return false;
+      });
+    });
+    return value;
+  };
+
+  addSiteConnected = () => {
+    const matrix = this.siteMatrix();
+    this.data.sites.forEach(from => {
+      from.connectedSites = [];
+      this.data.sites.forEach(to => {
+        if (from !== to) {
+          matrix.forEach(record => {
+            if (
+              (record.ingress === from.site_name &&
+                record.egress === to.site_name) ||
+              (record.ingress === to.site_name &&
+                record.egress === from.site_name)
+            ) {
+              if (
+                record.messages > 0 &&
+                !from.connectedSites.includes(to.site_id)
+              )
+                from.connectedSites.push(to.site_id);
+            }
+          });
+        }
+      });
+    });
+  };
+
+  // breakdown of which sites handle/originate requests for a given service
+  bySite = (service, handled, stat) => {
+    if (!stat) stat = "requests";
+    const key = handled ? "requests_handled" : "requests_received";
+    const by = {};
+    service[key].forEach(request => {
+      if (request.requests > 0) {
+        const site = request.site_id;
+        if (!by[site]) by[site] = 0;
+        by[site] += request[stat];
+      }
+    });
+    return by;
   };
 
   serviceNames = () => this.data.services.map(s => s.address);

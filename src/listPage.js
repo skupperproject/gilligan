@@ -33,9 +33,8 @@ import {
   TextVariants
 } from "@patternfly/react-core";
 import CardHealth from "./cardHealth";
-import { safePlural } from "./qdrGlobals";
 import ListToolbar from "./listToolbar";
-import { Icap, strDate } from "./qdrGlobals";
+import { safePlural, Icap, strDate } from "./utilities";
 
 // make sure you've installed @patternfly/patternfly
 class ListPage extends React.Component {
@@ -48,11 +47,14 @@ class ListPage extends React.Component {
     };
     this.cardAttributes = {
       cluster: {
-        compact: ["provider"],
-        expanded: ["location", "zone"]
+        compact: ["namespace"],
+        expanded: ["url", "edge"]
       },
       service: {
-        compact: ["protocol", { title: "site(s)", getFn: this.getSites }],
+        compact: [
+          "protocol",
+          { title: this.getDeployedTitle, getFn: this.getSites }
+        ],
         expanded: [{ title: this.getRequestTitle, getFn: this.getRequests }]
       }
     };
@@ -60,7 +62,7 @@ class ListPage extends React.Component {
 
   subNodes = cluster => cluster.services.length;
 
-  getSites = service =>
+  siteList = service =>
     Array.from(
       new Set(
         service.targets.map(
@@ -70,10 +72,19 @@ class ListPage extends React.Component {
             ).site_name
         )
       )
-    ).join(", ");
+    );
+
+  getSites = service => this.siteList(service).join(", ");
 
   getRequestTitle = service => {
-    return service.requests_sent ? "Requests sent" : "Requests handled";
+    return service.requests_sent
+      ? "Sites originating requests"
+      : "Sites handling requests";
+  };
+
+  getDeployedTitle = service => {
+    const siteCount = this.siteList(service).length;
+    return safePlural(siteCount, "Deployed at site");
   };
 
   getRequests = service => {
@@ -82,6 +93,7 @@ class ListPage extends React.Component {
     }
     return this.getRequestsHandled(service);
   };
+
   getRequestsHandled = service => {
     const handled = [];
     service.requests_handled.forEach(request => {
@@ -104,7 +116,7 @@ class ListPage extends React.Component {
           <span className="card-request-site">
             {this.props.service.adapter.siteNameFromId(request.site_id)}
           </span>
-          <span className="card-request-requests">{request.requests}</span>
+          <span className="card-request-requests">{`(${request.requests})`}</span>
         </div>
       );
     });
@@ -118,7 +130,10 @@ class ListPage extends React.Component {
   };
 
   bodyLine = (expanded, prop, obj) => {
-    const property = prop.getFn ? prop.getFn(obj) : obj[prop];
+    let property = prop.getFn ? prop.getFn(obj) : obj[prop];
+    if (typeof property === "boolean") {
+      property = property.toString();
+    }
     const title = prop.title
       ? typeof prop.title === "function"
         ? prop.title(obj)
@@ -210,7 +225,7 @@ class ListPage extends React.Component {
               {(cardShow === "all" || cardShow === "sites") &&
                 sites.map((c, i) => (
                   <GalleryItem key={c.site_id}>
-                    <Card isHoverable isCompact className="list-card">
+                    <Card isHoverable isCompact className="list-card site-card">
                       <CardHead>
                         <div className="card-cluster-header">
                           <i className="pf-icon pf-icon-cluster"></i>
@@ -231,10 +246,14 @@ class ListPage extends React.Component {
               {(cardShow === "all" || cardShow === "services") &&
                 services.map((s, i) => (
                   <GalleryItem key={s.address}>
-                    <Card isHoverable isCompact className="list-card">
+                    <Card
+                      isHoverable
+                      isCompact
+                      className="list-card service-card"
+                    >
                       <CardHead>
                         <div className="card-cluster-header">
-                          <i className="pf-icon pficon-container-node"></i>
+                          <i className="pf-icon pficon-service"></i>
                           <span>{s.address}</span>
                         </div>
                       </CardHead>

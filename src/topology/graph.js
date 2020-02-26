@@ -17,15 +17,27 @@ specific language governing permissions and limitations
 under the License.
 */
 
+/* The Graph class:
+ - initializes nodes and links for the various views
+ - creates the svg sub components that represent the nodes
+ - contains some utility functions that operate on nodes
+*/
+import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
-import { clusterColor, darkerColor } from "./clusterColors";
-import { adjustPositions, adjustY } from "../qdrGlobals";
+import {
+  adjustPositions,
+  adjustY,
+  saveSankey,
+  siteColor,
+  serviceColor,
+  RGB_Linear_Shade
+} from "../utilities";
 import { Node } from "./nodes";
 
 const ServiceWidth = 130;
 const ServiceHeight = 40;
 export const ServiceGap = 5;
-export const ServiceStart = 80;
+export const ServiceStart = 50;
 const ServiceBottomGap = 15;
 const ClusterPadding = 20;
 const BoxWidth = ClusterPadding + ServiceWidth + ClusterPadding;
@@ -38,7 +50,7 @@ export class Graph {
     this.sankeyLinkHorizontal = sankeyLinkHorizontal();
   }
 
-  initSiteLinks = (nodes, links) => {
+  initSiteLinks = (nodes, links, width, height) => {
     this.VAN.sites.forEach((site, i) => {
       const source = nodes.nodes.find(n => n.site_id === site.site_id);
       site.connected.forEach(targetSite => {
@@ -52,6 +64,38 @@ export class Graph {
         );
       });
     });
+  };
+
+  // get the links between sites for the site traffic view
+  initSiteTrafficLinks = (nodes, siteTrafficLinks, width, height) => {
+    nodes.nodes.forEach(fromSite => {
+      nodes.nodes.forEach(toSite => {
+        const value = this.adapter.siteToSite(fromSite, toSite);
+        if (value !== null) {
+          const linkIndex = siteTrafficLinks.getLink(
+            fromSite,
+            toSite,
+            "out",
+            "site2site",
+            `SiteLink-${fromSite.site_id}-${toSite.site_id}`
+          );
+          const link = siteTrafficLinks.links[Math.abs(linkIndex)];
+          if (linkIndex < 0) {
+            link.left = true;
+          }
+          link.value = value;
+          link.sankeyLinkHorizontal = this.sankeyLinkHorizontal;
+        }
+      });
+    });
+
+    const graph = {
+      nodes: nodes.nodes,
+      links: siteTrafficLinks.links
+    };
+    // create layout info for a sankey graph
+    this.initSankey(graph, width, height, BoxWidth, ClusterPadding);
+    saveSankey(nodes.nodes, "sitetraffic");
   };
 
   initNodesAndLinks = (nodes, links, width, height) => {
@@ -78,6 +122,7 @@ export class Graph {
         widthFn: this.clusterWidth
       });
       clusterNode.mergeWith(cluster);
+      clusterNode.color = siteColor(name);
       clusterNode.subNodes = [];
 
       cluster.services.forEach((service, i) => {
@@ -105,6 +150,8 @@ export class Graph {
         subNode.orgy = subNode.y;
         subNode.gap = 0;
         subNode.parentNode = clusterNode;
+        subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
+        subNode.color = serviceColor(subNode.name);
         clusterNode.subNodes.push(subNode);
       });
     });
@@ -112,26 +159,14 @@ export class Graph {
 
   // create links
   initLinks = (nodes, links, width, height) => {
-    // links between clusters
-    this.VAN.sites.forEach((site, i) => {
-      const source = i;
-      site.connected.forEach(targetSite => {
-        const target = this.VAN.sites.findIndex(s => s.site_id === targetSite);
-        links.getLink(
-          source,
-          target,
-          "both",
-          "cluster",
-          `Link-${source}-${target}`
-        );
-      });
-    });
+    this.initSiteTrafficLinks(nodes, links, width, height);
     // get the starting x,y for the clusters when using the namespace view
     let vsize = adjustPositions({
       nodes: nodes.nodes,
       links: links.links,
       width,
-      height
+      height,
+      crossTest: false
     });
 
     links.reset();
@@ -139,14 +174,17 @@ export class Graph {
     // get the links between services for the application view
     nodes.nodes.forEach(node => {
       node.subNodes.forEach((subNode, i) => {
-        subNode.index = i;
+        const original = subNodes.find(s => s.address === subNode.address);
+        subNode.extra = original ? true : false;
+        subNode.original = original;
         subNodes.push(subNode);
       });
     });
 
-    subNodes.forEach((subNode, source) => {
+    const nonExtra = subNodes.filter(n => !n.extra);
+    nonExtra.forEach((subNode, source) => {
       subNode.targetServices.forEach(targetService => {
-        const target = subNodes.findIndex(
+        const target = nonExtra.findIndex(
           sn => sn.address === targetService.address
         );
         links.getLink(
@@ -159,36 +197,38 @@ export class Graph {
         const link = links.links[links.links.length - 1];
         link.request = this.adapter.linkRequest(
           subNode.address,
-          subNodes[target]
+          nonExtra[target]
         );
-        link.value = link.request.bytes_out;
+        link.value = link.request.requests;
         link.sankeyLinkHorizontal = this.sankeyLinkHorizontal;
       });
     });
 
     // get the starting x,y for the subnodes when using the application view
     vsize = adjustPositions({
-      nodes: subNodes,
+      nodes: nonExtra,
       links: links.links,
       width: vsize.width,
-      height: vsize.height
+      height: vsize.height,
+      crossTest: true
     });
-
     const graph = {
-      nodes: subNodes,
+      nodes: nonExtra,
       links: links.links
     };
     // get the links between services for use with the traffic view
-    this.initSankey(graph, width, height);
+    this.initSankey(graph, width, height, ServiceWidth, ClusterPadding);
     return vsize;
   };
 
-  initSankey = (graph, width, height) => {
+  initSankey = (graph, width, height, nodeWidth, nodePadding) => {
     if (graph.links.length > 0) {
       const { nodes, links } = sankey()
-        .nodeWidth(ServiceWidth)
-        .nodePadding(ServiceGap)
-        .extent([[1, 1], [width - 1, height - ServiceGap]])(graph);
+        .nodeWidth(nodeWidth)
+        .nodePadding(nodePadding * 2)
+        .extent([[1, 1], [width - nodePadding * 2, height - nodePadding * 2]])(
+        graph
+      );
       return { snodes: nodes, slinks: links };
     } else {
       return { snodes: graph.nodes, slinks: graph.links };
@@ -221,14 +261,19 @@ export class Graph {
       .attr("class", "network")
       .attr("width", d => d.getWidth())
       .attr("height", d => this.clusterHeight(d))
-      .attr("style", d => `fill: ${clusterColor(d.index)}`);
+      .attr("fill", d => {
+        const color = d3.rgb(d.color);
+        const rgb = `rbg(${color.r},${color.g},${color.b})`;
+        return RGB_Linear_Shade(0.9, rgb);
+      })
+      .attr("opacity", 1);
 
     rects
       .append("svg:rect")
       .attr("class", "cluster-header")
       .attr("width", d => d.getWidth())
       .attr("height", 30)
-      .attr("style", d => `fill: ${darkerColor(d.index)}`);
+      .attr("fill", d => d3.rgb(d.color).darker(3));
 
     rects
       .append("svg:text")
@@ -238,20 +283,6 @@ export class Graph {
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
       .text(d => d.name);
-    /*
-    rects
-      .append("svg:text")
-      .attr("class", "location")
-      .attr("x", d => d.getWidth() / 2)
-      .attr("y", 50)
-      .attr("dominant-baseline", "middle")
-      .attr("text-anchor", "middle")
-      .attr(
-        "style",
-        d => `fill: ${darkerColor(d.index)}; stroke: ${darkerColor(d.index)}`
-      )
-      .text(d => d.site_id);
-      */
   };
 
   appendServices = (serviceTypes, links) => {
@@ -260,10 +291,7 @@ export class Graph {
       .enter()
       .append("svg:g")
       .attr("class", "service-type")
-      .classed(
-        "extra",
-        d => d.sourceNodes.length === 0 && d.targetNodes.length === 0
-      )
+      .classed("extra", d => d.extra)
       .attr("transform", d => {
         return `translate(${d.orgx},${d.orgy})`;
       });
@@ -274,7 +302,8 @@ export class Graph {
       .attr("rx", 10)
       .attr("ry", 10)
       .attr("width", d => Math.max(ServiceWidth, d.getWidth()))
-      .attr("height", d => d.getHeight());
+      .attr("height", d => d.getHeight())
+      .attr("fill", "#FFFFFF");
 
     serviceTypesEnter
       .append("svg:text")

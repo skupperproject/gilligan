@@ -18,9 +18,8 @@ under the License.
 */
 
 import React, { Component } from "react";
-//import { Button } from "@patternfly/react-core";
-//import { TimesIcon } from "@patternfly/react-icons";
-import { getSizes } from "../qdrGlobals";
+import { Tabs, Tab } from "@patternfly/react-core";
+import { getSizes, pretty, siteColors, serviceColors } from "../utilities";
 import { separateAddresses, aggregateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
 import { qdrRibbon } from "./ribbon/ribbon.js";
@@ -28,6 +27,8 @@ import { qdrlayoutChord } from "./layout/layout.js";
 import QDRPopup from "../qdrPopup";
 import * as d3 from "d3";
 import RoutersComponent from "./routersComponent";
+import PieBreakdownComponent from "./pieComponent";
+import KebabDropdown from "./kebob";
 import PropTypes from "prop-types";
 
 const DOUGHNUT = "#chord svg .empty";
@@ -40,8 +41,9 @@ const TRANSITION_DURATION = 1000;
 class ChordViewer extends Component {
   static propTypes = {
     service: PropTypes.object.isRequired,
-    data: PropTypes.object.isRequired,
-    sent: PropTypes.bool.isRequired
+    data: PropTypes.object,
+    site: PropTypes.bool.isRequired,
+    handleShowAll: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -51,7 +53,8 @@ class ChordViewer extends Component {
       showPopup: false,
       popupContent: "",
       showEmpty: false,
-      emptyText: ""
+      emptyText: "",
+      activeTabKey: 0
     };
     this.excludedAddresses = [];
     this.chordData = new ChordData(
@@ -60,23 +63,12 @@ class ChordViewer extends Component {
       aggregateAddresses
     );
     this.chordData.setFilter(this.excludedAddresses);
-    this.chordColors = {};
     this.outerRadius = null;
     this.innerRadius = null;
     this.textRadius = null;
 
-    // used for animation duration and the data refresh interval
     // format with commas
-    this.formatNumber = d3.format(",.1f");
-
-    // colors
-    this.colorGen = d3.scale.category20();
-    // The colorGen funtion is not random access.
-    // To get the correct color[19] you first have to get all previous colors
-    // I suspect some caching is going on in d3
-    for (let i = 0; i < 20; i++) {
-      this.colorGen(i);
-    }
+    this.formatNumber = pretty;
 
     // keep track of previous chords so we can animate to the new values
     this.last_chord = null;
@@ -88,9 +80,6 @@ class ChordViewer extends Component {
     this.popoverChord = null;
     this.popoverArc = null;
     this.theyveBeenWarned = false;
-    this.arcColors = {};
-    this.propsArcColors(this.props.service.adapter.serviceNames());
-    this.currentDataAddress = this.props.data.address;
   }
 
   // called only once when the component is initialized
@@ -162,19 +151,39 @@ class ChordViewer extends Component {
     });
 
     // get the raw data and render the svg
-    this.chordData.getMatrix(this.props.data).then(
-      matrix => {
-        // now that we have the routers and addresses, move the legend
-        this.renderChord(matrix);
-      },
-      e => {
-        console.log(ERROR_RENDERING + e);
-      }
-    );
-
+    this.getMatrix();
     //this.interval = setInterval(this.doUpdate, TRANSITION_DURATION);
   };
 
+  getMatrix = () => {
+    if (this.props.site) {
+      if (this.props.data === null) {
+        // all sites
+        this.chordData.getSiteMatrix(aggregateAddresses).then(this.renderChord);
+      } else {
+        if (this.props.data.address) {
+          // site traffic involving a service
+          this.chordData
+            .getSiteMatrixForService(this.props.data, aggregateAddresses)
+            .then(this.renderChord);
+        }
+        // for specific site
+        this.chordData
+          .getSiteMatrixForSite(this.props.data, aggregateAddresses)
+          .then(this.renderChord);
+      }
+    } else {
+      if (this.props.data === null) {
+        // all services
+        this.chordData.getAllServiceMatrix().then(this.renderChord);
+      } else {
+        // for specific service
+        this.chordData.getMatrix(this.props.data).then(this.renderChord, e => {
+          console.log(ERROR_RENDERING + e);
+        });
+      }
+    }
+  };
   // TODO: handle window resizes
   //let updateWindow  = function () {
   //setSizes();
@@ -183,6 +192,11 @@ class ChordViewer extends Component {
   //d3.select(window).on('resize.updatesvg', updateWindow);
   windowResized = () => {};
 
+  handleTabClick = (event, tabIndex) => {
+    this.setState({
+      activeTabKey: tabIndex
+    });
+  };
   // size the diagram based on the browser window size
   getRadius = () => {
     const sizes = getSizes(d3.select("#chordContainer").node());
@@ -206,20 +220,13 @@ class ChordViewer extends Component {
 
   // arc colors are taken from every other color starting at 0
   getArcColor = n => {
-    if (!(n in this.arcColors)) {
-      let ci = Object.keys(this.arcColors).length * 2;
-      this.arcColors[n] = this.colorGen(ci);
-    }
-    return this.arcColors[n];
+    //console.log(`getArcColor ${n}`);
+    return siteColors[n];
   };
   // chord colors are taken from every other color starting at 19 and going backwards
   getChordColor = n => {
-    if (!(n in this.chordColors)) {
-      let ci = 19 - Object.keys(this.chordColors).length * 2;
-      let c = this.colorGen(ci);
-      this.chordColors[n] = c;
-    }
-    return this.chordColors[n];
+    //console.log(`getChordColor ${n}`);
+    return serviceColors[n];
   };
 
   // fade out the empty circle that is shown when there is no traffic
@@ -234,7 +241,9 @@ class ChordViewer extends Component {
   // return the color associated with a router
   fillArc = (matrixValues, row) => {
     let router = matrixValues.routerName(row);
-    return this.getArcColor(router);
+    return this.props.site
+      ? this.getArcColor(router)
+      : this.getChordColor(router);
   };
 
   // return the color associated with a chord.
@@ -273,28 +282,6 @@ class ChordViewer extends Component {
     this.setState({ noValues: false });
   };
 
-  propsArcColors = serviceNames => {
-    serviceNames.forEach(router => {
-      this.getArcColor(router);
-    });
-  };
-  genArcColors = () => {
-    //$scope.arcColors = {};
-    let routers = this.chordData.getRouters();
-    routers.forEach(router => {
-      this.getArcColor(router);
-    });
-  };
-  genChordColors = () => {
-    /*
-    if (this.state.legendOptions.byAddress) {
-      Object.keys(this.state.addresses).forEach(address => {
-        // populate this.chordColor for this address
-        this.getChordColor(address);
-      });
-    }
-    */
-  };
   chordKey = (d, matrix) => {
     // sort so that if the soure and target are flipped, the chord doesn't
     // get destroyed and recreated
@@ -373,7 +360,9 @@ class ChordViewer extends Component {
       fg.key = matrix.routerName(fg.index);
       fg.components = [fg.index];
       fg.router = matrix.aggregate ? fg.key : matrix.getEgress(fg.index);
-      fg.color = this.getArcColor(fg.router);
+      fg.color = this.props.site
+        ? this.getArcColor(fg.router)
+        : this.getChordColor(fg.router);
     });
     return fixedGroups;
   };
@@ -386,8 +375,6 @@ class ChordViewer extends Component {
   };
   doRenderChord = matrix => {
     // populate the arcColors object with a color for each router
-    //this.genArcColors();
-    this.genChordColors();
     // if all the addresses are excluded, update the message
     let addressLen = Object.keys(this.state.addresses).length;
     this.allAddressesFiltered = false;
@@ -400,7 +387,7 @@ class ChordViewer extends Component {
 
     // if there is no data, show an empty circle and a message
     if (!matrix.hasValues()) {
-      this.noValues = this.arcColors.length === 0;
+      this.noValues = true;
       if (!this.theyveBeenWarned) {
         this.theyveBeenWarned = true;
         let msg = "There is no message traffic";
@@ -430,9 +417,9 @@ class ChordViewer extends Component {
     rechord.arcData = this.decorateArcData(rechord.groups, matrix);
 
     // join the decorated data with a d3 selection
-    let arcsGroup = this.svg.selectAll("g.arc").data(rechord.arcData, d => {
-      return d.key;
-    });
+    let arcsGroup = this.svg
+      .selectAll("g.arc")
+      .data(rechord.arcData, d => d.key);
 
     // get a d3 selection of all the new arcs that have been added
     let newArcs = arcsGroup
@@ -819,18 +806,12 @@ class ChordViewer extends Component {
 
   // called periodically to refresh the data
   doUpdate = () => {
-    this.chordData.getMatrix(this.props.data).then(this.renderChord, e => {
-      console.log(ERROR_RENDERING + e);
-    });
+    this.getMatrix();
   };
 
   updateNow = () => {
     clearInterval(this.interval);
-    this.chordData
-      .getMatrix(this.props.data)
-      .then(this.renderChord, function(e) {
-        console.log(ERROR_RENDERING + e);
-      });
+    this.getMatrix();
     this.interval = setInterval(this.doUpdate, TRANSITION_DURATION);
   };
 
@@ -841,10 +822,13 @@ class ChordViewer extends Component {
       this.leaveLegend();
     }
   };
+  handleHoverSite = (site, over) => {
+    console.log(`handleHoverSite ${site}, ${over}`);
+  };
 
   // called when mouse enters one of the router legends
   enterRouter = router => {
-    if (!this.props.data.address) return;
+    if (!this.props.data || !this.props.data.address) return;
     let indexes = [];
     // fade all chords that are not associated with this router
     let agg = this.chordData.last_matrix.aggregate;
@@ -868,17 +852,40 @@ class ChordViewer extends Component {
 
   render() {
     const getTitle = () => {
-      if (!this.props.data.address) {
-        return "";
+      if (this.props.site) {
+        if (this.props.data === null) {
+          return <div className="chord-title">Site to site requests</div>;
+        }
+        if (this.props.data.address) {
+          // site to site for a service
+          return (
+            <div className="chord-title">
+              {`Site to site involving ${this.props.data.address}`}
+            </div>
+          );
+        }
+        return (
+          <div className="chord-title">
+            {`Requests involving ${this.props.data.site_name}`}
+          </div>
+        );
+      } else if (this.props.data === null) {
+        return <div className="chord-title">Service to service requests</div>;
       }
-      return "requests involving ";
+      return (
+        <div className="chord-title">{`Requests involving ${this.props.data.address}`}</div>
+      );
     };
     return (
       <div id="chordContainer" className="qdrChord">
-        <div className="chord-title">
-          {getTitle()}
-          {this.props.data.address}
+        <div className="chord-kebob">
+          <KebabDropdown
+            disableAll={!this.props.data ? true : false}
+            allText={this.props.site ? "sites" : "services"}
+            handleShowAll={this.props.handleShowAll}
+          />
         </div>
+        {getTitle()}
         <div aria-label="chord-diagram" id="chord"></div>
         <div
           id="popover-div"
@@ -887,9 +894,8 @@ class ChordViewer extends Component {
         >
           <QDRPopup content={this.state.popupContent}></QDRPopup>
         </div>
-
         <RoutersComponent
-          arcColors={this.arcColors}
+          arcColors={this.props.site ? siteColors : serviceColors}
           handleHoverRouter={this.handleHoverRouter}
         ></RoutersComponent>
       </div>
@@ -899,12 +905,67 @@ class ChordViewer extends Component {
 
 export default ChordViewer;
 
-/*        <Button
-          className="chord-close"
-          variant="plain"
-          aria-label="Action"
-          onClick={this.props.close}
-        >
-          <TimesIcon />
-        </Button>
+/*
+      <Tabs
+        isFilled
+        activeKey={this.state.activeTabKey}
+        onSelect={this.handleTabClick}
+      >
+        <Tab eventKey={0} title="By service">
+          <div id="chordContainer" className="qdrChord">
+            <div className="chord-title">
+              {getTitle()}
+              {this.props.data.address}
+            </div>
+            <div aria-label="chord-diagram" id="chord"></div>
+            <div
+              id="popover-div"
+              className={this.state.showPopup ? "" : "hidden"}
+              ref={el => (this.popupRef = el)}
+            >
+              <QDRPopup content={this.state.popupContent}></QDRPopup>
+            </div>
+
+            <RoutersComponent
+              arcColors={siteColors}
+              handleHoverRouter={this.handleHoverRouter}
+            ></RoutersComponent>
+          </div>
+        </Tab>
+        <Tab eventKey={1} title="By originating site">
+          <div id="chordContainer" className="qdrChord">
+            <div className="chord-title">
+              {getTitle()}
+              {this.props.data.address}
+            </div>
+            <PieBreakdownComponent
+              data={this.props.data}
+              by="received"
+              colors={serviceColors}
+            />
+            <RoutersComponent
+              arcColors={serviceColors}
+              handleHoverRouter={this.handleHoverSite}
+            ></RoutersComponent>
+          </div>
+        </Tab>
+        <Tab eventKey={2} title="By handling site">
+          <div id="chordContainer" className="qdrChord">
+            <div className="chord-title">
+              {getTitle()}
+              {this.props.data.address}
+            </div>
+            <PieBreakdownComponent
+              data={this.props.data}
+              by="handled"
+              colors={serviceColors}
+            />
+            <RoutersComponent
+              arcColors={serviceColors}
+              handleHoverRouter={this.handleHoverSite}
+            ></RoutersComponent>
+          </div>
+        </Tab>
+      </Tabs>
+
 */

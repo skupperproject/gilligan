@@ -100,6 +100,18 @@ class ListToolbar extends Component {
             >
               Services
             </Button>
+            <Button
+              variant="control"
+              className={`radio-button${
+                this.props.show === "processes"
+                  ? "-selected ws-core-box-shadow-box pf-u-box-shadow-inset"
+                  : ""
+              }`}
+              onClick={this.props.handleChangeShow}
+              id="processes"
+            >
+              Processes
+            </Button>
           </ToolbarItem>
         </ToolbarGroup>
       </Toolbar>

@@ -18,6 +18,16 @@ under the License.
 */
 
 import * as d3 from "d3";
+const SankeyAttributes = [
+  "value",
+  "depth",
+  "height",
+  "layer",
+  "x0",
+  "x1",
+  "y0",
+  "y1"
+];
 
 export class QDRLogger {
   constructor(log, source) {
@@ -108,7 +118,7 @@ export const adjustY = ({ nodes, height, yAttr }) => {
   return curY;
 };
 
-export const adjustPositions = ({ nodes, links, width, height }) => {
+export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
   nodes.forEach(n => {
     n.sourceNodes = [];
     n.targetNodes = [];
@@ -116,24 +126,35 @@ export const adjustPositions = ({ nodes, links, width, height }) => {
 
   // for all the nodes, construct 2 lists: souce nodes, and target nodes
   links.forEach(l => {
-    nodes[l.source].targetNodes.push(nodes[l.target]);
-    nodes[l.target].sourceNodes.push(nodes[l.source]);
+    if (l.source.name) {
+      l.source.targetNodes.push(l.target);
+      l.target.sourceNodes.push(l.source);
+    } else {
+      nodes[l.source].targetNodes.push(nodes[l.target]);
+      nodes[l.target].sourceNodes.push(nodes[l.source]);
+    }
   });
 
   // find node(s) with fewest number of sources
   let minSources = Number.MAX_SAFE_INTEGER;
-  nodes.forEach(n => (minSources = Math.min(minSources, n.sourceNodes.length)));
-  const parents = nodes.filter(n => n.sourceNodes.length === minSources);
+  let minTargets = Number.MAX_SAFE_INTEGER;
+  nodes.forEach(n => {
+    minSources = Math.min(minSources, n.sourceNodes.length);
+    minTargets = Math.min(minTargets, n.targetNodes.length);
+  });
+  const leftMost = nodes.filter(n => n.sourceNodes.length === minSources);
+  const rightMost = nodes.filter(n => n.targetNodes.length === minTargets);
 
-  // put parents in 1st column
-  parents.forEach(n => (n.col = 0));
+  // put leftMost in 1st column
+  leftMost.forEach(n => (n.col = 0));
 
-  let colNodes = parents;
+  // put called nodes in column to the right of the caller
+  let colNodes = leftMost;
   while (colNodes.length > 0) {
     let foundNodes = [];
     colNodes.forEach(p => {
       nodes.forEach(n => {
-        if (p.targetNodes.includes(n)) {
+        if (p.targetNodes.includes(n) && n.col === undefined) {
           n.col = p.col + 1;
           foundNodes.push(n);
         }
@@ -142,30 +163,34 @@ export const adjustPositions = ({ nodes, links, width, height }) => {
     colNodes = foundNodes;
   }
 
-  // adjust parents' cols
-  nodes
-    .slice()
-    .reverse()
-    .forEach(n => {
-      n.sourceNodes.forEach(p => {
-        if (p.sourceNodes.length === 0) {
-          p.col = n.col - 1;
-        }
-      });
-    });
-
-  let cols = 0;
+  let maxcol = 0;
   nodes.forEach(n => {
-    cols = Math.max(cols, n.col);
+    maxcol = Math.max(maxcol, n.col);
   });
-  cols += 1; // cols are 0 based, so number of cols is last col number + 1
+
+  // put rightMost nodes in their own column
+  if (nodes.some(n => n.col === maxcol && n.targetNodes.length > 0)) {
+    // we have nodes that have a target and are in the rightmost column.
+    // put the rightmost nodes in a new column
+    nodes.forEach(n => {
+      if (rightMost.includes(n)) {
+        n.col = maxcol + 1;
+      }
+    });
+  }
+
+  let colCount = 0;
+  nodes.forEach(n => {
+    colCount = Math.max(colCount, n.col);
+  });
+  colCount += 1;
 
   const minGap = 10;
   let vheight = height;
   let vwidth = width;
 
   const colWidths = [];
-  for (let col = 0; col < cols; col++) {
+  for (let col = 0; col < colCount; col++) {
     colNodes = nodes.filter(n => n.col === col);
     let nodesHeight = 0;
     colNodes.forEach(n => (nodesHeight += n.getHeight()));
@@ -186,18 +211,30 @@ export const adjustPositions = ({ nodes, links, width, height }) => {
     });
   }
 
+  // avoid parent links crossing directly over a service
+  if (crossTest) {
+    nodes.forEach(n => {
+      const targets = n.targetNodes;
+      n.sourceNodes.forEach(s => {
+        if (s.targetNodes.some(v => targets.includes(v) && v.col > n.col)) {
+          n.y += n.getHeight();
+        }
+      });
+    });
+  }
+
   let nodesWidth = 0;
   colWidths.forEach(c => {
     nodesWidth += c;
   });
-  let hGap = (vwidth - nodesWidth) / (cols + 1);
+  let hGap = (vwidth - nodesWidth) / (colCount + 1);
   if (hGap < minGap) {
     hGap = minGap;
-    vwidth = Math.max(vwidth, nodesWidth + hGap * (cols + 1));
+    vwidth = Math.max(vwidth, nodesWidth + hGap * (colCount + 1));
     vheight = (height * vwidth) / width;
   }
   let curX = hGap;
-  for (let col = 0; col < cols; col++) {
+  for (let col = 0; col < colCount; col++) {
     for (let i = 0; i < nodes.length; i++) {
       const n = nodes[i];
       if (n.col === col) {
@@ -208,4 +245,67 @@ export const adjustPositions = ({ nodes, links, width, height }) => {
   }
 
   return { width: vwidth, height: vheight };
+};
+
+export const saveSankey = (nodes, key) => {
+  nodes.forEach(n => {
+    n[key] = {};
+    SankeyAttributes.forEach(a => {
+      n[key][a] = n[a];
+    });
+  });
+};
+export const restoreSankey = (nodes, key) => {
+  nodes.forEach(n => {
+    if (n[key]) {
+      SankeyAttributes.forEach(a => {
+        n[a] = n[key][a];
+      });
+    } else {
+      console.log(`did not find ${key} in node ${n.name}`);
+    }
+  });
+};
+
+export const siteColors = {};
+export const serviceColors = {};
+const colorGen = d3.scale.category20();
+for (let i = 0; i < 20; i++) {
+  colorGen(i);
+}
+
+export const siteColor = name => {
+  name = name.replace(/-*/gm, "");
+  if (!(name in siteColors)) {
+    siteColors[name] = colorGen(Object.keys(siteColors).length * 2);
+  }
+  return siteColors[name];
+};
+
+export const serviceColor = name => {
+  name = name.replace(/-*/gm, "");
+  if (!(name in serviceColors)) {
+    serviceColors[name] = colorGen(19 - Object.keys(serviceColors).length * 2);
+  }
+  return serviceColors[name];
+};
+
+/* see https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js) */
+export const RGB_Linear_Shade = (p, c) => {
+  var i = parseInt,
+    r = Math.round,
+    [a, b, c, d] = c.split(","),
+    P = p < 0,
+    t = P ? 0 : 255 * p,
+    P = P ? 1 + p : 1 - p;
+  return (
+    "rgb" +
+    (d ? "a(" : "(") +
+    r(i(a[3] === "a" ? a.slice(5) : a.slice(4)) * P + t) +
+    "," +
+    r(i(b) * P + t) +
+    "," +
+    r(i(c) * P + t) +
+    (d ? "," + d : ")")
+  );
 };

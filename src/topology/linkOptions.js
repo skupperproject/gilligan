@@ -1,7 +1,7 @@
 import React from "react";
 import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
-import { Icap } from "../qdrGlobals";
+import { Icap } from "../utilities";
 
 class LinkOptions extends React.Component {
   constructor(props) {
@@ -47,7 +47,7 @@ class LinkOptions extends React.Component {
             onToggle={this.onToggle}
             iconComponent={CaretDownIcon}
           >
-            {this.props.options.stat ? Icap(this.props.options.stat) : "Show"}
+            {this.props.options.stat ? Icap(this.props.options.stat) : "None"}
           </DropdownToggle>
         }
         isOpen={isOptionsOpen}

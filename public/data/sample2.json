@@ -2,18 +2,28 @@
   "sites": [
     {
       "site_name": "Web Server",
-      "site_id": "fooid",
-      "connected": ["barid"]
+      "site_id": "wsid",
+      "connected": ["bp1id", "bp2id"]
     },
     {
-      "site_name": "Business Processes",
-      "site_id": "barid",
-      "connected": ["fooid", "bazid"]
+      "site_name": "Business Processes 1",
+      "site_id": "bp1id",
+      "connected": ["wsid", "bp2id", "db1id", "db2id"]
     },
     {
-      "site_name": "Database",
-      "site_id": "bazid",
-      "connected": ["barid"]
+      "site_name": "Business Processes 2",
+      "site_id": "bp2id",
+      "connected": ["wsid", "bp1id", "db1id", "db2id"]
+    },
+    {
+      "site_name": "Database 1",
+      "site_id": "db1id",
+      "connected": ["bp1id", "bp2id"]
+    },
+    {
+      "site_name": "Database 2",
+      "site_id": "db2id",
+      "connected": ["bp1id", "bp2id"]
     }
   ],
   "services": [
@@ -22,7 +32,7 @@
       "protocol": "http",
       "requests_received": [
         {
-          "site_id": "fooid",
+          "site_id": "wsid",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -30,36 +40,73 @@
           "by_client": {}
         },
         {
-          "site_id": "barid",
-          "requests": 2,
+          "site_id": "bp1id",
+          "requests": 3,
           "bytes_in": 0,
-          "bytes_out": 1000,
+          "bytes_out": 1500,
           "details": {
-            "GET:200": 2
+            "GET:200": 3
           },
           "by_client": {
-            "reviews-v1-asdfasdf-asdf": {
-              "requests": 1,
+            "reviews-v1-at-bp1id": {
+              "requests": 2,
               "bytes_in": 0,
-              "bytes_out": 500,
+              "bytes_out": 1000,
               "details": {
-                "GET:200": 1
+                "GET:200": 2
               },
               "latency_max": 902
             },
-            "ratings-v1-werqwer-qwerty": {
+            "ratings-v1-at-bp1id": {
               "requests": 1,
               "bytes_in": 0,
               "bytes_out": 500,
               "details": {
                 "GET:200": 1
               },
-              "latency_max": 903
+              "latency_max": 901
             }
           }
         },
         {
-          "site_id": "bazid",
+          "site_id": "bp2id",
+          "requests": 3,
+          "bytes_in": 0,
+          "bytes_out": 1500,
+          "details": {
+            "GET:200": 3
+          },
+          "by_client": {
+            "ratings-v1-at-bp2id": {
+              "requests": 2,
+              "bytes_in": 0,
+              "bytes_out": 1000,
+              "details": {
+                "GET:200": 2
+              },
+              "latency_max": 902
+            },
+            "reviews-v1-at-bp2id": {
+              "requests": 1,
+              "bytes_in": 0,
+              "bytes_out": 500,
+              "details": {
+                "GET:200": 1
+              },
+              "latency_max": 901
+            }
+          }
+        },
+        {
+          "site_id": "db1id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_client": {}
+        },
+        {
+          "site_id": "db2id",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -69,7 +116,7 @@
       ],
       "requests_handled": [
         {
-          "site_id": "fooid",
+          "site_id": "wsid",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -77,7 +124,23 @@
           "by_server": {}
         },
         {
-          "site_id": "bazid",
+          "site_id": "bp1id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_server": {}
+        },
+        {
+          "site_id": "bp2id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_server": {}
+        },
+        {
+          "site_id": "db1id",
           "requests": 2,
           "bytes_in": 0,
           "bytes_out": 1000,
@@ -85,30 +148,46 @@
             "GET:200": 2
           },
           "by_server": {
-            "DB-v2-baz-uid": {
+            "DB-v1-at-bp1id": {
               "requests": 2,
               "bytes_in": 0,
               "bytes_out": 1000,
               "details": {
                 "GET:200": 2
               },
-              "latency_max": 890
+              "latency_max": 802
             }
           }
         },
         {
-          "site_id": "barid",
-          "requests": 0,
+          "site_id": "db2id",
+          "requests": 4,
           "bytes_in": 0,
-          "bytes_out": 0,
-          "details": {},
-          "by_server": {}
+          "bytes_out": 2000,
+          "details": {
+            "GET:200": 4
+          },
+          "by_server": {
+            "DB-v1-at-bp2id": {
+              "requests": 4,
+              "bytes_in": 0,
+              "bytes_out": 2000,
+              "details": {
+                "GET:200": 4
+              },
+              "latency_max": 804
+            }
+          }
         }
       ],
       "targets": [
         {
-          "name": "DB-v2-baz-uid",
-          "site_id": "bazid"
+          "name": "DB-v1-at-db1id",
+          "site_id": "db1id"
+        },
+        {
+          "name": "DB-v1-at-db2id",
+          "site_id": "db2id"
         }
       ]
     },
@@ -117,27 +196,27 @@
       "protocol": "http",
       "requests_received": [
         {
-          "site_id": "fooid",
-          "requests": 1,
+          "site_id": "wsid",
+          "requests": 2,
           "bytes_in": 0,
-          "bytes_out": 500,
+          "bytes_out": 1000,
           "details": {
-            "GET:200": 1
+            "GET:200": 2
           },
           "by_client": {
-            "productpage-v1-zxcv-zxcvzxcv": {
-              "requests": 1,
+            "productpage-v1-at-wsid": {
+              "requests": 2,
               "bytes_in": 0,
-              "bytes_out": 500,
+              "bytes_out": 1000,
               "details": {
-                "GET:200": 1
+                "GET:200": 2
               },
-              "latency_max": 901
+              "latency_max": 902
             }
           }
         },
         {
-          "site_id": "barid",
+          "site_id": "bp1id",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -145,7 +224,23 @@
           "by_client": {}
         },
         {
-          "site_id": "bazid",
+          "site_id": "bp2id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_client": {}
+        },
+        {
+          "site_id": "db1id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_client": {}
+        },
+        {
+          "site_id": "db2id",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -155,7 +250,7 @@
       ],
       "requests_handled": [
         {
-          "site_id": "fooid",
+          "site_id": "wsid",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -163,7 +258,7 @@
           "by_server": {}
         },
         {
-          "site_id": "barid",
+          "site_id": "bp1id",
           "requests": 1,
           "bytes_in": 0,
           "bytes_out": 500,
@@ -171,30 +266,44 @@
             "GET:200": 1
           },
           "by_server": {
-            "reviews-v1-dfgh-ertyrety": {
-              "requests": 2,
+            "reviews-v1-at-bp1id": {
+              "requests": 1,
               "bytes_in": 0,
-              "bytes_out": 1000,
+              "bytes_out": 500,
               "details": {
-                "GET:200": 2
+                "GET:200": 1
               },
-              "latency_max": 890
+              "latency_max": 891
             }
           }
         },
         {
-          "site_id": "bazid",
-          "requests": 0,
+          "site_id": "bp2id",
+          "requests": 1,
           "bytes_in": 0,
-          "bytes_out": 0,
-          "details": {},
-          "by_server": {}
+          "bytes_out": 500,
+          "details": { "GET:200": 1 },
+          "by_server": {
+            "reviews-v1-at-bp2id": {
+              "requests": 1,
+              "bytes_in": 0,
+              "bytes_out": 500,
+              "details": {
+                "GET:200": 1
+              },
+              "latency_max": 891
+            }
+          }
         }
       ],
       "targets": [
         {
-          "name": "reviews-v1-dfgh-ertyrety",
-          "site_id": "barid"
+          "name": "reviews-v1-at-bp1id",
+          "site_id": "bp1id"
+        },
+        {
+          "name": "reviews-v1-at-bp2id",
+          "site_id": "bp2id"
         }
       ]
     },
@@ -203,27 +312,7 @@
       "protocol": "http",
       "requests_received": [
         {
-          "site_id": "barid",
-          "requests": 1,
-          "bytes_in": 0,
-          "bytes_out": 500,
-          "details": {
-            "GET:200": 1
-          },
-          "by_client": {
-            "reviews-v1-dfgh-ertyrety": {
-              "requests": 1,
-              "bytes_in": 0,
-              "bytes_out": 500,
-              "details": {
-                "GET:200": 1
-              },
-              "latency_max": 901
-            }
-          }
-        },
-        {
-          "site_id": "fooid",
+          "site_id": "wsid",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -231,7 +320,51 @@
           "by_client": {}
         },
         {
-          "site_id": "bazid",
+          "site_id": "bp1id",
+          "requests": 1,
+          "bytes_in": 0,
+          "bytes_out": 500,
+          "details": { "GET:200": 1 },
+          "by_client": {
+            "reviews-v1-at-bp1id": {
+              "requests": 1,
+              "bytes_in": 0,
+              "bytes_out": 500,
+              "details": {
+                "GET:200": 1
+              },
+              "latency_max": 891
+            }
+          }
+        },
+        {
+          "site_id": "bp2id",
+          "requests": 1,
+          "bytes_in": 0,
+          "bytes_out": 500,
+          "details": { "GET:200": 1 },
+          "by_client": {
+            "reviews-v1-at-bp2id": {
+              "requests": 1,
+              "bytes_in": 0,
+              "bytes_out": 500,
+              "details": {
+                "GET:200": 1
+              },
+              "latency_max": 891
+            }
+          }
+        },
+        {
+          "site_id": "db1id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_client": {}
+        },
+        {
+          "site_id": "db2id",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -241,7 +374,7 @@
       ],
       "requests_handled": [
         {
-          "site_id": "fooid",
+          "site_id": "wsid",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -249,7 +382,7 @@
           "by_server": {}
         },
         {
-          "site_id": "barid",
+          "site_id": "bp1id",
           "requests": 1,
           "bytes_in": 0,
           "bytes_out": 500,
@@ -257,7 +390,7 @@
             "GET:200": 1
           },
           "by_server": {
-            "ratings-v1-tyuityui-tyui": {
+            "ratings-v1-at-bp1id": {
               "requests": 1,
               "bytes_in": 0,
               "bytes_out": 500,
@@ -269,7 +402,35 @@
           }
         },
         {
-          "site_id": "bazid",
+          "site_id": "bp2id",
+          "requests": 1,
+          "bytes_in": 0,
+          "bytes_out": 500,
+          "details": {
+            "GET:200": 1
+          },
+          "by_server": {
+            "ratings-v1-at-bp2id": {
+              "requests": 1,
+              "bytes_in": 0,
+              "bytes_out": 500,
+              "details": {
+                "GET:200": 1
+              },
+              "latency_max": 890
+            }
+          }
+        },
+        {
+          "site_id": "db1id",
+          "requests": 0,
+          "bytes_in": 0,
+          "bytes_out": 0,
+          "details": {},
+          "by_server": {}
+        },
+        {
+          "site_id": "db2id",
           "requests": 0,
           "bytes_in": 0,
           "bytes_out": 0,
@@ -279,8 +440,12 @@
       ],
       "targets": [
         {
-          "name": "ratings-v1-tyuityui-tyui",
-          "site_id": "barid"
+          "name": "ratings-v1-at-bp1id",
+          "site_id": "bp1id"
+        },
+        {
+          "name": "ratings-v1-at-bp2id",
+          "site_id": "bp2id"
         }
       ]
     }
