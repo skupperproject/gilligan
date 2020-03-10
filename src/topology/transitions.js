@@ -2,41 +2,27 @@ import * as d3 from "d3";
 import { interpolatePath } from "d3-interpolate-path";
 import { ServiceStart, ServiceGap } from "./graph";
 import { midPoints } from "./svgUtils";
-import { restoreSankey } from "../utilities";
+import { restoreSankey, genPath } from "../utilities";
 
 const VIEW_DURATION = 1000;
 const EXPAND_DURATION = 500;
 
 class Transitions {
-  toSite = (previousView, nodes, path, zoomed, initial) => {
-    return new Promise((resolve, reject) => {
-      if (previousView === "servicesankey") this.fromTraffic(path, "site");
-      zoomed(VIEW_DURATION);
+  toSite = (previousView, nodes, zoomed, initial) => {
+    restoreSankey(nodes.nodes, "site");
 
-      this.showRouterLinks();
+    return new Promise((resolve, reject) => {
+      //zoomed(VIEW_DURATION);
+
       this.hideServiceLinks();
       this.hideSankeySiteLinkDir();
       this.hideSankeyServiceLinkDir();
+      this.hideSiteServiceSankeyLinks();
+      this.hideSiteServiceSankeyLinkDir();
+      this.hideSiteTrafficLinks();
       this.hideEndpoints();
-      if (!initial) this.showExtraServices();
-      // fade in the shadow rects and then hide them
-      if (!initial && previousView === "service")
-        nodes.forEach(d => {
-          d3.select(`#shadow-${d.index}`)
-            .select(".shadow-rects")
-            .style("display", "block")
-            .attr("opacity", 0)
-            .transition()
-            .duration(VIEW_DURATION)
-            .attr("opacity", 1)
-            .each("end", function() {
-              d3.select(this)
-                .attr("opacity", 0)
-                .style("display", "none");
-            });
-        });
 
-      // while the above is happening, transition the containers to their proper position
+      // transition the containers to their proper position
       d3.selectAll(".cluster")
         .transition()
         .duration(VIEW_DURATION)
@@ -51,32 +37,19 @@ class Transitions {
         });
 
       // change the path's width and location
-      d3.selectAll("path.siteLink")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke-width", 2.5)
-        .attr("opacity", 1)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const { sx, sy, tx, ty } = midPoints(d.source, d.target);
-          const current = `M${sx},${sy}L${tx},${ty}`;
-
-          return interpolatePath(previous, current);
-        });
-
-      d3.selectAll("path.siteTrafficLink")
-        .style("display", "block")
-        .transition()
-        .duration(VIEW_DURATION)
+      d3.selectAll("path.site")
         .attr("opacity", 1)
         .attr("stroke-width", 2.5)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = `M${d.source.x + d.source.getWidth()} ${d.source.y +
-            d.source.getHeight() / 2} L ${d.target.x} ${d.target.y +
-            d.target.getHeight() / 2 +
-            i * 15}`;
-          return interpolatePath(previous, current);
+        .attr("stroke-dasharray", function(d) {
+          d.pathLen = this.getTotalLength();
+          return `${d.pathLen} ${d.pathLen}`;
+        })
+        .attr("stroke-dashoffset", d => d.pathLen)
+        .transition()
+        .duration(VIEW_DURATION / 2)
+        .attr("stroke-dashoffset", 0)
+        .each("end", function(d) {
+          d3.select(this).attr("stroke-dasharray", null);
         });
 
       d3.selectAll("rect.network")
@@ -85,57 +58,128 @@ class Transitions {
         .attr("width", d => d.getWidth())
         .attr("height", d => d.getHeight());
 
+      d3.selectAll("text.cluster-name").attr("y", d => d.getHeight() / 2);
+
       // and also move the service rects to their proper position within the container
-      d3.selectAll("g.service-type")
-        .filter(d => !d.extra)
+      d3.selectAll("g.service-type").style("display", "none");
+    });
+  };
+
+  toDeployment = (previousView, data, zoomed, initial) => {
+    const nodes = data.serviceNodes;
+    restoreSankey(nodes.nodes, "deployment");
+
+    return new Promise((resolve, reject) => {
+      this.hideServiceLinks();
+      this.hideSiteLinks();
+      this.hideSankeySiteLinkDir();
+      this.hideSankeyServiceLinkDir();
+      this.hideSiteServiceSankeyLinks();
+      this.hideSiteServiceSankeyLinkDir();
+      this.hideEndpoints();
+      //if (!initial) this.showExtraServices();
+
+      // transition the containers to their proper position
+      d3.selectAll(".cluster")
+        .attr("transform", d => `translate(${d.x0},${d.y0})`)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.orgx},${d.orgy})`);
+        .each("end", function() {
+          d3.select(this)
+            .style("display", "block")
+            .attr("opacity", 1)
+            .select(".cluster-rects")
+            .attr("opacity", 1)
+            .style("display", "block");
+        });
+
+      // move the service rects to their proper position within the container
+      d3.selectAll("g.service-type").attr(
+        "transform",
+        d => `translate(${d.x0},${d.y0})`
+      );
 
       d3.selectAll("rect.service-type")
         .transition()
         .duration(VIEW_DURATION)
         .attr("width", d => d.getWidth())
         .attr("height", d => d.getHeight())
-        .attr("fill", d => "#FFFFFF")
+        .attr("fill", d => d.lightColor)
         .attr("opacity", 1);
+
+      d3.selectAll("text.cluster-name").attr("y", d => -10);
 
       d3.selectAll("text.service-type")
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 1)
+        .attr("y", d => d.getHeight() / 2)
         .call(endall, () => {
           resolve();
+        });
+
+      // change the path's width and location
+      d3.selectAll("path.deployment")
+        .attr("d", d => genPath(d, "deployment"))
+        .attr("opacity", 1)
+        .attr("stroke-width", 2.5)
+        .attr("stroke-dasharray", function(d) {
+          d.pathLen = this.getTotalLength();
+          return `${d.pathLen} ${d.pathLen}`;
+        })
+        .attr("stroke-dashoffset", d => d.pathLen)
+        .transition()
+        .duration(VIEW_DURATION / 2)
+        .attr("stroke-dashoffset", 0)
+        .each("end", function(d) {
+          d3.select(this).attr("stroke-dasharray", null);
         });
     });
   };
 
-  toService = (previousView, nodes, path, zoomed) => {
+  toService = (initial, setLinkStat) => {
     return new Promise((resolve, reject) => {
       // Note: all the transitions happen concurrently
-      if (previousView === "site") this.fromNamespace(nodes);
-      if (previousView === "servicesankey") this.fromTraffic(path, "service");
-      zoomed(VIEW_DURATION);
+
+      // move the site containers to 0,0 and hide them
+      this.fullScreen();
 
       this.hideSiteLinks();
       this.hideSiteTrafficLinks();
       this.hideSankeySiteLinkDir();
+
       this.hideSankeyServiceLinkDir();
       this.showServiceLinks();
       this.showEndpoints();
-      this.hideExtraServices();
 
-      // move the service rects to their full-page locations
+      // unhide the hittarget paths
+      d3.selectAll("path.hittarget").style("display", "block");
+
+      // put the service-type groups in their proper location
       d3.selectAll("g.service-type")
         .filter(d => !d.extra)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.x},${d.y})`)
+        .attr("transform", d => `translate(${d.x0},${d.y0})`)
+        .attr("opacity", 1)
         .call(endall, () => {
           resolve();
         });
 
+      // move the extra service rects to their non-extra locations and then hide them
+      d3.selectAll("g.service-type")
+        .filter(d => d.extra)
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("transform", d => `translate(${d.original.x0},${d.original.y0})`)
+        .attr("opacity", 0)
+        .each("end", function(d) {
+          d3.select(this).style("display", "none");
+        });
+
+      // collapse the rects (getWidth() and getHeight() will return non-expanded sizes)
       d3.selectAll("rect.service-type")
+        .filter(d => !d.extra)
         .transition()
         .duration(VIEW_DURATION)
         .attr("fill", d => d.lightColor)
@@ -143,44 +187,62 @@ class Transitions {
         .attr("height", d => d.getHeight())
         .attr("opacity", 1);
 
+      // move the address text to the middle
       d3.selectAll("text.service-type")
+        .filter(d => !d.extra)
         .transition()
         .duration(VIEW_DURATION)
         .attr("y", d => d.getHeight() / 2)
         .attr("opacity", 1);
 
-      // move links to application locations
-      path
-        .selectAll("path.link")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke-width", d => 2.5)
-        .attr("opacity", 1)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const { sx, sy, tx, ty, sxoff, syoff, txoff, tyoff } = d.endpoints(1);
-          const current = `M${sx + sxoff},${sy + syoff}L${tx + txoff},${ty +
-            tyoff}`;
-          return interpolatePath(previous, current);
-        });
+      // change the path's width and location
+      if (initial) {
+        d3.selectAll("path.service")
+          .attr("opacity", 1)
+          .attr("d", d => d.path)
+          .attr("stroke-width", 2.5)
+          .attr("stroke-dasharray", function(d) {
+            d.pathLen = this.getTotalLength();
+            return `${d.pathLen} ${d.pathLen}`;
+          })
+          .attr("stroke-dashoffset", d => d.pathLen)
+          .transition()
+          .duration(VIEW_DURATION / 2)
+          .attr("stroke-dashoffset", 0)
+          .each("end", function(d) {
+            d3.select(this).attr("stroke-dasharray", null);
+          });
+      } else {
+        d3.selectAll("path.service")
+          .transition()
+          .duration(VIEW_DURATION)
+          .attr("stroke-width", 2.5)
+          .attr("opacity", 1)
+          .attrTween("d", function(d, i) {
+            const previous = d3.select(this).attr("d");
+            const current = d.path; //genPath(d, "service");
+            const ip = interpolatePath(previous, current);
+            return t => {
+              setLinkStat();
+              return ip(t);
+            };
+          });
+      }
     });
   };
 
-  toServiceSankey = (previousView, nodes, zoom, svg) => {
+  toServiceSankey = setLinkStat => {
     return new Promise((resolve, reject) => {
-      if (previousView === "site" || previousView === "sitesankey")
-        this.fromNamespace(nodes);
-      /*
-    nodes.forEach(n => {
-      restoreSankey(n.subNodes, "servicesankey");
-    });
-    */
+      //zoomed(VIEW_DURATION);
+      this.fullScreen();
+
       this.hideSiteLinks();
       this.hideSiteTrafficLinks();
       this.hideSankeySiteLinkDir();
-      this.showServiceLinks();
+      //this.showServiceLinks();
       this.hideEndpoints();
       this.hideExtraServices();
+
       // move the service rects to their traffic locations
       d3.selectAll("g.service-type")
         .filter(d => !d.extra)
@@ -195,7 +257,7 @@ class Transitions {
       d3.selectAll("rect.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("height", d => d.y1 - d.y0)
+        .attr("height", d => d.getHeight())
         .attr("fill", d => d.lightColor)
         .attr("opacity", 1);
 
@@ -203,26 +265,30 @@ class Transitions {
       d3.selectAll("text.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("y", d => (d.y1 - d.y0) / 2)
+        .attr("y", d => d.getHeight() / 2)
         .attr("opacity", 1);
 
       // hide the hittarget paths
       d3.selectAll("path.hittarget").style("display", "none");
 
-      // change the path's width and location
-      d3.selectAll("path.link")
+      // change the path's width
+      d3.selectAll("path.service")
         .transition()
         .duration(VIEW_DURATION)
         .attr("stroke-width", d => d.width)
         .attr("opacity", 0.5)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = d.sankeyLinkHorizontal(d, i);
-          return interpolatePath(previous, current);
+          const current = d.sankeyPath; //genPath(d, "service");
+          const ip = interpolatePath(previous, current);
+          return t => {
+            setLinkStat();
+            return ip(t);
+          };
         });
 
       // show the serviceTraffic arrows in the links
-      d3.selectAll("path.sankeyServiceLinkDir")
+      d3.selectAll("path.servicesankeyDir")
         .style("display", "block")
         .attr("opacity", 0)
         .transition()
@@ -231,112 +297,112 @@ class Transitions {
         .attr("opacity", 1)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = d.sankeyLinkHorizontal(d);
+          const current = d.sankeyPath;
           return interpolatePath(previous, current);
         });
-
-      zoom.scale(0.8);
-      zoom.translate([100, 50]);
-      svg
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("transform", `translate(100,50) scale(0.8)`);
     });
   };
 
-  toSiteSankey = (previousView, nodes, path, zoom, svg) => {
-    /*
-    nodes.forEach(n => {
-      restoreSankey(n.subNodes, "sitesankey");
-    });
-    */
-
+  toSiteSankey = (previousView, zoomed) => {
     return new Promise((resolve, reject) => {
-      this.hideSiteLinks();
-      this.hideServiceLinks();
-      this.hideEndpoints();
-      this.hideSankeyServiceLinkDir();
+      //zoomed(VIEW_DURATION);
 
-      // move site rects to sankey location
-      d3.selectAll(".cluster")
-        .style("display", "block")
-        .attr("opacity", 1)
+      //this.showRouterLinks();
+      this.hideServiceLinks();
+      this.hideSiteTrafficLinks();
+      this.hideSankeySiteLinkDir();
+      this.hideSankeyServiceLinkDir();
+      this.hideEndpoints();
+      this.showExtraServices();
+
+      // hide the shadow sites
+      d3.selectAll(".shadow")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.x0},${d.y0})`)
+        .attr("opacity", 0)
         .call(endall, () => {
           resolve();
         });
 
-      // show site rects
-      d3.selectAll(".cluster-rects")
+      // transition the containers to their proper position
+      d3.selectAll(".cluster")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("transform", d => `translate(${d.x0},${d.y0})`)
+        .each("end", function() {
+          d3.select(this)
+            .style("display", "block")
+            .attr("opacity", 1)
+            .select(".cluster-rects")
+            .attr("opacity", 1)
+            .style("display", "block");
+        });
+
+      // change the router links's width and location
+      d3.selectAll("path.site")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("stroke-width", 2.5)
+        .attr("opacity", 1)
+        .attrTween("d", function(d, i) {
+          const previous = d3.select(this).attr("d");
+          const { sx, sy, tx, ty } = midPoints(d.source, d.target);
+          const current = `M${sx},${sy}L${tx},${ty}`;
+          return interpolatePath(previous, current);
+        });
+
+      d3.selectAll("path.deployment")
         .style("display", "block")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("opacity", 1);
+        .attr("opacity", 0.5)
+        .attr("stroke-width", d => d.width)
+        .attrTween("d", function(d, i) {
+          const previous = d3.select(this).attr("d");
+          const current = d.path;
+          return interpolatePath(previous, current);
+        });
+
+      d3.selectAll("path.deploymentDir")
+        .style("display", "block")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 1)
+        .attr("stroke-width", 1)
+        .attrTween("d", function(d, i) {
+          const previous = d3.select(this).attr("d");
+          const current = d.path;
+          return interpolatePath(previous, current);
+        });
 
       d3.selectAll("rect.network")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("width", d => d.x1 - d.x0)
-        .attr("height", d => Math.max(d.y1 - d.y0, d.getHeight()));
+        .attr("width", d => d.getWidth())
+        .attr("height", d => d.getHeight());
 
-      // hide the hittarget paths
-      path.selectAll("path.hittarget").style("display", "none");
-
-      // move subNodes to their in-site locations
+      // move the service rects to their proper position within the container
       d3.selectAll("g.service-type")
-        .style("display", "block")
-        .attr("opacity", 1)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.orgx},${d.orgy})`);
+        .attr("transform", d => `translate(${d.orgx},${d.expandedY})`);
 
       d3.selectAll("rect.service-type")
         .transition()
         .duration(VIEW_DURATION)
+        .attr("width", d => d.getWidth())
         .attr("height", d => d.getHeight())
-        .attr("fill", "#FFFFFF")
-        .attr("opacity", 0.5);
+        .attr("fill", d => d.lightColor)
+        .attr("opacity", 1);
 
       d3.selectAll("text.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("y", d => d.getHeight() / 2)
-        .attr("opacity", 0.5);
-
-      // show the siteTraffic links
-      d3.selectAll("path.siteTrafficLink")
-        .style("display", "block")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke-width", d => d.width)
-        .attr("opacity", 0.5)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = d.sankeyLinkHorizontal(d, i);
-          return interpolatePath(previous, current);
-        });
-
-      // show the siteTraffic arrows in the links
-      d3.selectAll("path.sankeySiteLinkDir")
-        .style("display", "block")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke-width", 1)
         .attr("opacity", 1)
-        .attrTween("d", function(d) {
-          const previous = d3.select(this).attr("d");
-          const current = d.sankeyLinkHorizontal(d);
-          return interpolatePath(previous, current);
+        .attr("y", d => (d.y1 - d.y0) / 2)
+        .call(endall, () => {
+          resolve();
         });
-
-      zoom.scale(0.8);
-      zoom.translate([100, 50]);
-      svg
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("transform", `translate(100,50) scale(0.8)`);
     });
   };
 
@@ -356,7 +422,7 @@ class Transitions {
 
     // change the path's width and location
     path
-      .selectAll("path.link")
+      .selectAll("path.service")
       .transition()
       .duration(VIEW_DURATION)
       .attr("stroke-width", d => 2.5)
@@ -404,22 +470,23 @@ class Transitions {
     // hide the real cluster rects immediately
     d3.selectAll(".cluster-rects").style("display", "none");
 
+    // allow the service-types to be positioned at full screen locations
+    this.fullScreen();
+  };
+
+  fullScreen = () => {
     // make the cluster container start at the left of the svg
     // in order to move the services to their correct locations
     d3.selectAll(".cluster")
       .transition()
       .duration(VIEW_DURATION)
       .attr("transform", "translate(0,0)");
+
+    d3.selectAll(".cluster-rects").style("display", "none");
   };
 
   hideSiteLinks = () => {
-    d3.selectAll("g.siteLinks")
-      .transition()
-      .duration(VIEW_DURATION)
-      .attr("opacity", 0)
-      .each(function(d) {
-        d3.select(this).style("display", "none");
-      });
+    this.hideLinks("g.siteLinks");
   };
 
   showRouterLinks = () => {
@@ -427,21 +494,21 @@ class Transitions {
       .style("display", "block")
       .transition()
       .duration(VIEW_DURATION)
-      .attr("opacity", 1);
-  };
-
-  hideServiceLinks = () => {
-    d3.selectAll("g.links")
-      .transition()
-      .duration(VIEW_DURATION)
-      .attr("opacity", 0)
-      .each("end", function() {
-        d3.select(this).style("display", "none");
+      .attr("opacity", 1)
+      .attrTween("d", function(d, i) {
+        const previous = d3.select(this).attr("d");
+        const { sx, sy, tx, ty } = midPoints(d.source, d.target);
+        const current = `M${sx},${sy}L${tx},${ty}`;
+        return interpolatePath(previous, current);
       });
   };
 
+  hideServiceLinks = () => {
+    this.hideLinks("g.service");
+  };
+
   showServiceLinks = () => {
-    d3.selectAll("g.links")
+    d3.selectAll("g.service")
       .style("display", "block")
       .transition()
       .duration(VIEW_DURATION)
@@ -449,7 +516,17 @@ class Transitions {
   };
 
   hideSiteTrafficLinks = () => {
-    d3.selectAll("path.siteTrafficLink")
+    this.hideLinks("path.sitesankey");
+  };
+
+  hideSiteServiceSankeyLinks = () => {
+    this.hideLinks("path.deployment");
+  };
+  hideSiteServiceSankeyLinkDir = () => {
+    this.hideLinks("path.deploymentDir");
+  };
+  hideLinks = cls => {
+    d3.selectAll(cls)
       .transition()
       .duration(VIEW_DURATION)
       .attr("opacity", 0)
@@ -457,12 +534,12 @@ class Transitions {
         d3.select(this).style("display", "none");
       });
   };
-
   hideSankeySiteLinkDir = () => {
-    d3.selectAll("path.sankeySiteLinkDir")
+    d3.selectAll("path.sitesankeyDir")
       .transition()
       .duration(VIEW_DURATION)
       .attr("opacity", 0)
+      /*
       .attrTween("d", function(d, i) {
         const previous = d3.select(this).attr("d");
         const current = `M${d.source.x + d.source.getWidth()} ${d.source.y +
@@ -471,22 +548,20 @@ class Transitions {
           i * 5}`;
         return interpolatePath(previous, current);
       })
+      */
       .each("end", function(d) {
         d3.select(this).style("display", "none");
       });
   };
 
   hideSankeyServiceLinkDir = () => {
-    d3.selectAll("path.sankeyServiceLinkDir")
+    d3.selectAll("path.servicesankeyDir")
       .transition()
       .duration(VIEW_DURATION)
       .attr("opacity", 0)
       .attrTween("d", function(d, i) {
         const previous = d3.select(this).attr("d");
-        const current = `M${d.source.x + d.source.getWidth()} ${d.source.y +
-          d.source.getHeight() / 2} L ${d.target.x} ${d.target.y +
-          d.target.getHeight() / 2 +
-          i * 5}`;
+        const current = d.path;
         return interpolatePath(previous, current);
       })
       .each("end", function(d) {
@@ -623,7 +698,7 @@ class Transitions {
     if (view === "service") {
       // move links
       path
-        .selectAll("path.link")
+        .selectAll("path.service")
         .transition()
         .duration(VIEW_DURATION / 2)
         .attrTween("d", function(d, i) {

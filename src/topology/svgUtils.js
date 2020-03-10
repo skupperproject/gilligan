@@ -200,10 +200,10 @@ export function addDefs(svg) {
 // find the point on the target rect (tx,ty) that the line intersects
 export const midPoints = (source, target) => {
   return {
-    sx: source.x + source.getWidth() / 2,
-    sy: source.y + 20,
-    tx: target.x + target.getWidth() / 2,
-    ty: target.y + 20
+    sx: source.x0 + source.getWidth() / 2,
+    sy: source.y0 + 20,
+    tx: target.x0 + target.getWidth() / 2,
+    ty: target.y0 + 20
   };
   /*
   // get center of source and target rects

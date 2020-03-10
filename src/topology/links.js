@@ -96,7 +96,7 @@ export class Links {
   }
 
   addLink({ source, target, dir, cls, uid }) {
-    this.links.push(new Link(source, target, dir, cls, uid));
+    return this.links.push(new Link(source, target, dir, cls, uid)) - 1;
   }
   getLink(_source, _target, dir, cls, uid) {
     for (let i = 0; i < this.links.length; i++) {

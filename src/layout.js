@@ -60,13 +60,13 @@ class PageLayout extends React.Component {
     this.state = {
       connected: false,
       connectPath: "",
-      activeItem: "graph",
+      activeItem: "service",
       isConnectFormOpen: false,
       username: ""
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
-    this.views = ["Graph", "Cards"];
+    this.views = ["Service", "Site", "Deployment", "Process"];
   }
 
   componentDidMount = () => {
@@ -100,7 +100,7 @@ class PageLayout extends React.Component {
         connectPath === "/" ||
         connectPath === "/login"
       )
-        connectPath = "/graph";
+        connectPath = "/service";
       const activeItem = connectPath.split("/").pop();
       this.props.history.replace(connectPath);
       this.setState({
@@ -119,7 +119,6 @@ class PageLayout extends React.Component {
       connectPath: ""
     });
   };
-  icap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   toggleConnectForm = event => {
     this.setState({ isConnectFormOpen: !this.state.isConnectFormOpen });
@@ -233,7 +232,7 @@ class PageLayout extends React.Component {
     // we render a <Redirect> object
     const redirectAfterConnect = () => {
       let { connectPath } = this.state;
-      if (connectPath === "/login") connectPath = "/network";
+      if (connectPath === "/login") connectPath = "/";
       if (connectPath !== "") {
         return <Redirect to={connectPath} />;
       }
@@ -264,9 +263,24 @@ class PageLayout extends React.Component {
         >
           {connectForm()}
           <Switch>
-            <PrivateRoute path="/" exact component={TopologyPage} />
-            <PrivateRoute path="/graph" component={TopologyPage} />
-            <PrivateRoute path="/cards" component={ListPage} />
+            <PrivateRoute
+              path="/"
+              exact
+              component={TopologyPage}
+              view="service"
+            />
+            <PrivateRoute
+              path="/service"
+              component={TopologyPage}
+              view="service"
+            />
+            <PrivateRoute path="/site" component={TopologyPage} view="site" />
+            <PrivateRoute
+              path="/deployment"
+              component={TopologyPage}
+              view="deployment"
+            />
+            <PrivateRoute path="/process" component={ListPage} />
             <Route
               path="/login"
               render={props => (

@@ -8,6 +8,20 @@ class Adapter {
     this.addVersions();
     this.addSiteConnected();
     console.log(this.data);
+    /*
+    const serviceAddresses = this.serviceNames();
+    const siteIds = this.data.sites.map(s => s.site_id);
+    siteIds.forEach(fromSite => {
+      siteIds.forEach(toSite => {
+        serviceAddresses.forEach(fromAddress => {
+          serviceAddresses.forEach(toAddress => {
+            console.log(`${fromSite}:${fromAddress} => ${toSite}:${toAddress}`);
+            console.log(this.fromTo(fromAddress, fromSite, toAddress, toSite));
+          });
+        });
+      });
+    });
+    */
   }
 
   // add a service for each client that sends requests but
@@ -20,40 +34,23 @@ class Adapter {
     this.data.services.forEach(service => {
       service.requests_received.forEach(request => {
         for (const clientKey in request.by_client) {
-          const clientName = this.serviceNameFromId(clientKey);
-          if (!this.data.services.some(s => s.address === clientName)) {
+          const clientName = this.serviceNameFromClientId(clientKey);
+          const found = this.data.services.find(s => s.address === clientName);
+          if (!found) {
             // this is a new service. add it
             this.data.services.unshift({
+              derived: true,
               address: clientName,
               protocol: service.protocol,
               requests_received: [],
               requests_handled: [],
-              requests_sent: [],
               targets: [{ name: clientKey, site_id: request.site_id }]
             });
-            const newService = this.data.services[0];
-            this.addRequestSent(
-              newService,
-              clientKey,
-              request,
-              service.address
-            );
-          } else {
-            // the service was already added.
-            // add a new requests_sent section
-            const sender = this.data.services.find(
-              s => s.address === clientName && s.requests_sent
-            );
-            if (sender) {
-              // this service was already added, update its requests_sent
-              this.addRequestSent(sender, clientKey, request, service.address);
-              // and targets
-              if (!sender.targets.some(t => t.name === clientKey))
-                sender.targets.push({
-                  name: clientKey,
-                  site_id: request.site_id
-                });
-            }
+          } else if (found.derived) {
+            found.targets.push({
+              name: clientKey,
+              site_id: request.site_id
+            });
           }
         }
       });
@@ -74,22 +71,6 @@ class Adapter {
         }
       }
     }
-  };
-
-  // add the given request to a requests_sent section for a service
-  addRequestSent = (newService, clientKey, request, address) => {
-    const { site_id } = request;
-    let existingRequest = newService.requests_sent.find(
-      r => r.site_id === site_id
-    );
-    if (!existingRequest) {
-      existingRequest = { site_id, by_receiver: {} };
-      newService.requests_sent.push(existingRequest);
-    }
-    // add values to existing request
-    const newRequest = request.by_client[clientKey];
-    this.aggregateAttributes(newRequest, existingRequest);
-    existingRequest.by_receiver[address] = newRequest;
   };
 
   // add a list of resident services to each cluster
@@ -156,7 +137,7 @@ class Adapter {
     let serviceList = [];
     requests.forEach(request => {
       const names = Object.keys(request.by_client).map(key =>
-        this.serviceNameFromId(key)
+        this.serviceNameFromClientId(key)
       );
       serviceList.push(...names);
     });
@@ -165,11 +146,15 @@ class Adapter {
 
   // return a request record for traffic between source and target services
   linkRequest = (sourceAddress, target) => {
-    const matrix = this.allServiceMatrix();
-    const found = matrix.find(
-      r => r.ingress === sourceAddress && r.egress === target.address
-    );
-    if (found) return found.request;
+    let req = {};
+    target.requests_received.forEach(request => {
+      for (const client_id in request.by_client) {
+        if (this.serviceNameFromClientId(client_id) === sourceAddress) {
+          this.aggregateAttributes(request.by_client[client_id], req);
+        }
+      }
+    });
+    return req;
   };
 
   // get list of attributes in requests.
@@ -183,18 +168,25 @@ class Adapter {
         const keys = Object.keys(request.by_client);
         if (keys.length > 0) {
           return Object.keys(request.by_client[keys[0]]).filter(
-            k => k !== "details"
+            k => !["details", "by_handling_site"].includes(k)
           );
         }
       }
     }
   };
 
-  // assuming a key will look like name-v##-xxx-xxx
-  // and that the name could contain dashes
-  serviceNameFromId = server_key => {
-    const parts = server_key.split("-");
-    return parts.slice(0, Math.max(parts.length - 3), 1).join("-");
+  serviceNameFromClientId = server_key => {
+    let serviceName = server_key;
+    this.data.services.some(service => {
+      return service.targets.some(target => {
+        if (target.name === server_key) {
+          serviceName = service.address;
+          return true;
+        }
+        return false;
+      });
+    });
+    return serviceName;
   };
 
   versionFromId = server_key => {
@@ -241,7 +233,7 @@ class Adapter {
       service.requests_received.forEach(request => {
         if (request.site_id === site_id) {
           Object.keys(request.by_client).forEach(key => {
-            if (this.serviceNameFromId(key) === producerService.address) {
+            if (this.serviceNameFromClientId(key) === producerService.address) {
               versions.push({
                 version: this.versionFromId(key),
                 request: request.by_client[key],
@@ -270,7 +262,7 @@ class Adapter {
     this.data.services.forEach(service => {
       service.requests_received.forEach(request => {
         Object.keys(request.by_client).forEach(client => {
-          const clientAddress = this.serviceNameFromId(client);
+          const clientAddress = this.serviceNameFromClientId(client);
           const req = request.by_client[client];
           if (
             clientAddress === involvingService.address ||
@@ -312,32 +304,24 @@ class Adapter {
     return matrix;
   };
 
-  siteMatrixForService = (service, stat) => {
-    if (!stat) stat = "requests";
-    const matrix = this.siteMatrix(stat);
-    for (let i = matrix.length - 1; i >= 0; --i) {
-      if (matrix[i].address !== service.address) {
-        matrix.splice(i, 1);
-      }
-    }
-    return matrix;
-  };
-
   // gather matrix records between sites
   siteMatrix = stat => {
     const matrix = [];
     if (!stat) stat = "requests";
     this.data.services.forEach(service => {
-      service.requests_handled.forEach(request => {
-        Object.keys(request.by_originating_site).forEach(from_site_id => {
-          const req = request.by_originating_site[from_site_id];
-          matrix.push({
-            ingress: this.siteNameFromId(from_site_id),
-            egress: this.siteNameFromId(request.site_id),
-            address: service.address,
-            messages: req[stat]
-          });
-        });
+      service.requests_received.forEach(request => {
+        const from_site_id = request.site_id;
+        for (const client_id in request.by_client) {
+          const from_client_request = request.by_client[client_id];
+          for (const to_site_id in from_client_request.by_handling_site) {
+            matrix.push({
+              ingress: this.siteNameFromId(from_site_id),
+              egress: this.siteNameFromId(to_site_id),
+              address: service.address,
+              messages: from_client_request.by_handling_site[to_site_id][stat]
+            });
+          }
+        }
       });
     });
     return matrix;
@@ -348,27 +332,17 @@ class Adapter {
     if (!stat) stat = "requests";
     this.data.services.forEach(service => {
       service.requests_received.forEach(request => {
-        const clients = Object.keys(request.by_client);
-        clients.forEach(client_id => {
-          const ingress = this.serviceNameFromId(client_id);
-          const req = JSON.parse(JSON.stringify(request.by_client[client_id]));
-          const row = {
-            ingress,
-            egress: service.address,
-            address: "",
-            messages: req[stat],
-            request: req
-          };
-          const found = matrix.find(
-            r => r.ingress === ingress && r.egress === service.address
-          );
-          if (found) {
-            found.messages += req[stat];
-            this.aggregateAttributes(req, found.request);
-          } else {
-            matrix.push(row);
+        for (const from_client in request.by_client) {
+          const from_client_req = request.by_client[from_client];
+          for (const to_site_id in from_client_req.by_handling_site) {
+            matrix.push({
+              ingress: this.serviceNameFromClientId(from_client),
+              egress: service.address,
+              address: this.siteNameFromId(to_site_id),
+              messages: from_client_req.by_handling_site[to_site_id][stat]
+            });
           }
-        });
+        }
       });
     });
     return matrix;
@@ -438,7 +412,37 @@ class Adapter {
     return by;
   };
 
+  fromTo = (from_name, from_site_id, to_name, to_site_id, stat) => {
+    if (!stat) stat = "requests";
+    const toService = this.data.services.find(s => s.address === to_name);
+    if (toService) {
+      const request = toService.requests_received.find(
+        r => r.site_id === from_site_id
+      );
+      if (request) {
+        for (let clientKey in request.by_client) {
+          const address = this.serviceNameFromClientId(clientKey);
+          if (from_name === address) {
+            const client_request = request.by_client[clientKey];
+            const from_request = client_request.by_handling_site[to_site_id];
+            if (from_request) {
+              return { stat: from_request[stat], request: from_request };
+            }
+          }
+        }
+      }
+    }
+    return { stat: undefined, request: undefined };
+  };
+
   serviceNames = () => this.data.services.map(s => s.address);
+  requestSum = req => {
+    let sum = 0;
+    for (let server in req.by_server) {
+      sum += req.by_server[server].requests;
+    }
+    return sum;
+  };
 }
 
 export default Adapter;

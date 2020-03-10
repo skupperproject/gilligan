@@ -19,6 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import TooltipTable from "../tooltipTable";
+import { ServiceGap } from "./graph";
 
 var React = require("react");
 
@@ -92,7 +93,7 @@ export class Node {
     });
   }
   uid() {
-    if (!this.uuid) this.uuid = `${this.name}-${this.nodeType}`;
+    if (!this.uuid) this.uuid = `${this.name}`;
     return this.uuid;
   }
   setFixed(fixed) {
@@ -119,6 +120,16 @@ export class Node {
       this[key] = obj[key];
     }
   }
+  setSubNodePositions = key => {
+    if (this.subNodes && this.subNodes.length > 0) {
+      let curY = this.subNodes[0].y0;
+      this.subNodes.forEach(n => {
+        n[key].y1 = n.y1 = curY + (n.y1 - n.y0);
+        n[key].y0 = n.y0 = curY;
+        curY += n.getHeight() + ServiceGap;
+      });
+    }
+  };
 }
 const nodeProperties = {
   // router types
@@ -236,10 +247,13 @@ export class Nodes {
     return undefined;
   }
   nodeFor(name) {
+    return this.nodes.find(n => n.name === name);
+    /*
     for (let i = 0; i < this.nodes.length; ++i) {
       if (this.nodes[i].name === name) return this.nodes[i];
     }
     return null;
+    */
   }
   savePositions(nodes) {
     if (!nodes) nodes = this.nodes;

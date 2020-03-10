@@ -35,32 +35,26 @@ class GraphToolbar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      showSankey: false
+      showSankey: false,
+      showStat: false
     };
     this.dropdownItems = [
       {
-        key: "site",
-        description: "Site graph",
-        selected: this.props.initialView === "site",
-        sankeyView: "sitesankey"
+        key: "graph",
+        description: "Graph",
+        selected: this.props.viewType === "graph",
+        enabled: true
       },
       {
-        key: "service",
-        description: "Service call graph",
-        selected: this.props.initialView === "serivce",
-        sankeyView: "servicesankey"
-      } /*,
-      {
-        key: "servicesankey",
-        description: "Serivce relative traffic",
-        selected: this.props.initialView === "servicesankey"
+        key: "card",
+        description: "Card",
+        selected: this.props.viewType === "card"
       },
       {
-        key: "sitesankey",
-        description: "Site relative traffic",
-        selected: this.props.initialView === "sitesankey"
+        key: "table",
+        description: "Table",
+        selected: this.props.viewType === "table"
       }
-      */
     ];
   }
 
@@ -79,27 +73,34 @@ class GraphToolbar extends Component {
       item.selected = item.description === desc;
     });
     const selected = this.dropdownItems.find(item => item.selected);
-    this.props.handleChangeView(
-      this.state.showSankey ? selected.sankeyView : selected.key
-    );
+    this.props.handleChangeView(selected.key);
   };
 
   // checkbox was checked
   handleChange = (checked, event) => {
-    const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
-    const name = target.name;
-    const selected = this.dropdownItems.find(i => i.selected);
-    this.props.handleChangeView(
-      target.checked ? selected.sankeyView : selected.key
-    );
-    this.setState({ [name]: value });
+    const { name } = event.target;
+    this.setState({ [name]: checked }, () => {
+      if (name === "showSankey") {
+        this.props.handleChangeSankey(checked);
+      } else if (name === "showStat") {
+        this.props.handleChangeShowStat(checked);
+      } else if (name === "showConnDir") {
+        this.props.handleChangeShowConnDir(checked);
+      }
+    });
   };
 
   onToggle = () => {
     this.setState({
       isOptionsOpen: !this.state.isOptionsOpen
     });
+  };
+
+  // this component is the authority for whether or not the
+  // link stat is shown.
+  // This method allows other components to get the current value
+  getShowStat = () => {
+    return this.state.showStat;
   };
 
   buildDropdown = () => {
@@ -121,6 +122,7 @@ class GraphToolbar extends Component {
           <DropdownItem
             className={item.selected ? "selected" : ""}
             key={item.key}
+            isDisabled={!item.enabled}
           >
             {item.description}
           </DropdownItem>
@@ -130,12 +132,12 @@ class GraphToolbar extends Component {
   };
 
   render() {
-    return (
-      <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
-        <ToolbarGroup>
-          <ToolbarItem className="pf-u-mr-md">
-            View: {this.buildDropdown()}
-          </ToolbarItem>
+    const sankeyCheck = () => {
+      if (
+        this.props.view === "service" ||
+        this.props.view === "servicesankey"
+      ) {
+        return (
           <ToolbarItem>
             <Checkbox
               label="Show relative traffic"
@@ -144,8 +146,59 @@ class GraphToolbar extends Component {
               aria-label="show relative traffic"
               id="showSankey"
               name="showSankey"
-            />{" "}
+            />
           </ToolbarItem>
+        );
+      }
+    };
+
+    const statCheck = () => {
+      if (this.props.view !== "site") {
+        return (
+          <React.Fragment>
+            <ToolbarItem className="toolbar-item">
+              <Checkbox
+                label="Show statistic"
+                isChecked={this.state.showStat}
+                onChange={this.handleChange}
+                aria-label="show statistic"
+                id="showStat"
+                name="showStat"
+              />
+            </ToolbarItem>
+            <ToolbarItem className="toolbar-item">
+              <LinkOptions {...this.props} showStat={this.state.showStat} />
+            </ToolbarItem>
+          </React.Fragment>
+        );
+      }
+    };
+
+    const connectionDirCheck = () => {
+      if (this.props.view === "site") {
+        return (
+          <ToolbarItem className="toolbar-item">
+            <Checkbox
+              label="Show connection direction"
+              isChecked={this.state.showConnDir}
+              onChange={this.handleChange}
+              aria-label="show connection direction"
+              id="showConnDir"
+              name="showConnDir"
+            />
+          </ToolbarItem>
+        );
+      }
+    };
+    return (
+      <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
+        <ToolbarGroup>
+          <ToolbarItem className="pf-u-mr-md">
+            View: {this.buildDropdown()}
+          </ToolbarItem>
+          {sankeyCheck()}
+          {connectionDirCheck()}
+          {statCheck()}
         </ToolbarGroup>
       </Toolbar>
     );
@@ -153,13 +206,3 @@ class GraphToolbar extends Component {
 }
 
 export default GraphToolbar;
-
-/*          <ToolbarItem>
-            <div class="toolbar-prompt">Options:</div>
-            <LinkOptions
-              adapter={this.props.service.adapter}
-              options={this.props.options.link}
-              handleChangeOption={this.props.handleChangeOption}
-            />
-          </ToolbarItem>
-*/

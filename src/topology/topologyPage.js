@@ -34,36 +34,27 @@ class TopologyPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      viewType: "graph",
       lastUpdated: new Date(),
-      serviceTypeName: "All",
       options: {
         graph: {
           traffic: false,
           utilization: false
         },
-        link: { stat: "" }
+        link: { stat: "requests" }
       }
     };
-    this.initialView = "site";
   }
 
-  handleChangeService = serviceTypeName => {
-    this.setState({ serviceTypeName });
-  };
-
-  handleChangeView = key => {
-    this.graphRef[`to${Icap(key)}`]();
+  handleChangeView = viewType => {
+    this.setState({ viewType });
   };
 
   handleChangeOption = option => {
     const { options } = this.state;
-    if (option === "traffic" || option === "utilization") {
-      options.graph[option] = !options.graph[option];
-    } else {
-      options.link.stat = options.link.stat === option ? null : option;
-    }
+    options.link.stat = option;
     this.setState({ options }, () => {
-      this.graphRef.setLinkStat();
+      this.graphRef.restart();
     });
   };
 
@@ -77,7 +68,7 @@ class TopologyPage extends Component {
           <StackItem className="overview-header">
             <TextContent>
               <Text className="overview-title" component={TextVariants.h1}>
-                Graph view
+                {Icap(this.props.view)}s
               </Text>
               <Text className="overview-loading" component={TextVariants.pre}>
                 {`Updated ${strDate(this.state.lastUpdated)}`}
@@ -89,9 +80,9 @@ class TopologyPage extends Component {
               ref={el => (this.graphRef = el)}
               type={this.props.type}
               service={this.props.service}
-              serviceTypeName={this.state.serviceTypeName}
+              view={this.props.view}
+              viewType={this.state.viewType}
               options={this.state.options}
-              initialView={this.initialView}
               handleChangeView={this.handleChangeView}
               handleChangeOption={this.handleChangeOption}
             />

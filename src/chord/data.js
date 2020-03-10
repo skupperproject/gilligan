@@ -117,10 +117,37 @@ class ChordData {
     });
   }
 
-  getSiteMatrixForService(d, converter) {
+  getDeploymentMatrix(d, converter, deploymentLinks) {
     let self = this;
     return new Promise(resolve => {
-      const values = self.QDRService.adapter.siteMatrixForService(d);
+      const values = [];
+      deploymentLinks.forEach(link => {
+        if (link.source === d || link.target === d) {
+          values.push({
+            ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
+            egress: `${link.target.parentNode.site_name}:${link.target.address}`,
+            address: d.address,
+            messages: link.value
+          });
+        }
+      });
+      const matrix = convert(self, values, converter);
+      resolve(matrix);
+    });
+  }
+
+  getAllDeploymentMatrix(deploymentLinks, converter) {
+    let self = this;
+    return new Promise(resolve => {
+      const values = [];
+      deploymentLinks.forEach(link => {
+        values.push({
+          ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
+          egress: `${link.target.parentNode.site_name}:${link.target.address}`,
+          address: link.target.address,
+          messages: link.value
+        });
+      });
       const matrix = convert(self, values, converter);
       resolve(matrix);
     });

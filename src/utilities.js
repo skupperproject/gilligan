@@ -18,6 +18,8 @@ under the License.
 */
 
 import * as d3 from "d3";
+import { ServiceGap, ServiceStart } from "./topology/graph";
+import * as d3path from "d3-path";
 const SankeyAttributes = [
   "value",
   "depth",
@@ -26,7 +28,8 @@ const SankeyAttributes = [
   "x0",
   "x1",
   "y0",
-  "y1"
+  "y1",
+  "sankeyHeight"
 ];
 
 export class QDRLogger {
@@ -126,7 +129,7 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
 
   // for all the nodes, construct 2 lists: souce nodes, and target nodes
   links.forEach(l => {
-    if (l.source.name) {
+    if (isNaN(l.source)) {
       l.source.targetNodes.push(l.target);
       l.target.sourceNodes.push(l.source);
     } else {
@@ -136,14 +139,8 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
   });
 
   // find node(s) with fewest number of sources
-  let minSources = Number.MAX_SAFE_INTEGER;
-  let minTargets = Number.MAX_SAFE_INTEGER;
-  nodes.forEach(n => {
-    minSources = Math.min(minSources, n.sourceNodes.length);
-    minTargets = Math.min(minTargets, n.targetNodes.length);
-  });
+  const minSources = Math.min(...nodes.map(n => n.sourceNodes.length));
   const leftMost = nodes.filter(n => n.sourceNodes.length === minSources);
-  const rightMost = nodes.filter(n => n.targetNodes.length === minTargets);
 
   // put leftMost in 1st column
   leftMost.forEach(n => (n.col = 0));
@@ -167,17 +164,6 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
   nodes.forEach(n => {
     maxcol = Math.max(maxcol, n.col);
   });
-
-  // put rightMost nodes in their own column
-  if (nodes.some(n => n.col === maxcol && n.targetNodes.length > 0)) {
-    // we have nodes that have a target and are in the rightmost column.
-    // put the rightmost nodes in a new column
-    nodes.forEach(n => {
-      if (rightMost.includes(n)) {
-        n.col = maxcol + 1;
-      }
-    });
-  }
 
   let colCount = 0;
   nodes.forEach(n => {
@@ -247,6 +233,21 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
   return { width: vwidth, height: vheight };
 };
 
+// get list of all subnodes
+// mark duplicate subnodes
+export const getSubNodes = nodes => {
+  const subNodes = [];
+  nodes.nodes.forEach(node => {
+    node.subNodes.forEach((subNode, i) => {
+      const original = subNodes.find(s => s.address === subNode.address);
+      subNode.extra = original ? true : false;
+      subNode.original = original;
+      subNodes.push(subNode);
+    });
+  });
+  return subNodes;
+};
+
 export const saveSankey = (nodes, key) => {
   nodes.forEach(n => {
     n[key] = {};
@@ -275,7 +276,6 @@ for (let i = 0; i < 20; i++) {
 }
 
 export const siteColor = name => {
-  name = name.replace(/-*/gm, "");
   if (!(name in siteColors)) {
     siteColors[name] = colorGen(Object.keys(siteColors).length * 2);
   }
@@ -283,29 +283,209 @@ export const siteColor = name => {
 };
 
 export const serviceColor = name => {
-  name = name.replace(/-*/gm, "");
   if (!(name in serviceColors)) {
     serviceColors[name] = colorGen(19 - Object.keys(serviceColors).length * 2);
   }
   return serviceColors[name];
 };
 
+export const lighten = (percent, color) => {
+  const c = d3.rgb(color);
+  const rgb = `rbg(${c.r},${c.g},${c.b})`;
+  return RGB_Linear_Shade(percent, rgb);
+};
+
 /* see https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js) */
 export const RGB_Linear_Shade = (p, c) => {
   var i = parseInt,
     r = Math.round,
-    [a, b, c, d] = c.split(","),
+    [a, b, cs, d] = c.split(","),
     P = p < 0,
     t = P ? 0 : 255 * p,
-    P = P ? 1 + p : 1 - p;
+    P1 = P ? 1 + p : 1 - p;
   return (
     "rgb" +
     (d ? "a(" : "(") +
-    r(i(a[3] === "a" ? a.slice(5) : a.slice(4)) * P + t) +
+    r(i(a[3] === "a" ? a.slice(5) : a.slice(4)) * P1 + t) +
     "," +
-    r(i(b) * P + t) +
+    r(i(b) * P1 + t) +
     "," +
-    r(i(c) * P + t) +
+    r(i(cs) * P1 + t) +
     (d ? "," + d : ")")
   );
+};
+
+const parsePath = d => {
+  const cmdRegEx = /([MLQTCSAZVH])([^MLQTCSAZVH]*)/gi;
+  const commands = d.match(cmdRegEx);
+  commands.forEach((command, i) => {
+    commands[i] = command.trim();
+  });
+  return commands;
+};
+
+export const fixPath = l => {
+  let d = l.path;
+  if (l.circular) {
+    const commands = parsePath(d);
+    if (commands.length === 10) {
+      const l3 = commands[9].substr(1).split(/[\s,]+/);
+      const y3 = parseFloat(l3[1]);
+
+      const l1 = commands[5].substr(1).split(/[\s,]+/);
+      const x1 = parseFloat(l1[0]);
+      const y1 = parseFloat(l1[1]);
+
+      const maxr = Math.min(x1, (y1 - y3) / 2);
+      commands[6] = ["A", maxr, maxr, 0, 0, 1, x1 - maxr, y1 - maxr].join(" ");
+      commands[8] = ["A", maxr, maxr, 0, 0, 1, x1, y3].join(" ");
+      commands[7] = ["L", x1 - maxr, y3 + maxr].join(" ");
+      d = commands.join(" ");
+      l.path = d;
+    }
+  }
+  return d;
+};
+
+export const genPath = (link, key) =>
+  !link.circular ? bezier(link, key) : circular(link, key);
+
+const accessor = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
+
+const bezier = (link, key) => {
+  const x0 = accessor(link.source, "x1", key); // right side of source
+  const y0 = link.source.expanded
+    ? link.y0
+    : accessor(link.source, "y0", key) + link.source.getHeight() / 2;
+  const x1 = accessor(link.target, "x0", key); // left side of target
+  const y1 = link.target.expanded
+    ? link.y1
+    : accessor(link.target, "y0", key) + link.target.getHeight() / 2;
+  const path = d3path.path();
+  path.bezierCurveTo((x0 + x1) / 2, y0, (x0 + x1) / 2, y1, x1, y1);
+  return `M${x0} ${y0} ${path.toString()}`;
+};
+const circular = (link, key) => {
+  const r = 30;
+  const gap = 8;
+  const sourceX = accessor(link.source, "x1", key);
+  const sourceY =
+    accessor(link.source, "y0", key) + link.source.getHeight() / 2;
+  const targetX = accessor(link.target, "x0", key);
+  const targetY =
+    accessor(link.target, "y0", key) + link.target.getHeight() / 2;
+  const bottomY = Math.max(sourceY + r + gap + r, targetY + r + gap + r);
+
+  let path = d3path.path();
+  path.moveTo(sourceX, sourceY);
+  path.lineTo(sourceX + gap, sourceY);
+  path.arcTo(sourceX + gap + r, sourceY, sourceX + gap + r, sourceY + r, r);
+  path.lineTo(sourceX + gap + r, bottomY - r);
+  path.arcTo(sourceX + gap + r, bottomY, sourceX + gap, bottomY, r);
+  path.lineTo(targetX - gap, bottomY);
+  path.arcTo(targetX - gap - r, bottomY, targetX - gap - r, bottomY - r, r);
+  path.lineTo(targetX - gap - r, targetY + r);
+  path.arcTo(targetX - r - gap, targetY, targetX - gap, targetY, r);
+  path.lineTo(targetX, targetY);
+  return path.toString();
+};
+
+export const expandSite = (site, key) => {
+  if (site.subNodes && site.subNodes.length > 0) {
+    let curY = ServiceStart;
+    site.subNodes.forEach(n => {
+      n.expandedY = curY;
+      n.y0 = n[key].y0 = n.parentNode.y0 + n.expandedY;
+      n.y1 = n[key].y1 = n.y0 + n.sankeyHeight;
+      curY += n.sankeyHeight + ServiceGap;
+      n.x0 = n[key].x0 = n.parentNode.x0 + n.orgx;
+      n.x1 = n[key].x1 = n.x0 + n.getWidth();
+    });
+  }
+};
+
+export const setLinkStat = (selection, view, stat, shown) => {
+  const linkOptions = {
+    requests: { one: "req", more: "reqs" },
+    bytes_in: "bytes in",
+    bytes_out: "bytes out",
+    latency_max: "ms latency (max)"
+  };
+
+  selection.selectAll(`path.${view}`).each(function(d) {
+    const len = this.getTotalLength();
+    const mid = this.getPointAtLength(len / 2);
+    d.mid = mid;
+    const p1 = this.getPointAtLength(len / 2 - len * 0.01);
+    const p2 = this.getPointAtLength(len / 2 + len * 0.01);
+    const away = 10;
+    // vertical line. slope would be infinite
+    if (Math.abs(p2.x - p1.x) < 0.05) {
+      d.pt = { x: mid.x, y: mid.y + away };
+    } else {
+      const slope = (p2.y - p1.y) / (p2.x - p1.x);
+      if (Math.abs(slope) < 0.05) {
+        d.pt = { x: mid.x, y: mid.y + away };
+      } else {
+        const m = -1 / slope;
+        const y = (away * m) / Math.sqrt(1 + m * m) + mid.y;
+        const x = away / Math.sqrt(1 + m * m) + mid.x;
+        d.pt = { x, y };
+      }
+    }
+  });
+
+  selection
+    .selectAll("text.stats")
+    .attr("x", d => d.pt.x)
+    .attr("y", d => d.pt.y)
+    .attr("dominant-baseline", "middle")
+    .text(d => {
+      //const stat = self.props.options.link.stat;
+      if (stat && shown) {
+        const val = d.request[stat];
+        let text = linkOptions[stat];
+        if (typeof text === "object") {
+          text = val === 1 ? text.one : text.more;
+        }
+        return `${val} ${text}`;
+      } else {
+        return "";
+      }
+    });
+};
+
+export const positionPopup = ({
+  containerSelector,
+  popupSelector,
+  constrainX = true,
+  constrainY = true,
+  padding = 0
+}) => {
+  // after the content has rendered, position it
+  let selection = d3.select(containerSelector);
+  if (selection.size() > 0) {
+    selection = selection.node();
+    const selWidth = selection.offsetWidth;
+    const selHeight = selection.offsetHeight;
+    // get mouse position relative to chord container
+    const mouse = d3.mouse(selection);
+    // get width of popover now that it has rendered
+    const popover = d3.select(popupSelector);
+    if (popover.size() > 0) {
+      const width = popover.node().offsetWidth;
+      const height = popover.node().offsetHeight;
+      // desired left position
+      let left = mouse[0] + 10;
+      let top = mouse[1] + 10;
+      // if popover is too wide to use the desired left
+      if (constrainX && left + width + padding > selWidth) {
+        left = selWidth - width;
+      }
+      if (constrainY && top + height + padding > selHeight) {
+        top = selHeight - height;
+      }
+      popover.style("left", `${left}px`).style("top", `${top}px`);
+    }
+  }
 };

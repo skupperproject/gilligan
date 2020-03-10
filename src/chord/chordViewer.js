@@ -18,16 +18,22 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { Tabs, Tab } from "@patternfly/react-core";
-import { getSizes, pretty, siteColors, serviceColors } from "../utilities";
-import { separateAddresses, aggregateAddresses } from "./filters.js";
+//import { Tabs, Tab } from "@patternfly/react-core";
+import {
+  getSizes,
+  pretty,
+  positionPopup,
+  siteColors,
+  serviceColors
+} from "../utilities";
+import { aggregateAddresses, separateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
 import { qdrRibbon } from "./ribbon/ribbon.js";
 import { qdrlayoutChord } from "./layout/layout.js";
 import QDRPopup from "../qdrPopup";
 import * as d3 from "d3";
 import RoutersComponent from "./routersComponent";
-import PieBreakdownComponent from "./pieComponent";
+//import PieBreakdownComponent from "./pieComponent";
 import KebabDropdown from "./kebob";
 import PropTypes from "prop-types";
 
@@ -158,19 +164,37 @@ class ChordViewer extends Component {
   getMatrix = () => {
     if (this.props.site) {
       if (this.props.data === null) {
-        // all sites
-        this.chordData.getSiteMatrix(aggregateAddresses).then(this.renderChord);
+        if (this.props.deployment) {
+          this.chordData
+            .getAllDeploymentMatrix(
+              this.props.deploymentLinks,
+              separateAddresses
+            )
+            .then(this.renderChord);
+        } else {
+          // all sites
+          this.chordData
+            .getSiteMatrix(aggregateAddresses)
+            .then(this.renderChord);
+        }
       } else {
         if (this.props.data.address) {
           // site traffic involving a service
           this.chordData
-            .getSiteMatrixForService(this.props.data, aggregateAddresses)
+            .getDeploymentMatrix(
+              this.props.data,
+              aggregateAddresses,
+              this.props.deploymentLinks
+            )
             .then(this.renderChord);
+        } else {
+          // for specific site
+          this.chordData
+            .getSiteMatrixForSite(this.props.data, aggregateAddresses)
+            .then(matrix => {
+              this.renderChord(matrix);
+            });
         }
-        // for specific site
-        this.chordData
-          .getSiteMatrixForSite(this.props.data, aggregateAddresses)
-          .then(this.renderChord);
       }
     } else {
       if (this.props.data === null) {
@@ -220,12 +244,13 @@ class ChordViewer extends Component {
 
   // arc colors are taken from every other color starting at 0
   getArcColor = n => {
-    //console.log(`getArcColor ${n}`);
+    if (this.props.deployment) {
+      n = n.split(":")[0];
+    }
     return siteColors[n];
   };
   // chord colors are taken from every other color starting at 19 and going backwards
   getChordColor = n => {
-    //console.log(`getChordColor ${n}`);
     return serviceColors[n];
   };
 
@@ -369,9 +394,9 @@ class ChordViewer extends Component {
 
   // create and/or update the chord diagram
   renderChord = matrix => {
-    this.setState({ addresses: this.chordData.getAddresses() }, () =>
-      this.doRenderChord(matrix)
-    );
+    this.setState({ addresses: this.chordData.getAddresses() }, () => {
+      return this.doRenderChord(matrix);
+    });
   };
   doRenderChord = matrix => {
     // populate the arcColors object with a color for each router
@@ -445,11 +470,12 @@ class ChordViewer extends Component {
       .on("mouseover", this.mouseoverArc)
       .on("mousemove", d => {
         let popupContent = this.arcTitle(d, matrix);
-        this.displayTooltip(d3.event, popupContent);
+        this.showToolTip(popupContent);
       })
-      .on("mouseout", () => {
+      .on("mouseout", d => {
         this.popoverArc = null;
         this.setState({ showPopup: false });
+        this.props.handleArcOver(d, false);
       });
 
     // animate the arcs path to it's new location
@@ -548,11 +574,12 @@ class ChordViewer extends Component {
       .on("mousemove", d => {
         this.popoverChord = d;
         let popoverContent = this.chordTitle(d, matrix);
-        this.displayTooltip(d3.event, popoverContent);
+        this.showToolTip(popoverContent);
       })
-      .on("mouseout", () => {
+      .on("mouseout", d => {
         this.popoverChord = null;
         this.setState({ showPopup: false });
+        this.props.handleChordOver(d, false);
       });
 
     let exitingChords = chordPaths.exit().attr("class", "exiting-chord");
@@ -581,18 +608,16 @@ class ChordViewer extends Component {
     this.switchedByAddress = false;
   };
 
-  displayTooltip = (event, content) => {
-    if (this.popupCancelled) {
-      this.setState({ showPopup: false });
-      return;
-    }
-    const mouse = d3.mouse(d3.select("#chord").node());
-    d3.select("#popover-div")
-      .style("left", `${mouse[0] + 25}px`)
-      .style("top", `${mouse[1] + 50}px`);
-
-    // show popup
-    this.setState({ showPopup: true, popupContent: content });
+  showToolTip = content => {
+    // setting the popupContent state will cause the popup to render
+    this.setState({ showPopup: true, popupContent: content }, () => {
+      // after the content has rendered, position it
+      positionPopup({
+        containerSelector: "#chordContainer",
+        popupSelector: "#popover-div",
+        constrainY: false
+      });
+    });
   };
 
   // animate the disappearance of an arc by shrinking it to its center point
@@ -784,6 +809,7 @@ class ChordViewer extends Component {
       "fade",
       p => d.index !== p.source.index && d.index !== p.target.index
     );
+    this.props.handleArcOver(d, true);
   };
 
   // fade all chords except the given one
@@ -798,6 +824,7 @@ class ChordViewer extends Component {
             p.target.orgindex === d.target.orgindex
           )
       );
+    this.props.handleChordOver(d, true);
   };
 
   showAllChords = () => {
@@ -854,13 +881,25 @@ class ChordViewer extends Component {
     const getTitle = () => {
       if (this.props.site) {
         if (this.props.data === null) {
-          return <div className="chord-title">Site to site requests</div>;
+          if (this.props.deployment) {
+            return <div className="chord-title">Requests received</div>;
+          } else {
+            return <div className="chord-title">Requests received</div>;
+          }
         }
         if (this.props.data.address) {
           // site to site for a service
           return (
             <div className="chord-title">
-              {`Site to site involving ${this.props.data.address}`}
+              {
+                <React.Fragment>
+                  <span>Requests involving </span>{" "}
+                  <span>
+                    {this.props.data.parentNode.site_name}:
+                    {this.props.data.address}
+                  </span>
+                </React.Fragment>
+              }
             </div>
           );
         }
@@ -870,7 +909,7 @@ class ChordViewer extends Component {
           </div>
         );
       } else if (this.props.data === null) {
-        return <div className="chord-title">Service to service requests</div>;
+        return <div className="chord-title">Requests received</div>;
       }
       return (
         <div className="chord-title">{`Requests involving ${this.props.data.address}`}</div>
@@ -904,68 +943,3 @@ class ChordViewer extends Component {
 }
 
 export default ChordViewer;
-
-/*
-      <Tabs
-        isFilled
-        activeKey={this.state.activeTabKey}
-        onSelect={this.handleTabClick}
-      >
-        <Tab eventKey={0} title="By service">
-          <div id="chordContainer" className="qdrChord">
-            <div className="chord-title">
-              {getTitle()}
-              {this.props.data.address}
-            </div>
-            <div aria-label="chord-diagram" id="chord"></div>
-            <div
-              id="popover-div"
-              className={this.state.showPopup ? "" : "hidden"}
-              ref={el => (this.popupRef = el)}
-            >
-              <QDRPopup content={this.state.popupContent}></QDRPopup>
-            </div>
-
-            <RoutersComponent
-              arcColors={siteColors}
-              handleHoverRouter={this.handleHoverRouter}
-            ></RoutersComponent>
-          </div>
-        </Tab>
-        <Tab eventKey={1} title="By originating site">
-          <div id="chordContainer" className="qdrChord">
-            <div className="chord-title">
-              {getTitle()}
-              {this.props.data.address}
-            </div>
-            <PieBreakdownComponent
-              data={this.props.data}
-              by="received"
-              colors={serviceColors}
-            />
-            <RoutersComponent
-              arcColors={serviceColors}
-              handleHoverRouter={this.handleHoverSite}
-            ></RoutersComponent>
-          </div>
-        </Tab>
-        <Tab eventKey={2} title="By handling site">
-          <div id="chordContainer" className="qdrChord">
-            <div className="chord-title">
-              {getTitle()}
-              {this.props.data.address}
-            </div>
-            <PieBreakdownComponent
-              data={this.props.data}
-              by="handled"
-              colors={serviceColors}
-            />
-            <RoutersComponent
-              arcColors={serviceColors}
-              handleHoverRouter={this.handleHoverSite}
-            ></RoutersComponent>
-          </div>
-        </Tab>
-      </Tabs>
-
-*/

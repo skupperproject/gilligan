@@ -6,7 +6,7 @@ class RESTService {
 
   getData = alt =>
     new Promise((resolve, reject) => {
-      if (!alt) alt = "ambiguous";
+      if (!alt) alt = "data2";
       // try from the window url
       this.fetchFrom(`${this.url}/DATA`)
         .then(resolve)

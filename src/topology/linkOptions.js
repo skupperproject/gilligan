@@ -8,7 +8,7 @@ class LinkOptions extends React.Component {
     super(props);
     this.state = {
       isOptionsOpen: false,
-      linkOptions: this.props.adapter.requestAttributes()
+      linkOptions: this.props.service.adapter.requestAttributes()
     };
   }
 
@@ -31,13 +31,12 @@ class LinkOptions extends React.Component {
 
   render() {
     const { isOptionsOpen, linkOptions } = this.state;
-    const { stat } = this.props.options;
+    const { stat } = this.props.options.link;
     const dropdownItems = linkOptions.map((option, i) => (
       <DropdownItem key={option} className={stat === option ? "selected" : ""}>
         {option}
       </DropdownItem>
     ));
-
     return (
       <Dropdown
         onSelect={this.onSelect}
@@ -46,8 +45,9 @@ class LinkOptions extends React.Component {
             id="toggle-id"
             onToggle={this.onToggle}
             iconComponent={CaretDownIcon}
+            isDisabled={!this.props.showStat}
           >
-            {this.props.options.stat ? Icap(this.props.options.stat) : "None"}
+            {Icap(this.props.options.link.stat)}
           </DropdownToggle>
         }
         isOpen={isOptionsOpen}

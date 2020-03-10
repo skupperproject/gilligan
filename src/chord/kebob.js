@@ -1,21 +1,12 @@
 import React from "react";
 import {
   Dropdown,
-  DropdownToggle,
-  DropdownToggleAction,
   DropdownItem,
-  DropdownItemIcon,
   DropdownSeparator,
   DropdownPosition,
-  DropdownDirection,
   KebabToggle
 } from "@patternfly/react-core";
-import {
-  ExpandIcon,
-  BackwardIcon,
-  CheckIcon,
-  SquareIcon
-} from "@patternfly/react-icons";
+import { ExpandIcon, BackwardIcon, CheckIcon } from "@patternfly/react-icons";
 
 class KebabDropdown extends React.Component {
   constructor(props) {
