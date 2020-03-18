@@ -17,21 +17,33 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import { valuesMatrix } from './matrix.js';
+import { valuesMatrix } from "./matrix.js";
 // this filter will show an arc per router with the addresses aggregated
-export const aggregateAddresses = function (values, filter) {
+export const aggregateAddresses = function(values, filter) {
   let m = new valuesMatrix(true);
-  values.forEach (function (value) {
+  values.forEach(function(value) {
     if (filter.indexOf(value.address) < 0) {
       let chordName = value.egress;
       let egress = value.ingress;
       let row = m.indexOf(chordName);
       if (row < 0) {
-        row = m.addRow(chordName, value.ingress, value.egress, value.address);
+        row = m.addRow(
+          chordName,
+          value.ingress,
+          value.egress,
+          value.address,
+          value.info
+        );
       }
       let col = m.indexOf(egress);
       if (col < 0) {
-        col = m.addRow(egress, value.ingress, value.egress, value.address);
+        col = m.addRow(
+          egress,
+          value.ingress,
+          value.egress,
+          value.address,
+          value.info
+        );
       }
       m.addValue(row, col, value);
     }
@@ -39,20 +51,31 @@ export const aggregateAddresses = function (values, filter) {
   return m.sorted();
 };
 
-
-export const separateAddresses = function (values, filter) {
+export const separateAddresses = function(values, filter) {
   let m = new valuesMatrix(false);
-  values.forEach( function (value) {
+  values.forEach(function(value) {
     if (filter.indexOf(value.address) < 0) {
       let egressChordName = value.egress + value.ingress + value.address;
       let r = m.indexOf(egressChordName);
       if (r < 0) {
-        r = m.addRow(egressChordName, value.ingress, value.egress, value.address);
+        r = m.addRow(
+          egressChordName,
+          value.ingress,
+          value.egress,
+          value.address,
+          value.info
+        );
       }
       let ingressChordName = value.ingress + value.egress + value.address;
       let c = m.indexOf(ingressChordName);
       if (c < 0) {
-        c = m.addRow(ingressChordName, value.egress, value.ingress, value.address);
+        c = m.addRow(
+          ingressChordName,
+          value.egress,
+          value.ingress,
+          value.address,
+          value.info
+        );
       }
       m.addValue(r, c, value);
     }

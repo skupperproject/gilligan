@@ -11,7 +11,7 @@
     {
       "site_name": "stockholm",
       "site_id": "stockholmID",
-      "connected": ["oregonID"],
+      "connected": [],
       "namespace": "default",
       "url": "grs-stockholm.devcluster.openshift.com",
       "edge": false
@@ -19,7 +19,7 @@
     {
       "site_name": "minikube",
       "site_id": "minikubeID",
-      "connected": ["oregonID"],
+      "connected": [],
       "namespace": "default",
       "url": "10.106.252.153",
       "edge": false
@@ -34,20 +34,20 @@
           "site_id": "oregonID",
           "by_client": {
             "monkey-wrench-v1-asdfasdf-asdf": {
-              "requests": 1,
+              "requests": 1000,
               "bytes_in": 0,
-              "bytes_out": 100,
+              "bytes_out": 100000,
               "details": {
-                "GET:200": 1
+                "GET:200": 1000
               },
               "latency_max": 10,
               "by_handling_site": {
                 "oregonID": {
-                  "requests": 1,
+                  "requests": 1000,
                   "bytes_in": 0,
-                  "bytes_out": 100,
+                  "bytes_out": 100000,
                   "details": {
-                    "GET:200": 1
+                    "GET:200": 1000
                   },
                   "latency_max": 10
                 }
@@ -286,6 +286,62 @@
           "name": "still-simple-5694c68957-8dwfk",
           "target": "still-simple",
           "site_id": "minikubeID"
+        }
+      ]
+    },
+    {
+      "address": "tcp-echo",
+      "protocol": "tcp",
+      "targets": [
+        {
+          "name": "echo2-5b6877548c-zrh7m",
+          "target": "echo2",
+          "site_id": "minikubeID"
+        },
+        {
+          "name": "echo2-5b6877548c-zvrgb",
+          "target": "echo2",
+          "site_id": "minikubeID"
+        },
+        {
+          "name": "tcp-echo-7d86c78dd5-qldfp",
+          "site_id": "minikubeID"
+        },
+        {
+          "name": "tcp-echo-7d86c78dd5-vr56f",
+          "site_id": "minikubeID"
+        }
+      ],
+      "connections_ingress": [
+        {
+          "site_id": "oxfordID",
+          "connections": {
+            "10.129.2.11:60988@BmHdbzPQzh": {
+              "id": "10.129.2.11:60988@BmHdbzPQzh",
+              "start_time": 1583793999616,
+              "bytes_in": 14,
+              "bytes_out": 68,
+              "client": "tester",
+              "last_in": 1583794004400,
+              "last_out": 1583794004579
+            }
+          }
+        }
+      ],
+      "connections_egress": [
+        {
+          "site_id": "minikubeID",
+          "connections": {
+            "10.129.2.11:60988@BmHdbzPQzh": {
+              "id": "10.129.2.11:60988@BmHdbzPQzh",
+              "start_time": 1583793999239,
+              "bytes_in": 68,
+              "bytes_out": 14,
+              "server": "tcp-echo-7d86c78dd5-qldfp",
+              "last_out": 1583794004008,
+              "last_in": 1583794004010
+            }
+          }
         }
       ]
     }

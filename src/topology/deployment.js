@@ -18,17 +18,12 @@ under the License.
 */
 
 import * as d3 from "d3";
+import { lighten } from "../utilities";
 /* service to service links on deployment view*/
 export const createDeploymentLinksSelection = svg =>
   svg
     .append("svg:g")
     .attr("class", "deploymentLinks")
-    .selectAll("g");
-
-export const createDeploymentSankeyLinksSelection = svg =>
-  svg
-    .append("svg:g")
-    .attr("class", "siteTrafficLinks")
     .selectAll("g");
 
 export const setupDeploymentLinks = (
@@ -49,8 +44,8 @@ export const setupDeploymentLinks = (
   sssEnter
     .append("path")
     .attr("class", "deployment")
-    .attr("stroke", d => d.source.color)
-    .classed("siteCall", true)
+    .attr("stroke", d => lighten(-0.05, d.target.color))
+    .classed("forceBlack", true)
     .attr("marker-end", d => {
       return d.left ? `url(#end${d.markerId("end")})` : null;
     })
@@ -90,6 +85,10 @@ export const setupDeploymentLinks = (
     .attr("class", "stats")
     .attr("font-size", "12px")
     .attr("font-weight", "bold");
+
+  selection
+    .selectAll("path.deployment")
+    .classed("highlighted", d => d.highlighted);
 
   return selection;
 };

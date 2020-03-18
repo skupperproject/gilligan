@@ -66,7 +66,12 @@ class PageLayout extends React.Component {
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
-    this.views = ["Service", "Site", "Deployment", "Process"];
+    this.views = [
+      { name: "Services", view: "service" },
+      { name: "Sites", view: "site" },
+      { name: "Deployments", view: "deployment" },
+      { name: "Processes", view: "process" }
+    ];
   }
 
   componentDidMount = () => {
@@ -137,16 +142,16 @@ class PageLayout extends React.Component {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
           <NavList>
-            {this.views.map(V => {
-              const v = this.toL(V);
+            {this.views.map(viewInfo => {
+              const { view, name } = viewInfo;
               return (
                 <NavItem
-                  id={`${V}NavItem`}
-                  itemId={v}
-                  isActive={activeItem === v}
-                  key={v}
+                  id={`${name}NavItem`}
+                  itemId={view}
+                  isActive={activeItem === view}
+                  key={view}
                 >
-                  <Link to={`/${v}`}>{V}</Link>
+                  <Link to={`/${view}`}>{name}</Link>
                 </NavItem>
               );
             })}
@@ -181,9 +186,7 @@ class PageLayout extends React.Component {
         logo={
           <React.Fragment>
             <Brand src={gilliganImg} alt="Gilligan Logo" />
-            <span className="logo-text">
-              A tool to visualize a Skupper network
-            </span>
+            <span className="logo-text">Skupper</span>
           </React.Fragment>
         }
         toolbar={PageToolbar}

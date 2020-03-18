@@ -2,6 +2,12 @@
   height: 100vh;
 }
 
+:root {
+  --sk-global--FontFamily: "Alegreya Sans", sans-serif;
+  --pf-global--FontFamily--sans-serif: "Alegreya Sans", sans-serif;
+  --sk-global--FontFamily--body: Lato, sans-serif;
+}
+
 .App {
   text-align: center;
   height: 100%;
@@ -26,6 +32,10 @@
 
 .App-link {
   color: #61dafb;
+}
+
+.skupper-console-font {
+  font-family: var(--sk-global--FontFamily);
 }
 
 @keyframes App-logo-spin {
@@ -258,6 +268,7 @@ table.edge-table td[data-label="State"] svg {
   letter-spacing: 0.2em;
   font-size: 18px;
   width: 30em;
+  text-align: left;
 }
 
 .state-copy input {
@@ -537,14 +548,18 @@ svg.address-svg {
   margin-left: 0;
 }
 
-path.service.selected:not(.traffic) {
+path.service.selected:not(.traffic),
+path.deployment.selected:not(.traffic),
+path.deployment.highlighted:not(.traffic) {
   /* stroke-dasharray: 10,2; */
   stroke: #33f !important;
+  stroke-width: 4;
 }
 
-path.service {
-  fill: #000;
+path.service,
+path.deployment {
   cursor: default;
+  /* stroke-width: 2; */
 }
 
 path.service.unknown {
@@ -552,15 +567,10 @@ path.service.unknown {
   stroke: #888888;
 }
 
-path.site:not(.traffic) {
-  cursor: default;
-}
-
 path.sitesankeyDir,
 path.servicesankeyDir,
 path.deploymentDir,
-path.serviceCall,
-path.siteCall {
+path.forceBlack {
   stroke: #000;
 }
 
@@ -569,7 +579,7 @@ svg:not(.active):not(.ctrl) path.service {
 }
 
 path.hittarget {
-  stroke-width: 15px;
+  stroke-width: 20px;
   stroke: transparent;
 }
 path.hittarget.highlighted {
@@ -587,12 +597,12 @@ path.service.highlighted:not(.traffic) {
   stroke: #6f6 !important;
 }
 marker {
-  fill: #000;
+  /*fill: #000;*/
   stroke-width: 0;
 }
 #site-start,
 #site-end {
-  fill: #000;
+  fill: green;
 }
 path.service.dragline {
   pointer-events: none;
@@ -602,9 +612,14 @@ path.service.hidden {
   stroke-width: 0;
 }
 
+path.site:not(.traffic) {
+  cursor: default;
+}
+
 path.site {
   stroke: green;
-  stroke-width: 3;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
 }
 
 path.site.highlighted,
@@ -1140,7 +1155,7 @@ rect.service {
 
 g.service-type.selected rect.service-type {
   stroke: blue;
-  stroke-width: 2px;
+  stroke-width: 4px;
 }
 
 rect.service-type {
@@ -1279,7 +1294,8 @@ path.external {
     rgba(3, 3, 3, 0.06) 0px 4px 8px 4px;
   box-sizing: border-box;
   color: rgb(21, 21, 21);
-  font-family: RedHatText, Overpass, overpass, helvetica, arial, sans-serif;
+  font-family: "Alegreya Sans", RedHatText, Overpass, overpass, helvetica, arial,
+    sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 24px;
@@ -1303,7 +1319,8 @@ path.external {
 .overview-header .pf-c-content ul li {
   box-sizing: border-box;
   color: rgb(21, 21, 21);
-  font-family: RedHatText, Overpass, overpass, helvetica, arial, sans-serif;
+  font-family: "Alegreya Sans", RedHatText, Overpass, overpass, helvetica, arial,
+    sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 24px;
@@ -1344,7 +1361,8 @@ path.external {
   color: rgb(21, 21, 21);
   cursor: pointer;
   display: block;
-  font-family: RedHatText, Overpass, overpass, helvetica, arial, sans-serif;
+  font-family: "Alegreya Sans", RedHatText, Overpass, overpass, helvetica, arial,
+    sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 24px;
@@ -1572,6 +1590,9 @@ button#processes {
 path.service,
 path.stat,
 path.site,
+path.mask,
+path.siteTrafficLink,
+path.siteTrafficDir,
 path.hittarget,
 path.sankeySiteLink,
 path.sitesankeyDir,

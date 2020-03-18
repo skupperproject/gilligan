@@ -1,28 +1,26 @@
 class Adapter {
   constructor(data) {
     this.data = data;
+    this.removeTCPServices();
     this.addSendersServices();
     this.addServicesToClusters();
     this.addServersToSites();
     this.addSourcesTargets();
     this.addVersions();
-    this.addSiteConnected();
     console.log(this.data);
-    /*
-    const serviceAddresses = this.serviceNames();
-    const siteIds = this.data.sites.map(s => s.site_id);
-    siteIds.forEach(fromSite => {
-      siteIds.forEach(toSite => {
-        serviceAddresses.forEach(fromAddress => {
-          serviceAddresses.forEach(toAddress => {
-            console.log(`${fromSite}:${fromAddress} => ${toSite}:${toAddress}`);
-            console.log(this.fromTo(fromAddress, fromSite, toAddress, toSite));
-          });
-        });
-      });
-    });
-    */
   }
+
+  removeTCPServices = () => {
+    this.data.tcpServices = [];
+    for (let i = this.data.services.length - 1; i >= 0; i--) {
+      if (this.data.services[i].protocol !== "http") {
+        this.data.tcpServices.push(
+          JSON.parse(JSON.stringify(this.data.services[i]))
+        );
+        this.data.services.splice(i, 1);
+      }
+    }
+  };
 
   // add a service for each client that sends requests but
   // isn't in the service list.
@@ -318,7 +316,8 @@ class Adapter {
               ingress: this.siteNameFromId(from_site_id),
               egress: this.siteNameFromId(to_site_id),
               address: service.address,
-              messages: from_client_request.by_handling_site[to_site_id][stat]
+              messages: from_client_request.by_handling_site[to_site_id][stat],
+              request: from_client_request.by_handling_site[to_site_id]
             });
           }
         }
@@ -370,31 +369,6 @@ class Adapter {
       });
     });
     return value;
-  };
-
-  addSiteConnected = () => {
-    const matrix = this.siteMatrix();
-    this.data.sites.forEach(from => {
-      from.connectedSites = [];
-      this.data.sites.forEach(to => {
-        if (from !== to) {
-          matrix.forEach(record => {
-            if (
-              (record.ingress === from.site_name &&
-                record.egress === to.site_name) ||
-              (record.ingress === to.site_name &&
-                record.egress === from.site_name)
-            ) {
-              if (
-                record.messages > 0 &&
-                !from.connectedSites.includes(to.site_id)
-              )
-                from.connectedSites.push(to.site_id);
-            }
-          });
-        }
-      });
-    });
   };
 
   // breakdown of which sites handle/originate requests for a given service

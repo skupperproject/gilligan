@@ -132,64 +132,40 @@ class GraphToolbar extends Component {
   };
 
   render() {
-    const sankeyCheck = () => {
-      if (
-        this.props.view === "service" ||
-        this.props.view === "servicesankey"
-      ) {
-        return (
-          <ToolbarItem>
-            <Checkbox
-              label="Show relative traffic"
-              isChecked={this.state.showSankey}
-              onChange={this.handleChange}
-              aria-label="show relative traffic"
-              id="showSankey"
-              name="showSankey"
-            />
-          </ToolbarItem>
-        );
-      }
-    };
+    const sankeyCheck = () =>
+      this.props.view !== "deployment" && (
+        <ToolbarItem>
+          <Checkbox
+            label="Show relative traffic"
+            isChecked={this.state.showSankey}
+            onChange={this.handleChange}
+            aria-label="show relative traffic"
+            id="showSankey"
+            name="showSankey"
+          />
+        </ToolbarItem>
+      );
 
-    const statCheck = () => {
-      if (this.props.view !== "site") {
-        return (
-          <React.Fragment>
-            <ToolbarItem className="toolbar-item">
-              <Checkbox
-                label="Show statistic"
-                isChecked={this.state.showStat}
-                onChange={this.handleChange}
-                aria-label="show statistic"
-                id="showStat"
-                name="showStat"
-              />
-            </ToolbarItem>
-            <ToolbarItem className="toolbar-item">
-              <LinkOptions {...this.props} showStat={this.state.showStat} />
-            </ToolbarItem>
-          </React.Fragment>
-        );
-      }
-    };
-
-    const connectionDirCheck = () => {
-      if (this.props.view === "site") {
-        return (
+    const statCheck = () => (
+      <React.Fragment>
+        <ToolbarItem className="toolbar-item">
+          <Checkbox
+            label="Show statistic"
+            isChecked={this.state.showStat}
+            onChange={this.handleChange}
+            aria-label="show statistic"
+            id="showStat"
+            name="showStat"
+          />
+        </ToolbarItem>
+        {false && (
           <ToolbarItem className="toolbar-item">
-            <Checkbox
-              label="Show connection direction"
-              isChecked={this.state.showConnDir}
-              onChange={this.handleChange}
-              aria-label="show connection direction"
-              id="showConnDir"
-              name="showConnDir"
-            />
+            <LinkOptions {...this.props} showStat={this.state.showStat} />
           </ToolbarItem>
-        );
-      }
-    };
+        )}
+      </React.Fragment>
+    );
+
     return (
       <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
         <ToolbarGroup>
@@ -197,7 +173,6 @@ class GraphToolbar extends Component {
             View: {this.buildDropdown()}
           </ToolbarItem>
           {sankeyCheck()}
-          {connectionDirCheck()}
           {statCheck()}
         </ToolbarGroup>
       </Toolbar>

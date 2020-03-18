@@ -315,6 +315,25 @@ class ChordViewer extends Component {
       .join("-");
   };
 
+  chordInfo = (d, matrix) => {
+    const routerNames = this.getRouterNames(d, matrix);
+    const sourceKey = routerNames[0];
+    const targetKey = routerNames[1];
+    const row = matrix.rows.find(
+      r => r.ingress === sourceKey && r.egress === targetKey
+    );
+    if (row) {
+      return row.info;
+    }
+  };
+
+  arcInfo = (fg, matrix) => {
+    const row = matrix.rows.find(r => r.ingress === fg.key);
+    if (row) {
+      return row.info;
+    }
+  };
+
   getRouterNames = (d, matrix) => {
     let egress,
       ingress,
@@ -370,7 +389,8 @@ class ChordViewer extends Component {
   decorateChordData = (rechord, matrix) => {
     let data = rechord.chords();
     data.forEach((d, i) => {
-      d.key = this.chordKey(d, matrix, false);
+      d.key = this.chordKey(d, matrix);
+      d.info = this.chordInfo(d, matrix);
       d.orgIndex = i;
       d.color = this.fillChord(matrix, d);
     });
@@ -385,6 +405,7 @@ class ChordViewer extends Component {
       fg.key = matrix.routerName(fg.index);
       fg.components = [fg.index];
       fg.router = matrix.aggregate ? fg.key : matrix.getEgress(fg.index);
+      fg.info = this.arcInfo(fg, matrix);
       fg.color = this.props.site
         ? this.getArcColor(fg.router)
         : this.getChordColor(fg.router);
@@ -570,7 +591,9 @@ class ChordViewer extends Component {
 
     // attach mouse event handlers to the chords
     chordPaths
-      .on("mouseover", this.mouseoverChord)
+      .on("mouseover", d => {
+        this.mouseoverChord(d);
+      })
       .on("mousemove", d => {
         this.popoverChord = d;
         let popoverContent = this.chordTitle(d, matrix);
@@ -669,11 +692,14 @@ class ChordViewer extends Component {
       var old = oldGroups[d.index];
       if (old) {
         //there's a matching old group
-        tween = d3.interpolate(old, d);
-      } else {
+        try {
+          tween = d3.interpolate(old, d);
+        } catch (e) {}
+      }
+      if (!old || !tween) {
         //create a zero-width arc object
         let mid = (d.startAngle + d.endAngle) / 2;
-        var emptyArc = { startAngle: mid, endAngle: mid };
+        let emptyArc = { startAngle: mid, endAngle: mid };
         tween = d3.interpolate(emptyArc, d);
       }
 

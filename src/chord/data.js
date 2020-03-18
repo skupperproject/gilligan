@@ -145,6 +145,16 @@ class ChordData {
           ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
           egress: `${link.target.parentNode.site_name}:${link.target.address}`,
           address: link.target.address,
+          info: {
+            source: {
+              site_name: link.source.parentNode.site_name,
+              address: link.source.address
+            },
+            target: {
+              site_name: link.target.parentNode.site_name,
+              address: link.target.address
+            }
+          },
           messages: link.value
         });
       });

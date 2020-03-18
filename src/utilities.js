@@ -347,8 +347,24 @@ export const fixPath = l => {
   return d;
 };
 
-export const genPath = (link, key) =>
-  !link.circular ? bezier(link, key) : circular(link, key);
+export const genPath = (link, key, mask) => {
+  if (mask) {
+    let x0, x1, y;
+    if (mask === "source") {
+      const x = accessor(link.source, "x1", key);
+      y = accessor(link.source, "y0", key);
+      x0 = x - (link.width ? link.width : 0) / 8;
+      x1 = x - 1;
+    } else {
+      const x = accessor(link.target, "x0", key);
+      y = accessor(link.target, "y0", key);
+      x0 = x + (link.width ? link.width : 0) / 8;
+      x1 = x + 1;
+    }
+    return `M ${x0},${y} L ${x1},${y}`;
+  } else
+    return !link.circular ? bezier(link, key, mask) : circular(link, key, mask);
+};
 
 const accessor = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
@@ -366,7 +382,7 @@ const bezier = (link, key) => {
   return `M${x0} ${y0} ${path.toString()}`;
 };
 const circular = (link, key) => {
-  const r = 30;
+  const r = link.width ? Math.max(link.width, 30) : 30;
   const gap = 8;
   const sourceX = accessor(link.source, "x1", key);
   const sourceY =
@@ -441,7 +457,6 @@ export const setLinkStat = (selection, view, stat, shown) => {
     .attr("y", d => d.pt.y)
     .attr("dominant-baseline", "middle")
     .text(d => {
-      //const stat = self.props.options.link.stat;
       if (stat && shown) {
         const val = d.request[stat];
         let text = linkOptions[stat];
@@ -488,4 +503,51 @@ export const positionPopup = ({
       popover.style("left", `${left}px`).style("top", `${top}px`);
     }
   }
+};
+
+export const linkColor = (link, links) => {
+  const vals = links.map(l => l.value);
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  if (max > min) {
+    return fillColor((link.value - min) / (max - min));
+  } else {
+    return fillColor(0.5);
+  }
+};
+
+const fillColor = v => {
+  let color = d3.scale
+    .linear()
+    .domain([0, 0.5, 1])
+    .interpolate(d3.interpolateHcl)
+    .range([d3.rgb("#888888"), d3.rgb("#00FF00"), d3.rgb("#FF0000")]);
+
+  return color(v);
+};
+
+// return the path between 2 circles
+// path is the line segment formed from the intersection of the circles
+// and a line drawn between the 2 circle's centers
+export const pathBetween = (source, target) => {
+  const x1 = source.x + source.r; // center of source circle
+  const y1 = source.y + source.r;
+  const x2 = target.x + target.r; // center of target circle
+  const y2 = target.y + target.r;
+  const pt1 = circleIntercept(x1, y1, source.r, x2, y2);
+  const pt2 = circleIntercept(x2, y2, target.r, x1, y1);
+  let path = d3path.path();
+  path.moveTo(pt1.x, pt1.y);
+  path.lineTo(pt2.x, pt2.y);
+  return path.toString();
+};
+
+// intersection of circle at x1,y1 with radius r and line
+// between x1,y1 and y2,y2
+const circleIntercept = (x1, y1, r, x2, y2) => {
+  const pt = {};
+  const dist = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+  pt.x = (r * (x2 - x1)) / dist + x1;
+  pt.y = (r * (y2 - y1)) / dist + y1;
+  return pt;
 };

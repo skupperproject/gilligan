@@ -33,7 +33,38 @@ export const createSiteLinksSelection = svg =>
     .attr("class", "siteLinks")
     .selectAll("g");
 
-export const setupSiteLinks = (
+export const createSiteTrafficLinksSelection = svg =>
+  svg
+    .append("svg:g")
+    .attr("class", "siteTrafficLinks")
+    .selectAll("g");
+
+export const createSiteMaskSelection = svg =>
+  svg
+    .append("svg:g")
+    .attr("class", "masks")
+    .selectAll("g");
+
+export const setupSiteMask = (selection, links) => {
+  const sources = links.map(l => ({
+    mask: true,
+    source: l,
+    uid: `MaskSource-${l.uid}`
+  }));
+  const targets = links.map(l => ({
+    mask: true,
+    target: l,
+    uid: `MaskTarget-${l.uid}`
+  }));
+  console.log([...sources, ...targets]);
+  selection = selection.data([...sources, ...targets], d => d.uid);
+  selection.exit().remove();
+  const enter = selection.enter().append("g");
+  enter.append("path").attr("class", "mask");
+
+  return selection;
+};
+export const setupSiteTrafficLinks = (
   selection,
   links,
   clearPopups,
@@ -41,6 +72,63 @@ export const setupSiteLinks = (
   restart
 ) => {
   selection = selection.data(links, d => d.uid);
+
+  selection.exit().remove();
+
+  const enter = selection.enter().append("g");
+  enter
+    .append("path")
+    .attr("class", "siteTrafficLink")
+    .attr("stroke", "black")
+    .attr("stroke-width", 2)
+    .attr("d", d => {
+      return genPath(d, "site");
+    });
+
+  enter
+    .append("path")
+    .attr("class", "siteTrafficDir")
+    .attr("stroke", "black")
+    .attr("stroke-width", 1)
+    .attr("marker-end", "url(#end--15)");
+
+  enter
+    .append("path")
+    .attr("class", "hittarget")
+    .on("click", d => {
+      d3.event.stopPropagation();
+      clearPopups();
+      showLinkInfo(d);
+    })
+    .on("mouseover", d => {
+      d.highlighted = true;
+      restart();
+    })
+    .on("mouseout", d => {
+      d.highlighted = false;
+      restart();
+    });
+
+  enter
+    .append("text")
+    .attr("class", "stats")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+  return selection;
+};
+
+export const setupSiteLinks = (
+  selection,
+  links,
+  clearPopups,
+  showLinkInfo,
+  restart
+) => {
+  selection = selection
+    .data(links, d => d.uid)
+    .attr("marker-end", "url(#site-end)");
+
   selection.exit().remove();
   const enter = selection.enter().append("g");
 
@@ -65,6 +153,8 @@ export const setupSiteLinks = (
       d.highlighted = false;
       restart();
     });
+
+  selection.selectAll("path.site").classed("highlighted", d => d.highlighted);
 
   return selection;
 };

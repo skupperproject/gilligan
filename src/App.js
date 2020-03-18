@@ -16,7 +16,7 @@ class App extends Component {
   render() {
     return (
       <Router>
-        <div className="App pf-m-redhat-font">
+        <div className="App">
           <Route path="/" render={props => <PageLayout {...props} />} />
         </div>
       </Router>

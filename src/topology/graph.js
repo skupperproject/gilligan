@@ -27,6 +27,7 @@ import { sankeyCircular as sankey } from "d3-sankey-circular";
 import {
   adjustPositions,
   adjustY,
+  copy,
   getSubNodes,
   saveSankey,
   restoreSankey,
@@ -51,67 +52,6 @@ export class Graph {
     this.adapter = service.adapter;
     this.drawPath = drawPath;
   }
-
-  initRouterLinks = (nodes, links, width, height) => {
-    this.VAN.sites.forEach((site, i) => {
-      const source = nodes.nodes.find(n => n.site_id === site.site_id);
-      site.connected.forEach(targetSite => {
-        const target = nodes.nodes.find(s => s.site_id === targetSite);
-        links.getLink(
-          source,
-          target,
-          "both",
-          "cluster",
-          `Link-${source.name}-${target.name}`
-        );
-      });
-    });
-    adjustPositions({ nodes: nodes.nodes, links: links.links, width, height });
-    nodes.nodes.forEach(n => {
-      n.x0 = n.x;
-      n.x1 = n.x0 + n.getWidth();
-      n.y0 = n.y;
-      n.y1 = n.y0 + SiteRadius * 2;
-      n.cx = n.x + SiteRadius;
-      n.cy = n.y + SiteRadius;
-    });
-    saveSankey(nodes.nodes, "site");
-    saveSankey(nodes.nodes, "deployment");
-  };
-
-  initDeploymentLinks = (nodes, links, width, height) => {
-    const subNodes = nodes.nodes;
-    subNodes.forEach(fromNode => {
-      subNodes.forEach(toNode => {
-        const { stat, request } = this.adapter.fromTo(
-          fromNode.name,
-          fromNode.parentNode.site_id,
-          toNode.name,
-          toNode.parentNode.site_id
-        );
-        if (stat) {
-          /*
-          console.log(
-            `found link between (${fromNode.parentNode.site_id}:${fromNode.name} ${toNode.parentNode.site_id}:${toNode.name}) requests: ${stat}`
-          );
-          */
-          const linkIndex = links.addLink({
-            source: fromNode,
-            target: toNode,
-            dir: "in",
-            cls: "node2node",
-            uid: `Link-${fromNode.parentNode.site_id}-${fromNode.uid()}-${
-              toNode.parentNode.site_id
-            }-${toNode.uid()}`
-          });
-          const link = links.links[linkIndex];
-          link.request = request;
-          link.value = stat;
-        }
-      });
-    });
-    this.circularize(links.links);
-  };
 
   // force right to left links to be circular
   circularize = links => {
@@ -170,7 +110,7 @@ export class Graph {
     });
   };
 
-  expandSubNodes = ({ allNodes, nonExtra, expand }) => {
+  expandSubNodes = ({ allNodes, nonExtra = false, expand }) => {
     let nodes = allNodes.nodes;
     if (nonExtra) {
       nodes = nodes.filter(n => !n.extra);
@@ -336,6 +276,17 @@ export class Graph {
   // create links
   initLinks = (graphData, width, height, view) => {
     const { siteNodes, serviceNodes } = graphData;
+    if (view === "site") {
+      this.initSiteTrafficLinks(
+        siteNodes,
+        graphData.siteTrafficLinks,
+        width,
+        height
+      );
+    }
+    if (view === "site" || view === "deployment") {
+      this.initRouterLinks(siteNodes, graphData.siteLinks, width, height);
+    }
     if (view === "deployment") {
       this.initDeploymentLinks(
         serviceNodes,
@@ -344,13 +295,125 @@ export class Graph {
         height
       );
     }
-    if (view === "site" || view === "deployment") {
-      this.initRouterLinks(siteNodes, graphData.siteLinks, width, height);
-    }
     if (view === "service" || view === "servicesankey") {
       this.initServiceLinks(graphData, width, height);
     }
     return { width, height };
+  };
+
+  initSiteTrafficLinks = (nodes, links, width, height) => {
+    const siteMatrix = this.adapter.siteMatrix();
+    siteMatrix.forEach(record => {
+      const found = links.links.find(
+        l =>
+          l.source.site_name === record.ingress &&
+          l.target.site_name === record.egress
+      );
+      if (found) {
+        found.value += record.messages;
+        this.adapter.aggregateAttributes(record.request, found.request);
+      } else {
+        const linkIndex = links.addLink({
+          source: nodes.nodes.find(n => n.site_name === record.ingress),
+          target: nodes.nodes.find(n => n.site_name === record.egress),
+          dir: "in",
+          cls: "siteTraffic",
+          uid: `SiteLink-${record.ingress}-${record.egress}`
+        });
+        const link = links.links[linkIndex];
+        link.value = record.messages;
+        link.request = copy(record.request);
+      }
+    });
+    const graph = {
+      nodes: nodes.nodes,
+      links: links.links
+    };
+    this.initSankey({
+      graph,
+      width,
+      height,
+      nodeWidth: ServiceWidth,
+      nodePadding: ClusterPadding,
+      left: 50,
+      top: 20,
+      right: 50,
+      bottom: 10
+    });
+    saveSankey(nodes.nodes, "sitesankey");
+  };
+
+  initRouterLinks = (nodes, links, width, height) => {
+    this.VAN.sites.forEach((site, i) => {
+      const source = nodes.nodes.find(n => n.site_id === site.site_id);
+      site.connected.forEach(targetSite => {
+        const target = nodes.nodes.find(s => s.site_id === targetSite);
+        links.getLink(
+          source,
+          target,
+          "both",
+          "cluster",
+          `Link-${source.name}-${target.name}`
+        );
+      });
+    });
+    adjustPositions({
+      nodes: nodes.nodes,
+      links: links.links,
+      width,
+      height
+    });
+    nodes.nodes.forEach(n => {
+      n.x0 = n.x;
+      n.x1 = n.x0 + n.getWidth();
+      n.y0 = n.y;
+      n.y1 = n.y0 + SiteRadius * 2;
+      n.cx = n.x + SiteRadius;
+      n.cy = n.y + SiteRadius;
+    });
+    saveSankey(nodes.nodes, "site");
+    saveSankey(nodes.nodes, "deployment");
+  };
+
+  initDeploymentLinks = (nodes, links, width, height) => {
+    const subNodes = nodes.nodes;
+    subNodes.forEach(fromNode => {
+      subNodes.forEach(toNode => {
+        const { stat, request } = this.adapter.fromTo(
+          fromNode.name,
+          fromNode.parentNode.site_id,
+          toNode.name,
+          toNode.parentNode.site_id
+        );
+        if (stat) {
+          const linkIndex = links.addLink({
+            source: fromNode,
+            target: toNode,
+            dir: "in",
+            cls: "node2node",
+            uid: `Link-${fromNode.parentNode.site_id}-${fromNode.uid()}-${
+              toNode.parentNode.site_id
+            }-${toNode.uid()}`
+          });
+          const link = links.links[linkIndex];
+          link.request = request;
+          link.value = stat;
+        }
+      });
+    });
+    this.initSankey({
+      graph: { nodes: subNodes, links: links.links },
+      width,
+      height,
+      nodeWidth: ServiceWidth,
+      nodePadding: ServiceGap
+    });
+    // save sankeyHeight
+    subNodes.forEach(n => {
+      n.sankeyHeight = n.y1 - n.y0;
+    });
+    saveSankey(subNodes, "deployment");
+    //this.circularize(links.links);
   };
 
   initServiceLinks = (graphData, width, height) => {
@@ -447,9 +510,10 @@ export class Graph {
         .nodeWidth(nodeWidth)
         .nodePadding(nodePadding)
         .iterations(3)
-        .extent([[left, top], [width - right - left, height - bottom - top]])(
-        graph
-      );
+        .extent([
+          [left, top],
+          [width - right - left, height - bottom - top]
+        ])(graph);
       return { snodes: nodes, slinks: links };
     } else {
       return { snodes: graph.nodes, slinks: graph.links };
@@ -554,9 +618,10 @@ export class Graph {
       .attr("transform", d => `translate(${d.getWidth(true) - 40},0)`)
       .style("display", "none");
 
-    const versions = versionsG
-      .selectAll("g.service-version")
-      .data(d => d.versions, d => (d ? d.version : "v0"));
+    const versions = versionsG.selectAll("g.service-version").data(
+      d => d.versions,
+      d => (d ? d.version : "v0")
+    );
 
     versions.exit().remove();
     const versionsEnter = versions
