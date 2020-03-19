@@ -352,14 +352,14 @@ export const genPath = (link, key, mask) => {
     let x0, x1, y;
     if (mask === "source") {
       const x = accessor(link.source, "x1", key);
-      y = accessor(link.source, "y0", key);
+      y = accessor(link.source, "y0", key) + link.source.getHeight() / 2;
       x0 = x - (link.width ? link.width : 0) / 8;
-      x1 = x - 1;
+      x1 = x;
     } else {
       const x = accessor(link.target, "x0", key);
-      y = accessor(link.target, "y0", key);
+      y = accessor(link.target, "y0", key) + link.target.getHeight() / 2;
       x0 = x + (link.width ? link.width : 0) / 8;
-      x1 = x + 1;
+      x1 = x;
     }
     return `M ${x0},${y} L ${x1},${y}`;
   } else

@@ -117,7 +117,11 @@ class TopologyPage extends Component {
       }
     ];
     this.graph = new Graph(this.props.service, this.drawViewPath);
-    this.view = this.props.view;
+    this.view = `${this.props.view}${
+      this.props.getShowSankey() && this.props.view !== "deployment"
+        ? "sankey"
+        : ""
+    }`;
     this.resetScale = 1;
     this.transitions = new Transitions();
     this.showConnDir = false;
@@ -127,8 +131,9 @@ class TopologyPage extends Component {
   componentDidMount = () => {
     window.addEventListener("resize", this.resize);
 
-    this.init();
     // create the svg
+    this.init();
+    // call the to### transition
     this[`to${Icap(this.view)}`](true);
   };
 
@@ -305,8 +310,7 @@ class TopologyPage extends Component {
     if (this.transitioning) return;
     this.blurAll(highlight, d);
     this.highlightLink(highlight, link, d);
-
-    link.selectAll("text").attr("font-weight", highlight ? "bold" : "unset");
+    link.selectAll("text").attr("font-weight", highlight ? "bold" : null);
   };
 
   opaqueServiceType = d => {
@@ -317,9 +321,7 @@ class TopologyPage extends Component {
   };
 
   highlightLink = (highlight, link, d) => {
-    link
-      .selectAll("path")
-      .attr("opacity", highlight || this.view !== "servicesankey" ? 1 : 0.5);
+    d3.selectAll("path.service").attr("opacity", highlight ? 1 : 0.5);
     link.selectAll("text.stats").style("stroke", null);
     link.selectAll("path.servicesankeyDir").attr("opacity", 1);
 
@@ -331,7 +333,6 @@ class TopologyPage extends Component {
       )
       .attr("opacity", 1);
 
-    //services.selectAll("rect").style("stroke-width", highlight ? "2px" : "1px");
     services
       .selectAll("text")
       .attr("font-weight", highlight ? "bold" : "normal");
@@ -738,9 +739,12 @@ class TopologyPage extends Component {
   drawSiteTrafficPath = self => {
     self.drawSitePath(self);
     self.graph.circularize(self.forceData.siteTrafficLinks.links);
-    self.siteTrafficLinksSelection.selectAll("path").attr("d", d => {
-      return genPath(d, "site");
-    });
+    self.siteTrafficLinksSelection
+      .selectAll("path")
+      .attr("d", d => genPath(d, "site"));
+    self.siteMaskSelection
+      .selectAll("path")
+      .attr("d", d => genPath(d.link, "site", d.mask));
   };
   drawSitePath = self => {
     self.siteLinksSelection.selectAll("path").attr("d", d => {
@@ -860,6 +864,7 @@ class TopologyPage extends Component {
     this.forceData.serviceLinks.links.forEach(link => {
       link.path = genPath(link, "service");
     });
+    this.tick();
 
     this.transitions.toService(initial, this.setLinkStat).then(() => {
       // after all the transitions are done:
@@ -876,25 +881,20 @@ class TopologyPage extends Component {
 
   toDeployment = initial => {
     this.showChord(null);
-    const previousView = this.view;
     this.view = "deployment";
     this.graph.expandSubNodes({
       allNodes: this.forceData.serviceNodes,
       expand: false,
       nonExtra: false
     });
-    this.transitions
-      .toDeployment(
-        previousView,
-        this.forceData,
-        this.resetViewCallback,
-        initial
-      )
-      .then(() => {
-        this.deploymentLinksSelection
-          .selectAll("path.deployment")
-          .classed("forceBlack", true);
-      });
+    restoreSankey(this.forceData.serviceNodes.nodes, "deployment");
+    this.tick();
+    this.setLinkStat();
+    this.transitions.toDeployment().then(() => {
+      this.deploymentLinksSelection
+        .selectAll("path.deployment")
+        .classed("forceBlack", true);
+    });
     this.restart();
   };
 
@@ -915,7 +915,7 @@ class TopologyPage extends Component {
       this.showChord(null);
   };
 
-  toSitesankey = () => {
+  toSitesankey = initial => {
     this.view = "sitesankey";
     restoreSankey(this.forceData.siteNodes.nodes, "site");
     this.restart();
@@ -933,6 +933,8 @@ class TopologyPage extends Component {
     //restore the sankey values
     const subNodes = this.forceData.serviceNodes.nodes.filter(n => !n.extra);
     restoreSankey(subNodes, "service");
+    // hide extra services
+    d3.selectAll("g.service-type.extra").style("display", "none");
 
     // expand the service rects to sankeyHeight
     this.graph.expandSubNodes({
@@ -991,16 +993,12 @@ class TopologyPage extends Component {
   handleChangeSankey = checked => {
     const method = `to${Icap(this.props.view)}${checked ? "sankey" : ""}`;
     this[method]();
+    this.props.handleChangeSankey(checked);
   };
 
   handleChangeShowStat = checked => {
+    this.props.handleChangeShowStat(checked);
     this.setLinkStat();
-  };
-
-  handleChangeShowConnDir = checked => {
-    this.showConnDir = checked;
-    this.restart();
-    // TODO: show or hide the arrows on the site links for site view
   };
 
   setLinkStat = () => {
@@ -1021,7 +1019,7 @@ class TopologyPage extends Component {
         statSelection,
         cls,
         this.props.options.link.stat,
-        this.toolbarRef.getShowStat()
+        this.props.getShowStat()
       );
   };
 
@@ -1089,16 +1087,15 @@ class TopologyPage extends Component {
         aria-label="topology-viewer"
         viewToolbar={
           <GraphToolbar
-            ref={el => (this.toolbarRef = el)}
             service={this.props.service}
             handleChangeView={this.props.handleChangeView}
             handleChangeSankey={this.handleChangeSankey}
-            handleChangeOption={this.props.handleChangeOption}
             handleChangeShowStat={this.handleChangeShowStat}
-            handleChangeShowConnDir={this.handleChangeShowConnDir}
             options={this.props.options}
             viewType={this.props.viewType}
             view={this.view}
+            getShowStat={this.props.getShowStat}
+            getShowSankey={this.props.getShowSankey}
           />
         }
         controlBar={<TopologyControlBar controlButtons={controlButtons} />}

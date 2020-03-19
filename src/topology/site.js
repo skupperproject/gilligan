@@ -47,16 +47,15 @@ export const createSiteMaskSelection = svg =>
 
 export const setupSiteMask = (selection, links) => {
   const sources = links.map(l => ({
-    mask: true,
-    source: l,
+    mask: "source",
+    link: l,
     uid: `MaskSource-${l.uid}`
   }));
   const targets = links.map(l => ({
-    mask: true,
-    target: l,
+    mask: "target",
+    link: l,
     uid: `MaskTarget-${l.uid}`
   }));
-  console.log([...sources, ...targets]);
   selection = selection.data([...sources, ...targets], d => d.uid);
   selection.exit().remove();
   const enter = selection.enter().append("g");
@@ -101,11 +100,13 @@ export const setupSiteTrafficLinks = (
       showLinkInfo(d);
     })
     .on("mouseover", d => {
-      d.highlighted = true;
+      d.selected = true;
+      showLinkInfo(d);
       restart();
     })
     .on("mouseout", d => {
-      d.highlighted = false;
+      d.selected = false;
+      clearPopups();
       restart();
     });
 
@@ -114,6 +115,9 @@ export const setupSiteTrafficLinks = (
     .attr("class", "stats")
     .attr("font-size", "12px")
     .attr("font-weight", "bold");
+
+  selection.selectAll(".siteTrafficLink").classed("selected", d => d.selected);
+  d3.selectAll("path.mask").classed("selected", d => d.link.selected);
 
   return selection;
 };

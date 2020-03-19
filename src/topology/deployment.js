@@ -72,11 +72,13 @@ export const setupDeploymentLinks = (
       showLinkInfo(d);
     })
     .on("mouseover", d => {
-      d.highlighted = true;
+      d.selected = true;
+      showLinkInfo(d);
       restart();
     })
     .on("mouseout", d => {
-      d.highlighted = false;
+      d.selected = false;
+      clearPopups();
       restart();
     });
 
@@ -86,9 +88,7 @@ export const setupDeploymentLinks = (
     .attr("font-size", "12px")
     .attr("font-weight", "bold");
 
-  selection
-    .selectAll("path.deployment")
-    .classed("highlighted", d => d.highlighted);
+  selection.selectAll("path.deployment").classed("selected", d => d.selected);
 
   return selection;
 };

@@ -34,20 +34,20 @@
           "site_id": "oregonID",
           "by_client": {
             "monkey-wrench-v1-asdfasdf-asdf": {
-              "requests": 1000,
+              "requests": 1,
               "bytes_in": 0,
-              "bytes_out": 100000,
+              "bytes_out": 100,
               "details": {
-                "GET:200": 1000
+                "GET:200": 1
               },
               "latency_max": 10,
               "by_handling_site": {
                 "oregonID": {
-                  "requests": 1000,
+                  "requests": 1,
                   "bytes_in": 0,
-                  "bytes_out": 100000,
+                  "bytes_out": 100,
                   "details": {
-                    "GET:200": 1000
+                    "GET:200": 1
                   },
                   "latency_max": 10
                 }

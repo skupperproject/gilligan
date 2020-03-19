@@ -35,8 +35,8 @@ class GraphToolbar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      showSankey: false,
-      showStat: false
+      isDropDownOpen: false,
+      checkChanged: false
     };
     this.dropdownItems = [
       {
@@ -79,28 +79,18 @@ class GraphToolbar extends Component {
   // checkbox was checked
   handleChange = (checked, event) => {
     const { name } = event.target;
-    this.setState({ [name]: checked }, () => {
-      if (name === "showSankey") {
-        this.props.handleChangeSankey(checked);
-      } else if (name === "showStat") {
-        this.props.handleChangeShowStat(checked);
-      } else if (name === "showConnDir") {
-        this.props.handleChangeShowConnDir(checked);
-      }
-    });
+    if (name === "showSankey") {
+      this.props.handleChangeSankey(checked);
+    } else if (name === "showStat") {
+      this.props.handleChangeShowStat(checked);
+    }
+    this.setState({ checkChanged: !this.state.checkChanged });
   };
 
   onToggle = () => {
     this.setState({
       isOptionsOpen: !this.state.isOptionsOpen
     });
-  };
-
-  // this component is the authority for whether or not the
-  // link stat is shown.
-  // This method allows other components to get the current value
-  getShowStat = () => {
-    return this.state.showStat;
   };
 
   buildDropdown = () => {
@@ -137,7 +127,7 @@ class GraphToolbar extends Component {
         <ToolbarItem>
           <Checkbox
             label="Show relative traffic"
-            isChecked={this.state.showSankey}
+            isChecked={this.props.getShowSankey()}
             onChange={this.handleChange}
             aria-label="show relative traffic"
             id="showSankey"
@@ -151,7 +141,7 @@ class GraphToolbar extends Component {
         <ToolbarItem className="toolbar-item">
           <Checkbox
             label="Show statistic"
-            isChecked={this.state.showStat}
+            isChecked={this.props.getShowStat()}
             onChange={this.handleChange}
             aria-label="show statistic"
             id="showStat"
@@ -160,7 +150,7 @@ class GraphToolbar extends Component {
         </ToolbarItem>
         {false && (
           <ToolbarItem className="toolbar-item">
-            <LinkOptions {...this.props} showStat={this.state.showStat} />
+            <LinkOptions {...this.props} showStat={this.props.getShowStat()} />
           </ToolbarItem>
         )}
       </React.Fragment>

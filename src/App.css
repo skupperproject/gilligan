@@ -133,11 +133,6 @@ g.selected line {
   stroke-width: 4;
 }
 
-path.hittarget {
-  stroke-width: 15px;
-  stroke: transparent;
-}
-
 .node.client rect {
   stroke: black;
   fill: white;
@@ -549,11 +544,11 @@ svg.address-svg {
 }
 
 path.service.selected:not(.traffic),
+path.siteTrafficLink.selected:not(.traffic),
+path.mask.selected:not(.traffic),
 path.deployment.selected:not(.traffic),
 path.deployment.highlighted:not(.traffic) {
-  /* stroke-dasharray: 10,2; */
-  stroke: #33f !important;
-  stroke-width: 4;
+  stroke: #33f;
 }
 
 path.service,
@@ -579,9 +574,9 @@ svg:not(.active):not(.ctrl) path.service {
 }
 
 path.hittarget {
-  stroke-width: 20px;
   stroke: transparent;
 }
+
 path.hittarget.highlighted {
   stroke: #6f6;
   opacity: 0.5;

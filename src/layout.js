@@ -72,6 +72,8 @@ class PageLayout extends React.Component {
       { name: "Deployments", view: "deployment" },
       { name: "Processes", view: "process" }
     ];
+    this.showSankey = false;
+    this.showStat = false;
   }
 
   componentDidMount = () => {
@@ -131,6 +133,18 @@ class PageLayout extends React.Component {
 
   handleConnectCancel = () => {
     this.setState({ isConnectFormOpen: false });
+  };
+  handleChangeShowStat = showStat => {
+    this.showStat = showStat;
+  };
+  handleChangeSankey = showSankey => {
+    this.showSankey = showSankey;
+  };
+  getShowStat = () => {
+    return this.showStat;
+  };
+  getShowSankey = () => {
+    return this.showSankey;
   };
 
   toL = s => s[0].toLowerCase() + s.slice(1);
@@ -215,7 +229,15 @@ class PageLayout extends React.Component {
         {...(more.exact ? "exact" : "")}
         render={props =>
           this.state.connected ? (
-            <Component service={this.service} {...props} {...more} />
+            <Component
+              service={this.service}
+              {...props}
+              {...more}
+              getShowStat={this.getShowStat}
+              getShowSankey={this.getShowSankey}
+              handleChangeSankey={this.handleChangeSankey}
+              handleChangeShowStat={this.handleChangeShowStat}
+            />
           ) : (
             <Redirect
               to={{

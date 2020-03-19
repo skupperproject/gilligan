@@ -38,27 +38,7 @@ export const setupServiceLinksSelection = (selection, links, self) => {
   // based on the link.uid
   selection = selection.data(links, d => d.uid);
   // add new links. if a link with a new uid is found in the data, add a new path
-  let enterpath = selection
-    .enter()
-    .append("g")
-    .on("mouseover", function(d) {
-      // mouse over a path
-      d.selected = true;
-      self.highlightConnection(true, d3.select(this), d, self);
-      self.popupCancelled = false;
-      self.restart();
-    })
-    .on("mouseout", function(d) {
-      self.handleMouseOutPath(d);
-      self.highlightConnection(false, d3.select(this), d, self);
-      self.restart();
-    })
-    // left click a path
-    .on("click", d => {
-      d3.event.stopPropagation();
-      self.clearPopups();
-      self.showLinkInfo(d);
-    });
+  let enterpath = selection.enter().append("g");
 
   // the d attribute of the following path elements is set in tick()
   enterpath
@@ -91,7 +71,28 @@ export const setupServiceLinksSelection = (selection, links, self) => {
   enterpath
     .append("path")
     .attr("class", "hittarget")
-    .attr("id", d => `hitpath-${d.source.uid()}-${d.target.uid()}`);
+    .attr("id", d => `hitpath-${d.source.uid()}-${d.target.uid()}`)
+    .on("mouseover", function(d) {
+      // mouse over a path
+      d.selected = true;
+      self.highlightConnection(true, d3.select(this), d, self);
+      self.popupCancelled = false;
+      self.showLinkInfo(d);
+      self.restart();
+    })
+    .on("mouseout", function(d) {
+      self.handleMouseOutPath(d);
+      self.highlightConnection(false, d3.select(this), d, self);
+      d.selected = false;
+      self.clearPopups();
+      self.restart();
+    })
+    // left click a path
+    .on("click", d => {
+      d3.event.stopPropagation();
+      self.clearPopups();
+      self.showLinkInfo(d);
+    });
 
   enterpath
     .append("text")

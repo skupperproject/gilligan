@@ -276,7 +276,7 @@ export class Graph {
   // create links
   initLinks = (graphData, width, height, view) => {
     const { siteNodes, serviceNodes } = graphData;
-    if (view === "site") {
+    if (view === "site" || view === "sitesankey") {
       this.initSiteTrafficLinks(
         siteNodes,
         graphData.siteTrafficLinks,
@@ -284,7 +284,7 @@ export class Graph {
         height
       );
     }
-    if (view === "site" || view === "deployment") {
+    if (view === "site" || view === "deployment" || view === "sitesankey") {
       this.initRouterLinks(siteNodes, graphData.siteLinks, width, height);
     }
     if (view === "deployment") {

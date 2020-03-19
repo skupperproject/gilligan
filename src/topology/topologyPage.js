@@ -85,6 +85,10 @@ class TopologyPage extends Component {
               options={this.state.options}
               handleChangeView={this.handleChangeView}
               handleChangeOption={this.handleChangeOption}
+              getShowStat={this.props.getShowStat}
+              getShowSankey={this.props.getShowSankey}
+              handleChangeShowStat={this.props.handleChangeShowStat}
+              handleChangeSankey={this.props.handleChangeSankey}
             />
           </StackItem>
         </Stack>
