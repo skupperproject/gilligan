@@ -73,6 +73,7 @@ class PageLayout extends React.Component {
       { name: "Processes", view: "process" }
     ];
     this.showSankey = false;
+    this.showTraffic = false;
     this.showStat = false;
   }
 
@@ -140,11 +141,17 @@ class PageLayout extends React.Component {
   handleChangeSankey = showSankey => {
     this.showSankey = showSankey;
   };
+  handleChangeTraffic = showTraffic => {
+    this.showTraffic = showTraffic;
+  };
   getShowStat = () => {
     return this.showStat;
   };
   getShowSankey = () => {
     return this.showSankey;
+  };
+  getShowTraffic = () => {
+    return this.showTraffic;
   };
 
   toL = s => s[0].toLowerCase() + s.slice(1);
@@ -235,7 +242,9 @@ class PageLayout extends React.Component {
               {...more}
               getShowStat={this.getShowStat}
               getShowSankey={this.getShowSankey}
+              getShowTraffic={this.getShowTraffic}
               handleChangeSankey={this.handleChangeSankey}
+              handleChangeTraffic={this.handleChangeTraffic}
               handleChangeShowStat={this.handleChangeShowStat}
             />
           ) : (

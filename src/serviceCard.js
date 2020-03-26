@@ -223,7 +223,9 @@ class ServiceCard extends React.Component {
               }`}
             ></i>
             <span>
-              {cardService.address ? cardService.address : cardService.site_id}
+              {cardService.address
+                ? cardService.address
+                : cardService.site_name}
             </span>
           </div>
         </CardHead>

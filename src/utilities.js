@@ -18,8 +18,9 @@ under the License.
 */
 
 import * as d3 from "d3";
-import { ServiceGap, ServiceStart } from "./topology/graph";
 import * as d3path from "d3-path";
+import { sankeyCircular as sankey } from "d3-sankey-circular";
+export const Sankey = sankey;
 const SankeyAttributes = [
   "value",
   "depth",
@@ -31,6 +32,14 @@ const SankeyAttributes = [
   "y1",
   "sankeyHeight"
 ];
+export const VIEW_DURATION = 1000;
+export const EXPAND_DURATION = 500;
+export const ServiceWidth = 130;
+export const ServiceHeight = 40;
+export const ServiceGap = 5;
+export const ServiceStart = 50;
+export const ClusterPadding = 20;
+export const SiteRadius = 100;
 
 export class QDRLogger {
   constructor(log, source) {
@@ -121,22 +130,72 @@ export const adjustY = ({ nodes, height, yAttr }) => {
   return curY;
 };
 
-export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
-  nodes.forEach(n => {
-    n.sourceNodes = [];
-    n.targetNodes = [];
-  });
-
-  // for all the nodes, construct 2 lists: souce nodes, and target nodes
-  links.forEach(l => {
-    if (isNaN(l.source)) {
-      l.source.targetNodes.push(l.target);
-      l.target.sourceNodes.push(l.source);
+export const adjustPositions = ({
+  nodes,
+  links,
+  width,
+  height,
+  xyKey = ""
+}) => {
+  const accessor = (n, attr, value) => {
+    if (xyKey !== "") {
+      n[xyKey][attr] = value;
     } else {
-      nodes[l.source].targetNodes.push(nodes[l.target]);
-      nodes[l.target].sourceNodes.push(nodes[l.source]);
+      n[attr] = value;
+    }
+  };
+
+  const sourcesTargets = () => {
+    nodes.forEach(n => {
+      if (xyKey !== "" && n[xyKey] === undefined) {
+        n[xyKey] = { x: 0, y: 0 };
+      }
+      n.sourceNodes = [];
+      n.targetNodes = [];
+    });
+
+    // for all the nodes, construct 2 lists: souce nodes, and target nodes
+    links.forEach(l => {
+      if (isNaN(l.source)) {
+        l.source.targetNodes.push(l.target);
+        l.target.sourceNodes.push(l.source);
+      } else {
+        nodes[l.source].targetNodes.push(nodes[l.target]);
+        nodes[l.target].sourceNodes.push(nodes[l.source]);
+      }
+    });
+  };
+  sourcesTargets();
+
+  // handle loops
+  const loops = []; // list of list of links involved in loops
+  const linkBetween = (source, target) =>
+    links.find(l => l.source === source && l.target === target);
+
+  const loopCheck = (originalSource, currentTarget, linkChain) => {
+    for (let t = 0; t < currentTarget.targetNodes.length; t++) {
+      const between = linkBetween(currentTarget, currentTarget.targetNodes[t]);
+      const newChain = [...linkChain, between];
+      if (currentTarget.targetNodes[t] === originalSource) {
+        loops.push(newChain);
+      } else {
+        loopCheck(originalSource, currentTarget.targetNodes[t], newChain);
+      }
+    }
+  };
+  links.forEach(l => {
+    if (!loops.some(loop => loop.includes(l))) {
+      const linkChain = [l];
+      loopCheck(l.source, l.target, linkChain);
     }
   });
+  // eliminate the weakest links
+  loops.forEach(loop => {
+    const minVal = Math.min(...loop.map(link => link.value));
+    loop.find(l => l.value === minVal).weakest = true;
+  });
+  links = [...links.filter(l => !l.weakest)];
+  sourcesTargets();
 
   // find node(s) with fewest number of sources
   const minSources = Math.min(...nodes.map(n => n.sourceNodes.length));
@@ -159,18 +218,22 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
     });
     colNodes = foundNodes;
   }
+  // in case we have stranded nodes, i.e. nodes that are not descendants
+  // of any of the nodes in the leftmost column
+  const stranded = nodes.filter(n => n.col === undefined);
+  if (stranded.length > 0) {
+    const vsize = adjustPositions({
+      nodes: stranded,
+      links,
+      width,
+      height,
+      xyKey
+    });
+    width = vsize.width;
+    height = vsize.height;
+  }
 
-  let maxcol = 0;
-  nodes.forEach(n => {
-    maxcol = Math.max(maxcol, n.col);
-  });
-
-  let colCount = 0;
-  nodes.forEach(n => {
-    colCount = Math.max(colCount, n.col);
-  });
-  colCount += 1;
-
+  const colCount = Math.max(...nodes.map(n => n.col)) + 1;
   const minGap = 10;
   let vheight = height;
   let vwidth = width;
@@ -192,20 +255,8 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
     colWidths[col] = 0;
     colNodes.forEach(n => {
       colWidths[col] = Math.max(colWidths[col], n.getWidth());
-      n.y = curY;
+      accessor(n, "y", curY);
       curY += n.getHeight() + gapHeight;
-    });
-  }
-
-  // avoid parent links crossing directly over a service
-  if (crossTest) {
-    nodes.forEach(n => {
-      const targets = n.targetNodes;
-      n.sourceNodes.forEach(s => {
-        if (s.targetNodes.some(v => targets.includes(v) && v.col > n.col)) {
-          n.y += n.getHeight();
-        }
-      });
     });
   }
 
@@ -214,8 +265,8 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
     nodesWidth += c;
   });
   let hGap = (vwidth - nodesWidth) / (colCount + 1);
-  if (hGap < minGap) {
-    hGap = minGap;
+  if (hGap < minGap * 4) {
+    hGap = minGap * 4;
     vwidth = Math.max(vwidth, nodesWidth + hGap * (colCount + 1));
     vheight = (height * vwidth) / width;
   }
@@ -224,7 +275,7 @@ export const adjustPositions = ({ nodes, links, width, height, crossTest }) => {
     for (let i = 0; i < nodes.length; i++) {
       const n = nodes[i];
       if (n.col === col) {
-        n.x = curX;
+        accessor(n, "x", curX);
       }
     }
     curX += colWidths[col] + hGap;
@@ -287,6 +338,11 @@ export const serviceColor = name => {
     serviceColors[name] = colorGen(19 - Object.keys(serviceColors).length * 2);
   }
   return serviceColors[name];
+};
+
+export const shortName = name => {
+  const parts = name.split("-");
+  return parts[0];
 };
 
 export const lighten = (percent, color) => {
@@ -353,12 +409,12 @@ export const genPath = (link, key, mask) => {
     if (mask === "source") {
       const x = accessor(link.source, "x1", key);
       y = accessor(link.source, "y0", key) + link.source.getHeight() / 2;
-      x0 = x - (link.width ? link.width : 0) / 8;
+      x0 = x - link.source.getWidth() / 2;
       x1 = x;
     } else {
       const x = accessor(link.target, "x0", key);
       y = accessor(link.target, "y0", key) + link.target.getHeight() / 2;
-      x0 = x + (link.width ? link.width : 0) / 8;
+      x0 = x + link.target.getWidth() / 2;
       x1 = x;
     }
     return `M ${x0},${y} L ${x1},${y}`;
@@ -382,7 +438,7 @@ const bezier = (link, key) => {
   return `M${x0} ${y0} ${path.toString()}`;
 };
 const circular = (link, key) => {
-  const r = link.width ? Math.max(link.width, 30) : 30;
+  const r = link.width ? Math.max(Math.min(140, link.width), 30) : 30;
   const gap = 8;
   const sourceX = accessor(link.source, "x1", key);
   const sourceY =
@@ -550,4 +606,87 @@ const circleIntercept = (x1, y1, r, x2, y2) => {
   pt.x = (r * (x2 - x1)) / dist + x1;
   pt.y = (r * (y2 - y1)) / dist + y1;
   return pt;
+};
+
+export const initSankey = ({
+  graph,
+  width,
+  height,
+  nodeWidth,
+  nodePadding,
+  left = 0,
+  top = 0,
+  right = 0,
+  bottom = 0
+}) => {
+  if (graph.links.length > 0) {
+    const { nodes, links } = sankey()
+      .nodeWidth(nodeWidth)
+      .nodePadding(nodePadding)
+      .iterations(3)
+      .extent([
+        [left, top],
+        [width - right - left, height - bottom - top]
+      ])(graph);
+    return { snodes: nodes, slinks: links };
+  } else {
+    return { snodes: graph.nodes, slinks: graph.links };
+  }
+};
+
+export const circularize = links => {
+  let circularLinkID = 0;
+  links.forEach(l => {
+    if (l.source.x1 > l.target.x0) {
+      l.circular = true;
+      l.circularLinkID = circularLinkID++;
+      l.circularLinkType = "bottom";
+      l.source.partOfCycle = true;
+      l.target.partOfCycle = true;
+      l.source.circularLinkType = "bottom";
+      l.target.curcularLinkType = "bottom";
+    } else {
+      if (l.circular) {
+        l.circular = false;
+        delete l.circularLinkID;
+        delete l.circularLinkType;
+      }
+    }
+  });
+};
+
+export const updateSankey = ({ nodes, links, excludeExtra = false }) => {
+  if (excludeExtra) {
+    nodes = nodes.filter(n => !n.extra);
+  }
+  circularize(links);
+  // use the sankeyHeight when updating sankey path
+  nodes.forEach(n => {
+    n.y1 = n.y0 + n.sankeyHeight;
+  });
+  sankey().update({ nodes, links });
+  // restore the node height
+  nodes.forEach(n => {
+    n.y1 = n.y0 + n.getHeight();
+  });
+  links.forEach(l => {
+    l.sankeyPath = fixPath(l);
+    l.path = genPath(l);
+  });
+};
+
+export const endall = (transition, callback) => {
+  if (typeof callback !== "function")
+    throw new Error("Wrong callback in endall");
+  if (transition.size() === 0) {
+    callback();
+  }
+  var n = 0;
+  transition
+    .each(function() {
+      ++n;
+    })
+    .each("end", function() {
+      if (!--n) callback.apply(this, arguments);
+    });
 };

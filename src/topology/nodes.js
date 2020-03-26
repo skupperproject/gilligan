@@ -19,7 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import TooltipTable from "../tooltipTable";
-import { ServiceGap } from "./graph";
+import { ServiceGap } from "../utilities";
 
 var React = require("react");
 

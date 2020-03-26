@@ -28,6 +28,7 @@ import {
   adjustPositions,
   adjustY,
   copy,
+  fixPath,
   getSubNodes,
   saveSankey,
   restoreSankey,
@@ -39,12 +40,12 @@ import {
 import { Node } from "./nodes";
 import { Links } from "./links";
 
-const ServiceWidth = 130;
+export const ServiceWidth = 130;
 export const ServiceHeight = 40;
 export const ServiceGap = 5;
 export const ServiceStart = 50;
-const ClusterPadding = 20;
-const SiteRadius = 100;
+export const ClusterPadding = 20;
+export const SiteRadius = 100;
 
 export class Graph {
   constructor(service, drawPath) {
@@ -89,7 +90,7 @@ export class Graph {
     saveSankey(nodes, "service");
   };
 
-  updateSankey = ({ allNodes, links, excludeExtra }) => {
+  updateSankey = ({ allNodes, links, excludeExtra = false }) => {
     let nodes = allNodes.nodes;
     if (excludeExtra) {
       nodes = nodes.filter(n => !n.extra);
@@ -105,7 +106,7 @@ export class Graph {
       n.y1 = n.y0 + n.getHeight();
     });
     links.forEach(l => {
-      l.sankeyPath = l.path;
+      l.sankeyPath = fixPath(l);
       l.path = genPath(l);
     });
   };
@@ -123,6 +124,7 @@ export class Graph {
   initNodesAndLinks = (graphData, width, height, view) => {
     this.initNodes(graphData, width, height);
     const vsize = this.initLinks(graphData, width, height, view);
+    console.log(graphData);
     return { nodeCount: graphData.siteNodes.nodes.length, size: vsize };
   };
 
@@ -131,7 +133,8 @@ export class Graph {
   initNodes = (graphData, width, height) => {
     const { siteNodes, serviceNodes } = graphData;
     const clusters = this.VAN.sites;
-    clusters.forEach((cluster, clusterIndex) => {
+
+    clusters.forEach(cluster => {
       const name = cluster.site_name;
 
       const clusterNode = siteNodes.addUsing({
@@ -145,10 +148,6 @@ export class Graph {
       });
       clusterNode.mergeWith(cluster);
       clusterNode.color = siteColor(name);
-      clusterNode.y0 = clusterNode.y;
-      clusterNode.x0 = clusterNode.x;
-      clusterNode.y1 = clusterNode.y0 + SiteRadius * 2;
-      clusterNode.x1 = clusterNode.x0 + SiteRadius * 2;
 
       cluster.services.forEach((service, i) => {
         const subNode = new Node({
@@ -185,9 +184,10 @@ export class Graph {
         serviceNodes.add(subNode);
       });
     });
-    // get site sizes
+    // size the sites based on the services deployed in them
     siteNodes.nodes.forEach(site => {
       const links = [];
+      // services deployed in this site
       const subServices = serviceNodes.nodes.filter(
         sn => sn.parentNode.site_id === site.site_id
       );
@@ -216,15 +216,17 @@ export class Graph {
         width,
         height
       });
-      // adjust site size
-      const maxColumn = Math.max(...subServices.map(ss => ss.col));
+      // adjust site size to contain the deployments
+      const maxColumn = subServices.length
+        ? Math.max(...subServices.map(ss => ss.col))
+        : 0;
       const r =
         ((maxColumn + 1) * ServiceWidth + (maxColumn * ServiceWidth) / 2 + 40) /
         2;
-      site.r = r;
+      site.r = r; // set the site size (radius) to contain all columns
       site.subServiceLinks = links;
     });
-    // get site positions
+    // now position the sites based on site-to-site traffic
     const interSiteLinks = new Links();
     siteNodes.nodes.forEach(fromSite => {
       siteNodes.nodes.forEach(toSite => {
@@ -248,6 +250,7 @@ export class Graph {
         sn => sn.parentNode.site_id === cluster.site_id
       );
       // position subServices in sites
+      // using the site size as the width and height
       adjustPositions({
         nodes: subServices,
         links: cluster.subServiceLinks,
@@ -284,11 +287,17 @@ export class Graph {
         height
       );
     }
-    if (view === "site" || view === "deployment" || view === "sitesankey") {
+    if (
+      view === "site" ||
+      view === "deployment" ||
+      view === "sitesankey" ||
+      view === "deploymentsankey"
+    ) {
       this.initRouterLinks(siteNodes, graphData.siteLinks, width, height);
     }
-    if (view === "deployment") {
+    if (view === "deployment" || view === "deploymentsankey") {
       this.initDeploymentLinks(
+        siteNodes,
         serviceNodes,
         graphData.deploymentLinks,
         width,
@@ -373,9 +382,10 @@ export class Graph {
     });
     saveSankey(nodes.nodes, "site");
     saveSankey(nodes.nodes, "deployment");
+    saveSankey(nodes.nodes, "deploymentsankey");
   };
 
-  initDeploymentLinks = (nodes, links, width, height) => {
+  initDeploymentLinks = (sites, nodes, links, width, height) => {
     const subNodes = nodes.nodes;
     subNodes.forEach(fromNode => {
       subNodes.forEach(toNode => {
@@ -401,19 +411,108 @@ export class Graph {
         }
       });
     });
+    // get the sankey height of each node
     this.initSankey({
       graph: { nodes: subNodes, links: links.links },
       width,
-      height,
+      height: height,
       nodeWidth: ServiceWidth,
-      nodePadding: ServiceGap
+      nodePadding: ServiceGap,
+      left: 20,
+      bottom: 60
     });
-    // save sankeyHeight
+    // move the nodes to their previously calculated non-sankey position
     subNodes.forEach(n => {
       n.sankeyHeight = n.y1 - n.y0;
+      n.expanded = true;
+      n.y0 = n.deployment.y0;
+      n.y1 = n.y0 + n.sankeyHeight;
+      n.x0 = n.deployment.x0;
+      n.x1 = n.x0 + ServiceWidth;
     });
-    saveSankey(subNodes, "deployment");
-    //this.circularize(links.links);
+    // adjust the y0 of the nodes so they don't overlap
+    sites.nodes.forEach(site => {
+      site.expanded = true;
+      const siteSubNodes = subNodes.filter(
+        n => n.parentNode.site_id === site.site_id
+      );
+      const maxCol = siteSubNodes.length
+        ? Math.max(...siteSubNodes.map(n => n.col))
+        : 0;
+      for (let col = 0; col <= maxCol; col++) {
+        const sameCol = siteSubNodes.filter(n => n.col === col);
+        const newSize = adjustPositions({
+          nodes: sameCol,
+          links: [],
+          width: site.r * 2 + 40,
+          height: (site.sankey ? site.sankey.r : site.r) * 2
+        });
+        if (!site.sankey) {
+          site.sankey = {};
+          site.sankey.r = Math.max(site.r, newSize.height / 2);
+        } else {
+          site.sankey.r = Math.max(site.sankey.r, newSize.height / 2);
+        }
+        sameCol.forEach(n => {
+          n.y0 = site.y0 + n.y;
+        });
+      }
+    });
+    // now each site has a site.sankey.r that is big enough
+    // to encompass all its expanded deployments
+    // adjust the y positions of the sites using the new site.sankey.r
+    const maxCol = Math.max(...sites.nodes.map(n => n.col));
+    for (let col = 0; col <= maxCol; col++) {
+      const sameCol = sites.nodes.filter(s => s.col === col);
+      // if any of the sites in this column have changed r values
+      if (sameCol.some(s => s.sankey.r !== s.r)) {
+        sameCol.forEach(s => {
+          // save the x,y,col for the site
+          s.savedx = s.x;
+          s.savedy = s.y;
+          s.savedcol = s.col;
+        });
+        // set the site x,y,col based on its expanded height
+        adjustPositions({
+          nodes: sameCol,
+          links: [],
+          width,
+          height
+        });
+        // save the y into site.sankey.y and restore the original values
+        sameCol.forEach(s => {
+          s.x = s.site.x = s.sankey.x = s.savedx;
+          s.sankey.y = s.y;
+          s.y = s.site.y = s.savedy;
+          s.col = s.savedcol;
+          // clean up
+          delete s.savedx;
+          delete s.savedy;
+          delete s.savedcol;
+        });
+      } else {
+        sameCol.forEach(s => {
+          s.sankey.x = s.site.x = s.x;
+          s.sankey.y = s.site.y = s.y;
+        });
+      }
+    }
+    sites.nodes.forEach(site => {
+      site.expanded = false;
+    });
+    subNodes.forEach(n => {
+      n.y0 = n.parentNode.sankey.y + n.y;
+      n.x0 += n.parentNode.sankey.r - n.parentNode.r;
+    });
+    // regenerate the sankey path for each link
+    this.updateSankey({ allNodes: nodes, links: links.links });
+    links.links.forEach(l => {
+      l.sankeyPath = fixPath(l);
+    });
+    subNodes.forEach(n => {
+      n.expanded = false;
+    });
+    saveSankey(subNodes, "deploymentsankey");
   };
 
   initServiceLinks = (graphData, width, height) => {
@@ -487,7 +586,7 @@ export class Graph {
     saveSankey(nonExtra, "servicesankey");
     // generate our own paths
     links.links.forEach(link => {
-      link.sankeyPath = link.path;
+      link.sankeyPath = fixPath(link);
       link.path = genPath(link, "service");
     });
 
@@ -645,8 +744,9 @@ export class Graph {
       .attr("cy", d => d.y + 10);
   };
 
-  clusterHeight = n => n.r * 2;
-  clusterWidth = n => n.r * 2;
+  clusterHeight = (n, expanded) =>
+    expanded || n.expanded ? n.sankey.r * 2 : n.r * 2;
+  clusterWidth = (n, expanded) => this.clusterHeight(n, expanded);
 
   serviceHeight = (n, expanded) => {
     if (expanded === undefined) {
@@ -664,9 +764,6 @@ export class Graph {
     if (expanded === undefined) {
       expanded = node.expanded;
     }
-    //if (expanded) {
-    //  return ServiceWidth + 60;
-    //}
     let width = Math.max(ServiceWidth, Math.min(node.name.length, 15) * 8);
     if (node.subNodes) {
       node.subNodes.forEach(n => {
@@ -676,16 +773,3 @@ export class Graph {
     return width;
   };
 }
-
-/*
-M 704.6 346 
-L709.6 346 
-A29.3 29.3 0 0 1 738.9 375.3 
-L738.9 445.1 
-A29.3 29.3 0 0 1 709.6 474.4 
-L63.2 474.4 
-A69.9 69.9 0 0 1 -6.6 404.6 
-L-6.6 438.1 
-A69.9 67.9 0 0 1 63.2 370.3 
-L68.2 370.3
-*/

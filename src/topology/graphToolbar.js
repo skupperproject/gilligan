@@ -83,6 +83,8 @@ class GraphToolbar extends Component {
       this.props.handleChangeSankey(checked);
     } else if (name === "showStat") {
       this.props.handleChangeShowStat(checked);
+    } else if (name === "showTraffic") {
+      this.props.handleChangeTraffic(checked);
     }
     this.setState({ checkChanged: !this.state.checkChanged });
   };
@@ -122,19 +124,36 @@ class GraphToolbar extends Component {
   };
 
   render() {
-    const sankeyCheck = () =>
-      this.props.view !== "deployment" && (
-        <ToolbarItem>
+    const trafficCheck = () =>
+      this.props.view === "site" && (
+        <ToolbarItem className="toolbar-item">
           <Checkbox
-            label="Show relative traffic"
-            isChecked={this.props.getShowSankey()}
+            label="Show traffic"
+            isChecked={this.props.getShowTraffic()}
             onChange={this.handleChange}
-            aria-label="show relative traffic"
-            id="showSankey"
-            name="showSankey"
+            aria-label="show traffic"
+            id="showTraffic"
+            name="showTraffic"
           />
         </ToolbarItem>
       );
+    const sankeyCheck = () => (
+      <ToolbarItem className="toolbar-item">
+        <Checkbox
+          label="Show relative traffic"
+          isChecked={this.props.getShowSankey()}
+          isDisabled={
+            this.props.view === "site" && !this.props.getShowTraffic()
+              ? true
+              : false
+          }
+          onChange={this.handleChange}
+          aria-label="show relative traffic"
+          id="showSankey"
+          name="showSankey"
+        />
+      </ToolbarItem>
+    );
 
     const statCheck = () => (
       <React.Fragment>
@@ -142,6 +161,11 @@ class GraphToolbar extends Component {
           <Checkbox
             label="Show statistic"
             isChecked={this.props.getShowStat()}
+            isDisabled={
+              this.props.view === "site" && !this.props.getShowTraffic()
+                ? true
+                : false
+            }
             onChange={this.handleChange}
             aria-label="show statistic"
             id="showStat"
@@ -162,6 +186,7 @@ class GraphToolbar extends Component {
           <ToolbarItem className="pf-u-mr-md">
             View: {this.buildDropdown()}
           </ToolbarItem>
+          {trafficCheck()}
           {sankeyCheck()}
           {statCheck()}
         </ToolbarGroup>

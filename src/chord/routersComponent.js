@@ -18,6 +18,7 @@ under the License.
 */
 
 import React, { Component } from "react";
+import { shortName } from "../utilities";
 
 class RoutersComponent extends Component {
   constructor(props) {
@@ -42,7 +43,7 @@ class RoutersComponent extends Component {
                   style={{ backgroundColor: this.props.arcColors[router] }}
                 ></span>
                 <span className="legend-router legend-text" title={router}>
-                  {router}
+                  {shortName(router)}
                 </span>
               </li>
             );
