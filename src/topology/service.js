@@ -19,6 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import {
+  adjustPositions,
   fixPath,
   genPath,
   circularize,
@@ -132,12 +133,11 @@ export class Service {
       });
     });
 
+    // get the service positions and heights for use with the servicesankey view
     const graph = {
       nodes: serviceNodes,
       links: links.links
     };
-
-    // get the service positions and heights for use with the servicesankey view
     initSankey({
       graph,
       width: vsize.width,
@@ -150,33 +150,37 @@ export class Service {
       bottom: 10
     });
 
+    this.expandNodes();
     serviceNodes.forEach(n => {
       n.sankeyHeight = Math.max(n.y1 - n.y0, ServiceHeight);
-      // top doesn't work. manually adjust top of nodes
-      n.y0 += 20;
-      n.y1 += 20;
-      n.x = n.x0;
-      n.y = n.y0;
     });
-    links.links.forEach(l => {
-      // manually adjust top for links
-      l.y0 += 20;
-      l.y1 += 20;
+
+    // set the x,y based on links and node sizes
+    const newSize = adjustPositions({
+      nodes: serviceNodes,
+      links: links.links,
+      width: vsize.width,
+      height: vsize.height,
+      align: "right",
+      sort: true
     });
+
+    // move the sankey x,y
+    serviceNodes.forEach(n => {
+      n.x0 = n.x;
+      n.y0 = n.y;
+      n.x1 = n.x0 + n.getWidth();
+      n.y1 = n.y0 + n.getHeight();
+    });
+    this.collapseNodes();
     // regen the link.paths
     Sankey().update(graph);
-    // override height for non-sankey view
-    serviceNodes.forEach(n => {
-      //n.y1 = n.y0 + n.getHeight();
-    });
-    // save the sankey info
     // generate our own paths
     links.links.forEach(link => {
       link.sankeyPath = fixPath(link);
       link.path = genPath(link);
     });
-
-    return vsize;
+    return newSize;
   };
 
   createMasksSelection = svg =>

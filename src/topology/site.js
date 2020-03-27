@@ -318,13 +318,14 @@ export class Site {
           cur_mouse[0] !== viewer.initial_mouse_down_position[0] ||
           cur_mouse[1] !== viewer.initial_mouse_down_position[1]
         ) {
+          d3.event.preventDefault();
+
           this.sites.setFixed(d, true);
           viewer.resetMouseVars();
           viewer.restart();
           viewer.mousedown_node = null;
           return;
         }
-
         viewer.clearAllHighlights();
         viewer.mousedown_node = null;
         // apply any data changes to the interface
@@ -341,8 +342,8 @@ export class Site {
       })
       .on("click", d => {
         // circle
-        viewer.clearPopups();
         if (d3.event.defaultPrevented) return; // click suppressed
+        viewer.clearPopups();
         viewer.showChord(d);
         viewer.showCard(d);
         d3.event.stopPropagation();
@@ -512,13 +513,12 @@ export class Site {
     this.routerLinksSelection
       .selectAll("path")
       .attr("d", d => pathBetween(d.source, d.target));
-    if (sankey) {
-      circularize(this.trafficLinks.links);
-      this.trafficLinksSelection.selectAll("path").attr("d", d => genPath(d));
-      this.masksSelection
-        .selectAll("path")
-        .attr("d", d => genPath(d.link, undefined, d.mask));
-    }
+
+    circularize(this.trafficLinks.links);
+    this.trafficLinksSelection.selectAll("path").attr("d", d => genPath(d));
+    this.masksSelection
+      .selectAll("path")
+      .attr("d", d => genPath(d.link, undefined, d.mask));
   };
 
   setLinkStat = (sankey, props) => {
@@ -697,7 +697,5 @@ export class Site {
         .attr("stroke-width", 2)
         .attr("opacity", 0);
     }
-    // hide services
-    //d3.selectAll("g.services").style("display", "none");
   };
 }

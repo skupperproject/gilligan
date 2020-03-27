@@ -135,7 +135,9 @@ export const adjustPositions = ({
   links,
   width,
   height,
-  xyKey = ""
+  xyKey = "",
+  align = "",
+  sort = false
 }) => {
   const accessor = (n, attr, value) => {
     if (xyKey !== "") {
@@ -144,6 +146,7 @@ export const adjustPositions = ({
       n[attr] = value;
     }
   };
+  const get = (n, attr) => (xyKey !== "" ? n[xyKey][attr] : n[attr]);
 
   const sourcesTargets = () => {
     nodes.forEach(n => {
@@ -227,19 +230,50 @@ export const adjustPositions = ({
       links,
       width,
       height,
-      xyKey
+      xyKey,
+      align,
+      sort
     });
     width = vsize.width;
     height = vsize.height;
   }
 
   const colCount = Math.max(...nodes.map(n => n.col)) + 1;
+
+  if (align === "right") {
+    // put nodes with source but no target in right column
+    const rightMost = nodes.filter(
+      n => n.sourceNodes.length > 0 && n.targetNodes.length === 0
+    );
+    rightMost.forEach(n => (n.col = colCount - 1));
+  }
+
   const minGap = 10;
   let vheight = height;
   let vwidth = width;
 
+  const sum = (a, sourceTarget) =>
+    a[sourceTarget]
+      .map(n => get(n, "y") - (a.col - n.col))
+      .reduce((total, y) => total + y, 0);
+  const avg = (a, sourceTarget) =>
+    a[sourceTarget].length > 0
+      ? sum(a, sourceTarget) / a[sourceTarget].length
+      : height / 2;
+
+  const sortByHeights = (nodes, sourceTarget) => {
+    nodes.sort((a, b) => {
+      let aavg = avg(a, sourceTarget);
+      let bavg = avg(b, sourceTarget);
+      if (aavg < bavg) return -1;
+      if (aavg > bavg) return 1;
+      return 0;
+    });
+  };
+
   const colWidths = [];
   for (let col = 0; col < colCount; col++) {
+    // only nodes in this column
     colNodes = nodes.filter(n => n.col === col);
     let nodesHeight = 0;
     colNodes.forEach(n => (nodesHeight += n.getHeight()));
@@ -251,6 +285,9 @@ export const adjustPositions = ({
       // keep aspect ratio the same
       vwidth = (width * vheight) / height;
     }
+    // sort by average caller y
+    sortByHeights(colNodes, "sourceNodes");
+
     let curY = gapHeight;
     colWidths[col] = 0;
     colNodes.forEach(n => {
@@ -258,6 +295,24 @@ export const adjustPositions = ({
       accessor(n, "y", curY);
       curY += n.getHeight() + gapHeight;
     });
+  }
+
+  // go backwards and set the parent node heights to be the
+  // average of the child node heights (if possible)
+  if (sort) {
+    for (let col = colCount - 2; col >= 0; col--) {
+      let bottomY = minGap;
+      colNodes = nodes.filter(n => n.col === col);
+      sortByHeights(colNodes, "targetNodes");
+      colNodes.forEach(n => {
+        let avgTargets = avg(n, "targetNodes");
+        if (avgTargets < bottomY + minGap) {
+          avgTargets = bottomY + minGap;
+        }
+        accessor(n, "y", avgTargets);
+        bottomY = get(n, "y") + n.getHeight() + minGap;
+      });
+    }
   }
 
   let nodesWidth = 0;

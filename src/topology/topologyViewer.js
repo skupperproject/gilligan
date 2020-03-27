@@ -186,7 +186,7 @@ class TopologyPage extends Component {
     // mouse event vars
     this.mousedown_node = null;
 
-    this.resetScale = this.width / size.width;
+    this.resetScale = this.height / size.height;
     this.zoom.scale(this.resetScale);
     this.zoomed();
 
@@ -253,10 +253,12 @@ class TopologyPage extends Component {
   };
 
   highlightLink = (highlight, link, d) => {
-    d3.selectAll("path.service").attr("opacity", highlight ? 1 : 0.5);
     link.selectAll("text.stats").style("stroke", null);
     link.selectAll("path.servicesankeyDir").attr("opacity", 1);
+    // highlight the link
+    link.selectAll("path.service").attr("opacity", 1);
 
+    // highlight/blur the services on each end of the link
     const services = d3
       .select("#SVG_ID")
       .selectAll("g.service-type")
@@ -265,11 +267,13 @@ class TopologyPage extends Component {
       )
       .attr("opacity", 1);
 
+    // bold/normal the text on each end of the link
     services
       .selectAll("text")
       .attr("font-weight", highlight ? "bold" : "normal");
 
-    if (this.view === "service")
+    // highlight/blur the connection circles and diamonds
+    if (!this.sankey && this.view === "service") {
       services
         .selectAll("circle.end-point")
         .filter(
@@ -278,8 +282,6 @@ class TopologyPage extends Component {
             d1.targetNodes.some(t => t.address === d.target.address)
         )
         .attr("opacity", 1);
-
-    if (this.view === "service")
       services
         .selectAll("rect.end-point")
         .filter(
@@ -288,6 +290,7 @@ class TopologyPage extends Component {
             d1.sourceNodes.some(t => t.address === d.source.address)
         )
         .attr("opacity", 1);
+    }
   };
 
   highlightServiceType = (highlight, st, d, self) => {
@@ -313,11 +316,9 @@ class TopologyPage extends Component {
   };
 
   blurAll = (blur, d) => {
-    const opacity = blur ? 0.5 : 1;
+    const opacity = blur ? 0.25 : 1;
     const pathOpacity =
-      blur || this.view === "servicesankey" || this.view === "deploymentsankey"
-        ? 0.5
-        : 1;
+      blur || this.view === "service" || this.view === "deployment" ? 0.25 : 1;
     const svg = d3.select("#SVG_ID");
     svg.selectAll(".cluster-rects").attr("opacity", opacity);
     svg.selectAll("g.service-type").attr("opacity", opacity);
@@ -327,7 +328,7 @@ class TopologyPage extends Component {
     svg
       .selectAll("path.deployment")
       .attr("opacity", d1 => (d && d1.uid !== d.uid ? pathOpacity : 1));
-    if (this.view === "service")
+    if (!this.sankey && this.view === "service")
       svg.selectAll(".end-point").attr("opacity", pathOpacity);
     svg.selectAll("text").attr("font-weight", "normal");
     svg
@@ -489,7 +490,7 @@ class TopologyPage extends Component {
   };
 
   tositesankey = initial => {
-    this.view = "sitesankey";
+    this.view = "site";
     this.restart();
     this.viewObj.drawViewPath(true);
     this.viewObj.transition(this.sankey, initial, this.props.getShowTraffic());
@@ -497,7 +498,7 @@ class TopologyPage extends Component {
   };
 
   toservicesankey = initial => {
-    this.view = "servicesankey";
+    this.view = "service";
 
     // allow links to take on color of source service
     this.viewObj.setBlack(false);
@@ -557,7 +558,7 @@ class TopologyPage extends Component {
 
   handleChordOver = (chord, over) => {
     const self = this;
-    if (this.view === "service" || this.view === "servicesankey") {
+    if (this.view === "service") {
       d3.selectAll("path.service").each(function(p) {
         if (
           `-${p.source.name}-${p.target.name}` === chord.key ||
@@ -587,7 +588,7 @@ class TopologyPage extends Component {
   handleArcOver = (arc, over) => {
     const self = this;
     d3.selectAll("rect.service-type").each(function(d) {
-      if (self.view === "service" || self.view === "servicesankey") {
+      if (self.view === "service") {
         if (arc.key === d.address && !d.extra) {
           d.selected = over;
           self.blurAll(over, d);
@@ -641,11 +642,7 @@ class TopologyPage extends Component {
               data={this.state.chordData}
               deploymentLinks={this.viewObj.links().links}
               deployment={this.view === "deployment"}
-              site={
-                this.view === "site" ||
-                this.view === "deployment" ||
-                this.view === "sitesankey"
-              }
+              site={this.view === "site" || this.view === "deployment"}
               handleShowAll={this.handleShowAll}
               handleChordOver={this.handleChordOver}
               handleArcOver={this.handleArcOver}
@@ -675,7 +672,7 @@ class TopologyPage extends Component {
         </div>
         {this.state.showLegend && (
           <LegendComponent
-            nodes={this.forceData.siteNodes}
+            nodes={this.viewObj.nodes()}
             handleCloseLegend={this.handleCloseLegend}
           />
         )}
