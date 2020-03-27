@@ -549,6 +549,7 @@ path.mask.selected:not(.traffic),
 path.deployment.selected:not(.traffic),
 path.deployment.highlighted:not(.traffic) {
   stroke: #33f;
+  opacity: 1;
 }
 
 path.service,
@@ -595,9 +596,13 @@ marker {
   /*fill: #000;*/
   stroke-width: 0;
 }
-#site-start,
 #site-end {
   fill: green;
+}
+#tcp-end {
+  stroke-width: 1px;
+  fill: black;
+  stroke: black;
 }
 path.service.dragline {
   pointer-events: none;
@@ -933,6 +938,11 @@ div.qdrChord .legend-text {
   margin-bottom: 0;
 }
 
+#topologyLegend header button {
+  position: absolute;
+  right: 0.5em;
+  top: 0.5em;
+}
 .colored-dot {
   display: inline-block;
   margin-bottom: 4px;

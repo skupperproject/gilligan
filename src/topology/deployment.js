@@ -46,7 +46,7 @@ export class Deployment {
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initServiceLinks(viewer, vsize);
     /*
-    console.log(this.Site.sites);
+    console.log(this.Site.siteNodes);
     console.log(this.Service.serviceNodes);
     console.log(this.Service.serviceLinks);
     */
@@ -72,7 +72,7 @@ export class Deployment {
 
   setParentNodes = () => {
     this.Service.serviceNodes.nodes.forEach(service => {
-      const siteNode = this.Site.sites.nodes.find(
+      const siteNode = this.Site.siteNodes.nodes.find(
         s => s.site_id === service.cluster.site_id
       );
       if (siteNode) {
@@ -83,7 +83,7 @@ export class Deployment {
 
   // move the sites and move the services inside their respective site
   adjustSites = viewer => {
-    const siteNodes = this.Site.sites;
+    const siteNodes = this.Site.siteNodes;
     const serviceNodes = this.Service.serviceNodes;
     // size the sites based on the services deployed in them
     siteNodes.nodes.forEach(site => {
@@ -150,7 +150,7 @@ export class Deployment {
   initServiceLinks = (viewer, vsize) => {
     const subNodes = this.Service.serviceNodes.nodes;
     const links = this.Service.serviceLinks;
-    const sites = this.Site.sites;
+    const sites = this.Site.siteNodes;
     // create links between all services
     subNodes.forEach(fromNode => {
       subNodes.forEach(toNode => {
@@ -297,7 +297,7 @@ export class Deployment {
   };
 
   setupNodePositions = sankey => {
-    this.Site.sites.nodes.forEach(s => {
+    this.Site.siteNodes.nodes.forEach(s => {
       this.dragStart(s, sankey);
     });
     this.Service.serviceNodes.nodes.forEach(n => {

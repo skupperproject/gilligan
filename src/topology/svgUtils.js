@@ -122,7 +122,7 @@ export function appendTitle(g) {
 // Generate a marker for each combination of:
 //  start|end, ''|selected highlighted, and each possible node radius
 export function addDefs(svg) {
-  let sten = ["start", "end"];
+  let sten = ["end"];
   let states = ["", "selected", "highlighted", "unknown"];
   let radii = Nodes.discrete();
   let defs = [];
@@ -173,18 +173,19 @@ export function addDefs(svg) {
     .attr("orient", "auto")
     .append("svg:path")
     .attr("d", `M 0 -5 L 10 0 L 0 5 z`);
+
   svg
     .select("defs.marker-defs")
     .append("marker")
-    .attr("id", "site-start")
+    .attr("id", "tcp-end")
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 2)
+    .attr("refX", 10)
     .attr("markerWidth", 14)
     .attr("markerHeight", 14)
     .attr("markerUnits", "userSpaceOnUse")
     .attr("orient", "auto")
     .append("svg:path")
-    .attr("d", `M 10 -5 L 0 0 L 10 5 z`);
+    .attr("d", "M 0 -5 L 10 0 L 0 5 L 5 0 z");
 
   addStyles(
     sten,

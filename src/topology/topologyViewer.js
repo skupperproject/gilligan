@@ -256,7 +256,9 @@ class TopologyPage extends Component {
     link.selectAll("text.stats").style("stroke", null);
     link.selectAll("path.servicesankeyDir").attr("opacity", 1);
     // highlight the link
-    link.selectAll("path.service").attr("opacity", 1);
+    link
+      .selectAll("path.service")
+      .attr("opacity", highlight ? 1 : this.sankey ? 0.5 : 1);
 
     // highlight/blur the services on each end of the link
     const services = d3
@@ -317,17 +319,14 @@ class TopologyPage extends Component {
 
   blurAll = (blur, d) => {
     const opacity = blur ? 0.25 : 1;
-    const pathOpacity =
-      blur || this.view === "service" || this.view === "deployment" ? 0.25 : 1;
+    const pathOpacity = blur ? 0.25 : this.sankey ? 0.5 : 1;
     const svg = d3.select("#SVG_ID");
     svg.selectAll(".cluster-rects").attr("opacity", opacity);
     svg.selectAll("g.service-type").attr("opacity", opacity);
+    svg.selectAll("path.service").attr("opacity", pathOpacity);
     svg
-      .selectAll("path.service")
-      .attr("opacity", d1 => (d && d1.uid !== d.uid ? pathOpacity : 1));
-    svg
-      .selectAll("path.deployment")
-      .attr("opacity", d1 => (d && d1.uid !== d.uid ? pathOpacity : 1));
+      .selectAll("path.servicesankeyDir")
+      .attr("opacity", !blur ? 1 : pathOpacity);
     if (!this.sankey && this.view === "service")
       svg.selectAll(".end-point").attr("opacity", pathOpacity);
     svg.selectAll("text").attr("font-weight", "normal");
@@ -523,6 +522,7 @@ class TopologyPage extends Component {
     // so dragging starts in correct location
     this.viewObj.setupNodePositions(true);
     // transition rects and paths
+    this.viewObj.regenPaths(this.sankey);
     this.viewObj.transition(this.sankey, initial, this);
     this.restart();
   };

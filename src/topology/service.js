@@ -55,7 +55,7 @@ export class Service {
   };
 
   setupSelections = viewer => {
-    //this.masksSelection = this.setupMasks(viewer);
+    this.masksSelection = this.setupMasks(viewer);
     this.servicesSelection = this.setupServicesSelection(viewer);
     this.linksSelection = this.setupLinksSelection(viewer);
   };
@@ -245,8 +245,8 @@ export class Service {
     serviceTypesEnter
       .append("svg:rect")
       .attr("class", "service-type")
-      .attr("rx", 10)
-      .attr("ry", 10)
+      //.attr("rx", 10)
+      //.attr("ry", 10)
       .attr("width", d => Math.max(ServiceWidth, d.getWidth()))
       .attr("height", d => d.getHeight())
       .attr("fill", "#FFFFFF");
@@ -258,13 +258,7 @@ export class Service {
       .attr("y", d => d.getHeight() / 2)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
-      .text(d =>
-        d.shortName.length > 15
-          ? d.shortName.substr(0, 7) +
-            "..." +
-            d.shortName.substr(d.shortName.length - 4)
-          : d.shortName
-      );
+      .text(d => d.shortName);
 
     const links = this.serviceLinks.links;
     // draw circle on right if this serviceType
@@ -324,6 +318,26 @@ export class Service {
       });
 
     selection.classed("selected", d => d.selected);
+
+    // adjust service name text based on its size
+    selection.select("text.service-type").text(function(d) {
+      if (!d.ellipseName) {
+        d.ellipseName = d.shortName;
+        let { width } = this.getBBox();
+        let first = d.shortName.length - 4;
+        while (width > d.getWidth() - 20) {
+          --first;
+          d.ellipseName = `${d.shortName.substr(
+            0,
+            first
+          )}...${d.shortName.slice(-4)}`;
+          this.innerHTML = d.ellipseName;
+          width = this.getBBox().width;
+        }
+      }
+      return d.ellipseName;
+    });
+
     return selection;
   };
 
@@ -333,6 +347,9 @@ export class Service {
     // based on the link.uid
     const links = this.serviceLinks.links;
     const selection = this.linksSelection.data(links, d => d.uid);
+    // remove old links
+    selection.exit().remove();
+
     // add new links. if a link with a new uid is found in the data, add a new path
     let enterpath = selection.enter().append("g");
 
@@ -341,27 +358,21 @@ export class Service {
       .append("path")
       .attr("class", "service")
       .classed("forceBlack", true)
+      .classed("tcp", d => d.target.protocol === "tcp")
       .attr("stroke", d => lighten(-0.05, d.target.color)) //linkColor(d, links))
-      .attr("stroke-width", 2)
-      .attr("marker-end", d => {
-        return d.right && d.cls !== "network"
-          ? `url(#end${d.markerId("end")})`
-          : null;
-      })
-      .attr("marker-start", d => {
-        return d.cls !== "network" && (d.left || (!d.left && !d.right))
-          ? `url(#start${d.markerId("start")})`
-          : null;
-      });
+      .attr("stroke-width", 2);
 
     enterpath
       .append("path")
       .attr("class", "servicesankeyDir")
       .attr("marker-end", d => {
-        return d.right ? `url(#end${d.markerId("end")})` : null;
-      })
-      .attr("marker-start", d => {
-        return d.left ? `url(#start--undefined)` : null;
+        return d.right
+          ? `url(#${
+              d.target.protocol === "tcp"
+                ? "tcp-end"
+                : "end" + d.markerId("end")
+            })`
+          : null;
       });
 
     enterpath
@@ -406,20 +417,6 @@ export class Service {
         return d.highlighted;
       });
 
-    // reset the markers based on current highlighted/selected
-    selection
-      .select(".service")
-      .attr("marker-end", d => {
-        return d.cls !== "network" && d.right && !d.source.expanded
-          ? `url(#end${d.markerId("end")})`
-          : null;
-      })
-      .attr("marker-start", d => {
-        return d.cls !== "network" &&
-          (d.left || (!d.left && !d.right && !d.source.expanded))
-          ? `url(#start${d.markerId("start")})`
-          : null;
-      });
     // update each existing {g.links g.link} element
     selection
       .select(".service")
@@ -431,22 +428,13 @@ export class Service {
       });
 
     // reset the markers based on current highlighted/selected
-    selection
-      .select(".service")
-      .attr("marker-end", d => {
-        return d.cls !== "network" && d.right && !d.source.expanded
-          ? `url(#end${d.markerId("end")})`
-          : null;
-      })
-      .attr("marker-start", d => {
-        return d.cls !== "network" &&
-          (d.left || (!d.left && !d.right && !d.source.expanded))
-          ? `url(#start${d.markerId("start")})`
-          : null;
-      });
-
-    // remove old links
-    selection.exit().remove();
+    selection.select(".service").attr("marker-end", d => {
+      return d.cls !== "network" && d.right && !d.source.expanded
+        ? `url(#${
+            d.target.protocol === "tcp" ? "tcp-end" : "end" + d.markerId("end")
+          })`
+        : null;
+    });
 
     // update each existing {g.links g.link} element
     selection
@@ -456,21 +444,6 @@ export class Service {
       })
       .classed("highlighted", function(d) {
         return d.highlighted;
-      });
-
-    // reset the markers based on current highlighted/selected
-    selection
-      .select(".service")
-      .attr("marker-end", d => {
-        return d.cls !== "network" && d.right && !d.source.expanded
-          ? `url(#end${d.markerId("end")})`
-          : null;
-      })
-      .attr("marker-start", d => {
-        return d.cls !== "network" &&
-          (d.left || (!d.left && !d.right && !d.source.expanded))
-          ? `url(#start${d.markerId("start")})`
-          : null;
       });
 
     selection.select(".service").classed("forceBlack", d => d.black);
@@ -485,7 +458,7 @@ export class Service {
       expanded = n.expanded;
     }
     if (expanded && n.sankeyHeight) {
-      return Math.max(n.sankeyHeight, ServiceHeight / 2);
+      return Math.max(n.sankeyHeight, ServiceHeight);
     }
     return ServiceHeight;
   };
@@ -650,7 +623,7 @@ export class Service {
         .attr("opacity", 0)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath(d.link, undefined, d.mask);
+          const current = genPath(d.link, undefined, d.mask, true);
           return interpolatePath(previous, current);
         });
 
@@ -733,7 +706,7 @@ export class Service {
         .attr("stroke", d => d.target.color)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke-width", d => Math.max(6, d.width))
+        .attr("stroke-width", d => Math.max(1, d.width))
         .attr("opacity", 0.5)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -749,12 +722,14 @@ export class Service {
         .attr("opacity", 0)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke-width", d => Math.max(6, d.link.width))
+        .attr("stroke-width", d => Math.max(1, d.link.width))
         .attr("stroke", d => d.link.target.color)
         .attr("opacity", 0.5)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath(d.link, undefined, d.mask);
+          const current = genPath(d.link, undefined, d.mask, true);
+          console.log(`going to tween to ${d.mask} ${d.link[d.mask].name}`);
+          console.log(d.link);
           return interpolatePath(previous, current);
         });
 

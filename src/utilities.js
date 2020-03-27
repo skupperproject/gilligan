@@ -458,17 +458,23 @@ export const fixPath = l => {
   return d;
 };
 
-export const genPath = (link, key, mask) => {
+export const genPath = (link, key, mask, useSankeyY) => {
   if (mask) {
     let x0, x1, y;
     if (mask === "source") {
       const x = accessor(link.source, "x1", key);
       y = accessor(link.source, "y0", key) + link.source.getHeight() / 2;
+      if (useSankeyY) {
+        y = link.y0;
+      }
       x0 = x - link.source.getWidth() / 2;
       x1 = x;
     } else {
       const x = accessor(link.target, "x0", key);
       y = accessor(link.target, "y0", key) + link.target.getHeight() / 2;
+      if (useSankeyY) {
+        y = link.y1;
+      }
       x0 = x + link.target.getWidth() / 2;
       x1 = x;
     }

@@ -43,10 +43,10 @@ import { Links } from "./links.js";
 export class Site {
   constructor(adapter) {
     this.adapter = adapter;
-    this.sites = new Nodes();
+    this.siteNodes = new Nodes();
     this.routerLinks = new Links();
     this.trafficLinks = new Links();
-    this.nodes = () => this.sites;
+    this.nodes = () => this.siteNodes;
     this.links = () => this.routerLinks;
   }
 
@@ -69,12 +69,12 @@ export class Site {
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initRouterLinks(viewer, vsize);
     vsize = this.initTrafficLinks(viewer, vsize);
-    return { nodeCount: this.sites.nodes.length, size: vsize };
+    return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
 
   initNodes = viewer => {
     const clusters = this.adapter.data.sites;
-    const siteNodes = this.sites;
+    const siteNodes = this.siteNodes;
     clusters.forEach(cluster => {
       const name = cluster.site_name;
 
@@ -115,8 +115,10 @@ export class Site {
         this.adapter.aggregateAttributes(record.request, found.request);
       } else {
         const linkIndex = links.addLink({
-          source: this.sites.nodes.find(n => n.site_name === record.ingress),
-          target: this.sites.nodes.find(n => n.site_name === record.egress),
+          source: this.siteNodes.nodes.find(
+            n => n.site_name === record.ingress
+          ),
+          target: this.siteNodes.nodes.find(n => n.site_name === record.egress),
           dir: "in",
           cls: "siteTraffic",
           uid: `SiteLink-${record.ingress}-${record.egress}`
@@ -127,7 +129,7 @@ export class Site {
       }
     });
     const graph = {
-      nodes: this.sites.nodes,
+      nodes: this.siteNodes.nodes,
       links: links.links
     };
     initSankey({
@@ -142,7 +144,7 @@ export class Site {
       bottom: 10
     });
     // move the sankey starting points to the site location
-    this.sites.nodes.forEach(n => {
+    this.siteNodes.nodes.forEach(n => {
       n.x0 = n.x;
       n.x1 = n.x + n.getWidth();
       n.y0 = n.y;
@@ -154,7 +156,7 @@ export class Site {
   };
 
   initRouterLinks = (viewer, vsize) => {
-    const nodes = this.sites;
+    const nodes = this.siteNodes;
     const links = this.routerLinks;
 
     this.adapter.data.sites.forEach((site, i) => {
@@ -228,7 +230,9 @@ export class Site {
   };
 
   setupSitesSelection = viewer => {
-    const selection = this.sitesSelection.data(this.sites.nodes, function(d) {
+    const selection = this.sitesSelection.data(this.siteNodes.nodes, function(
+      d
+    ) {
       return d.uid();
     });
 
@@ -320,7 +324,7 @@ export class Site {
         ) {
           d3.event.preventDefault();
 
-          this.sites.setFixed(d, true);
+          this.siteNodes.setFixed(d, true);
           viewer.resetMouseVars();
           viewer.restart();
           viewer.mousedown_node = null;
@@ -335,7 +339,7 @@ export class Site {
         // circle
         d3.event.preventDefault();
         if (d.fixed) {
-          this.sites.setFixed(d, false);
+          this.siteNodes.setFixed(d, false);
           viewer.restart(); // redraw the node without a dashed line
           viewer.force.start(); // let the nodes move to a new position
         }
@@ -415,9 +419,7 @@ export class Site {
 
   setupRouterLinks = viewer => {
     const links = this.routerLinks.links;
-    const selection = this.routerLinksSelection
-      .data(links, d => d.uid)
-      .attr("marker-end", "url(#site-end)");
+    const selection = this.routerLinksSelection.data(links, d => d.uid);
 
     selection.exit().remove();
     const enter = selection.enter().append("g");
@@ -429,6 +431,7 @@ export class Site {
 
     enter
       .append("path")
+      .attr("marker-end", "url(#site-end)")
       .attr("class", "hittarget")
       .on("click", d => {
         d3.event.stopPropagation();
@@ -450,7 +453,7 @@ export class Site {
   };
 
   interSiteLinks = () => {
-    const siteNodes = this.sites;
+    const siteNodes = this.siteNodes;
     // set the site non-sankey x,y based on its new size
     // using site-to-site traffic as the links
     const interSiteLinks = new Links();
@@ -537,12 +540,12 @@ export class Site {
   };
 
   collapseNodes = () => {
-    this.sites.nodes.forEach(n => {
+    this.siteNodes.nodes.forEach(n => {
       n.expanded = false;
     });
   };
   expandNodes = () => {
-    this.sites.nodes.forEach(n => {
+    this.siteNodes.nodes.forEach(n => {
       n.expanded = true;
     });
   };
