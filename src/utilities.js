@@ -545,46 +545,69 @@ export const setLinkStat = (selection, view, stat, shown) => {
     latency_max: "ms latency (max)"
   };
 
-  selection.selectAll(`path.${view}`).each(function(d) {
-    const len = this.getTotalLength();
-    const mid = this.getPointAtLength(len / 2);
-    d.mid = mid;
-    const p1 = this.getPointAtLength(len / 2 - len * 0.01);
-    const p2 = this.getPointAtLength(len / 2 + len * 0.01);
-    const away = 10;
-    // vertical line. slope would be infinite
-    if (Math.abs(p2.x - p1.x) < 0.05) {
-      d.pt = { x: mid.x, y: mid.y + away };
-    } else {
-      const slope = (p2.y - p1.y) / (p2.x - p1.x);
-      if (Math.abs(slope) < 0.05) {
-        d.pt = { x: mid.x, y: mid.y + away };
-      } else {
-        const m = -1 / slope;
-        const y = (away * m) / Math.sqrt(1 + m * m) + mid.y;
-        const x = away / Math.sqrt(1 + m * m) + mid.x;
-        d.pt = { x, y };
+  // calculate a point "away" distance from given pt, that is perpendicular
+  // to the line going from pt with given slope
+  const ptAway = (pt, away, slope) => {
+    const m = -1 / slope;
+    const y = (away * m) / Math.sqrt(1 + m * m) + pt.y;
+    const x = away / Math.sqrt(1 + m * m) + pt.x;
+    return { x, y };
+  };
+
+  // create a defs sections to hold the text paths
+  d3.select("defs.stats").remove();
+  const statDefs = d3
+    .select("g.zoom")
+    .insert("defs", "defs.marker-defs")
+    .attr("class", "stats");
+
+  // set or clear the stat text
+  selection.selectAll("textPath.stats").text(d => {
+    if (stat && shown) {
+      const val = d.request[stat];
+      let text = linkOptions[stat];
+      if (typeof text === "object") {
+        text = val === 1 ? text.one : text.more;
       }
+      return `${val} ${text}`;
+    } else {
+      return "";
     }
   });
 
-  selection
-    .selectAll("text.stats")
-    .attr("x", d => d.pt.x)
-    .attr("y", d => d.pt.y)
-    .attr("dominant-baseline", "middle")
-    .text(d => {
-      if (stat && shown) {
-        const val = d.request[stat];
-        let text = linkOptions[stat];
-        if (typeof text === "object") {
-          text = val === 1 ? text.one : text.more;
-        }
-        return `${val} ${text}`;
+  // put the stat text along a path that is parallel to the path
+  selection.selectAll(`path.${view}`).each(function(d) {
+    const len = this.getTotalLength();
+    const p1 = this.getPointAtLength(len / 2 - Math.min(len / 2, 40));
+    const p2 = this.getPointAtLength(len / 2 + Math.min(len / 2, 40));
+    let away = 10;
+    let pt1, pt2;
+    // vertical line. slope would be infinite
+    if (Math.abs(p2.x - p1.x) < 0.05) {
+      pt1 = { x: p1.x + away, y: p1.y };
+      pt2 = { x: p2.x + away, y: p2.y };
+    } else {
+      const slope = (p2.y - p1.y) / (p2.x - p1.x);
+      if (Math.abs(slope) < 0.001) {
+        pt1 = { x: p1.x, y: p1.y + away };
+        pt2 = { x: p2.x, y: p2.y + away };
       } else {
-        return "";
+        // always draw below the path
+        if (slope > 0) away = -away;
+        pt1 = ptAway(p1, away, slope);
+        pt2 = ptAway(p2, away, slope);
       }
-    });
+      if (pt1.x > pt2.x) {
+        const tmp = copy(pt1);
+        pt1 = copy(pt2);
+        pt2 = tmp;
+      }
+      statDefs
+        .append("path")
+        .attr("id", `statPath-${d.source.name}-${d.target.name}`)
+        .attr("d", `M${pt1.x} ${pt1.y} L${pt2.x} ${pt2.y}`);
+    }
+  });
 };
 
 export const positionPopup = ({
@@ -750,4 +773,13 @@ export const endall = (transition, callback) => {
     .each("end", function() {
       if (!--n) callback.apply(this, arguments);
     });
+};
+
+export const getSaved = (key, defaultValue) => {
+  const savedStr = localStorage.getItem(key);
+  return savedStr ? JSON.parse(savedStr) : defaultValue;
+};
+
+export const setSaved = (key, value) => {
+  localStorage.setItem(key, JSON.stringify(value));
 };

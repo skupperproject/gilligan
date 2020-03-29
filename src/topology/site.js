@@ -23,6 +23,7 @@ import {
   circularize,
   copy,
   genPath,
+  //getSaved,
   initSankey,
   lighten,
   pathBetween,
@@ -81,8 +82,6 @@ export class Site {
       const clusterNode = siteNodes.addUsing({
         name,
         nodeType: "cluster",
-        x: undefined,
-        y: undefined,
         fixed: true,
         heightFn: this.clusterHeight,
         widthFn: this.clusterWidth
@@ -90,14 +89,6 @@ export class Site {
       clusterNode.mergeWith(cluster);
       clusterNode.color = siteColor(name);
       clusterNode.r = SiteRadius;
-    });
-    // site-to-site traffic
-    const interSiteLinks = this.interSiteLinks();
-    adjustPositions({
-      nodes: siteNodes.nodes,
-      links: interSiteLinks.links,
-      width: viewer.width,
-      height: viewer.height
     });
   };
 
@@ -128,6 +119,15 @@ export class Site {
         link.request = copy(record.request);
       }
     });
+    // site-to-site traffic
+    const interSiteLinks = this.interSiteLinks();
+    adjustPositions({
+      nodes: this.siteNodes.nodes,
+      links: interSiteLinks.links,
+      width: viewer.width,
+      height: viewer.height
+    });
+
     const graph = {
       nodes: this.siteNodes.nodes,
       links: links.links
@@ -172,12 +172,25 @@ export class Site {
         );
       });
     });
+    /*
     vsize = adjustPositions({
       nodes: nodes.nodes,
       links: links.links,
       width: vsize.width,
       height: vsize.height
     });
+    */
+    /*
+    nodes.nodes.forEach(n => {
+      // override the default starting position with saved positions
+      const key = `${n.nodeType}:${n.name}`;
+      const pos = getSaved(key);
+      if (pos) {
+        n.x = pos.x;
+        n.y = pos.y;
+      }
+    });
+    */
     return vsize;
   };
 
@@ -252,9 +265,7 @@ export class Site {
             2 -
             d.getHeight() / 2})`
       )
-      .attr("id", function(d) {
-        return (d.nodeType !== "normal" ? "cluster" : "client") + "-" + d.index;
-      });
+      .attr("id", d => `$cluster-${d.name}`);
 
     const rects = enterCircle
       .append("svg:g")
@@ -386,6 +397,7 @@ export class Site {
     enter
       .append("path")
       .attr("class", "hittarget")
+      .attr("id", d => `dir-${d.source.name}-${d.target.name}`)
       .attr("d", d => genPath(d))
       .on("click", d => {
         d3.event.stopPropagation();
@@ -405,9 +417,14 @@ export class Site {
 
     enter
       .append("text")
-      .attr("class", "stats")
       .attr("font-size", "12px")
-      .attr("font-weight", "bold");
+      .attr("font-weight", "bold")
+      .append("textPath")
+      .attr("class", "stats")
+      .attr("text-anchor", "middle")
+      .attr("startOffset", "50%")
+      .attr("text-length", "100%")
+      .attr("href", d => `#statPath-${d.source.name}-${d.target.name}`);
 
     selection
       .selectAll(".siteTrafficLink")

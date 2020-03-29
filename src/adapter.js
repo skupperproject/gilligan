@@ -241,7 +241,7 @@ class Adapter {
 
   shortName = name => {
     const parts = name.split("-");
-    return parts[0];
+    return parts.length > 2 ? parts[0] : name;
   };
 
   // is the address a valid ip address?

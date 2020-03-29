@@ -18,6 +18,7 @@ under the License.
 */
 
 import React from "react";
+import { pretty } from "../utilities";
 
 class LinkInfo extends React.Component {
   constructor(props) {
@@ -34,11 +35,51 @@ class LinkInfo extends React.Component {
   };
 
   render() {
+    const obj2Str = (k, value) => {
+      let val;
+      if (k === "start_time" || k === "last_in" || k === "last_out") {
+        const options = {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric"
+        };
+        val = new Date(value).toLocaleDateString("en-US", options);
+      } else if (typeof value === "object") {
+        val = JSON.stringify(value, null, 2);
+      } else {
+        val = pretty(this.props.linkInfo.request[k]);
+      }
+      return val;
+    };
     const whichInfo = () => {
       if (this.props.linkInfo.source.site_id) {
         return this.routerToRouter();
       }
-      return "LinkInfo";
+      return (
+        <table>
+          <tbody>
+            <tr>
+              <td>Protocol</td>
+              <td>{this.props.linkInfo.source.protocol}</td>
+            </tr>
+            {Object.keys(this.props.linkInfo.request).map(k => {
+              if (k !== "by_handling_site") {
+                let val = obj2Str(k, this.props.linkInfo.request[k]);
+                return (
+                  <tr key={k}>
+                    <td>{k}</td>
+                    <td>{val}</td>
+                  </tr>
+                );
+              }
+              return null;
+            })}
+          </tbody>
+        </table>
+      );
     };
     return <div className="link-info">{whichInfo()}</div>;
   }

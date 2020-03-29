@@ -1627,3 +1627,8 @@ path.deploymentDir {
   background-color: white;
   padding: 1em;
 }
+
+.link-info td:first-child {
+  padding-right: 1em;
+  font-weight: bold;
+}

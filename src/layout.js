@@ -51,16 +51,20 @@ import TopologyPage from "./topology/topologyPage";
 import ListPage from "./listPage";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
+import { getSaved, setSaved } from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
+const TOOLBAR_CHECKS = "toolbarChecks";
+const LAST_VIEW = "lastView";
 
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
+    this.lastView = getSaved(LAST_VIEW, "service");
     this.state = {
       connected: false,
       connectPath: "",
-      activeItem: "service",
+      activeItem: this.lastView,
       isConnectFormOpen: false,
       username: ""
     };
@@ -72,9 +76,14 @@ class PageLayout extends React.Component {
       { name: "Deployments", view: "deployment" },
       { name: "Processes", view: "process" }
     ];
-    this.showSankey = false;
-    this.showTraffic = false;
-    this.showStat = false;
+    const checks = getSaved(TOOLBAR_CHECKS, {
+      sankey: false,
+      traffic: false,
+      stat: false
+    });
+    this.showSankey = checks.sankey;
+    this.showTraffic = checks.traffic;
+    this.showStat = checks.stat;
   }
 
   componentDidMount = () => {
@@ -108,7 +117,7 @@ class PageLayout extends React.Component {
         connectPath === "/" ||
         connectPath === "/login"
       )
-        connectPath = "/service";
+        connectPath = `/${this.lastView}`;
       const activeItem = connectPath.split("/").pop();
       this.props.history.replace(connectPath);
       this.setState({
@@ -122,6 +131,8 @@ class PageLayout extends React.Component {
   };
 
   onNavSelect = result => {
+    this.lastView = result.itemId;
+    setSaved(LAST_VIEW, this.lastView);
     this.setState({
       activeItem: result.itemId,
       connectPath: ""
@@ -135,14 +146,24 @@ class PageLayout extends React.Component {
   handleConnectCancel = () => {
     this.setState({ isConnectFormOpen: false });
   };
+  saveChecks = () => {
+    setSaved(TOOLBAR_CHECKS, {
+      sankey: this.showSankey,
+      traffic: this.showTraffic,
+      stat: this.showStat
+    });
+  };
   handleChangeShowStat = showStat => {
     this.showStat = showStat;
+    this.saveChecks();
   };
   handleChangeSankey = showSankey => {
     this.showSankey = showSankey;
+    this.saveChecks();
   };
   handleChangeTraffic = showTraffic => {
     this.showTraffic = showTraffic;
+    this.saveChecks();
   };
   getShowStat = () => {
     return this.showStat;

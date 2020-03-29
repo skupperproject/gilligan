@@ -218,6 +218,7 @@ class TopologyPage extends Component {
         this.viewObj.dragStart(d, this.sankey);
       })
       .on("drag", d => {
+        //setSaved(`${d.nodeType}:${d.name}`, { x: d.x, y: d.y });
         this.viewObj.drag(d, this.sankey);
         this.tick();
         this.setLinkStat();
@@ -324,6 +325,9 @@ class TopologyPage extends Component {
     svg.selectAll(".cluster-rects").attr("opacity", opacity);
     svg.selectAll("g.service-type").attr("opacity", opacity);
     svg.selectAll("path.service").attr("opacity", pathOpacity);
+    svg
+      .selectAll("path.mask")
+      .attr("opacity", blur ? 0 : this.sankey ? 0.5 : 1);
     svg
       .selectAll("path.servicesankeyDir")
       .attr("opacity", !blur ? 1 : pathOpacity);
@@ -468,27 +472,27 @@ class TopologyPage extends Component {
     }
     this.view = "deployment";
     this.viewObj.collapseNodes();
-    this.tick();
-    this.setLinkStat();
+    this.viewObj.setupNodePositions(true);
+    // transition rects and paths
+    this.viewObj.regenPaths(this.sankey);
     this.viewObj.transition(this.sankey, initial).then(() => {
       this.viewObj.setBlack(true);
       this.restart();
     });
-    /*
-    this.forceData.serviceNodes.nodes.forEach(n => {
-      n.x = n.x0;
-      n.y = n.y0;
-    });
-*/
   };
 
   tosite = initial => {
     this.view = "site";
+    this.sankey = this.props.getShowSankey() && this.props.getShowTraffic();
     this.viewObj.transition(this.sankey, initial, this.props.getShowTraffic());
     this.restart();
   };
 
   tositesankey = initial => {
+    if (!this.props.getShowTraffic()) {
+      this.sankey = false;
+      return this.tosite(initial);
+    }
     this.view = "site";
     this.restart();
     this.viewObj.drawViewPath(true);
@@ -514,8 +518,9 @@ class TopologyPage extends Component {
   };
 
   todeploymentsankey = initial => {
-    this.view = "deploymentsankey";
+    this.view = "deployment";
     this.viewObj.setBlack(false);
+    this.viewObj.selectionSetBlack();
     this.viewObj.expandNodes();
 
     // set initial x and y before calling drag.start
@@ -523,8 +528,9 @@ class TopologyPage extends Component {
     this.viewObj.setupNodePositions(true);
     // transition rects and paths
     this.viewObj.regenPaths(this.sankey);
-    this.viewObj.transition(this.sankey, initial, this);
-    this.restart();
+    this.viewObj.transition(this.sankey, initial, this).then(() => {
+      this.restart();
+    });
   };
 
   handleCloseSidebar = () => {
@@ -536,16 +542,16 @@ class TopologyPage extends Component {
   };
 
   handleChangeSankey = checked => {
+    this.props.handleChangeSankey(checked);
     const method = `to${this.props.view}${checked ? "sankey" : ""}`;
     this.sankey = checked;
     this[method]();
-    this.props.handleChangeSankey(checked);
   };
 
   handleChangeTraffic = checked => {
+    this.props.handleChangeTraffic(checked);
     if (this.viewObj.showTraffic)
       this.viewObj.showTraffic(checked, this.sankey);
-    this.props.handleChangeTraffic(checked);
   };
   handleChangeShowStat = checked => {
     this.props.handleChangeShowStat(checked);

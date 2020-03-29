@@ -22,6 +22,7 @@ import {
   adjustPositions,
   fixPath,
   genPath,
+  //getSaved,
   circularize,
   initSankey,
   lighten,
@@ -133,7 +134,7 @@ export class Service {
       });
     });
 
-    // get the service positions and heights for use with the servicesankey view
+    // get the service heights for use with the servicesankey view
     const graph = {
       nodes: serviceNodes,
       links: links.links
@@ -167,6 +168,16 @@ export class Service {
 
     // move the sankey x,y
     serviceNodes.forEach(n => {
+      // override the default starting position with saved positions
+      /*
+      const key = `${n.nodeType}:${n.name}`;
+      const pos = getSaved(key);
+      if (pos) {
+        n.x = pos.x;
+        n.y = pos.y;
+      }
+      */
+      // set sankey positions
       n.x0 = n.x;
       n.y0 = n.y;
       n.x1 = n.x0 + n.getWidth();
@@ -245,8 +256,8 @@ export class Service {
     serviceTypesEnter
       .append("svg:rect")
       .attr("class", "service-type")
-      //.attr("rx", 10)
-      //.attr("ry", 10)
+      .attr("rx", 5)
+      .attr("ry", 5)
       .attr("width", d => Math.max(ServiceWidth, d.getWidth()))
       .attr("height", d => d.getHeight())
       .attr("fill", "#FFFFFF");
@@ -365,6 +376,7 @@ export class Service {
     enterpath
       .append("path")
       .attr("class", "servicesankeyDir")
+      .attr("id", d => `dir-${d.source.name}-${d.target.name}`)
       .attr("marker-end", d => {
         return d.right
           ? `url(#${
@@ -403,9 +415,14 @@ export class Service {
 
     enterpath
       .append("text")
-      .attr("class", "stats")
       .attr("font-size", "12px")
-      .attr("font-weight", "bold");
+      .attr("font-weight", "bold")
+      .append("textPath")
+      .attr("class", "stats")
+      .attr("text-anchor", "middle")
+      .attr("startOffset", "50%")
+      .attr("text-length", "100%")
+      .attr("href", d => `#statPath-${d.source.name}-${d.target.name}`);
 
     // update each existing {g.links g.link} element
     selection
@@ -446,13 +463,17 @@ export class Service {
         return d.highlighted;
       });
 
-    selection.select(".service").classed("forceBlack", d => d.black);
+    //selection.select(".service").classed("forceBlack", d => d.black);
+    this.selectionSetBlack();
     d3.selectAll("path.mask").classed("selected", d => d.link.selected);
 
     viewer.setLinkStat();
     return selection;
   };
 
+  selectionSetBlack = () => {
+    d3.selectAll("path.service").classed("forceBlack", d => d.black);
+  };
   serviceHeight = (n, expanded) => {
     if (expanded === undefined) {
       expanded = n.expanded;
@@ -557,6 +578,8 @@ export class Service {
           })
           .attr("opacity", 1);
       }
+
+      d3.select("g.masks").style("display", "none");
 
       d3.selectAll("path.servicesankeyDir")
         .transition()
@@ -717,6 +740,8 @@ export class Service {
             return ip(t);
           };
         });
+      d3.select("g.masks").style("display", "block");
+
       d3.selectAll("path.mask")
         .attr("stroke-width", 2)
         .attr("opacity", 0)
@@ -728,8 +753,6 @@ export class Service {
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = genPath(d.link, undefined, d.mask, true);
-          console.log(`going to tween to ${d.mask} ${d.link[d.mask].name}`);
-          console.log(d.link);
           return interpolatePath(previous, current);
         });
 

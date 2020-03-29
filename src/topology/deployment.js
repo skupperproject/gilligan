@@ -23,6 +23,7 @@ import {
   adjustPositions,
   endall,
   genPath,
+  //getSaved,
   initSankey,
   updateSankey,
   VIEW_DURATION,
@@ -221,6 +222,17 @@ export class Deployment {
       height: vsize.height - 20,
       xyKey: "sankey"
     });
+    /*
+    sites.nodes.forEach(n => {
+      // override the default starting position with saved positions
+      const key = `${n.nodeType}:${n.name}`;
+      const pos = getSaved(key);
+      if (pos) {
+        n.x = pos.x;
+        n.y = pos.y;
+      }
+    });
+    */
 
     sites.nodes.forEach(site => {
       site.expanded = false;
@@ -378,6 +390,9 @@ export class Deployment {
   setBlack = black => {
     this.Service.setBlack(black);
   };
+  selectionSetBlack = () => {
+    this.Service.selectionSetBlack();
+  };
   drawViewPath = sankey => {
     this.regenPaths(sankey);
     this.Service.drawViewPath(sankey);
@@ -392,8 +407,12 @@ export class Deployment {
   };
   toDeployment = initial => {
     return new Promise(resolve => {
+      d3.selectAll(".end-point")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 1);
+
       d3.select("g.clusters")
-        .style("display", "block")
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 1);
@@ -433,6 +452,7 @@ export class Deployment {
         .transition()
         .duration(VIEW_DURATION)
         .attr("transform", d => {
+          this.dragStart(d, false);
           return `translate(${d.x},${d.y})`;
         });
 
@@ -453,25 +473,54 @@ export class Deployment {
           resolve();
         });
 
-      // change the path's width and location
-      d3.selectAll("path.service")
-        .attr("d", d => genPath(d))
+      d3.selectAll("path.servicesankeyDir")
         .attr("opacity", 1)
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", function(d) {
-          d.pathLen = this.getTotalLength();
-          return `${d.pathLen} ${d.pathLen}`;
-        })
-        .attr("stroke-dashoffset", d => d.pathLen)
+        .style("display", "block")
         .transition()
-        .duration(VIEW_DURATION / 2)
-        .attr("stroke-dashoffset", 0)
+        .duration(VIEW_DURATION)
+        .attr("stroke-width", 2)
+        .attrTween("d", function(d, i) {
+          const previous = d3.select(this).attr("d");
+          const current = genPath(d);
+          return interpolatePath(previous, current);
+        })
         .each("end", function(d) {
-          d3.select(this).attr("stroke-dasharray", null);
+          d3.select(this)
+            .attr("stroke-width", 1)
+            .style("display", "none");
         });
 
-      d3.select("g.serviceLinks")
-        .selectAll("path.hittarget")
+      // change the path's width and location
+      if (initial) {
+        d3.selectAll("path.service")
+          .attr("d", d => genPath(d))
+          .attr("opacity", 1)
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", function(d) {
+            d.pathLen = this.getTotalLength();
+            return `${d.pathLen} ${d.pathLen}`;
+          })
+          .attr("stroke-dashoffset", d => d.pathLen)
+          .transition()
+          .duration(VIEW_DURATION / 2)
+          .attr("stroke-dashoffset", 0)
+          .each("end", function(d) {
+            d3.select(this).attr("stroke-dasharray", null);
+          });
+      } else {
+        d3.selectAll("path.service")
+          .transition()
+          .duration(VIEW_DURATION)
+          .attr("opacity", 1)
+          .attr("stroke-width", 2)
+          .attrTween("d", function(d, i) {
+            const previous = d3.select(this).attr("d");
+            const current = genPath(d);
+            return interpolatePath(previous, current);
+          });
+      }
+
+      d3.selectAll("path.hittarget")
         .attr("d", d => genPath(d))
         .attr("stroke-width", 20);
     });
@@ -482,7 +531,10 @@ export class Deployment {
       d3.selectAll(".end-point")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("opacity", 0);
+        .attr("opacity", 0)
+        .call(endall, () => {
+          resolve();
+        });
 
       d3.select("g.clusters")
         .selectAll("circle.network")
@@ -510,7 +562,7 @@ export class Deployment {
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 0.5)
-        .attr("stroke-width", d => d.width)
+        .attr("stroke-width", d => Math.max(d.width, 1))
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = d.sankeyPath; //d.path;
@@ -519,9 +571,9 @@ export class Deployment {
 
       d3.selectAll("path.servicesankeyDir")
         .style("display", "block")
+        .attr("opacity", 1)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("opacity", 1)
         .attr("stroke-width", 1)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -529,17 +581,17 @@ export class Deployment {
           return interpolatePath(previous, current);
         });
 
+      d3.select("g.links")
+        .selectAll("path.hittarget")
+        .attr("stroke-width", d => Math.max(d.width, 6))
+        .attr("d", d => d.sankeyPath);
+
       // move the service rects to their sankey location
       d3.selectAll("g.service-type")
         .transition()
         .duration(VIEW_DURATION)
         .attr("transform", d => {
-          //this.dragStart(d, true);
           return `translate(${d.x},${d.y})`;
-          /*
-            `translate(${d.parentNode.sankey.x +
-              d.sankeySiteOffset.x},${d.parentNode.sankey.y +
-              d.sankeySiteOffset.y})`;*/
         });
 
       d3.selectAll("rect.service-type")
