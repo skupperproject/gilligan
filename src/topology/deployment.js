@@ -23,6 +23,7 @@ import {
   adjustPositions,
   endall,
   genPath,
+  linkColor,
   //getSaved,
   initSankey,
   updateSankey,
@@ -174,6 +175,7 @@ export class Deployment {
           const link = links.links[linkIndex];
           link.request = request;
           link.value = stat;
+          link.getColor = () => linkColor(link, links.links);
         }
       });
     });
@@ -398,14 +400,14 @@ export class Deployment {
     this.Service.drawViewPath(sankey);
   };
 
-  transition = (sankey, initial, viewer) => {
+  transition = (sankey, initial, color, viewer) => {
     if (sankey) {
-      return this.toDeploymentSankey(initial, viewer.setLinkStat);
+      return this.toDeploymentSankey(initial, viewer.setLinkStat, color);
     } else {
-      return this.toDeployment(initial, viewer.setLinkStat);
+      return this.toDeployment(initial, viewer.setLinkStat, color);
     }
   };
-  toDeployment = (initial, setLinkStat) => {
+  toDeployment = (initial, setLinkStat, color) => {
     return new Promise(resolve => {
       d3.selectAll(".end-point")
         .transition()
@@ -501,6 +503,7 @@ export class Deployment {
             return `${d.pathLen} ${d.pathLen}`;
           })
           .attr("stroke-dashoffset", d => d.pathLen)
+          .attr("stroke", d => (color ? d.getColor() : null))
           .transition()
           .duration(VIEW_DURATION / 2)
           .attr("stroke-dashoffset", 0)
@@ -513,6 +516,7 @@ export class Deployment {
           .duration(VIEW_DURATION)
           .attr("opacity", 1)
           .attr("stroke-width", 2)
+          .attr("stroke", d => (color ? d.getColor() : null))
           .attrTween("d", function(d, i) {
             const previous = d3.select(this).attr("d");
             const current = genPath(d);
@@ -530,7 +534,7 @@ export class Deployment {
     });
   };
 
-  toDeploymentSankey = (initial, setLinkStat) => {
+  toDeploymentSankey = (initial, setLinkStat, color) => {
     return new Promise((resolve, reject) => {
       d3.selectAll(".end-point")
         .transition()
@@ -567,6 +571,7 @@ export class Deployment {
         .duration(VIEW_DURATION)
         .attr("opacity", 0.5)
         .attr("stroke-width", d => Math.max(d.width, 1))
+        .attr("stroke", d => (color ? d.getColor() : d.target.color))
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = d.sankeyPath; //d.path;

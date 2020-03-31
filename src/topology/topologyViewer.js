@@ -81,7 +81,7 @@ class TopologyPage extends Component {
       }
     ];
     this.view = this.props.view;
-    this.sankey = this.props.getShowSankey();
+    this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
     this.viewObj = new VIEWS[this.view](this.props.service.adapter);
     this.resetScale = 1;
     this.showConnDir = false;
@@ -94,13 +94,18 @@ class TopologyPage extends Component {
     // create the svg
     this.init();
     // call the to### transition
-    const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
-    this[to](true);
+    this.callTransitions(true);
   };
 
   componentWillUnmount = () => {
     window.removeEventListener("resize", this.resize);
     d3.select(".pf-c-page__main").style("background-color", "white");
+  };
+
+  callTransitions = initial => {
+    this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
+    const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
+    this[to](initial);
   };
 
   resize = () => {
@@ -458,15 +463,19 @@ class TopologyPage extends Component {
     this.viewObj.reGenPaths();
     this.tick();
 
-    this.viewObj.transition(this.sankey, initial, this).then(() => {
-      // after all the transitions are done:
-      // allow mouse events to be processed
-      this.transitioning = false;
+    if (this.getShowColor()) this.viewObj.setBlack(false);
+    this.viewObj.selectionSetBlack();
+    this.viewObj
+      .transition(this.sankey, initial, this.getShowColor(), this)
+      .then(() => {
+        // after all the transitions are done:
+        // allow mouse events to be processed
+        this.transitioning = false;
 
-      // force links to be black
-      this.viewObj.setBlack(true);
-      this.restart();
-    });
+        // force links to be black
+        if (!this.getShowColor()) this.viewObj.setBlack(true);
+        this.restart();
+      });
   };
 
   todeployment = initial => {
@@ -480,25 +489,41 @@ class TopologyPage extends Component {
     this.viewObj.setupNodePositions(true);
     // transition rects and paths
     this.viewObj.regenPaths(this.sankey);
-    this.viewObj.transition(this.sankey, initial, this).then(() => {
-      this.viewObj.setBlack(true);
-      this.restart();
-    });
+    if (this.getShowColor()) this.viewObj.setBlack(false);
+    this.viewObj.selectionSetBlack();
+    this.viewObj
+      .transition(this.sankey, initial, this.getShowColor(), this)
+      .then(() => {
+        if (!this.getShowColor()) this.viewObj.setBlack(true);
+        this.restart();
+      });
   };
 
   tosite = initial => {
     this.view = "site";
-    this.sankey = this.props.getShowSankey() && this.props.getShowTraffic();
+    this.sankey =
+      this.props.getShowSankey() &&
+      this.props.getShowTraffic() &&
+      !this.props.getShowColor();
+    if (this.getShowColor()) this.viewObj.setBlack(false);
+    this.viewObj.selectionSetBlack();
     this.viewObj
-      .transition(this.sankey, initial, this.props.getShowTraffic(), this)
+      .transition(
+        this.sankey,
+        initial,
+        this.props.getShowTraffic(),
+        this.getShowColor(),
+        this
+      )
       .then(() => {
+        if (!this.getShowColor()) this.viewObj.setBlack(true);
         this.setLinkStat();
       });
     this.restart();
   };
 
   tositesankey = initial => {
-    if (!this.props.getShowTraffic()) {
+    if (!this.props.getShowTraffic() || this.props.getShowColor()) {
       this.sankey = false;
       return this.tosite(initial);
     }
@@ -506,7 +531,13 @@ class TopologyPage extends Component {
     this.restart();
     this.viewObj.drawViewPath(true);
     this.viewObj
-      .transition(this.sankey, initial, this.props.getShowTraffic(), this)
+      .transition(
+        this.sankey,
+        initial,
+        this.props.getShowTraffic(),
+        this.getShowColor(),
+        this
+      )
       .then(() => {
         this.setLinkStat();
       });
@@ -526,7 +557,7 @@ class TopologyPage extends Component {
     this.viewObj.reGenPaths();
 
     // transition rects and paths
-    this.viewObj.transition(this.sankey, initial, this);
+    this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
     this.restart();
   };
 
@@ -541,9 +572,11 @@ class TopologyPage extends Component {
     this.viewObj.setupNodePositions(true);
     // transition rects and paths
     this.viewObj.regenPaths(this.sankey);
-    this.viewObj.transition(this.sankey, initial, this).then(() => {
-      this.restart();
-    });
+    this.viewObj
+      .transition(this.sankey, initial, this.getShowColor(), this)
+      .then(() => {
+        this.restart();
+      });
   };
 
   handleCloseSidebar = () => {
@@ -554,17 +587,14 @@ class TopologyPage extends Component {
     this.showChord(null);
   };
 
-  handleChangeSankey = checked => {
-    this.props.handleChangeSankey(checked);
-    const method = `to${this.props.view}${checked ? "sankey" : ""}`;
-    this.sankey = checked;
-    this[method]();
-  };
-
   handleChangeTraffic = checked => {
     this.props.handleChangeTraffic(checked);
     if (this.viewObj.showTraffic) {
-      this.viewObj.showTraffic(checked, this.props.getShowSankey(), this);
+      this.viewObj.showTraffic(
+        checked,
+        this.props.getShowSankey() && !this.props.getShowColor(),
+        this
+      );
       this.setLinkStat();
     }
   };
@@ -572,7 +602,20 @@ class TopologyPage extends Component {
     this.props.handleChangeShowStat(checked);
     this.setLinkStat();
   };
-
+  handleChangeSankey = checked => {
+    this.props.handleChangeSankey(checked);
+    this.callTransitions();
+  };
+  handleChangeWidth = checked => {
+    this.props.handleChangeWidth(checked);
+    this.callTransitions();
+  };
+  handleChangeColor = checked => {
+    this.props.handleChangeColor(checked);
+    this.callTransitions();
+  };
+  // only show links in color if showing traffic and by color
+  getShowColor = () => this.props.getShowSankey() && this.props.getShowColor();
   setLinkStat = () => {
     this.viewObj.setLinkStat(this.sankey, this.props);
   };
@@ -646,12 +689,16 @@ class TopologyPage extends Component {
             handleChangeSankey={this.handleChangeSankey}
             handleChangeTraffic={this.handleChangeTraffic}
             handleChangeShowStat={this.handleChangeShowStat}
+            handleChangeWidth={this.handleChangeWidth}
+            handleChangeColor={this.handleChangeColor}
             options={this.props.options}
             viewType={this.props.viewType}
             view={this.view}
             getShowStat={this.props.getShowStat}
             getShowSankey={this.props.getShowSankey}
             getShowTraffic={this.props.getShowTraffic}
+            getShowWidth={this.props.getShowWidth}
+            getShowColor={this.props.getShowColor}
           />
         }
         controlBar={<TopologyControlBar controlButtons={controlButtons} />}

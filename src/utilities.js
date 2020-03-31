@@ -665,13 +665,9 @@ export const linkColor = (link, links) => {
 };
 
 const fillColor = v => {
-  let color = d3.scale
-    .linear()
-    .domain([0, 0.5, 1])
-    .interpolate(d3.interpolateHcl)
-    .range([d3.rgb("#888888"), d3.rgb("#00FF00"), d3.rgb("#FF0000")]);
-
-  return color(v);
+  if (v < 0.333) return "#888888";
+  if (v < 0.666) return "#00FF00";
+  return "#FF0000";
 };
 
 // return the path between 2 circles

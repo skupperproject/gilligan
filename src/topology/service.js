@@ -23,6 +23,7 @@ import {
   fixPath,
   genPath,
   //getSaved,
+  linkColor,
   circularize,
   initSankey,
   lighten,
@@ -129,8 +130,8 @@ export class Service {
           subNode.address,
           serviceNodes[target]
         );
-
         link.value = link.request.bytes_out;
+        link.getColor = () => linkColor(link, links.links);
       });
     });
 
@@ -425,17 +426,11 @@ export class Service {
         return d.highlighted;
       })
       // reset the markers based on current highlighted/selected
-      .attr("marker-end", d => {
-        console.log(
-          `marker-end d.cls=${d.cls}, d.right=${d.right} d.source.expanded=${d.source.expanded}`
-        );
-        const ret =
-          d.cls !== "network" && d.right && !d.source.expanded
-            ? `url(#${d.target.protocol === "tcp" ? "tcp-end" : "end--15"})`
-            : null;
-        console.log(`returning ${ret}`);
-        return ret;
-      });
+      .attr("marker-end", d =>
+        d.cls !== "network"
+          ? `url(#${d.target.protocol === "tcp" ? "tcp-end" : "end--15"})`
+          : null
+      );
 
     this.selectionSetBlack();
     d3.selectAll("path.mask").classed("selected", d => d.link.selected);
@@ -533,15 +528,15 @@ export class Service {
     this.servicesSelection.call(drag);
   };
 
-  transition = (sankey, initial, viewer) => {
+  transition = (sankey, initial, color, viewer) => {
     if (sankey) {
       return this.toServiceSankey(initial, viewer.setLinkStat);
     } else {
-      return this.toService(initial, viewer.setLinkStat);
+      return this.toService(initial, viewer.setLinkStat, color);
     }
   };
 
-  toService = (initial, setLinkStat) => {
+  toService = (initial, setLinkStat, color) => {
     return new Promise((resolve, reject) => {
       // Note: all the transitions happen concurrently
       if (initial) {
@@ -559,7 +554,7 @@ export class Service {
         .duration(VIEW_DURATION)
         .attr("opacity", 0)
         .attrTween("d", function(d, i) {
-          const previous = d.sankeyPath;
+          const previous = d.sankeyPath; //d3.select(this).attr("d"); //d.sankeyPath;
           const current = genPath(d);
           return interpolatePath(previous, current);
         })
@@ -626,7 +621,8 @@ export class Service {
       // change the path's width and location
       if (initial) {
         d3.selectAll("path.service")
-          .classed("forceBlack", true)
+          .classed("forceBlack", color ? false : true)
+          .attr("stroke", d => (color ? d.getColor() : null))
           .attr("opacity", 1)
           .attr("d", d => d.path)
           .attr("stroke-dasharray", function(d) {
@@ -644,11 +640,11 @@ export class Service {
         d3.selectAll("path.service")
           .transition()
           .duration(VIEW_DURATION)
-          .attr("stroke", "black")
+          .attr("stroke", d => (color ? d.getColor() : "black"))
           .attr("stroke-width", 2)
           .attr("opacity", 1)
           .attrTween("d", function(d, i) {
-            const previous = d.sankeyPath;
+            const previous = d.sankeyPath; //d3.select(this).attr("d"); //d.sankeyPath;
             const current = genPath(d); // d.path; //
             const ip = interpolatePath(previous, current);
             return t => {

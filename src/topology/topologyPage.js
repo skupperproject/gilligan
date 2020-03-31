@@ -88,9 +88,13 @@ class TopologyPage extends Component {
               getShowStat={this.props.getShowStat}
               getShowSankey={this.props.getShowSankey}
               getShowTraffic={this.props.getShowTraffic}
+              getShowWidth={this.props.getShowWidth}
+              getShowColor={this.props.getShowColor}
               handleChangeShowStat={this.props.handleChangeShowStat}
               handleChangeSankey={this.props.handleChangeSankey}
               handleChangeTraffic={this.props.handleChangeTraffic}
+              handleChangeColor={this.props.handleChangeColor}
+              handleChangeWidth={this.props.handleChangeWidth}
             />
           </StackItem>
         </Stack>

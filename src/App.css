@@ -1472,6 +1472,21 @@ circle.end-point {
 .graph-toolbar {
   border-bottom: 1px solid #cccccc;
 }
+.graph-toolbar .pf-c-radio {
+  margin-left: 1.5em;
+}
+.graph-toolbar svg {
+  padding-top: 0.5em;
+  padding-left: 0.5em;
+}
+.graph-toolbar div.color-gradient {
+  display: flex;
+}
+.graph-toolbar .tall-item {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  padding-right: 1em;
+}
 
 a.selected.pf-c-dropdown__menu-item {
   background-color: #0066cc;

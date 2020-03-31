@@ -79,11 +79,15 @@ class PageLayout extends React.Component {
     const checks = getSaved(TOOLBAR_CHECKS, {
       sankey: false,
       traffic: false,
-      stat: false
+      stat: false,
+      width: true,
+      color: false
     });
     this.showSankey = checks.sankey;
     this.showTraffic = checks.traffic;
     this.showStat = checks.stat;
+    this.showWidth = checks.width;
+    this.showColor = checks.color;
   }
 
   componentDidMount = () => {
@@ -150,7 +154,9 @@ class PageLayout extends React.Component {
     setSaved(TOOLBAR_CHECKS, {
       sankey: this.showSankey,
       traffic: this.showTraffic,
-      stat: this.showStat
+      stat: this.showStat,
+      width: this.showWidth,
+      color: this.showColor
     });
   };
   handleChangeShowStat = showStat => {
@@ -165,6 +171,16 @@ class PageLayout extends React.Component {
     this.showTraffic = showTraffic;
     this.saveChecks();
   };
+  handleChangeWidth = showWidth => {
+    this.showWidth = showWidth;
+    this.showColor = !showWidth;
+    this.saveChecks();
+  };
+  handleChangeColor = showColor => {
+    this.showColor = showColor;
+    this.showWidth = !showColor;
+    this.saveChecks();
+  };
   getShowStat = () => {
     return this.showStat;
   };
@@ -173,6 +189,12 @@ class PageLayout extends React.Component {
   };
   getShowTraffic = () => {
     return this.showTraffic;
+  };
+  getShowWidth = () => {
+    return this.showWidth;
+  };
+  getShowColor = () => {
+    return this.showColor;
   };
 
   toL = s => s[0].toLowerCase() + s.slice(1);
@@ -264,8 +286,12 @@ class PageLayout extends React.Component {
               getShowStat={this.getShowStat}
               getShowSankey={this.getShowSankey}
               getShowTraffic={this.getShowTraffic}
+              getShowWidth={this.getShowWidth}
+              getShowColor={this.getShowColor}
               handleChangeSankey={this.handleChangeSankey}
               handleChangeTraffic={this.handleChangeTraffic}
+              handleChangeWidth={this.handleChangeWidth}
+              handleChangeColor={this.handleChangeColor}
               handleChangeShowStat={this.handleChangeShowStat}
             />
           ) : (

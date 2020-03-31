@@ -159,7 +159,6 @@ export function addDefs(svg) {
         ? "M 0 -5 L 10 0 L 0 5 z"
         : "M 10 -5 L 0 0 L 10 5 z";
     });
-  //.attr("fill", "context-stroke");
 
   svg
     .select("defs.marker-defs")

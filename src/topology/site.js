@@ -23,6 +23,7 @@ import {
   circularize,
   copy,
   genPath,
+  linkColor,
   //getSaved,
   initSankey,
   lighten,
@@ -117,6 +118,7 @@ export class Site {
         const link = links.links[linkIndex];
         link.value = record.messages;
         link.request = copy(record.request);
+        link.getColor = () => linkColor(link, links.links);
       }
     });
     // site-to-site traffic
@@ -568,15 +570,23 @@ export class Site {
     });
   };
 
+  setBlack = black => {
+    this.trafficLinks.links.forEach(l => (l.black = black));
+  };
+
+  selectionSetBlack = () => {
+    d3.selectAll("path.siteTrafficLink").classed("forceBlack", d => d.black);
+  };
+
   clusterHeight = (n, expanded) =>
     expanded || n.expanded ? n.sankey.r * 2 : n.r * 2;
   clusterWidth = (n, expanded) => this.clusterHeight(n, expanded);
 
-  transition = (sankey, initial, traffic, viewer) => {
+  transition = (sankey, initial, traffic, color, viewer) => {
     if (sankey) {
-      return this.toSiteSankey(initial, false, viewer.setLinkStat);
+      return this.toSiteSankey(initial, false, viewer.setLinkStat, color);
     } else if (traffic) {
-      return this.toSiteSankey(initial, true, viewer.setLinkStat);
+      return this.toSiteSankey(initial, true, viewer.setLinkStat, color);
     } else {
       return this.toSite(initial, viewer.setLinkStat);
     }
@@ -657,7 +667,7 @@ export class Site {
     });
   };
 
-  toSiteSankey = (initial, showTraffic, setLinkStat) => {
+  toSiteSankey = (initial, showTraffic, setLinkStat, color) => {
     return new Promise(resolve => {
       d3.select("g.siteTrafficLinks").style("display", "block");
       d3.select("g.siteLinks")
@@ -671,7 +681,9 @@ export class Site {
       d3.selectAll("path.siteTrafficDir")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("opacity", 1);
+        .attr("opacity", 1)
+        .attr("stroke", d => (color ? d.getColor() : "black"))
+        .attr("stroke-width", color ? 2 : 1);
       d3.select("g.siteTrafficLinks")
         .selectAll("text.stats")
         .transition()
@@ -695,6 +707,7 @@ export class Site {
         d3.selectAll("path.siteTrafficLink")
           .transition()
           .duration(VIEW_DURATION)
+          .attr("stroke", d => (color ? d.getColor() : null))
           .attr("stroke-width", 2)
           .attr("opacity", 0);
       }

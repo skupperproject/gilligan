@@ -204,6 +204,11 @@ class Adapter {
         }
       }
     });
+    if (req.start_time) {
+      const o = req.bytes_out;
+      req.bytes_out = req.bytes_in;
+      req.bytes_in = o;
+    }
     return req;
   };
 
