@@ -376,16 +376,7 @@ export class Service {
     enterpath
       .append("path")
       .attr("class", "servicesankeyDir")
-      .attr("id", d => `dir-${d.source.name}-${d.target.name}`)
-      .attr("marker-end", d => {
-        return d.right
-          ? `url(#${
-              d.target.protocol === "tcp"
-                ? "tcp-end"
-                : "end" + d.markerId("end")
-            })`
-          : null;
-      });
+      .attr("id", d => `dir-${d.source.name}-${d.target.name}`);
 
     enterpath
       .append("path")
@@ -435,13 +426,15 @@ export class Service {
       })
       // reset the markers based on current highlighted/selected
       .attr("marker-end", d => {
-        return d.cls !== "network" && d.right && !d.source.expanded
-          ? `url(#${
-              d.target.protocol === "tcp"
-                ? "tcp-end"
-                : "end" + d.markerId("end")
-            })`
-          : null;
+        console.log(
+          `marker-end d.cls=${d.cls}, d.right=${d.right} d.source.expanded=${d.source.expanded}`
+        );
+        const ret =
+          d.cls !== "network" && d.right && !d.source.expanded
+            ? `url(#${d.target.protocol === "tcp" ? "tcp-end" : "end--15"})`
+            : null;
+        console.log(`returning ${ret}`);
+        return ret;
       });
 
     this.selectionSetBlack();
