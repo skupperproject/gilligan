@@ -54,16 +54,31 @@ class LinkInfo extends React.Component {
       }
       return val;
     };
-    const whichInfo = () => {
-      if (this.props.linkInfo.source.site_id) {
-        return this.routerToRouter();
+    const getProtocol = title => {
+      if (this.props.linkInfo.source.protocol) {
+        return title ? "Protocol" : this.props.linkInfo.source.protocol;
       }
+      let protocols = [];
+      if (this.props.linkInfo.request.requests) {
+        protocols.push("http");
+      }
+      if (this.props.linkInfo.request.start_time) {
+        protocols.push("tcp");
+      }
+      return title
+        ? `Protocol${protocols.length > 1 ? "s" : ""}`
+        : protocols.join(", ");
+    };
+    const whichInfo = () => {
+      //if (this.props.linkInfo.source.site_id) {
+      //  return this.routerToRouter();
+      //}
       return (
         <table>
           <tbody>
             <tr>
-              <td>Protocol</td>
-              <td>{this.props.linkInfo.source.protocol}</td>
+              <td>{getProtocol(true)}</td>
+              <td>{getProtocol()}</td>
             </tr>
             {Object.keys(this.props.linkInfo.request).map(k => {
               if (k !== "by_handling_site") {

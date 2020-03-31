@@ -494,18 +494,18 @@ export class Site {
     return interSiteLinks;
   };
 
-  showTraffic = (showTraffic, sankey) => {
+  showTraffic = (showTraffic, sankey, viewer) => {
     if (showTraffic) {
       if (sankey) {
-        this.toSiteSankey(false);
+        this.toSiteSankey(false, false, viewer.setLinkStat);
       } else {
         circularize(this.trafficLinks.links);
         d3.selectAll("path.siteTrafficDir")
           .attr("d", d => genPath(d))
           .attr("opacity", 0);
-        this.toSiteSankey(false, showTraffic);
+        this.toSiteSankey(false, showTraffic, viewer.setLinkStat);
       }
-    } else this.toSite(false);
+    } else this.toSite(false, viewer.setLinkStat);
   };
 
   dragStart = d => {
@@ -542,7 +542,8 @@ export class Site {
   };
 
   setLinkStat = (sankey, props) => {
-    if (sankey) {
+    const traffic = props.getShowTraffic();
+    if (traffic) {
       setLinkStat(
         this.trafficLinksSelection,
         "siteTrafficLink",
@@ -571,16 +572,16 @@ export class Site {
     expanded || n.expanded ? n.sankey.r * 2 : n.r * 2;
   clusterWidth = (n, expanded) => this.clusterHeight(n, expanded);
 
-  transition = (sankey, initial, traffic) => {
+  transition = (sankey, initial, traffic, viewer) => {
     if (sankey) {
-      return this.toSiteSankey(initial, false);
+      return this.toSiteSankey(initial, false, viewer.setLinkStat);
     } else if (traffic) {
-      return this.toSiteSankey(initial, true);
+      return this.toSiteSankey(initial, true, viewer.setLinkStat);
     } else {
-      return this.toSite(initial);
+      return this.toSite(initial, viewer.setLinkStat);
     }
   };
-  toSite = initial => {
+  toSite = (initial, setLinkStat) => {
     return new Promise(resolve => {
       if (!initial) {
         d3.selectAll("path.siteTrafficLink")
@@ -656,66 +657,72 @@ export class Site {
     });
   };
 
-  toSiteSankey = (initial, showTraffic) => {
-    d3.select("g.siteTrafficLinks").style("display", "block");
-    d3.select("g.siteLinks")
-      .transition()
-      .duration(VIEW_DURATION)
-      .attr("opacity", 0.25);
-    d3.selectAll("path.siteTrafficDir")
-      .transition()
-      .duration(VIEW_DURATION)
-      .attr("opacity", 1);
-    d3.select("g.siteTrafficLinks")
-      .selectAll("text.stats")
-      .transition()
-      .duration(VIEW_DURATION)
-      .attr("opacity", 1);
-
-    if (!showTraffic) {
-      d3.selectAll("path.siteTrafficLink")
-        .attr("stroke-width", 2)
+  toSiteSankey = (initial, showTraffic, setLinkStat) => {
+    return new Promise(resolve => {
+      d3.select("g.siteTrafficLinks").style("display", "block");
+      d3.select("g.siteLinks")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("opacity", 0.5)
-        .attr("stroke-width", d => Math.max(6, d.width))
-        .attr("stroke", d => d.target.color)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = previous; //d.path;
-          return interpolatePath(previous, current);
+        .attr("opacity", 0.25)
+        .call(endall, () => {
+          resolve();
         });
-    } else {
-      d3.selectAll("path.siteTrafficLink")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke-width", 2)
-        .attr("opacity", 0);
-    }
-    d3.select("g.siteTrafficLinks")
-      .selectAll("path.hittarget")
-      .attr("stroke-width", d => Math.max(6, showTraffic ? 6 : d.width));
 
-    if (!showTraffic) {
-      d3.selectAll("path.mask")
-        .attr("stroke-width", 2)
-        .attr("opacity", 0)
+      d3.selectAll("path.siteTrafficDir")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke-width", d => Math.max(6, d.link.width))
-        .attr("stroke", d => d.link.target.color)
-        .attr("opacity", 0.5)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = genPath(d.link, undefined, d.mask);
-          return interpolatePath(previous, current);
-        });
-    } else {
-      d3.selectAll("path.mask")
+        .attr("opacity", 1);
+      d3.select("g.siteTrafficLinks")
+        .selectAll("text.stats")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke-width", 2)
-        .attr("opacity", 0);
-    }
+        .attr("opacity", 1);
+
+      if (!showTraffic) {
+        d3.selectAll("path.siteTrafficLink")
+          .attr("stroke-width", 2)
+          .transition()
+          .duration(VIEW_DURATION)
+          .attr("opacity", 0.5)
+          .attr("stroke-width", d => Math.max(6, d.width))
+          .attr("stroke", d => d.target.color)
+          .attrTween("d", function(d, i) {
+            const previous = d3.select(this).attr("d");
+            const current = previous; //d.path;
+            return interpolatePath(previous, current);
+          });
+      } else {
+        d3.selectAll("path.siteTrafficLink")
+          .transition()
+          .duration(VIEW_DURATION)
+          .attr("stroke-width", 2)
+          .attr("opacity", 0);
+      }
+      d3.select("g.siteTrafficLinks")
+        .selectAll("path.hittarget")
+        .attr("stroke-width", d => Math.max(6, showTraffic ? 6 : d.width));
+
+      if (!showTraffic) {
+        d3.selectAll("path.mask")
+          .attr("stroke-width", 2)
+          .attr("opacity", 0)
+          .transition()
+          .duration(VIEW_DURATION)
+          .attr("stroke-width", d => Math.max(6, d.link.width))
+          .attr("stroke", d => d.link.target.color)
+          .attr("opacity", 0.5)
+          .attrTween("d", function(d, i) {
+            const previous = d3.select(this).attr("d");
+            const current = genPath(d.link, undefined, d.mask);
+            return interpolatePath(previous, current);
+          });
+      } else {
+        d3.selectAll("path.mask")
+          .transition()
+          .duration(VIEW_DURATION)
+          .attr("stroke-width", 2)
+          .attr("opacity", 0);
+      }
+    });
   };
 }

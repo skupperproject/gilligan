@@ -398,14 +398,14 @@ export class Deployment {
     this.Service.drawViewPath(sankey);
   };
 
-  transition = (sankey, initial) => {
+  transition = (sankey, initial, viewer) => {
     if (sankey) {
-      return this.toDeploymentSankey(initial);
+      return this.toDeploymentSankey(initial, viewer.setLinkStat);
     } else {
-      return this.toDeployment(initial);
+      return this.toDeployment(initial, viewer.setLinkStat);
     }
   };
-  toDeployment = initial => {
+  toDeployment = (initial, setLinkStat) => {
     return new Promise(resolve => {
       d3.selectAll(".end-point")
         .transition()
@@ -516,7 +516,11 @@ export class Deployment {
           .attrTween("d", function(d, i) {
             const previous = d3.select(this).attr("d");
             const current = genPath(d);
-            return interpolatePath(previous, current);
+            const ip = interpolatePath(previous, current);
+            return t => {
+              setLinkStat();
+              return ip(t);
+            };
           });
       }
 
@@ -526,7 +530,7 @@ export class Deployment {
     });
   };
 
-  toDeploymentSankey = setLinkStat => {
+  toDeploymentSankey = (initial, setLinkStat) => {
     return new Promise((resolve, reject) => {
       d3.selectAll(".end-point")
         .transition()
@@ -566,7 +570,11 @@ export class Deployment {
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = d.sankeyPath; //d.path;
-          return interpolatePath(previous, current);
+          const ip = interpolatePath(previous, current);
+          return t => {
+            setLinkStat();
+            return ip(t);
+          };
         });
 
       d3.selectAll("path.servicesankeyDir")

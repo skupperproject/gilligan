@@ -180,12 +180,17 @@ class TopologyPage extends Component {
       addDefs(this.svg);
     }
 
+    // create the svg groups in the correct order for this view
     this.viewObj.createSelections(this.svg);
+
+    // create the nodes and links for this view
     const { nodeCount, size } = this.viewObj.initNodesAndLinks(this);
 
     // mouse event vars
     this.mousedown_node = null;
 
+    // the required height may be larger than the available height
+    // adjust the scale of make sure the entire graph is visible
     this.resetScale = this.height / size.height;
     this.zoom.scale(this.resetScale);
     this.zoomed();
@@ -475,7 +480,7 @@ class TopologyPage extends Component {
     this.viewObj.setupNodePositions(true);
     // transition rects and paths
     this.viewObj.regenPaths(this.sankey);
-    this.viewObj.transition(this.sankey, initial).then(() => {
+    this.viewObj.transition(this.sankey, initial, this).then(() => {
       this.viewObj.setBlack(true);
       this.restart();
     });
@@ -484,7 +489,11 @@ class TopologyPage extends Component {
   tosite = initial => {
     this.view = "site";
     this.sankey = this.props.getShowSankey() && this.props.getShowTraffic();
-    this.viewObj.transition(this.sankey, initial, this.props.getShowTraffic());
+    this.viewObj
+      .transition(this.sankey, initial, this.props.getShowTraffic(), this)
+      .then(() => {
+        this.setLinkStat();
+      });
     this.restart();
   };
 
@@ -496,7 +505,11 @@ class TopologyPage extends Component {
     this.view = "site";
     this.restart();
     this.viewObj.drawViewPath(true);
-    this.viewObj.transition(this.sankey, initial, this.props.getShowTraffic());
+    this.viewObj
+      .transition(this.sankey, initial, this.props.getShowTraffic(), this)
+      .then(() => {
+        this.setLinkStat();
+      });
     this.restart();
   };
 
@@ -550,8 +563,10 @@ class TopologyPage extends Component {
 
   handleChangeTraffic = checked => {
     this.props.handleChangeTraffic(checked);
-    if (this.viewObj.showTraffic)
-      this.viewObj.showTraffic(checked, this.sankey);
+    if (this.viewObj.showTraffic) {
+      this.viewObj.showTraffic(checked, this.props.getShowSankey(), this);
+      this.setLinkStat();
+    }
   };
   handleChangeShowStat = checked => {
     this.props.handleChangeShowStat(checked);

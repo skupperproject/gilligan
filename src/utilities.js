@@ -575,11 +575,17 @@ export const setLinkStat = (selection, view, stat, shown) => {
     }
   });
 
+  if (!shown) return;
   // put the stat text along a path that is parallel to the path
   selection.selectAll(`path.${view}`).each(function(d) {
+    let p1, p2;
     const len = this.getTotalLength();
-    const p1 = this.getPointAtLength(len / 2 - Math.min(len / 2, 40));
-    const p2 = this.getPointAtLength(len / 2 + Math.min(len / 2, 40));
+    if (len > 0) {
+      p1 = this.getPointAtLength(len / 2 - Math.min(len / 2, 40));
+      p2 = this.getPointAtLength(len / 2 + Math.min(len / 2, 40));
+    } else {
+      return;
+    }
     let away = 10;
     let pt1, pt2;
     // vertical line. slope would be infinite
@@ -592,11 +598,13 @@ export const setLinkStat = (selection, view, stat, shown) => {
         pt1 = { x: p1.x, y: p1.y + away };
         pt2 = { x: p2.x, y: p2.y + away };
       } else {
-        // always draw below the path
-        if (slope > 0) away = -away;
+        // always draw above the path
+        if (slope < 0) away = -away;
         pt1 = ptAway(p1, away, slope);
         pt2 = ptAway(p2, away, slope);
       }
+      // path goes from right to left?
+      // swap the points so the text is going the right direction
       if (pt1.x > pt2.x) {
         const tmp = copy(pt1);
         pt1 = copy(pt2);
@@ -728,7 +736,7 @@ export const circularize = links => {
       l.source.partOfCycle = true;
       l.target.partOfCycle = true;
       l.source.circularLinkType = "bottom";
-      l.target.curcularLinkType = "bottom";
+      l.target.circularLinkType = "bottom";
     } else {
       if (l.circular) {
         l.circular = false;

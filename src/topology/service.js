@@ -432,38 +432,18 @@ export class Service {
       })
       .classed("highlighted", function(d) {
         return d.highlighted;
-      });
-
-    // update each existing {g.links g.link} element
-    selection
-      .select(".service")
-      .classed("selected", function(d) {
-        return d.selected;
       })
-      .classed("highlighted", function(d) {
-        return d.highlighted;
+      // reset the markers based on current highlighted/selected
+      .attr("marker-end", d => {
+        return d.cls !== "network" && d.right && !d.source.expanded
+          ? `url(#${
+              d.target.protocol === "tcp"
+                ? "tcp-end"
+                : "end" + d.markerId("end")
+            })`
+          : null;
       });
 
-    // reset the markers based on current highlighted/selected
-    selection.select(".service").attr("marker-end", d => {
-      return d.cls !== "network" && d.right && !d.source.expanded
-        ? `url(#${
-            d.target.protocol === "tcp" ? "tcp-end" : "end" + d.markerId("end")
-          })`
-        : null;
-    });
-
-    // update each existing {g.links g.link} element
-    selection
-      .select(".service")
-      .classed("selected", function(d) {
-        return d.selected;
-      })
-      .classed("highlighted", function(d) {
-        return d.highlighted;
-      });
-
-    //selection.select(".service").classed("forceBlack", d => d.black);
     this.selectionSetBlack();
     d3.selectAll("path.mask").classed("selected", d => d.link.selected);
 
