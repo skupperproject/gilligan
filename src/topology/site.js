@@ -50,6 +50,10 @@ export class Site {
     this.trafficLinks = new Links();
     this.nodes = () => this.siteNodes;
     this.links = () => this.routerLinks;
+    this.fields = [
+      { title: "Name", field: "site_name" },
+      { title: "Site ID", field: "site_id" }
+    ];
   }
 
   createSelections = svg => {
@@ -736,6 +740,12 @@ export class Site {
           .attr("stroke-width", 2)
           .attr("opacity", 0);
       }
+    });
+  };
+
+  doFetch = (page, perPage) => {
+    return new Promise(resolve => {
+      resolve({ data: this.siteNodes.nodes, page, perPage });
     });
   };
 }

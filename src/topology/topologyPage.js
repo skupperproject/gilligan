@@ -27,14 +27,22 @@ import {
   TextContent,
   TextVariants
 } from "@patternfly/react-core";
+import {
+  Dropdown,
+  DropdownPosition,
+  DropdownToggle,
+  DropdownItem
+} from "@patternfly/react-core";
+import { Split, SplitItem } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
 import { Icap, strDate } from "../utilities";
+import TableViewer from "../tableViewer";
 
 class TopologyPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      viewType: "graph",
+      isDropDownOpen: false,
       lastUpdated: new Date(),
       options: {
         graph: {
@@ -44,10 +52,83 @@ class TopologyPage extends Component {
         link: { stat: "bytes_out" }
       }
     };
+    const viewType = this.props.getViewType();
+    this.dropdownItems = [
+      {
+        key: "graph",
+        description: "Graph",
+        selected: viewType === "graph",
+        enabled: true
+      },
+      {
+        key: "card",
+        description: "Card",
+        selected: viewType === "card"
+      },
+      {
+        key: "table",
+        description: "Table",
+        selected: viewType === "table",
+        enabled: true
+      }
+    ];
   }
 
+  onDropDownToggle = isOpen => {
+    this.setState({
+      isDropDownOpen: isOpen
+    });
+  };
+
+  onDropDownSelect = event => {
+    this.setState({
+      isDropDownOpen: !this.state.isDropDownOpen
+    });
+    const desc = event.target.text;
+    this.dropdownItems.forEach(item => {
+      item.selected = item.description === desc;
+    });
+    const selected = this.dropdownItems.find(item => item.selected);
+    this.props.handleChangeViewType(selected.key);
+  };
+
+  onToggle = () => {
+    this.setState({
+      isOptionsOpen: !this.state.isOptionsOpen
+    });
+  };
+
+  buildDropdown = () => {
+    const { isDropDownOpen } = this.state;
+    return (
+      <Dropdown
+        onSelect={this.onDropDownSelect}
+        position={DropdownPosition.left}
+        toggle={
+          <DropdownToggle onToggle={this.onDropDownToggle}>
+            {
+              this.dropdownItems.find(item => item.selected === true)
+                .description
+            }
+          </DropdownToggle>
+        }
+        isOpen={isDropDownOpen}
+        dropdownItems={this.dropdownItems.map(item => (
+          <DropdownItem
+            className={item.selected ? "selected" : ""}
+            key={item.key}
+            isDisabled={!item.enabled}
+          >
+            {item.description}
+          </DropdownItem>
+        ))}
+      />
+    );
+  };
+
   handleChangeView = viewType => {
-    this.setState({ viewType });
+    this.props.handleChangeViewType(viewType);
+    //this.setState({ viewType });
   };
 
   handleChangeOption = option => {
@@ -66,36 +147,59 @@ class TopologyPage extends Component {
       >
         <Stack>
           <StackItem className="overview-header">
-            <TextContent>
-              <Text className="overview-title" component={TextVariants.h1}>
-                {Icap(this.props.view)}s
-              </Text>
-              <Text className="overview-loading" component={TextVariants.pre}>
-                {`Updated ${strDate(this.state.lastUpdated)}`}
-              </Text>
-            </TextContent>
+            <Split gutter="md">
+              <SplitItem>
+                <TextContent>
+                  <Text className="overview-title" component={TextVariants.h1}>
+                    {Icap(this.props.view)}s
+                  </Text>
+                </TextContent>
+              </SplitItem>
+              <SplitItem isFilled>View: {this.buildDropdown()}</SplitItem>
+              <SplitItem>
+                <TextContent>
+                  <Text
+                    className="overview-loading"
+                    component={TextVariants.pre}
+                  >
+                    {`Updated ${strDate(this.state.lastUpdated)}`}
+                  </Text>
+                </TextContent>
+              </SplitItem>
+            </Split>
           </StackItem>
           <StackItem className="overview-table">
-            <TopologyViewer
-              ref={el => (this.graphRef = el)}
-              type={this.props.type}
-              service={this.props.service}
-              view={this.props.view}
-              viewType={this.state.viewType}
-              options={this.state.options}
-              handleChangeView={this.handleChangeView}
-              handleChangeOption={this.handleChangeOption}
-              getShowStat={this.props.getShowStat}
-              getShowSankey={this.props.getShowSankey}
-              getShowTraffic={this.props.getShowTraffic}
-              getShowWidth={this.props.getShowWidth}
-              getShowColor={this.props.getShowColor}
-              handleChangeShowStat={this.props.handleChangeShowStat}
-              handleChangeSankey={this.props.handleChangeSankey}
-              handleChangeTraffic={this.props.handleChangeTraffic}
-              handleChangeColor={this.props.handleChangeColor}
-              handleChangeWidth={this.props.handleChangeWidth}
-            />
+            {this.props.getViewType() === "graph" && (
+              <TopologyViewer
+                ref={el => (this.graphRef = el)}
+                type={this.props.type}
+                service={this.props.service}
+                view={this.props.view}
+                viewType={this.props.getViewType()}
+                options={this.state.options}
+                handleChangeView={this.handleChangeView}
+                handleChangeOption={this.handleChangeOption}
+                getShowStat={this.props.getShowStat}
+                getShowSankey={this.props.getShowSankey}
+                getShowTraffic={this.props.getShowTraffic}
+                getShowWidth={this.props.getShowWidth}
+                getShowColor={this.props.getShowColor}
+                getViewType={this.props.getViewType}
+                handleChangeShowStat={this.props.handleChangeShowStat}
+                handleChangeSankey={this.props.handleChangeSankey}
+                handleChangeTraffic={this.props.handleChangeTraffic}
+                handleChangeColor={this.props.handleChangeColor}
+                handleChangeWidth={this.props.handleChangeWidth}
+                handleChangeViewType={this.props.handleChangeViewType}
+              />
+            )}
+            {this.props.getViewType() === "table" && (
+              <TableViewer
+                service={this.props.service}
+                view={this.props.view}
+                handleAddNotification={() => {}}
+              />
+            )}
           </StackItem>
         </Stack>
       </PageSection>

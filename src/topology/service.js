@@ -48,6 +48,11 @@ export class Service {
     this.serviceLinks = new Links();
     this.nodes = () => this.serviceNodes;
     this.links = () => this.serviceLinks;
+    this.fields = [
+      { title: "Address", field: "address" },
+      { title: "Protocol", field: "protocol" },
+      { title: "Deployed", field: "deployedAt" }
+    ];
   }
 
   createSelections = svg => {
@@ -736,6 +741,12 @@ export class Service {
           const current = d.sankeyPath;
           return interpolatePath(previous, current);
         });
+    });
+  };
+
+  doFetch = (page, perPage) => {
+    return new Promise(resolve => {
+      resolve({ data: this.serviceNodes.nodes, page, perPage });
     });
   };
 }

@@ -42,6 +42,11 @@ export class Deployment {
     this.Service = new Service(adapter);
     this.nodes = () => this.Service.nodes();
     this.links = () => this.Service.links();
+    this.fields = [
+      { title: "Address", field: "address" },
+      { title: "Protocol", field: "protocol" },
+      { title: "Site", field: "site_name" }
+    ];
   }
 
   initNodesAndLinks = viewer => {
@@ -640,6 +645,16 @@ export class Deployment {
         .call(endall, () => {
           resolve();
         });
+    });
+  };
+  doFetch = (page, perPage) => {
+    return new Promise(resolve => {
+      const data = this.Service.serviceNodes.nodes.map(n => ({
+        address: n.address,
+        protocol: n.protocol,
+        site_name: n.parentNode.site_name
+      }));
+      resolve({ data, page, perPage });
     });
   };
 }

@@ -463,6 +463,7 @@ main.pf-c-login__main {
 .overview-header {
   padding: 1em;
   text-align: left;
+  border-bottom: 1px solid #cccccc;
 }
 .overview-header.details {
   padding: 1em 2em;
@@ -470,6 +471,11 @@ main.pf-c-login__main {
 .overview-header.details .pf-c-breadcrumb__item {
   font-size: 1.125em;
   margin-bottom: 1em;
+}
+
+.overview-header .pf-m-fill {
+  position: relative;
+  top: -4px;
 }
 
 .fill-card {
@@ -1483,10 +1489,13 @@ circle.end-point {
   display: flex;
 }
 .graph-toolbar .tall-item {
-  border-left: 1px solid black;
   border-right: 1px solid black;
   padding-right: 1em;
 }
+.graph-toolbar .tall-item:not(:first-child) {
+  border-left: 1px solid black;
+}
+
 .graph-toolbar .show-traffic {
   padding-right: 1em;
 }

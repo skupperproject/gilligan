@@ -81,13 +81,15 @@ class PageLayout extends React.Component {
       traffic: false,
       stat: false,
       width: true,
-      color: false
+      color: false,
+      viewType: "graph"
     });
     this.showSankey = checks.sankey;
     this.showTraffic = checks.traffic;
     this.showStat = checks.stat;
     this.showWidth = checks.width;
     this.showColor = checks.color;
+    this.viewType = checks.viewType || "graph";
   }
 
   componentDidMount = () => {
@@ -156,8 +158,13 @@ class PageLayout extends React.Component {
       traffic: this.showTraffic,
       stat: this.showStat,
       width: this.showWidth,
-      color: this.showColor
+      color: this.showColor,
+      viewType: this.viewType
     });
+  };
+  handleChangeViewType = viewType => {
+    this.viewType = viewType;
+    this.saveChecks();
   };
   handleChangeShowStat = showStat => {
     this.showStat = showStat;
@@ -283,16 +290,18 @@ class PageLayout extends React.Component {
               service={this.service}
               {...props}
               {...more}
-              getShowStat={this.getShowStat}
-              getShowSankey={this.getShowSankey}
-              getShowTraffic={this.getShowTraffic}
-              getShowWidth={this.getShowWidth}
-              getShowColor={this.getShowColor}
+              getShowStat={() => this.showStat}
+              getShowSankey={() => this.showSankey}
+              getShowTraffic={() => this.showTraffic}
+              getShowWidth={() => this.showWidth}
+              getShowColor={() => this.showColor}
+              getViewType={() => this.viewType}
               handleChangeSankey={this.handleChangeSankey}
               handleChangeTraffic={this.handleChangeTraffic}
               handleChangeWidth={this.handleChangeWidth}
               handleChangeColor={this.handleChangeColor}
               handleChangeShowStat={this.handleChangeShowStat}
+              handleChangeViewType={this.handleChangeViewType}
             />
           ) : (
             <Redirect

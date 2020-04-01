@@ -54,7 +54,8 @@ class GraphToolbar extends Component {
       {
         key: "table",
         description: "Table",
-        selected: this.props.viewType === "table"
+        selected: this.props.viewType === "table",
+        enabled: true
       }
     ];
   }
@@ -267,9 +268,6 @@ class GraphToolbar extends Component {
     return (
       <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
         <ToolbarGroup>
-          <ToolbarItem className="pf-u-mr-md">
-            View: {this.buildDropdown()}
-          </ToolbarItem>
           {trafficCheck()}
           {sankeyCheck()}
           {statCheck()}

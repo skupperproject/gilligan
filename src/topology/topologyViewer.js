@@ -34,11 +34,7 @@ import ClientInfoComponent from "./clientInfoComponent";
 import ChordViewer from "../chord/chordViewer.js";
 import ServiceCard from "../serviceCard";
 import LinkInfo from "./linkInfo";
-import { Site } from "./site";
-import { Service } from "./service";
-import { Deployment } from "./deployment";
-
-const VIEWS = { site: Site, service: Service, deployment: Deployment };
+import { viewsMap as VIEWS } from "../views";
 
 class TopologyPage extends Component {
   constructor(props) {
