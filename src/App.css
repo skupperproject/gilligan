@@ -1487,6 +1487,9 @@ circle.end-point {
   border-right: 1px solid black;
   padding-right: 1em;
 }
+.graph-toolbar .show-traffic {
+  padding-right: 1em;
+}
 
 a.selected.pf-c-dropdown__menu-item {
   background-color: #0066cc;

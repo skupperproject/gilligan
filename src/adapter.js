@@ -5,6 +5,7 @@ class Adapter {
     this.removeEmptyServices();
     this.addSendersServices();
     this.addServicesToClusters();
+    //this.adoptOrphanServices();
     this.addServersToSites();
     this.addSourcesTargets();
     console.log(this.data);
@@ -182,6 +183,31 @@ class Adapter {
     });
   };
 
+  adoptOrphanServices = () => {
+    this.data.services.forEach(service => {
+      const hasParent = this.data.sites.some(site =>
+        site.services.includes(service)
+      );
+      if (!hasParent) {
+        service.targets = [
+          { name: service.address, site_id: `${service.address}ID` }
+        ];
+        this.data.sites.push({
+          site_name: service.address,
+          site_id: `${service.address}ID`,
+          connected: [],
+          namespace: "none",
+          url: "none",
+          edge: false,
+          services: [service],
+          servers: [service.address],
+          derived: true
+        });
+      }
+    });
+    this.addServicesToClusters();
+  };
+
   // return a list of service names in a requests list
   servicesFromRequests = requests => {
     let serviceList = [];
@@ -197,6 +223,7 @@ class Adapter {
   // return a request record for traffic between source and target services
   linkRequest = (sourceAddress, target) => {
     let req = {};
+    if (!target) debugger;
     target.requests_received.forEach(request => {
       for (const client_id in request.by_client) {
         if (this.serviceNameFromClientId(client_id) === sourceAddress) {

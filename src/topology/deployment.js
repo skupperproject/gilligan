@@ -29,7 +29,8 @@ import {
   updateSankey,
   VIEW_DURATION,
   ServiceWidth,
-  ServiceGap
+  ServiceGap,
+  ServiceHeight
 } from "../utilities";
 import { Site } from "./site";
 import { Service } from "./service";
@@ -68,17 +69,29 @@ export class Deployment {
   initNodes = viewer => {
     this.Site.initNodes(viewer);
     this.Service.initNodes(viewer, true);
-    this.setParentNodes();
+    this.setParentNodes(viewer);
     this.adjustSites(viewer);
   };
 
-  setParentNodes = () => {
+  setParentNodes = viewer => {
     this.Service.serviceNodes.nodes.forEach(service => {
-      const siteNode = this.Site.siteNodes.nodes.find(
-        s => s.site_id === service.cluster.site_id
-      );
-      if (siteNode) {
-        service.parentNode = siteNode;
+      if (service.cluster) {
+        const siteNode = this.Site.siteNodes.nodes.find(
+          s => s.site_id === service.cluster.site_id
+        );
+        if (siteNode) {
+          service.parentNode = siteNode;
+        }
+      } else {
+        service.parentNode = {
+          sankey: { x: 0, y: 0 },
+          x: 0,
+          y: 0,
+          site_id: "",
+          site_name: "",
+          getWidth: () => viewer.width,
+          getHeight: () => viewer.height
+        };
       }
     });
   };
@@ -147,6 +160,14 @@ export class Deployment {
         xyKey: "siteOffset"
       });
     });
+    const orphans = serviceNodes.nodes.filter(n => !n.siteOffset);
+    adjustPositions({
+      nodes: orphans,
+      links: [],
+      width: ServiceWidth,
+      height: viewer.height,
+      xyKey: "siteOffset"
+    });
   };
 
   initServiceLinks = (viewer, vsize) => {
@@ -158,9 +179,9 @@ export class Deployment {
       subNodes.forEach(toNode => {
         const { stat, request } = this.adapter.fromTo(
           fromNode.name,
-          fromNode.parentNode.site_id,
+          fromNode.parentNode ? fromNode.parentNode.site_id : null,
           toNode.name,
-          toNode.parentNode.site_id
+          toNode.parentNode ? toNode.parentNode.site_id : null
         );
         if (stat) {
           const linkIndex = links.addLink({
@@ -180,8 +201,11 @@ export class Deployment {
       });
     });
     // get the sankey height of each node
+    const linkNodes = subNodes.filter(sub =>
+      links.links.some(l => l.source === sub || l.target === sub)
+    );
     initSankey({
-      graph: { nodes: subNodes, links: links.links },
+      graph: { nodes: linkNodes, links: links.links },
       width: vsize.width,
       height: vsize.height,
       nodeWidth: ServiceWidth,
@@ -191,6 +215,10 @@ export class Deployment {
     });
     // save the height and expand the subnodes
     subNodes.forEach(n => {
+      if (n.y0 === undefined) {
+        n.y0 = n.y;
+        n.y1 = n.y + ServiceHeight;
+      }
       n.sankeyHeight = n.y1 - n.y0;
       n.expanded = true;
     });
@@ -224,17 +252,6 @@ export class Deployment {
       height: vsize.height - 20,
       xyKey: "sankey"
     });
-    /*
-    sites.nodes.forEach(n => {
-      // override the default starting position with saved positions
-      const key = `${n.nodeType}:${n.name}`;
-      const pos = getSaved(key);
-      if (pos) {
-        n.x = pos.x;
-        n.y = pos.y;
-      }
-    });
-    */
 
     sites.nodes.forEach(site => {
       site.expanded = false;
@@ -247,6 +264,14 @@ export class Deployment {
       };
     });
 
+    const orphans = subNodes.filter(n => !n.sankeySiteOffset);
+    adjustPositions({
+      nodes: orphans,
+      links: [],
+      width: ServiceWidth,
+      height: viewer.height,
+      xyKey: "sankeySiteOffset"
+    });
     this.regenPaths(true);
     subNodes.forEach(n => {
       n.expanded = false;
@@ -256,21 +281,19 @@ export class Deployment {
 
   regenPaths = sankey => {
     this.Service.serviceNodes.nodes.forEach(n => {
-      if (sankey) {
-        n.y = n.y0 = n.parentNode.sankey.y + n.sankeySiteOffset.y;
-        n.x = n.x0 = n.parentNode.sankey.x + n.sankeySiteOffset.x;
-      } else {
-        n.y = n.y0 = n.parentNode.y + n.siteOffset.y;
-        n.x = n.x0 = n.parentNode.x + n.siteOffset.x;
-      }
+      this.dragStart(n, sankey);
       n.y1 = n.y0 + n.getHeight();
       n.x1 = n.x0 + n.getWidth();
-      //n.x = n.parentNode.x + n.siteOffset.x;
-      //n.y = n.parentNode.y + n.siteOffset.y;
     });
     if (sankey) {
+      const linkNodes = this.Service.serviceNodes.nodes.filter(sub =>
+        this.Service.serviceLinks.links.some(
+          l => l.source === sub || l.target === sub
+        )
+      );
+
       updateSankey({
-        nodes: this.Service.serviceNodes.nodes,
+        nodes: linkNodes, //this.Service.serviceNodes.nodes,
         links: this.Service.serviceLinks.links
       });
     }
@@ -353,13 +376,7 @@ export class Deployment {
         n => n.parentNode.site_id === d.site_id
       );
       subNodes.forEach(n => {
-        if (sankey) {
-          n.x = n.x0 = n.parentNode.sankey.x + n.sankeySiteOffset.x;
-          n.y = n.y0 = n.parentNode.sankey.y + n.sankeySiteOffset.y;
-        } else {
-          n.x = n.parentNode.x + n.siteOffset.x;
-          n.y = n.parentNode.y + n.siteOffset.y;
-        }
+        this.dragStart(n, sankey);
       });
     }
     this.regenPaths(sankey);

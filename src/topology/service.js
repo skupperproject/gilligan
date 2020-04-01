@@ -72,37 +72,35 @@ export class Service {
   };
 
   initNodes = (viewer, includeExtra) => {
-    const clusters = this.adapter.data.sites;
     const serviceNodes = this.serviceNodes;
-    clusters.forEach(cluster => {
-      cluster.services.forEach((service, i) => {
-        if (
-          includeExtra ||
-          !serviceNodes.nodes.some(n => n.name === service.address)
-        ) {
-          const subNode = new Node({
-            name: service.address,
-            nodeType: "service",
-            fixed: true,
-            heightFn: this.serviceHeight,
-            widthFn: this.serviceWidth
-          });
-          subNode.mergeWith(service);
-          subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
-          subNode.color = serviceColor(subNode.name);
-          subNode.cluster = cluster;
-          subNode.shortName = this.adapter.shortName(subNode.name);
-
-          if (includeExtra) {
-            const original = serviceNodes.nodeFor(subNode.name);
-            if (original) {
-              subNode.extra = true;
-              subNode.original = original;
-            }
+    this.adapter.data.services.forEach(service => {
+      if (
+        includeExtra ||
+        !serviceNodes.nodes.some(n => n.name === service.address)
+      ) {
+        const subNode = new Node({
+          name: service.address,
+          nodeType: "service",
+          fixed: true,
+          heightFn: this.serviceHeight,
+          widthFn: this.serviceWidth
+        });
+        subNode.mergeWith(service);
+        subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
+        subNode.color = serviceColor(subNode.name);
+        subNode.cluster = this.adapter.data.sites.find(site =>
+          site.services.includes(service)
+        );
+        subNode.shortName = this.adapter.shortName(subNode.name);
+        if (includeExtra) {
+          const original = serviceNodes.nodeFor(subNode.name);
+          if (original) {
+            subNode.extra = true;
+            subNode.original = original;
           }
-          serviceNodes.add(subNode);
         }
-      });
+        serviceNodes.add(subNode);
+      }
     });
   };
 

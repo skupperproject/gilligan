@@ -75,7 +75,7 @@ export class Site {
   };
 
   initNodes = viewer => {
-    const clusters = this.adapter.data.sites;
+    const clusters = this.adapter.data.sites; //.filter(s => !s.derived);
     const siteNodes = this.siteNodes;
     clusters.forEach(cluster => {
       const name = cluster.site_name;

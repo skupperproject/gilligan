@@ -131,7 +131,7 @@ class GraphToolbar extends Component {
   render() {
     const trafficCheck = () =>
       this.props.view === "site" && (
-        <ToolbarItem className="toolbar-item">
+        <ToolbarItem className="toolbar-item show-traffic">
           <Checkbox
             label="Show traffic"
             isChecked={this.props.getShowTraffic()}
