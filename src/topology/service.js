@@ -107,7 +107,6 @@ export class Service {
         serviceNodes.add(subNode);
       }
     });
-    console.log(this.serviceNodes.nodes);
   }
 
   initLinks = (viewer, vsize) => {
@@ -706,7 +705,7 @@ export class Service {
         .attr("opacity", 0.5)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath(d); //d.sankeyPath; //genPath(d, "service");
+          const current = genPath(d); //d.sankeyPath;
           const ip = interpolatePath(previous, current);
           return t => {
             setLinkStat();
@@ -739,7 +738,7 @@ export class Service {
         .attr("opacity", 1)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = d.sankeyPath;
+          const current = genPath(d); //d.sankeyPath;
           return interpolatePath(previous, current);
         });
     });

@@ -6,7 +6,7 @@ class RESTService {
 
   getData = alt =>
     new Promise((resolve, reject) => {
-      if (!alt) alt = "sample-mar31"; //"tcp-http-mixed"; //"data2";
+      if (!alt) alt = "noservice"; //"sample-mar31"; //"tcp-http-mixed"; //"data2";
       // try from the window url
       this.fetchFrom(`${this.url}/DATA`)
         .then(resolve)

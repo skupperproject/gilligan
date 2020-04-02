@@ -96,7 +96,6 @@ export class Site {
       clusterNode.color = siteColor(name);
       clusterNode.r = SiteRadius;
     });
-    console.log(this.siteNodes.nodes);
   };
 
   initTrafficLinks = (viewer, vsize) => {
@@ -136,21 +135,23 @@ export class Site {
       height: viewer.height
     });
 
-    const graph = {
-      nodes: this.siteNodes.nodes,
-      links: links.links
-    };
-    initSankey({
-      graph,
-      width: vsize.width,
-      height: vsize.height,
-      nodeWidth: ServiceWidth,
-      nodePadding: ClusterPadding,
-      left: 50,
-      top: 20,
-      right: 50,
-      bottom: 10
-    });
+    if (links.links.length > 0) {
+      const graph = {
+        nodes: this.siteNodes.nodes,
+        links: links.links
+      };
+      initSankey({
+        graph,
+        width: vsize.width,
+        height: vsize.height,
+        nodeWidth: ServiceWidth,
+        nodePadding: ClusterPadding,
+        left: 50,
+        top: 20,
+        right: 50,
+        bottom: 10
+      });
+    }
     // move the sankey starting points to the site location
     this.siteNodes.nodes.forEach(n => {
       n.x0 = n.x;
@@ -158,8 +159,10 @@ export class Site {
       n.y0 = n.y;
       n.y1 = n.y + n.getHeight();
     });
-    // update the links
-    Sankey().update(graph);
+    if (links.links.length > 0) {
+      // update the links
+      Sankey().update({ nodes: this.siteNodes.nodes, links: links.links });
+    }
     return vsize;
   };
 
