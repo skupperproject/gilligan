@@ -35,17 +35,14 @@ import {
 import { Site } from "./site";
 import { Service } from "./service";
 
-export class Deployment {
+export class Deployment extends Service {
   constructor(adapter) {
-    this.adapter = adapter;
+    super(adapter);
     this.Site = new Site(adapter);
-    this.Service = new Service(adapter);
-    this.nodes = () => this.Service.nodes();
-    this.links = () => this.Service.links();
     this.fields = [
       { title: "Address", field: "address" },
       { title: "Protocol", field: "protocol" },
-      { title: "Site", field: "site_name" }
+      { title: "Deployed at", field: "site_name" }
     ];
   }
 
@@ -63,23 +60,23 @@ export class Deployment {
 
   createSelections = svg => {
     this.Site.sitesSelection = this.Site.createSitesSelection(svg);
-    this.Service.createSelections(svg);
+    super.createSelections(svg);
   };
 
   setupSelections = viewer => {
     this.Site.sitesSelection = this.Site.setupSitesSelection(viewer);
-    this.Service.setupSelections(viewer);
+    super.setupSelections(viewer);
   };
 
   initNodes = viewer => {
     this.Site.initNodes(viewer);
-    this.Service.initNodes(viewer, true);
+    super.initNodes(viewer, true);
     this.setParentNodes(viewer);
     this.adjustSites(viewer);
   };
 
   setParentNodes = viewer => {
-    this.Service.serviceNodes.nodes.forEach(service => {
+    this.serviceNodes.nodes.forEach(service => {
       if (service.cluster) {
         const siteNode = this.Site.siteNodes.nodes.find(
           s => s.site_id === service.cluster.site_id
@@ -104,12 +101,12 @@ export class Deployment {
   // move the sites and move the services inside their respective site
   adjustSites = viewer => {
     const siteNodes = this.Site.siteNodes;
-    const serviceNodes = this.Service.serviceNodes;
+    const serviceNodes = this.serviceNodes;
     // size the sites based on the services deployed in them
     siteNodes.nodes.forEach(site => {
       const links = [];
       // services deployed in this site
-      const subServices = this.Service.serviceNodes.nodes.filter(
+      const subServices = this.serviceNodes.nodes.filter(
         sn => sn.parentNode.site_id === site.site_id
       );
       // get links between services within each site
@@ -176,8 +173,8 @@ export class Deployment {
   };
 
   initServiceLinks = (viewer, vsize) => {
-    const subNodes = this.Service.serviceNodes.nodes;
-    const links = this.Service.serviceLinks;
+    const subNodes = this.serviceNodes.nodes;
+    const links = this.serviceLinks;
     const sites = this.Site.siteNodes;
     // create links between all services
     subNodes.forEach(fromNode => {
@@ -285,21 +282,19 @@ export class Deployment {
   };
 
   regenPaths = sankey => {
-    this.Service.serviceNodes.nodes.forEach(n => {
+    this.serviceNodes.nodes.forEach(n => {
       this.dragStart(n, sankey);
       n.y1 = n.y0 + n.getHeight();
       n.x1 = n.x0 + n.getWidth();
     });
     if (sankey) {
-      const linkNodes = this.Service.serviceNodes.nodes.filter(sub =>
-        this.Service.serviceLinks.links.some(
-          l => l.source === sub || l.target === sub
-        )
+      const linkNodes = this.serviceNodes.nodes.filter(sub =>
+        this.serviceLinks.links.some(l => l.source === sub || l.target === sub)
       );
 
       updateSankey({
         nodes: linkNodes, //this.Service.serviceNodes.nodes,
-        links: this.Service.serviceLinks.links
+        links: this.serviceLinks.links
       });
     }
   };
@@ -342,7 +337,7 @@ export class Deployment {
     this.Site.siteNodes.nodes.forEach(s => {
       this.dragStart(s, sankey);
     });
-    this.Service.serviceNodes.nodes.forEach(n => {
+    this.serviceNodes.nodes.forEach(n => {
       this.dragStart(n, sankey);
     });
   };
@@ -377,7 +372,7 @@ export class Deployment {
       d.sankey.x = d.x;
       d.sankey.y = d.y;
       // now move the deployments that are in the circle
-      const subNodes = this.Service.serviceNodes.nodes.filter(
+      const subNodes = this.serviceNodes.nodes.filter(
         n => n.parentNode.site_id === d.site_id
       );
       subNodes.forEach(n => {
@@ -389,37 +384,27 @@ export class Deployment {
 
   tick = sankey => {
     this.Site.tick(sankey);
-    this.Service.servicesSelection.attr("transform", d => {
+    this.servicesSelection.attr("transform", d => {
       return `translate(${d.x},${d.y})`;
     });
   };
 
-  setLinkStat = (sankey, props) => {
-    this.Service.setLinkStat(sankey, props);
-  };
-
   setupDrag = drag => {
-    this.Service.setupDrag(drag);
+    super.setupDrag(drag);
     this.Site.setupDrag(drag);
   };
 
   collapseNodes = () => {
-    this.Service.collapseNodes();
+    super.collapseNodes();
     this.Site.collapseNodes();
   };
   expandNodes = () => {
-    this.Service.expandNodes();
+    super.expandNodes();
     this.Site.expandNodes();
-  };
-  setBlack = black => {
-    this.Service.setBlack(black);
-  };
-  selectionSetBlack = () => {
-    this.Service.selectionSetBlack();
   };
   drawViewPath = sankey => {
     this.regenPaths(sankey);
-    this.Service.drawViewPath(sankey);
+    super.drawViewPath(sankey);
   };
 
   transition = (sankey, initial, color, viewer) => {
@@ -649,7 +634,7 @@ export class Deployment {
   };
   doFetch = (page, perPage) => {
     return new Promise(resolve => {
-      const data = this.Service.serviceNodes.nodes.map(n => ({
+      const data = this.serviceNodes.nodes.map(n => ({
         address: n.address,
         protocol: n.protocol,
         site_name: n.parentNode.site_name

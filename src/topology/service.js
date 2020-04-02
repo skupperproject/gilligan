@@ -51,21 +51,21 @@ export class Service {
     this.fields = [
       { title: "Address", field: "address" },
       { title: "Protocol", field: "protocol" },
-      { title: "Deployed", field: "deployedAt" }
+      { title: "Deployed at", field: "deployedAt" }
     ];
   }
 
-  createSelections = svg => {
+  createSelections(svg) {
     this.masksSelection = this.createMasksSelection(svg);
     this.servicesSelection = this.createServicesSelection(svg);
     this.linksSelection = this.createLinksSelection(svg);
-  };
+  }
 
-  setupSelections = viewer => {
+  setupSelections(viewer) {
     this.masksSelection = this.setupMasks(viewer);
     this.servicesSelection = this.setupServicesSelection(viewer);
     this.linksSelection = this.setupLinksSelection(viewer);
-  };
+  }
 
   initNodesAndLinks = viewer => {
     this.initNodes(viewer, false);
@@ -76,7 +76,7 @@ export class Service {
     return { nodeCount: this.serviceNodes.nodes.length, size: vsize };
   };
 
-  initNodes = (viewer, includeExtra) => {
+  initNodes(viewer, includeExtra) {
     const serviceNodes = this.serviceNodes;
     this.adapter.data.services.forEach(service => {
       if (
@@ -107,7 +107,8 @@ export class Service {
         serviceNodes.add(subNode);
       }
     });
-  };
+    console.log(this.serviceNodes.nodes);
+  }
 
   initLinks = (viewer, vsize) => {
     const serviceNodes = this.serviceNodes.nodes;
@@ -483,7 +484,7 @@ export class Service {
     });
   };
 
-  drawViewPath = sankey => {
+  drawViewPath(sankey) {
     circularize(this.serviceLinks.links);
     this.linksSelection.selectAll("path").attr("d", d => {
       if (sankey) {
@@ -495,18 +496,18 @@ export class Service {
     this.masksSelection
       .selectAll("path")
       .attr("d", d => genPath(d.link, undefined, d.mask));
-  };
+  }
 
-  collapseNodes = () => {
+  collapseNodes() {
     this.serviceNodes.nodes.forEach(n => {
       n.expanded = false;
     });
-  };
-  expandNodes = () => {
+  }
+  expandNodes() {
     this.serviceNodes.nodes.forEach(n => {
       n.expanded = true;
     });
-  };
+  }
 
   reGenPaths = () => {
     this.serviceLinks.links.forEach(link => {
@@ -527,9 +528,9 @@ export class Service {
     );
   };
 
-  setupDrag = drag => {
+  setupDrag(drag) {
     this.servicesSelection.call(drag);
-  };
+  }
 
   transition = (sankey, initial, color, viewer) => {
     if (sankey) {
@@ -745,8 +746,13 @@ export class Service {
   };
 
   doFetch = (page, perPage) => {
+    const data = this.serviceNodes.nodes.map(n => ({
+      address: n.address,
+      protocol: n.protocol,
+      deployedAt: n.cluster ? n.cluster.site_name : ""
+    }));
     return new Promise(resolve => {
-      resolve({ data: this.serviceNodes.nodes, page, perPage });
+      resolve({ data, page, perPage });
     });
   };
 }

@@ -52,7 +52,8 @@ export class Site {
     this.links = () => this.routerLinks;
     this.fields = [
       { title: "Name", field: "site_name" },
-      { title: "Site ID", field: "site_id" }
+      { title: "Site ID", field: "site_id" },
+      { title: "Servers", field: "servers" }
     ];
   }
 
@@ -95,6 +96,7 @@ export class Site {
       clusterNode.color = siteColor(name);
       clusterNode.r = SiteRadius;
     });
+    console.log(this.siteNodes.nodes);
   };
 
   initTrafficLinks = (viewer, vsize) => {
@@ -744,8 +746,15 @@ export class Site {
   };
 
   doFetch = (page, perPage) => {
+    const data = this.siteNodes.nodes.map(n => ({
+      site_name: n.site_name,
+      site_id: n.site_id,
+      servers: [
+        ...new Set(n.servers.map(s => this.adapter.serviceNameFromClientId(s)))
+      ].join(", ")
+    }));
     return new Promise(resolve => {
-      resolve({ data: this.siteNodes.nodes, page, perPage });
+      resolve({ data, page, perPage });
     });
   };
 }
