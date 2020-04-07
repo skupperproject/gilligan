@@ -181,13 +181,11 @@ class TopologyPage extends Component {
                 handleChangeOption={this.handleChangeOption}
                 getShowStat={this.props.getShowStat}
                 getShowSankey={this.props.getShowSankey}
-                getShowTraffic={this.props.getShowTraffic}
                 getShowWidth={this.props.getShowWidth}
                 getShowColor={this.props.getShowColor}
                 getViewType={this.props.getViewType}
                 handleChangeShowStat={this.props.handleChangeShowStat}
                 handleChangeSankey={this.props.handleChangeSankey}
-                handleChangeTraffic={this.props.handleChangeTraffic}
                 handleChangeColor={this.props.handleChangeColor}
                 handleChangeWidth={this.props.handleChangeWidth}
                 handleChangeViewType={this.props.handleChangeViewType}

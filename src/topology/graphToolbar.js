@@ -85,8 +85,6 @@ class GraphToolbar extends Component {
       this.props.handleChangeSankey(checked);
     } else if (name === "showStat") {
       this.props.handleChangeShowStat(checked);
-    } else if (name === "showTraffic") {
-      this.props.handleChangeTraffic(checked);
     } else if (name === "showWidth") {
       this.props.handleChangeWidth(checked);
     } else if (name === "showColor") {
@@ -130,29 +128,12 @@ class GraphToolbar extends Component {
   };
 
   render() {
-    const trafficCheck = () =>
-      this.props.view === "site" && (
-        <ToolbarItem className="toolbar-item show-traffic">
-          <Checkbox
-            label="Show traffic"
-            isChecked={this.props.getShowTraffic()}
-            onChange={this.handleChange}
-            aria-label="show traffic"
-            id="showTraffic"
-            name="showTraffic"
-          />
-        </ToolbarItem>
-      );
     const sankeyCheck = () => (
       <ToolbarItem className="toolbar-item tall-item">
         <Checkbox
+          className="always-on"
           label="Show relative traffic"
           isChecked={this.props.getShowSankey()}
-          isDisabled={
-            this.props.view === "site" && !this.props.getShowTraffic()
-              ? true
-              : false
-          }
           onChange={this.handleChange}
           aria-label="show relative traffic"
           id="showSankey"
@@ -247,7 +228,7 @@ class GraphToolbar extends Component {
             label="Show statistic"
             isChecked={this.props.getShowStat()}
             isDisabled={
-              this.props.view === "site" && !this.props.getShowTraffic()
+              this.props.view === "site" && !this.props.getShowSankey()
                 ? true
                 : false
             }
@@ -268,7 +249,6 @@ class GraphToolbar extends Component {
     return (
       <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
         <ToolbarGroup>
-          {trafficCheck()}
           {sankeyCheck()}
           {statCheck()}
         </ToolbarGroup>

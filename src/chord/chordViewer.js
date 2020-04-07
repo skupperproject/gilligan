@@ -363,7 +363,8 @@ class ChordViewer extends Component {
       to = rinfo[1],
       address = rinfo[2];
     if (!matrix.aggregate) {
-      address += "<br/>";
+      address = "";
+      //address += "<br/>";
     }
     let title =
       address + from + " → " + to + ": " + this.formatNumber(d.source.value);

@@ -24,7 +24,8 @@ import {
   copy,
   genPath,
   linkColor,
-  //getSaved,
+  getSaved,
+  setSaved,
   initSankey,
   lighten,
   pathBetween,
@@ -41,6 +42,7 @@ import { interpolatePath } from "d3-interpolate-path";
 
 import { Nodes } from "./nodes.js";
 import { Links } from "./links.js";
+const SITE_POSITION = "site";
 
 export class Site {
   constructor(adapter) {
@@ -154,14 +156,25 @@ export class Site {
     }
     // move the sankey starting points to the site location
     this.siteNodes.nodes.forEach(n => {
-      n.x0 = n.x;
+      const pos = getSaved(`${SITE_POSITION}-${n.site_id}`);
+      if (pos) {
+        n.x = pos.x;
+        n.y = pos.y;
+        n.x0 = pos.x0;
+        n.y = pos.y0;
+      } else {
+        n.x0 = n.x;
+        n.y0 = n.y;
+      }
       n.x1 = n.x + n.getWidth();
-      n.y0 = n.y;
       n.y1 = n.y + n.getHeight();
     });
     if (links.links.length > 0) {
       // update the links
-      Sankey().update({ nodes: this.siteNodes.nodes, links: links.links });
+      Sankey().update({
+        nodes: this.siteNodes.nodes,
+        links: links.links
+      });
     }
     return vsize;
   };
@@ -183,25 +196,6 @@ export class Site {
         );
       });
     });
-    /*
-    vsize = adjustPositions({
-      nodes: nodes.nodes,
-      links: links.links,
-      width: vsize.width,
-      height: vsize.height
-    });
-    */
-    /*
-    nodes.nodes.forEach(n => {
-      // override the default starting position with saved positions
-      const key = `${n.nodeType}:${n.name}`;
-      const pos = getSaved(key);
-      if (pos) {
-        n.x = pos.x;
-        n.y = pos.y;
-      }
-    });
-    */
     return vsize;
   };
 
@@ -391,10 +385,9 @@ export class Site {
     enter
       .append("path")
       .attr("class", "siteTrafficLink")
-      .attr("stroke", "black")
-      .attr("stroke-width", 2)
+      .attr("fill", d => d.getColor())
       .attr("d", d => {
-        return genPath(d);
+        return genPath({ link: d });
       });
 
     enter
@@ -402,28 +395,22 @@ export class Site {
       .attr("class", "siteTrafficDir")
       .attr("stroke", "black")
       .attr("stroke-width", 1)
-      .attr("marker-end", "url(#end--15)")
-      .attr("d", d => genPath(d));
+      .attr("marker-end", "url(#end--15)");
 
     enter
       .append("path")
       .attr("class", "hittarget")
-      .attr("id", d => `dir-${d.source.name}-${d.target.name}`)
-      .attr("d", d => genPath(d))
+      //.attr("id", d => `dir-${d.source.name}-${d.target.name}`)
       .on("click", d => {
         d3.event.stopPropagation();
         viewer.clearPopups();
         viewer.showLinkInfo(d);
       })
       .on("mouseover", d => {
-        d.selected = true;
         viewer.showLinkInfo(d);
-        viewer.restart();
       })
       .on("mouseout", d => {
-        d.selected = false;
         viewer.clearPopups();
-        viewer.restart();
       });
 
     enter
@@ -452,15 +439,13 @@ export class Site {
     selection.exit().remove();
     const enter = selection.enter().append("g");
 
-    enter
-      .append("path")
-      .attr("class", "site")
-      .attr("d", d => genPath(d));
+    enter.append("path").attr("class", "site");
 
     enter
       .append("path")
       .attr("marker-end", "url(#site-end)")
-      .attr("class", "hittarget")
+      .attr("class", "site-hittarget")
+      .attr("stroke-width", 6)
       .on("click", d => {
         d3.event.stopPropagation();
         viewer.clearPopups();
@@ -505,28 +490,25 @@ export class Site {
     return interSiteLinks;
   };
 
-  showTraffic = (showTraffic, sankey, viewer) => {
-    if (showTraffic) {
-      if (sankey) {
-        this.toSiteSankey(false, false, viewer.setLinkStat);
-      } else {
-        circularize(this.trafficLinks.links);
-        d3.selectAll("path.siteTrafficDir")
-          .attr("d", d => genPath(d))
-          .attr("opacity", 0);
-        this.toSiteSankey(false, showTraffic, viewer.setLinkStat);
-      }
-    } else this.toSite(false, viewer.setLinkStat);
+  savePosition = d => {
+    setSaved(`${SITE_POSITION}-${d.site_id}`, {
+      x: d.x,
+      y: d.y,
+      x0: d.x0,
+      y0: d.y0
+    });
   };
 
   dragStart = d => {
     d.x = d.x0;
     d.y = d.y0;
+    this.savePosition(d);
   };
 
-  drag = d => {
+  drag = (d, sankey, skipSave) => {
     d.x = d.x0 = d.px;
     d.y = d.y0 = d.py;
+    if (!skipSave) this.savePosition(d);
   };
 
   tick = sankey => {
@@ -542,26 +524,33 @@ export class Site {
 
   drawViewPath = sankey => {
     this.routerLinksSelection
-      .selectAll("path")
+      .selectAll("path") // this includes the .site and .site-hittarget
       .attr("d", d => pathBetween(d.source, d.target));
 
     circularize(this.trafficLinks.links);
-    this.trafficLinksSelection.selectAll("path").attr("d", d => genPath(d));
+    this.trafficLinksSelection
+      .selectAll("path.siteTrafficLink")
+      .attr("d", d => genPath({ link: d, useSankeyY: true, sankey: true }));
+    this.trafficLinksSelection
+      .selectAll("path.siteTrafficDir")
+      .attr("d", d => genPath({ link: d }));
+    this.trafficLinksSelection
+      .selectAll("path.hittarget")
+      .attr("stroke-width", d => (sankey ? Math.max(d.width, 6) : 6))
+      .attr("d", d => genPath({ link: d }));
+
     this.masksSelection
       .selectAll("path")
-      .attr("d", d => genPath(d.link, undefined, d.mask));
+      .attr("d", d => genPath({ link: d.link, mask: d.mask }));
   };
 
   setLinkStat = (sankey, props) => {
-    const traffic = props.getShowTraffic();
-    if (traffic) {
-      setLinkStat(
-        this.trafficLinksSelection,
-        "siteTrafficLink",
-        props.options.link.stat,
-        props.getShowStat()
-      );
-    }
+    setLinkStat(
+      this.trafficLinksSelection,
+      "siteTrafficDir",
+      props.options.link.stat,
+      props.getShowStat()
+    );
   };
 
   setupDrag = drag => {
@@ -591,46 +580,111 @@ export class Site {
     expanded || n.expanded ? n.sankey.r * 2 : n.r * 2;
   clusterWidth = (n, expanded) => this.clusterHeight(n, expanded);
 
-  transition = (sankey, initial, traffic, color, viewer) => {
+  highlightLink(highlight, link, d, sankey, color) {
+    this.trafficLinksSelection
+      .selectAll("path.siteTrafficLink")
+      .filter(d1 => d1 === d)
+      .attr("opacity", highlight ? (sankey ? 0.8 : 0) : sankey ? 0.5 : 0);
+
+    this.trafficLinksSelection
+      .selectAll("path.siteTrafficDir")
+      .filter(d1 => d1 === d)
+      .attr("opacity", 1);
+  }
+
+  blurAll(blur, d, sankey, color) {
+    const opacity = blur ? 0.25 : 1;
+    this.sitesSelection.attr("opacity", opacity);
+    this.trafficLinksSelection
+      .selectAll("path.siteTrafficLink")
+      .attr("opacity", blur ? (color ? 0 : 0.25) : sankey ? 0.5 : 0);
+    this.trafficLinksSelection
+      .selectAll("path.siteTrafficDir")
+      .attr("opacity", blur ? 0.25 : 1);
+    this.routerLinksSelection
+      .selectAll("path.site")
+      .attr("opacity", blur ? 0.25 : 1);
+  }
+
+  transition = (sankey, initial, color, viewer) => {
     if (sankey) {
-      return this.toSiteSankey(initial, false, viewer.setLinkStat, color);
-    } else if (traffic) {
-      return this.toSiteSankey(initial, true, viewer.setLinkStat, color);
+      return this.toSiteSankey(initial, viewer.setLinkStat);
+    } else if (color) {
+      return this.toSiteColor(initial, viewer.setLinkStat);
     } else {
       return this.toSite(initial, viewer.setLinkStat);
     }
   };
+
+  // show traffic as a single colored line
+  toSiteColor = (initial, setLinkStat) => {
+    return new Promise(resolve => {
+      d3.select("g.siteTrafficLinks").style("display", "block");
+      // hide the wide traffic paths
+      d3.selectAll("path.siteTrafficLink")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("stroke-width", 2)
+        .attr("opacity", 0)
+        .call(endall, () => {
+          resolve();
+        });
+
+      // traffic mouseover path
+      d3.selectAll("path.hittarget")
+        .style("display", "block")
+        .attr("stroke-width", 6)
+        .attr("d", d => genPath({ link: d }));
+
+      // show the traffic direction in color
+      d3.selectAll("path.siteTrafficDir")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 1)
+        .attr("stroke-width", 2)
+        .attr("stroke", d => d.getColor())
+        .attrTween("d", function(d, i) {
+          const previous = d3.select(this).attr("d");
+          const current = genPath({ link: d });
+          return interpolatePath(previous, current);
+        });
+
+      // let the stats show if/when the checkbox is checked
+      d3.select("g.siteTrafficLinks")
+        .selectAll("text.stats")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 1);
+
+      // hide the wide masks
+      d3.selectAll("path.mask")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 0)
+        .attr("stroke-width", 0);
+
+      // fade all inter-router paths
+      d3.select("g.siteLinks")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 0.25);
+    });
+  };
+
+  // no traffic view
   toSite = (initial, setLinkStat) => {
     return new Promise(resolve => {
-      if (!initial) {
-        d3.selectAll("path.siteTrafficLink")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("stroke-width", 2)
-          .attr("opacity", 0)
-          .call(endall, () => {
-            d3.select("g.siteTrafficLinks").style("display", "none");
-            resolve();
-          });
+      // hide all traffic paths
+      d3.select("g.siteTrafficLinks").style("display", "none");
 
-        d3.selectAll("path.siteTrafficDir")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("opacity", 0);
-
-        d3.select("g.siteLinks")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("opacity", 1);
-
-        d3.select("g.siteTrafficLinks")
-          .selectAll("text.stats")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("opacity", 0);
-      } else {
-        d3.selectAll("g.siteTrafficLinks").style("display", "none");
-      }
+      // show all inter router links
+      d3.select("g.siteLinks")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 1)
+        .call(endall, () => {
+          resolve();
+        });
 
       // transition the containers to their proper position
       d3.selectAll(".cluster")
@@ -646,20 +700,17 @@ export class Site {
             .style("display", "block");
         });
 
-      // change the path's width and location
-      d3.selectAll("path.site")
-        .attr("opacity", 1)
-        .attr("stroke-width", null);
+      d3.selectAll("path.hittarget").style("display", "none");
 
       d3.selectAll("path.mask")
+        .attr("stroke-width", 0)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke-width", 1)
-        .attr("stroke", d => d.link.target.color)
+        .attr("fill", d => d.link.target.color)
         .attr("opacity", 0)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath(d.link, undefined, d.mask);
+          const current = genPath({ link: d.link, mask: d.mask });
           return interpolatePath(previous, current);
         });
 
@@ -676,7 +727,8 @@ export class Site {
     });
   };
 
-  toSiteSankey = (initial, showTraffic, setLinkStat, color) => {
+  // show traffic as wide lines
+  toSiteSankey = (initial, setLinkStat) => {
     return new Promise(resolve => {
       d3.select("g.siteTrafficLinks").style("display", "block");
       d3.select("g.siteLinks")
@@ -691,60 +743,56 @@ export class Site {
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 1)
-        .attr("stroke", d => (color ? d.getColor() : "black"))
-        .attr("stroke-width", color ? 2 : 1);
+        .attr("stroke", "black")
+        .attr("stroke-width", 1);
+
       d3.select("g.siteTrafficLinks")
         .selectAll("text.stats")
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 1);
 
-      if (!showTraffic) {
-        d3.selectAll("path.siteTrafficLink")
-          .attr("stroke-width", 2)
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("opacity", 0.5)
-          .attr("stroke-width", d => Math.max(6, d.width))
-          .attr("stroke", d => d.target.color)
-          .attrTween("d", function(d, i) {
-            const previous = d3.select(this).attr("d");
-            const current = previous; //d.path;
-            return interpolatePath(previous, current);
+      d3.selectAll("path.siteTrafficLink")
+        .attr("stroke-width", 0)
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 0.5)
+        .attr("fill", d => d.target.color)
+        .attrTween("d", function(d, i) {
+          const previous = genPath({
+            link: d,
+            useSankeyY: true,
+            sankey: true,
+            width: 2
           });
-      } else {
-        d3.selectAll("path.siteTrafficLink")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("stroke", d => (color ? d.getColor() : null))
-          .attr("stroke-width", 2)
-          .attr("opacity", 0);
-      }
-      d3.select("g.siteTrafficLinks")
-        .selectAll("path.hittarget")
-        .attr("stroke-width", d => Math.max(6, showTraffic ? 6 : d.width));
+          const current = genPath({
+            link: d,
+            useSankeyY: true,
+            sankey: true
+          });
+          return interpolatePath(previous, current);
+        });
 
-      if (!showTraffic) {
-        d3.selectAll("path.mask")
-          .attr("stroke-width", 2)
-          .attr("opacity", 0)
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("stroke-width", d => Math.max(6, d.link.width))
-          .attr("stroke", d => d.link.target.color)
-          .attr("opacity", 0.5)
-          .attrTween("d", function(d, i) {
-            const previous = d3.select(this).attr("d");
-            const current = genPath(d.link, undefined, d.mask);
-            return interpolatePath(previous, current);
+      d3.selectAll("path.hittarget")
+        .style("display", "block")
+        .attr("stroke-width", d => Math.max(d.width, 6))
+        .attr("d", d => genPath({ link: d }));
+
+      d3.selectAll("path.mask")
+        .attr("stroke-width", 0)
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 0.5)
+        .attr("fill", d => d.link.target.color)
+        .attrTween("d", function(d, i) {
+          const previous = genPath({
+            link: d.link,
+            mask: d.mask,
+            width: 2
           });
-      } else {
-        d3.selectAll("path.mask")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("stroke-width", 2)
-          .attr("opacity", 0);
-      }
+          const current = genPath({ link: d.link, mask: d.mask });
+          return interpolatePath(previous, current);
+        });
     });
   };
 
@@ -760,4 +808,6 @@ export class Site {
       resolve({ data, page, perPage });
     });
   };
+  chordOver(chord, over, viewer) {}
+  arcOver(arc, over, viewer) {}
 }

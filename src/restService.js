@@ -6,7 +6,6 @@ class RESTService {
 
   getData = alt =>
     new Promise((resolve, reject) => {
-      if (!alt) alt = "noservice"; //"sample-mar31"; //"tcp-http-mixed"; //"data2";
       // try from the window url
       this.fetchFrom(`${this.url}/DATA`)
         .then(resolve)
@@ -16,6 +15,9 @@ class RESTService {
           // TODO: remove this for production
           // this was only used to get the data when the console
           // was served by yarn start
+          if (!alt) {
+            alt = "hipster-store"; //"tcp-http-mixed"; //"data2";
+          }
           this.fetchFrom(`/data/${alt}.json`)
             .then(resolve)
             .catch(error => {

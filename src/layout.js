@@ -78,14 +78,13 @@ class PageLayout extends React.Component {
     ];
     const checks = getSaved(TOOLBAR_CHECKS, {
       sankey: false,
-      traffic: false,
       stat: false,
       width: true,
       color: false,
       viewType: "graph"
     });
+    checks.sankey = true;
     this.showSankey = checks.sankey;
-    this.showTraffic = checks.traffic;
     this.showStat = checks.stat;
     this.showWidth = checks.width;
     this.showColor = checks.color;
@@ -155,7 +154,6 @@ class PageLayout extends React.Component {
   saveChecks = () => {
     setSaved(TOOLBAR_CHECKS, {
       sankey: this.showSankey,
-      traffic: this.showTraffic,
       stat: this.showStat,
       width: this.showWidth,
       color: this.showColor,
@@ -174,10 +172,6 @@ class PageLayout extends React.Component {
     this.showSankey = showSankey;
     this.saveChecks();
   };
-  handleChangeTraffic = showTraffic => {
-    this.showTraffic = showTraffic;
-    this.saveChecks();
-  };
   handleChangeWidth = showWidth => {
     this.showWidth = showWidth;
     this.showColor = !showWidth;
@@ -193,9 +187,6 @@ class PageLayout extends React.Component {
   };
   getShowSankey = () => {
     return this.showSankey;
-  };
-  getShowTraffic = () => {
-    return this.showTraffic;
   };
   getShowWidth = () => {
     return this.showWidth;
@@ -292,12 +283,10 @@ class PageLayout extends React.Component {
               {...more}
               getShowStat={() => this.showStat}
               getShowSankey={() => this.showSankey}
-              getShowTraffic={() => this.showTraffic}
               getShowWidth={() => this.showWidth}
               getShowColor={() => this.showColor}
               getViewType={() => this.viewType}
               handleChangeSankey={this.handleChangeSankey}
-              handleChangeTraffic={this.handleChangeTraffic}
               handleChangeWidth={this.handleChangeWidth}
               handleChangeColor={this.handleChangeColor}
               handleChangeShowStat={this.handleChangeShowStat}

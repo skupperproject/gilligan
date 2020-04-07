@@ -85,7 +85,7 @@ class TopologyPage extends Component {
 
   // called only once when the component is initialized
   componentDidMount = () => {
-    window.addEventListener("resize", this.resize);
+    //window.addEventListener("resize", this.resize);
 
     // create the svg
     this.init();
@@ -94,7 +94,7 @@ class TopologyPage extends Component {
   };
 
   componentWillUnmount = () => {
-    window.removeEventListener("resize", this.resize);
+    //window.removeEventListener("resize", this.resize);
     d3.select(".pf-c-page__main").style("background-color", "white");
   };
 
@@ -212,10 +212,10 @@ class TopologyPage extends Component {
       .gravity(d => {
         return this.viewObj.nodes().gravity(d, nodeCount);
       })
-      .on("tick", this.tick);
+      .on("tick", this._tick);
 
-    this.force.stop();
-    this.force.start();
+    //this.force.stop();
+    //this.force.start();
     this.drag = this.force
       .drag()
       .on("dragstart", d => {
@@ -247,9 +247,23 @@ class TopologyPage extends Component {
 
   highlightConnection = (highlight, link, d, self) => {
     if (this.transitioning) return;
+    /*
+    this.viewObj.highlightConnection(highlight, link, d, this.sankey, this.getShowColor(), self)
+    */
+    this.viewObj.blurAll(highlight, link, this.sankey, this.getShowColor());
+    this.viewObj.highlightLink(
+      highlight,
+      link,
+      d,
+      this.sankey,
+      this.getShowColor()
+    );
+
+    /*
     this.blurAll(highlight, d);
     this.highlightLink(highlight, link, d);
     link.selectAll("text").attr("font-weight", highlight ? "bold" : null);
+    */
   };
 
   opaqueServiceType = d => {
@@ -260,6 +274,14 @@ class TopologyPage extends Component {
   };
 
   highlightLink = (highlight, link, d) => {
+    this.viewObj.highlightLink(
+      highlight,
+      link,
+      d,
+      this.sankey,
+      this.getShowColor()
+    );
+    /*
     link.selectAll("text.stats").style("stroke", null);
     link.selectAll("path.servicesankeyDir").attr("opacity", 1);
     // highlight the link
@@ -300,6 +322,7 @@ class TopologyPage extends Component {
         )
         .attr("opacity", 1);
     }
+    */
   };
 
   highlightServiceType = (highlight, st, d, self) => {
@@ -325,6 +348,8 @@ class TopologyPage extends Component {
   };
 
   blurAll = (blur, d) => {
+    this.viewObj.blurAll(blur, d, this.sankey, this.getShowColor());
+    /*
     const opacity = blur ? 0.25 : 1;
     const pathOpacity = blur ? 0.25 : this.sankey ? 0.5 : 1;
     const svg = d3.select("#SVG_ID");
@@ -344,6 +369,7 @@ class TopologyPage extends Component {
       .selectAll("text.stats")
       .style("stroke", blur ? "#CCCCCC" : null)
       .attr("font-weight", "unset");
+    */
   };
 
   setDragBehavior = () => {
@@ -382,6 +408,7 @@ class TopologyPage extends Component {
     });
   };
 
+  _tick = () => {};
   // update force layout (called automatically each iteration)
   tick = () => {
     // move the sites or services
@@ -456,101 +483,49 @@ class TopologyPage extends Component {
 
     // collapse the service rects
     this.viewObj.collapseNodes();
-    this.viewObj.reGenPaths();
-    this.tick();
-
-    if (this.getShowColor()) this.viewObj.setBlack(false);
-    this.viewObj.selectionSetBlack();
     this.viewObj
       .transition(this.sankey, initial, this.getShowColor(), this)
       .then(() => {
         // after all the transitions are done:
         // allow mouse events to be processed
         this.transitioning = false;
-
-        // force links to be black
-        if (!this.getShowColor()) this.viewObj.setBlack(true);
-        this.restart();
       });
   };
 
   todeployment = initial => {
     this.showChord(null);
-    if (initial) {
-      this.viewObj.setBlack(true);
-      this.restart();
-    }
     this.view = "deployment";
     this.viewObj.collapseNodes();
-    this.viewObj.setupNodePositions(true);
     // transition rects and paths
-    this.viewObj.regenPaths(this.sankey);
-    if (this.getShowColor()) this.viewObj.setBlack(false);
-    this.viewObj.selectionSetBlack();
     this.viewObj
       .transition(this.sankey, initial, this.getShowColor(), this)
-      .then(() => {
-        if (!this.getShowColor()) this.viewObj.setBlack(true);
-        this.restart();
-      });
+      .then(() => {});
   };
 
   tosite = initial => {
     this.view = "site";
-    this.sankey =
-      this.props.getShowSankey() &&
-      this.props.getShowTraffic() &&
-      !this.props.getShowColor();
-    if (this.getShowColor()) this.viewObj.setBlack(false);
-    this.viewObj.selectionSetBlack();
-    this.viewObj
-      .transition(
-        this.sankey,
-        initial,
-        this.props.getShowTraffic(),
-        this.getShowColor(),
-        this
-      )
-      .then(() => {
-        if (!this.getShowColor()) this.viewObj.setBlack(true);
-        this.setLinkStat();
-      });
+    this.tick();
+    this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
+    this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
     this.restart();
   };
 
   tositesankey = initial => {
-    if (!this.props.getShowTraffic() || this.props.getShowColor()) {
+    if (this.props.getShowColor()) {
       this.sankey = false;
       return this.tosite(initial);
     }
     this.view = "site";
-    this.restart();
-    this.viewObj.drawViewPath(true);
-    this.viewObj
-      .transition(
-        this.sankey,
-        initial,
-        this.props.getShowTraffic(),
-        this.getShowColor(),
-        this
-      )
-      .then(() => {
-        this.setLinkStat();
-      });
+    this.tick();
+    this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
     this.restart();
   };
 
   toservicesankey = initial => {
     this.view = "service";
 
-    // allow links to take on color of source service
-    this.viewObj.setBlack(false);
-
     // expand the service rects to sankeyHeight
     this.viewObj.expandNodes();
-
-    // recreate the paths between service rects
-    this.viewObj.reGenPaths();
 
     // transition rects and paths
     this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
@@ -559,15 +534,10 @@ class TopologyPage extends Component {
 
   todeploymentsankey = initial => {
     this.view = "deployment";
-    this.viewObj.setBlack(false);
-    this.viewObj.selectionSetBlack();
+    this.showChord(null);
     this.viewObj.expandNodes();
 
-    // set initial x and y before calling drag.start
-    // so dragging starts in correct location
-    this.viewObj.setupNodePositions(true);
     // transition rects and paths
-    this.viewObj.regenPaths(this.sankey);
     this.viewObj
       .transition(this.sankey, initial, this.getShowColor(), this)
       .then(() => {
@@ -583,17 +553,6 @@ class TopologyPage extends Component {
     this.showChord(null);
   };
 
-  handleChangeTraffic = checked => {
-    this.props.handleChangeTraffic(checked);
-    if (this.viewObj.showTraffic) {
-      this.viewObj.showTraffic(
-        checked,
-        this.props.getShowSankey() && !this.props.getShowColor(),
-        this
-      );
-      this.setLinkStat();
-    }
-  };
   handleChangeShowStat = checked => {
     this.props.handleChangeShowStat(checked);
     this.setLinkStat();
@@ -617,54 +576,13 @@ class TopologyPage extends Component {
   };
 
   handleChordOver = (chord, over) => {
-    const self = this;
-    if (this.view === "service") {
-      d3.selectAll("path.service").each(function(p) {
-        if (
-          `-${p.source.name}-${p.target.name}` === chord.key ||
-          `-${p.target.name}-${p.source.name}` === chord.key
-        ) {
-          p.selected = over;
-          self.blurAll(over, p);
-          self.restart();
-        }
-      });
-    } else if (this.view === "deployment") {
-      d3.selectAll("path.deployment").each(function(p) {
-        if (
-          chord.info.source.site_name === p.source.parentNode.site_name &&
-          chord.info.target.site_name === p.target.parentNode.site_name &&
-          chord.info.source.address === p.source.address &&
-          chord.info.target.address === p.target.address
-        ) {
-          p.highlighted = over;
-          self.blurAll(over, p);
-          self.restart();
-        }
-      });
-    }
+    this.viewObj.chordOver(chord, over, this);
   };
 
   handleArcOver = (arc, over) => {
-    const self = this;
-    d3.selectAll("rect.service-type").each(function(d) {
-      if (self.view === "service") {
-        if (arc.key === d.address && !d.extra) {
-          d.selected = over;
-          self.blurAll(over, d);
-          self.opaqueServiceType(d);
-          self.restart();
-        }
-      } else if (self.view === "deployment") {
-        if (arc.key === `${d.parentNode.site_name}:${d.address}`) {
-          d.selected = over;
-          self.blurAll(over, d);
-          self.opaqueServiceType(d);
-          self.restart();
-        }
-      }
-    });
+    this.viewObj.arcOver(arc, over, this);
   };
+
   render() {
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,

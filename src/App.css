@@ -561,17 +561,8 @@ path.deployment.highlighted:not(.traffic) {
 path.service,
 path.deployment {
   cursor: default;
-  /* stroke-width: 2; */
 }
 
-path.service.unknown {
-  stroke-dasharray: 4 3;
-  stroke: #888888;
-}
-
-path.sitesankeyDir,
-path.servicesankeyDir,
-path.deploymentDir,
 path.forceBlack {
   stroke: #000;
 }
@@ -610,10 +601,6 @@ marker {
   fill: black;
   stroke: black;
 }
-path.service.dragline {
-  pointer-events: none;
-}
-
 path.service.hidden {
   stroke-width: 0;
 }
@@ -1619,31 +1606,23 @@ button#processes {
   background-color: #ffffee;
 }
 
-path.service,
 path.stat,
 path.site,
-path.mask,
-path.siteTrafficLink,
 path.siteTrafficDir,
-path.hittarget,
 path.sankeySiteLink,
 path.sitesankeyDir,
 path.sankeyServiceLink,
 path.servicesankeyDir,
-path.sitesankey,
-path.deployment,
-path.deploymentDir {
+path.sitesankey {
   fill: transparent;
-}
-
-path.deploymentDir {
-  stroke: black;
+  pointer-events: none;
 }
 
 /* for curved paths, only trigger events when mouse is over the visible path
    and not when the mouse is over the rectangle enclosing the path */
-#SVG_ID path {
+path.hittarget {
   pointer-events: stroke;
+  fill: transparent;
 }
 
 .toolbar-item {
@@ -1658,4 +1637,8 @@ path.deploymentDir {
 .link-info td:first-child {
   padding-right: 1em;
   font-weight: bold;
+}
+
+.always-on #showSankey {
+  display: none;
 }

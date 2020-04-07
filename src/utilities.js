@@ -32,7 +32,7 @@ const SankeyAttributes = [
   "y1",
   "sankeyHeight"
 ];
-export const VIEW_DURATION = 1000;
+export const VIEW_DURATION = 500;
 export const EXPAND_DURATION = 500;
 export const ServiceWidth = 130;
 export const ServiceHeight = 40;
@@ -139,13 +139,8 @@ export const adjustPositions = ({
   align = "",
   sort = false
 }) => {
-  const accessor = (n, attr, value) => {
-    if (xyKey !== "") {
-      n[xyKey][attr] = value;
-    } else {
-      n[attr] = value;
-    }
-  };
+  const set = (n, attr, value) =>
+    xyKey !== "" ? (n[xyKey][attr] = value) : (n[attr] = value);
   const get = (n, attr) => (xyKey !== "" ? n[xyKey][attr] : n[attr]);
 
   const sourcesTargets = () => {
@@ -207,15 +202,24 @@ export const adjustPositions = ({
   // put leftMost in 1st column
   leftMost.forEach(n => (n.col = 0));
 
+  // special case: all the nodes are in the 1st column
+  // and they are not connected to each other.
+  // spread the nodes into separate columns
+  if (leftMost.length === nodes.length && links.length === 0) {
+    leftMost.forEach((n, i) => (n.col = i));
+  }
+
   // put called nodes in column to the right of the caller
   let colNodes = leftMost;
   while (colNodes.length > 0) {
     let foundNodes = [];
     colNodes.forEach(p => {
       nodes.forEach(n => {
-        if (p.targetNodes.includes(n) && n.col === undefined) {
-          n.col = p.col + 1;
-          foundNodes.push(n);
+        if (p.targetNodes.includes(n)) {
+          if (align === "left" || n.col === undefined) {
+            n.col = p.col + 1;
+            foundNodes.push(n);
+          }
         }
       });
     });
@@ -292,7 +296,7 @@ export const adjustPositions = ({
     colWidths[col] = 0;
     colNodes.forEach(n => {
       colWidths[col] = Math.max(colWidths[col], n.getWidth());
-      accessor(n, "y", curY);
+      set(n, "y", curY);
       curY += n.getHeight() + gapHeight;
     });
   }
@@ -309,7 +313,7 @@ export const adjustPositions = ({
         if (avgTargets < bottomY + minGap) {
           avgTargets = bottomY + minGap;
         }
-        accessor(n, "y", avgTargets);
+        set(n, "y", avgTargets);
         bottomY = get(n, "y") + n.getHeight() + minGap;
       });
     }
@@ -330,7 +334,7 @@ export const adjustPositions = ({
     for (let i = 0; i < nodes.length; i++) {
       const n = nodes[i];
       if (n.col === col) {
-        accessor(n, "x", curX);
+        set(n, "x", curX);
       }
     }
     curX += colWidths[col] + hGap;
@@ -458,68 +462,120 @@ export const fixPath = l => {
   return d;
 };
 
-export const genPath = (link, key, mask, useSankeyY) => {
+export const genPath = ({ link, key, mask, useSankeyY, sankey, width }) => {
   if (mask) {
-    let x0, x1, y;
+    if (!width) width = link.width;
+    let x0, y0, x1, y1;
     if (mask === "source") {
-      const x = accessor(link.source, "x1", key);
-      y = accessor(link.source, "y0", key) + link.source.getHeight() / 2;
-      if (useSankeyY) {
-        y = link.y0;
-      }
-      x0 = x - link.source.getWidth() / 2;
-      x1 = x;
+      x1 = get(link.source, "x1", key);
+      x0 = x1 - link.source.getWidth() / 2;
+      y0 =
+        get(link.source, "y0", key) + link.source.getHeight() / 2 - width / 2;
+      y1 = y0 + width;
     } else {
-      const x = accessor(link.target, "x0", key);
-      y = accessor(link.target, "y0", key) + link.target.getHeight() / 2;
-      if (useSankeyY) {
-        y = link.y1;
-      }
-      x0 = x + link.target.getWidth() / 2;
-      x1 = x;
+      x0 = get(link.target, "x0", key);
+      x1 = x0 + link.target.getWidth() / 2;
+      y0 =
+        get(link.target, "y0", key) + link.target.getHeight() / 2 - width / 2;
+      y1 = y0 + width;
     }
-    return `M ${x0},${y} L ${x1},${y}`;
+    return `M ${x0},${y0} L ${x1},${y0} L ${x1},${y1} L ${x0},${y1} z`;
   } else
-    return !link.circular ? bezier(link, key, mask) : circular(link, key, mask);
+    return !link.circular
+      ? bezier(link, key, sankey, width)
+      : circular(link, key, sankey, width);
 };
 
-const accessor = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
+const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
-const bezier = (link, key) => {
-  const x0 = accessor(link.source, "x1", key); // right side of source
+const bezier = (link, key, sankey, width) => {
+  if (!width) width = link.width;
+  const x0 = get(link.source, "x1", key); // right side of source
   const y0 = link.source.expanded
     ? link.y0
-    : accessor(link.source, "y0", key) + link.source.getHeight() / 2;
-  const x1 = accessor(link.target, "x0", key); // left side of target
+    : get(link.source, "y0", key) + link.source.getHeight() / 2;
+  const x1 = get(link.target, "x0", key); // left side of target
   const y1 = link.target.expanded
     ? link.y1
-    : accessor(link.target, "y0", key) + link.target.getHeight() / 2;
+    : get(link.target, "y0", key) + link.target.getHeight() / 2;
+  const mid = (x0 + x1) / 2;
   const path = d3path.path();
-  path.bezierCurveTo((x0 + x1) / 2, y0, (x0 + x1) / 2, y1, x1, y1);
-  return `M${x0} ${y0} ${path.toString()}`;
+  if (sankey) {
+    const halfWidth = width / 2;
+    path.moveTo(x0, y0 - halfWidth);
+    path.bezierCurveTo(
+      mid,
+      y0 - halfWidth,
+      mid,
+      y1 - halfWidth,
+      x1,
+      y1 - halfWidth
+    );
+    path.lineTo(x1, y1 + halfWidth);
+    path.bezierCurveTo(
+      mid,
+      y1 + halfWidth,
+      mid,
+      y0 + halfWidth,
+      x0,
+      y0 + halfWidth
+    );
+    path.closePath();
+  } else {
+    path.moveTo(x0, y0);
+    path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
+  }
+  return path.toString();
 };
-const circular = (link, key) => {
-  const r = link.width ? Math.max(Math.min(140, link.width), 30) : 30;
+
+const circular = (link, key, sankey, width) => {
+  const minR = 10;
+  const maxR = 80;
+  if (!width) {
+    width = link.width;
+  }
+  const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
   const gap = 8;
-  const sourceX = accessor(link.source, "x1", key);
-  const sourceY =
-    accessor(link.source, "y0", key) + link.source.getHeight() / 2;
-  const targetX = accessor(link.target, "x0", key);
-  const targetY =
-    accessor(link.target, "y0", key) + link.target.getHeight() / 2;
+  const sourceX = get(link.source, "x1", key);
+  const sourceY = get(link.source, "y0", key) + link.source.getHeight() / 2;
+  const targetX = get(link.target, "x0", key);
+  const targetY = get(link.target, "y0", key) + link.target.getHeight() / 2;
   const bottomY = Math.max(sourceY + r + gap + r, targetY + r + gap + r);
+  const offset = sankey ? width / 2 : 0;
+  let sy = sourceY - offset;
+  let ty = targetY - offset;
+  let by = bottomY + offset;
+  let sr = r + offset;
 
   let path = d3path.path();
-  path.moveTo(sourceX, sourceY);
-  path.lineTo(sourceX + gap, sourceY);
-  path.arcTo(sourceX + gap + r, sourceY, sourceX + gap + r, sourceY + r, r);
-  path.lineTo(sourceX + gap + r, bottomY - r);
-  path.arcTo(sourceX + gap + r, bottomY, sourceX + gap, bottomY, r);
-  path.lineTo(targetX - gap, bottomY);
-  path.arcTo(targetX - gap - r, bottomY, targetX - gap - r, bottomY - r, r);
-  path.lineTo(targetX - gap - r, targetY + r);
-  path.arcTo(targetX - r - gap, targetY, targetX - gap, targetY, r);
-  path.lineTo(targetX, targetY);
+  path.moveTo(sourceX, sy);
+  path.lineTo(sourceX + gap, sy);
+  path.arcTo(sourceX + gap + sr, sy, sourceX + gap + sr, sy + sr, sr);
+  path.lineTo(sourceX + gap + sr, by - sr);
+  path.arcTo(sourceX + gap + sr, by, sourceX + gap, by, sr);
+  path.lineTo(targetX - gap, by);
+  path.arcTo(targetX - gap - sr, by, targetX - gap - sr, by - sr, sr);
+  path.lineTo(targetX - gap - sr, ty + sr);
+  path.arcTo(targetX - gap - sr, ty, targetX - gap, ty, sr);
+  path.lineTo(targetX, ty);
+
+  if (sankey) {
+    sy = sourceY + offset;
+    ty = targetY + offset;
+    by = bottomY - offset;
+    sr = Math.max(r - offset, minR);
+    path.lineTo(targetX, ty);
+    path.lineTo(targetX - gap, ty);
+    path.arcTo(targetX - gap - sr, ty, targetX - gap - sr, ty + sr, sr);
+    path.lineTo(targetX - gap - sr, by - sr);
+    path.arcTo(targetX - gap - sr, by, targetX - gap, by, sr);
+    path.lineTo(sourceX + gap, by);
+    path.arcTo(sourceX + gap + sr, by, sourceX + gap + sr, by - sr, sr);
+    path.lineTo(sourceX + gap + sr, sy + sr);
+    path.arcTo(sourceX + gap + sr, sy, sourceX + gap, sy, sr);
+    path.lineTo(sourceX, sy);
+    path.closePath();
+  }
   return path.toString();
 };
 
@@ -581,8 +637,8 @@ export const setLinkStat = (selection, view, stat, shown) => {
     let p1, p2;
     const len = this.getTotalLength();
     if (len > 0) {
-      p1 = this.getPointAtLength(len / 2 - Math.min(len / 2, 40));
-      p2 = this.getPointAtLength(len / 2 + Math.min(len / 2, 40));
+      p1 = this.getPointAtLength(len / 2 - Math.min(len / 2, 50));
+      p2 = this.getPointAtLength(len / 2 + Math.min(len / 2, 50));
     } else {
       return;
     }
@@ -671,8 +727,7 @@ const fillColor = v => {
 };
 
 // return the path between 2 circles
-// path is the line segment formed from the intersection of the circles
-// and a line drawn between the 2 circle's centers
+// the path is the shortest line segment joining the circles
 export const pathBetween = (source, target) => {
   const x1 = source.x + source.r; // center of source circle
   const y1 = source.y + source.r;
@@ -758,8 +813,8 @@ export const updateSankey = ({ nodes, links, excludeExtra = false }) => {
     n.y1 = n.y0 + n.getHeight();
   });
   links.forEach(l => {
-    l.sankeyPath = fixPath(l);
-    l.path = genPath(l);
+    //l.sankeyPath = fixPath(l);
+    l.path = genPath({ link: l, useSankeyY: true });
   });
 };
 

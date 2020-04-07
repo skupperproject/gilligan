@@ -18,22 +18,24 @@ under the License.
 */
 
 import * as d3 from "d3";
-import { interpolatePath } from "d3-interpolate-path";
 import {
   adjustPositions,
-  endall,
-  genPath,
   linkColor,
-  //getSaved,
+  getSaved,
+  setSaved,
   initSankey,
   updateSankey,
   VIEW_DURATION,
   ServiceWidth,
   ServiceGap,
-  ServiceHeight
+  ServiceHeight,
+  endall,
+  genPath
 } from "../utilities";
+import { interpolatePath } from "d3-interpolate-path";
 import { Site } from "./site";
 import { Service } from "./service";
+const DEPLOYMENT_POSITION = "dpl";
 
 export class Deployment extends Service {
   constructor(adapter) {
@@ -55,6 +57,9 @@ export class Deployment extends Service {
     console.log(this.Service.serviceNodes);
     console.log(this.Service.serviceLinks);
     */
+    this.setupNodePositions(true);
+    this.setupNodePositions(false);
+
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
@@ -132,7 +137,8 @@ export class Deployment extends Service {
         nodes: subServices,
         links,
         width: site.r * 2,
-        height: site.r * 2
+        height: site.r * 2,
+        align: "left"
       });
       site.r = Math.max(site.r, Math.max(siteSize.width, siteSize.height) / 2);
       site.subServiceLinks = links;
@@ -167,7 +173,7 @@ export class Deployment extends Service {
       nodes: orphans,
       links: [],
       width: ServiceWidth,
-      height: viewer.height,
+      height: ServiceHeight,
       xyKey: "siteOffset"
     });
   };
@@ -207,7 +213,10 @@ export class Deployment extends Service {
       links.links.some(l => l.source === sub || l.target === sub)
     );
     initSankey({
-      graph: { nodes: linkNodes, links: links.links },
+      graph: {
+        nodes: linkNodes,
+        links: links.links
+      },
       width: vsize.width,
       height: vsize.height,
       nodeWidth: ServiceWidth,
@@ -271,9 +280,39 @@ export class Deployment extends Service {
       nodes: orphans,
       links: [],
       width: ServiceWidth,
-      height: viewer.height,
+      height: ServiceHeight, //viewer.height,
       xyKey: "sankeySiteOffset"
     });
+    // restore the saved positions
+    subNodes.forEach(n => {
+      const pos = getSaved(`${DEPLOYMENT_POSITION}-${n.name}`);
+      if (pos) {
+        n.x = pos.x;
+        n.x0 = pos.x0;
+        n.y = pos.y;
+        n.y0 = pos.y0;
+        n.sankeySiteOffset = {
+          x: pos.ssox,
+          y: pos.ssoy
+        };
+        n.siteOffset = {
+          x: pos.sox,
+          y: pos.soy
+        };
+      }
+    });
+    /*
+    sites.nodes.forEach(s => {
+      const pos = getSaved(`${DEPLOYMENT_POSITION}-${s.site_id}`);
+      if (pos) {
+        s.x = pos.x;
+        s.y = pos.y;
+        s.x0 = pos.x0;
+        s.y0 = pos.y0;
+        s.sankey = { x: pos.sx, y: pos.sy };
+      }
+    });
+    */
     this.regenPaths(true);
     subNodes.forEach(n => {
       n.expanded = false;
@@ -340,6 +379,34 @@ export class Deployment extends Service {
     this.serviceNodes.nodes.forEach(n => {
       this.dragStart(n, sankey);
     });
+    this.regenPaths(sankey);
+  };
+
+  savePosition = d => {
+    const save =
+      d.nodeType === "service"
+        ? {
+            x: d.x,
+            y: d.y,
+            x0: d.x0,
+            y0: d.y0,
+            ssox: d.sankeySiteOffset.x,
+            ssoy: d.sankeySiteOffset.y,
+            sox: d.siteOffset.x,
+            soy: d.siteOffset.y
+          }
+        : {
+            x: d.x,
+            y: d.y,
+            x0: d.x0,
+            y0: d.y0,
+            sx: d.sankey.x,
+            sy: d.sankey.y
+          };
+    setSaved(
+      `${DEPLOYMENT_POSITION}-${d.nodeType === "service" ? d.name : d.site_id}`,
+      save
+    );
   };
 
   dragStart = (d, sankey) => {
@@ -360,6 +427,7 @@ export class Deployment extends Service {
         d.y = d.y0;
       }
     }
+    this.savePosition(d);
   };
 
   drag = (d, sankey) => {
@@ -367,7 +435,7 @@ export class Deployment extends Service {
       this.constrainDeployment(d, sankey);
     } else {
       // move the circle
-      this.Site.drag(d, sankey);
+      this.Site.drag(d, sankey, true);
       // set the new sankey position
       d.sankey.x = d.x;
       d.sankey.y = d.y;
@@ -380,13 +448,13 @@ export class Deployment extends Service {
       });
     }
     this.regenPaths(sankey);
+    this.savePosition(d);
   };
 
   tick = sankey => {
     this.Site.tick(sankey);
-    this.servicesSelection.attr("transform", d => {
-      return `translate(${d.x},${d.y})`;
-    });
+    super.tick(sankey);
+    //this.servicesSelection.attr("transform", d => `translate(${d.x},${d.y})`);
   };
 
   setupDrag = drag => {
@@ -402,19 +470,18 @@ export class Deployment extends Service {
     super.expandNodes();
     this.Site.expandNodes();
   };
-  drawViewPath = sankey => {
-    this.regenPaths(sankey);
-    super.drawViewPath(sankey);
-  };
 
   transition = (sankey, initial, color, viewer) => {
+    this.setupNodePositions(sankey);
     if (sankey) {
-      return this.toDeploymentSankey(initial, viewer.setLinkStat, color);
+      this.toDeploymentSankey(initial, viewer.setLinkStat);
     } else {
-      return this.toDeployment(initial, viewer.setLinkStat, color);
+      this.toDeployment(initial, viewer.setLinkStat, color);
     }
+    return super.transition(sankey, false, color, viewer);
   };
-  toDeployment = (initial, setLinkStat, color) => {
+
+  _toDeployment = (initial, setLinkStat, color) => {
     return new Promise(resolve => {
       d3.selectAll(".end-point")
         .transition()
@@ -483,20 +550,13 @@ export class Deployment extends Service {
         });
 
       d3.selectAll("path.servicesankeyDir")
-        .attr("opacity", 1)
-        .style("display", "block")
         .transition()
         .duration(VIEW_DURATION)
         .attr("stroke-width", 2)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath(d);
+          const current = genPath({ link: d });
           return interpolatePath(previous, current);
-        })
-        .each("end", function(d) {
-          d3.select(this)
-            .attr("stroke-width", 1)
-            .style("display", "none");
         });
 
       // change the path's width and location
@@ -521,12 +581,10 @@ export class Deployment extends Service {
         d3.selectAll("path.service")
           .transition()
           .duration(VIEW_DURATION)
-          .attr("opacity", 1)
-          .attr("stroke-width", 2)
-          .attr("stroke", d => (color ? d.getColor() : null))
+          .attr("opacity", 0)
           .attrTween("d", function(d, i) {
             const previous = d3.select(this).attr("d");
-            const current = genPath(d);
+            const current = genPath({ link: d });
             const ip = interpolatePath(previous, current);
             return t => {
               setLinkStat();
@@ -536,12 +594,48 @@ export class Deployment extends Service {
       }
 
       d3.selectAll("path.hittarget")
-        .attr("d", d => genPath(d))
-        .attr("stroke-width", 20);
+        .attr("d", d => genPath({ link: d }))
+        .attr("stroke-width", 6);
     });
   };
+  toDeployment = () => {
+    return new Promise(resolve => {
+      d3.select("g.clusters")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("opacity", 1);
 
-  toDeploymentSankey = (initial, setLinkStat, color) => {
+      // transition the containers to their proper position
+      d3.selectAll(".cluster")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("transform", d => `translate(${d.x},${d.y})`)
+        .each("end", function() {
+          d3.select(this)
+            .style("display", "block")
+            .attr("opacity", 1)
+            .select(".cluster-rects")
+            .attr("opacity", 1)
+            .style("display", "block");
+        });
+
+      d3.select("g.clusters")
+        .selectAll("circle.network")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("r", d => d.r)
+        .attr("cx", d => d.r)
+        .attr("cy", d => d.r);
+
+      d3.select("g.clusters")
+        .selectAll("text.cluster-name")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("y", -10)
+        .attr("x", d => d.getWidth() / 2);
+    });
+  };
+  _toDeploymentSankey = (initial, setLinkStat) => {
     return new Promise((resolve, reject) => {
       d3.selectAll(".end-point")
         .transition()
@@ -577,11 +671,14 @@ export class Deployment extends Service {
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 0.5)
-        .attr("stroke-width", d => Math.max(d.width, 1))
-        .attr("stroke", d => (color ? d.getColor() : d.target.color))
+        .attr("fill", d => d.getColor())
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = d.sankeyPath; //d.path;
+          const current = genPath({
+            link: d,
+            useSankeyY: true,
+            sankey: true
+          });
           const ip = interpolatePath(previous, current);
           return t => {
             setLinkStat();
@@ -590,21 +687,27 @@ export class Deployment extends Service {
         });
 
       d3.selectAll("path.servicesankeyDir")
-        .style("display", "block")
-        .attr("opacity", 1)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke-width", 1)
+        .attr("stroke", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = d.sankeyPath;
+          const current = genPath({
+            link: d,
+            useSankeyY: true
+          });
           return interpolatePath(previous, current);
         });
 
-      d3.select("g.links")
-        .selectAll("path.hittarget")
-        .attr("stroke-width", d => Math.max(d.width, 6))
-        .attr("d", d => d.sankeyPath);
+      // expand the hittarget paths
+      d3.selectAll("path.hittarget")
+        .attr("d", d =>
+          genPath({
+            link: d,
+            useSankeyY: true
+          })
+        )
+        .attr("stroke-width", d => Math.max(6, d.width));
 
       // move the service rects to their sankey location
       d3.selectAll("g.service-type")
@@ -632,6 +735,30 @@ export class Deployment extends Service {
         });
     });
   };
+  toDeploymentSankey = () => {
+    return new Promise((resolve, reject) => {
+      d3.select("g.clusters")
+        .selectAll("circle.network")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("r", d => d.sankey.r)
+        .attr("cx", d => d.sankey.r)
+        .attr("cy", d => d.sankey.r);
+
+      d3.select("g.clusters")
+        .selectAll("g.cluster")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("transform", d => `translate(${d.sankey.x},${d.sankey.y})`);
+
+      d3.select("g.clusters")
+        .selectAll("text.cluster-name")
+        .transition()
+        .duration(VIEW_DURATION)
+        .attr("y", -10)
+        .attr("x", d => d.getWidth(true) / 2);
+    });
+  };
   doFetch = (page, perPage) => {
     return new Promise(resolve => {
       const data = this.serviceNodes.nodes.map(n => ({
@@ -642,4 +769,29 @@ export class Deployment extends Service {
       resolve({ data, page, perPage });
     });
   };
+  chordOver(chord, over, viewer) {
+    if (!chord.info) return;
+    d3.selectAll("path.service").each(function(p) {
+      if (
+        chord.info.source.site_name === p.source.parentNode.site_name &&
+        chord.info.target.site_name === p.target.parentNode.site_name &&
+        chord.info.source.address === p.source.address &&
+        chord.info.target.address === p.target.address
+      ) {
+        p.selected = over;
+        viewer.blurAll(over, p);
+        viewer.restart();
+      }
+    });
+  }
+  arcOver(arc, over, viewer) {
+    d3.selectAll("rect.service-type").each(function(d) {
+      if (arc.key === `${d.parentNode.site_name}:${d.address}`) {
+        d.selected = over;
+        viewer.blurAll(over, d);
+        viewer.opaqueServiceType(d);
+        viewer.restart();
+      }
+    });
+  }
 }
