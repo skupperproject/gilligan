@@ -79,8 +79,8 @@ class PageLayout extends React.Component {
     const checks = getSaved(TOOLBAR_CHECKS, {
       sankey: false,
       stat: false,
-      width: true,
-      color: false,
+      width: false,
+      color: true,
       viewType: "graph"
     });
     checks.sankey = true;
