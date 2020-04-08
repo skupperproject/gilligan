@@ -557,7 +557,9 @@ path.deployment.highlighted:not(.traffic) {
   stroke: #33f;
   opacity: 1;
 }
-
+path.hittarget.selected {
+  opacity: 1;
+}
 path.service,
 path.deployment {
   cursor: default;
@@ -572,7 +574,7 @@ svg:not(.active):not(.ctrl) path.service {
 }
 
 path.hittarget {
-  stroke: transparent;
+  /* stroke: transparent; */
 }
 
 path.hittarget.highlighted {
@@ -589,6 +591,10 @@ path.service.small:not(.traffic) {
 path.service.highlighted:not(.traffic) {
   stroke: #6f6 !important;
 }
+path.servicesankeyDir.tcp {
+  stroke-dasharray: 5 5;
+}
+
 marker {
   /*fill: #000;*/
   stroke-width: 0;
@@ -1639,6 +1645,6 @@ path.hittarget {
   font-weight: bold;
 }
 
-.always-on #showSankey {
+.hidden {
   display: none;
 }

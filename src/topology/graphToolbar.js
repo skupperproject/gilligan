@@ -131,7 +131,6 @@ class GraphToolbar extends Component {
     const sankeyCheck = () => (
       <ToolbarItem className="toolbar-item tall-item">
         <Checkbox
-          className="always-on"
           label="Show relative traffic"
           isChecked={this.props.getShowSankey()}
           onChange={this.handleChange}
@@ -163,7 +162,7 @@ class GraphToolbar extends Component {
             version="1.1"
             preserveAspectRatio="xMidYMid meet"
             width="140"
-            height="40"
+            height="44"
           >
             <defs>
               <linearGradient
@@ -192,11 +191,11 @@ class GraphToolbar extends Component {
                   offset="0.666"
                 />
                 <stop
-                  style={{ stopColor: "#FF0000", stopOpacity: 1 }}
+                  style={{ stopColor: "#0000FF", stopOpacity: 1 }}
                   offset="0.667"
                 />
                 <stop
-                  style={{ stopColor: "#FF0000", stopOpacity: 1 }}
+                  style={{ stopColor: "#0000FF", stopOpacity: 1 }}
                   offset="1"
                 />
               </linearGradient>

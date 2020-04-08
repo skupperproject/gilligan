@@ -83,7 +83,7 @@ class PageLayout extends React.Component {
       color: true,
       viewType: "graph"
     });
-    checks.sankey = true;
+    //checks.sankey = true;
     this.showSankey = checks.sankey;
     this.showStat = checks.stat;
     this.showWidth = checks.width;

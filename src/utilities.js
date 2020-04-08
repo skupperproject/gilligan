@@ -625,7 +625,7 @@ export const setLinkStat = (selection, view, stat, shown) => {
       if (typeof text === "object") {
         text = val === 1 ? text.one : text.more;
       }
-      return `${val} ${text}`;
+      return `${pretty(val)} ${text}`;
     } else {
       return "";
     }
@@ -723,7 +723,7 @@ export const linkColor = (link, links) => {
 const fillColor = v => {
   if (v < 0.333) return "#888888";
   if (v < 0.666) return "#00FF00";
-  return "#FF0000";
+  return "#0000FF";
 };
 
 // return the path between 2 circles

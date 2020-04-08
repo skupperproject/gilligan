@@ -25,7 +25,6 @@ import {
   linkColor,
   circularize,
   initSankey,
-  lighten,
   serviceColor,
   Sankey,
   setLinkStat,
@@ -338,15 +337,12 @@ export class Service {
     let enterpath = selection.enter().append("g");
 
     // the d attribute of the following path elements is set in tick()
-    enterpath
-      .append("path")
-      .attr("class", "service")
-      .classed("tcp", d => d.target.protocol === "tcp")
-      .attr("stroke", d => lighten(-0.05, d.target.color)); //linkColor(d, links))
+    enterpath.append("path").attr("class", "service");
 
     enterpath
       .append("path")
       .attr("class", "servicesankeyDir")
+      .classed("tcp", d => d.target.protocol === "tcp")
       .attr("stroke-width", 2)
       .attr("id", d => `dir-${d.source.name}-${d.target.name}`)
       // reset the markers based on current highlighted/selected
@@ -402,8 +398,7 @@ export class Service {
         return d.highlighted;
       });
 
-    //this.selectionSetBlack();
-
+    selection.select(".hittarget").classed("selected", d => d.selected);
     viewer.setLinkStat();
     return selection;
   };
@@ -558,7 +553,7 @@ export class Service {
       d3.selectAll("path.servicesankeyDir")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke", d => (color ? d.getColor() : d.target.color))
+        .attr("stroke", d => (color ? d.getColor() : "black")) //d.target.color))
         .attr("stroke-width", 2)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -577,7 +572,9 @@ export class Service {
       // shrink the hittarget paths
       d3.selectAll("path.hittarget")
         .attr("d", d => genPath({ link: d }))
-        .attr("stroke-width", 6);
+        .attr("stroke-width", 6)
+        .attr("stroke", d => (color ? d.getColor() : null))
+        .attr("opacity", color ? 0.25 : null);
 
       // collapse the rects (getWidth() and getHeight() will return non-expanded sizes)
       d3.selectAll("rect.service-type")
@@ -648,7 +645,9 @@ export class Service {
       // expand the hittarget paths
       d3.selectAll("path.hittarget")
         .attr("d", d => genPath({ link: d, useSankeyY: true }))
-        .attr("stroke-width", d => Math.max(6, d.width));
+        .attr("stroke-width", d => Math.max(6, d.width))
+        .attr("stroke", "transparent")
+        .attr("opacity", null);
 
       // draw the sankey path
       d3.selectAll("path.service")

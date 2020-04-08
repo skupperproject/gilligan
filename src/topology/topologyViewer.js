@@ -636,7 +636,12 @@ class TopologyPage extends Component {
       >
         <div className="diagram">
           <div ref={el => (this.topologyRef = el)} id="topology"></div>
-          <div id="topo_popover-div">
+          <div
+            id="topo_popover-div"
+            className={
+              this.state.showCard || this.state.showLinkInfo ? "" : "hidden"
+            }
+          >
             {this.state.showCard && (
               <ServiceCard
                 cardSize="expanded"

@@ -28,11 +28,8 @@ import {
   VIEW_DURATION,
   ServiceWidth,
   ServiceGap,
-  ServiceHeight,
-  endall,
-  genPath
+  ServiceHeight
 } from "../utilities";
-import { interpolatePath } from "d3-interpolate-path";
 import { Site } from "./site";
 import { Service } from "./service";
 const DEPLOYMENT_POSITION = "dpl";
@@ -454,7 +451,6 @@ export class Deployment extends Service {
   tick = sankey => {
     this.Site.tick(sankey);
     super.tick(sankey);
-    //this.servicesSelection.attr("transform", d => `translate(${d.x},${d.y})`);
   };
 
   setupDrag = drag => {
@@ -481,123 +477,6 @@ export class Deployment extends Service {
     return super.transition(sankey, false, color, viewer);
   };
 
-  _toDeployment = (initial, setLinkStat, color) => {
-    return new Promise(resolve => {
-      d3.selectAll(".end-point")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("opacity", 1);
-
-      d3.select("g.clusters")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("opacity", 1);
-
-      // transition the containers to their proper position
-      d3.selectAll(".cluster")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.x},${d.y})`)
-        .each("end", function() {
-          d3.select(this)
-            .style("display", "block")
-            .attr("opacity", 1)
-            .select(".cluster-rects")
-            .attr("opacity", 1)
-            .style("display", "block");
-        });
-
-      d3.select("g.clusters")
-        .selectAll("circle.network")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("r", d => d.r)
-        .attr("cx", d => d.r)
-        .attr("cy", d => d.r);
-
-      d3.select("g.clusters")
-        .selectAll("text.cluster-name")
-        .transition()
-        .duration(initial ? 0 : VIEW_DURATION)
-        .attr("y", -10)
-        .attr("x", d => d.getWidth() / 2);
-
-      // move the service rects to their proper position within the container
-
-      d3.selectAll("g.service-type")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("transform", d => {
-          this.dragStart(d, false);
-          return `translate(${d.x},${d.y})`;
-        });
-
-      d3.selectAll("rect.service-type")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("width", d => d.getWidth())
-        .attr("height", d => d.getHeight())
-        .attr("fill", d => d.lightColor)
-        .attr("opacity", 1);
-
-      d3.selectAll("text.service-type")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("opacity", 1)
-        .attr("y", d => d.getHeight() / 2)
-        .call(endall, () => {
-          resolve();
-        });
-
-      d3.selectAll("path.servicesankeyDir")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke-width", 2)
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d });
-          return interpolatePath(previous, current);
-        });
-
-      // change the path's width and location
-      if (initial) {
-        d3.selectAll("path.service")
-          .attr("d", d => genPath(d))
-          .attr("opacity", 1)
-          .attr("stroke-width", 2)
-          .attr("stroke-dasharray", function(d) {
-            d.pathLen = this.getTotalLength();
-            return `${d.pathLen} ${d.pathLen}`;
-          })
-          .attr("stroke-dashoffset", d => d.pathLen)
-          .attr("stroke", d => (color ? d.getColor() : null))
-          .transition()
-          .duration(VIEW_DURATION / 2)
-          .attr("stroke-dashoffset", 0)
-          .each("end", function(d) {
-            d3.select(this).attr("stroke-dasharray", null);
-          });
-      } else {
-        d3.selectAll("path.service")
-          .transition()
-          .duration(VIEW_DURATION)
-          .attr("opacity", 0)
-          .attrTween("d", function(d, i) {
-            const previous = d3.select(this).attr("d");
-            const current = genPath({ link: d });
-            const ip = interpolatePath(previous, current);
-            return t => {
-              setLinkStat();
-              return ip(t);
-            };
-          });
-      }
-
-      d3.selectAll("path.hittarget")
-        .attr("d", d => genPath({ link: d }))
-        .attr("stroke-width", 6);
-    });
-  };
   toDeployment = () => {
     return new Promise(resolve => {
       d3.select("g.clusters")
@@ -635,106 +514,7 @@ export class Deployment extends Service {
         .attr("x", d => d.getWidth() / 2);
     });
   };
-  _toDeploymentSankey = (initial, setLinkStat) => {
-    return new Promise((resolve, reject) => {
-      d3.selectAll(".end-point")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("opacity", 0)
-        .call(endall, () => {
-          resolve();
-        });
 
-      d3.select("g.clusters")
-        .selectAll("circle.network")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("r", d => d.sankey.r)
-        .attr("cx", d => d.sankey.r)
-        .attr("cy", d => d.sankey.r);
-
-      d3.select("g.clusters")
-        .selectAll("g.cluster")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.sankey.x},${d.sankey.y})`);
-
-      d3.select("g.clusters")
-        .selectAll("text.cluster-name")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("y", -10)
-        .attr("x", d => d.getWidth(true) / 2);
-
-      d3.selectAll("path.service")
-        .style("display", "block")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("opacity", 0.5)
-        .attr("fill", d => d.getColor())
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = genPath({
-            link: d,
-            useSankeyY: true,
-            sankey: true
-          });
-          const ip = interpolatePath(previous, current);
-          return t => {
-            setLinkStat();
-            return ip(t);
-          };
-        });
-
-      d3.selectAll("path.servicesankeyDir")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("stroke", "black")
-        .attrTween("d", function(d, i) {
-          const previous = d3.select(this).attr("d");
-          const current = genPath({
-            link: d,
-            useSankeyY: true
-          });
-          return interpolatePath(previous, current);
-        });
-
-      // expand the hittarget paths
-      d3.selectAll("path.hittarget")
-        .attr("d", d =>
-          genPath({
-            link: d,
-            useSankeyY: true
-          })
-        )
-        .attr("stroke-width", d => Math.max(6, d.width));
-
-      // move the service rects to their sankey location
-      d3.selectAll("g.service-type")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("transform", d => {
-          return `translate(${d.x},${d.y})`;
-        });
-
-      d3.selectAll("rect.service-type")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("width", d => d.getWidth())
-        .attr("height", d => d.getHeight())
-        .attr("fill", d => d.lightColor)
-        .attr("opacity", 1);
-
-      d3.selectAll("text.service-type")
-        .transition()
-        .duration(VIEW_DURATION)
-        .attr("opacity", 1)
-        .attr("y", d => d.getHeight() / 2)
-        .call(endall, () => {
-          resolve();
-        });
-    });
-  };
   toDeploymentSankey = () => {
     return new Promise((resolve, reject) => {
       d3.select("g.clusters")
@@ -759,6 +539,8 @@ export class Deployment extends Service {
         .attr("x", d => d.getWidth(true) / 2);
     });
   };
+
+  // get records for the table view
   doFetch = (page, perPage) => {
     return new Promise(resolve => {
       const data = this.serviceNodes.nodes.map(n => ({
@@ -769,6 +551,8 @@ export class Deployment extends Service {
       resolve({ data, page, perPage });
     });
   };
+
+  // handle mouse over a chord. highlight the path
   chordOver(chord, over, viewer) {
     if (!chord.info) return;
     d3.selectAll("path.service").each(function(p) {
@@ -784,6 +568,8 @@ export class Deployment extends Service {
       }
     });
   }
+
+  // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
     d3.selectAll("rect.service-type").each(function(d) {
       if (arc.key === `${d.parentNode.site_name}:${d.address}`) {
