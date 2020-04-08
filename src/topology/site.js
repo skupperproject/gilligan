@@ -137,9 +137,14 @@ export class Site {
       height: viewer.height
     });
 
+    // initSankey will crash if there are nodes that are not
+    // pointed to from a link
+    const linkedNodes = this.siteNodes.nodes.filter(n =>
+      links.links.some(l => l.source === n || l.target === n)
+    );
     if (links.links.length > 0) {
       const graph = {
-        nodes: this.siteNodes.nodes,
+        nodes: linkedNodes,
         links: links.links
       };
       initSankey({
@@ -172,7 +177,7 @@ export class Site {
     if (links.links.length > 0) {
       // update the links
       Sankey().update({
-        nodes: this.siteNodes.nodes,
+        nodes: linkedNodes,
         links: links.links
       });
     }
@@ -646,7 +651,11 @@ export class Site {
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d });
-          return interpolatePath(previous, current);
+          const ip = interpolatePath(previous, current);
+          return t => {
+            setLinkStat();
+            return ip(t);
+          };
         });
 
       // let the stats show if/when the checkbox is checked
@@ -711,7 +720,11 @@ export class Site {
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d.link, mask: d.mask });
-          return interpolatePath(previous, current);
+          const ip = interpolatePath(previous, current);
+          return t => {
+            setLinkStat();
+            return ip(t);
+          };
         });
 
       d3.selectAll("rect.network")
@@ -770,7 +783,11 @@ export class Site {
             useSankeyY: true,
             sankey: true
           });
-          return interpolatePath(previous, current);
+          const ip = interpolatePath(previous, current);
+          return t => {
+            setLinkStat();
+            return ip(t);
+          };
         });
 
       d3.selectAll("path.hittarget")
