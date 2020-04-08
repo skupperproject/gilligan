@@ -1,31 +1,21 @@
-# Gilligan installation
+# Installation
 
-How to install Gilligan - the demo console for skupper
+The skupper console is installed when skupper is initialized using
 
-- [Prerequisites](#prerequisites)
-- [Step 1: Clone the repository](#step-1-clone)
-- [Step 2: Start the console](#step-2-start-the-console)
-- [Next steps](#next-steps)
+`skupper init --enable-console`
 
-## Prerequisites
+## Accessing the console
 
-- You must be able to log into a dispatch router network
-- npm
-- yarn
-  > `$sudo npm install yarn -g`
+Access the console via the skupper-controller service (or route if running on openshift).
 
-## Step 1: Clone
+> `If you initialized skupper with --cluster-local, a route will not be generated automatically. You will need to create a route to the controller manually`
 
-git clone https://github.com/skupperproject/gilligan.git
+## Securing the console
 
-## Step 2: Start the console
+When you run skupper init you can specify the --console-user and --console-password, otherwise they will be generated (admin and a random password held in secrets/skupper-console-users).
 
-In the gilligan directory:
+You can also disable authentication by specifying
 
-> `$yarn install` > `$yarn start`
+`--console-auth unsecured`
 
-Yarn will compile the code and start a browser pointing to localhost:3000.
-
-## Next steps
-
-Provide polite feedback.
+If you are running on openshift you can use oauth against the openshift console by specifying --console-auth openshift.
