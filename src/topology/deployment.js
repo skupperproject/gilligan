@@ -206,14 +206,9 @@ export class Deployment extends Service {
       });
     });
     // get the sankey height of each node
-    const linkNodes = subNodes.filter(sub =>
-      links.links.some(l => l.source === sub || l.target === sub)
-    );
     initSankey({
-      graph: {
-        nodes: linkNodes,
-        links: links.links
-      },
+      nodes: subNodes,
+      links: links.links,
       width: vsize.width,
       height: vsize.height,
       nodeWidth: ServiceWidth,
@@ -324,12 +319,8 @@ export class Deployment extends Service {
       n.x1 = n.x0 + n.getWidth();
     });
     if (sankey) {
-      const linkNodes = this.serviceNodes.nodes.filter(sub =>
-        this.serviceLinks.links.some(l => l.source === sub || l.target === sub)
-      );
-
       updateSankey({
-        nodes: linkNodes, //this.Service.serviceNodes.nodes,
+        nodes: this.serviceNodes.nodes,
         links: this.serviceLinks.links
       });
     }

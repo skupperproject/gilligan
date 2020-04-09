@@ -138,19 +138,11 @@ export class Site {
       height: viewer.height
     });
 
-    // initSankey will crash if there are nodes that are not
-    // pointed to from a link
-    const linkedNodes = this.siteNodes.nodes.filter(n =>
-      links.links.some(l => l.source === n || l.target === n)
-    );
     if (links.links.length > 0) {
-      const graph = {
-        nodes: linkedNodes,
-        links: links.links
-      };
       // set the y0, y1, width of the links, set the x0 y0, x1 y1 of the nodes
       initSankey({
-        graph,
+        nodes: this.siteNodes.nodes,
+        links: links.links,
         width: vsize.width,
         height: vsize.height,
         nodeWidth: ServiceWidth,
@@ -184,7 +176,7 @@ export class Site {
     if (links.links.length > 0) {
       // update the links
       Sankey().update({
-        nodes: linkedNodes,
+        nodes: this.siteNodes.nodes,
         links: links.links
       });
     }

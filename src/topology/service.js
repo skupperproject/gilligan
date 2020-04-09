@@ -34,7 +34,7 @@ import {
   ServiceWidth,
   ClusterPadding,
   ServiceHeight,
-  setSaved
+  setSaved,
 } from "../utilities";
 import { interpolatePath } from "d3-interpolate-path";
 import { Node, Nodes } from "./nodes.js";
@@ -50,7 +50,7 @@ export class Service {
     this.fields = [
       { title: "Address", field: "address" },
       { title: "Protocol", field: "protocol" },
-      { title: "Deployed at", field: "deployedAt" }
+      { title: "Deployed at", field: "deployedAt" },
     ];
   }
 
@@ -64,33 +64,33 @@ export class Service {
     this.linksSelection = this.setupLinksSelection(viewer);
   }
 
-  initNodesAndLinks = viewer => {
+  initNodesAndLinks = (viewer) => {
     this.initNodes(viewer, false);
     const vsize = this.initLinks(viewer, {
       width: viewer.width,
-      height: viewer.height
+      height: viewer.height,
     });
     return { nodeCount: this.serviceNodes.nodes.length, size: vsize };
   };
 
   initNodes(viewer, includeExtra) {
     const serviceNodes = this.serviceNodes;
-    this.adapter.data.services.forEach(service => {
+    this.adapter.data.services.forEach((service) => {
       if (
         includeExtra ||
-        !serviceNodes.nodes.some(n => n.name === service.address)
+        !serviceNodes.nodes.some((n) => n.name === service.address)
       ) {
         const subNode = new Node({
           name: service.address,
           nodeType: "service",
           fixed: true,
           heightFn: this.serviceHeight,
-          widthFn: this.serviceWidth
+          widthFn: this.serviceWidth,
         });
         subNode.mergeWith(service);
         subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
         subNode.color = serviceColor(subNode.name);
-        subNode.cluster = this.adapter.data.sites.find(site =>
+        subNode.cluster = this.adapter.data.sites.find((site) =>
           site.services.includes(service)
         );
         subNode.shortName = this.adapter.shortName(subNode.name);
@@ -114,9 +114,9 @@ export class Service {
 
     // get the links between services for the service view
     serviceNodes.forEach((subNode, source) => {
-      subNode.targetServices.forEach(targetService => {
+      subNode.targetServices.forEach((targetService) => {
         const target = serviceNodes.findIndex(
-          sn => sn.address === targetService.address
+          (sn) => sn.address === targetService.address
         );
         const linkIndex = links.getLink(
           subNode,
@@ -136,12 +136,9 @@ export class Service {
     });
 
     // get the service heights for use with the servicesankey view
-    const graph = {
-      nodes: serviceNodes,
-      links: links.links
-    };
     initSankey({
-      graph,
+      nodes: serviceNodes,
+      links: links.links,
       width: vsize.width,
       height: vsize.height,
       nodeWidth: ServiceWidth,
@@ -149,26 +146,26 @@ export class Service {
       left: 50,
       top: 20,
       right: 50,
-      bottom: 10
+      bottom: 10,
     });
 
-    this.expandNodes();
-    serviceNodes.forEach(n => {
+    // set the expanded height
+    serviceNodes.forEach((n) => {
       n.sankeyHeight = Math.max(n.y1 - n.y0, ServiceHeight);
     });
 
-    // set the x,y based on links and node sizes
+    // set the x,y based on links and expanded node sizes
+    this.expandNodes();
     const newSize = adjustPositions({
       nodes: serviceNodes,
       links: links.links,
       width: vsize.width,
       height: vsize.height,
       align: "right",
-      sort: true
+      sort: true,
     });
-
     // move the sankey x,y
-    serviceNodes.forEach(n => {
+    serviceNodes.forEach((n) => {
       // override the default starting position with saved positions
       const key = `${SERVICE_POSITION}-${n.name}`;
       const pos = getSaved(key);
@@ -183,35 +180,31 @@ export class Service {
       }
       // set sankey heights
       n.x1 = n.x0 + n.getWidth();
-      n.y1 = n.y0 + n.getHeight();
+      n.y1 = n.y0 + n.getHeight(); // node is expanded
     });
     this.collapseNodes();
+
     // regen the link.paths
-    Sankey().update(graph);
-    // generate our own paths
-    links.links.forEach(link => {
-      //link.sankeyPath = fixPath(link);
-      link.path = genPath({ link });
-    });
+    Sankey().update({ nodes: serviceNodes, links: links.links });
     return newSize;
   };
 
-  createServicesSelection = svg =>
+  createServicesSelection = (svg) =>
     svg
       .append("svg:g")
       .attr("class", "services")
       .selectAll("g.service-type");
 
-  createLinksSelection = svg =>
+  createLinksSelection = (svg) =>
     svg
       .append("svg:g")
       .attr("class", "links")
       .selectAll("g");
 
-  setupServicesSelection = viewer => {
+  setupServicesSelection = (viewer) => {
     const selection = this.servicesSelection.data(
       this.serviceNodes.nodes,
-      d => d.address
+      (d) => d.address
     );
 
     selection.exit().remove();
@@ -219,49 +212,49 @@ export class Service {
       .enter()
       .append("svg:g")
       .attr("class", "service-type")
-      .classed("extra", d => d.extra)
-      .attr("transform", d => {
+      .classed("extra", (d) => d.extra)
+      .attr("transform", (d) => {
         return `translate(${d.x},${d.y})`;
       });
 
-    serviceTypesEnter.append("svg:title").text(d => d.name);
+    serviceTypesEnter.append("svg:title").text((d) => d.name);
 
     serviceTypesEnter
       .append("svg:rect")
       .attr("class", "service-type")
       .attr("rx", 5)
       .attr("ry", 5)
-      .attr("width", d => Math.max(ServiceWidth, d.getWidth()))
-      .attr("height", d => d.getHeight())
+      .attr("width", (d) => Math.max(ServiceWidth, d.getWidth()))
+      .attr("height", (d) => d.getHeight())
       .attr("fill", "#FFFFFF");
 
     serviceTypesEnter
       .append("svg:text")
       .attr("class", "service-type")
-      .attr("x", d => Math.max(ServiceWidth, d.getWidth()) / 2)
-      .attr("y", d => d.getHeight() / 2)
+      .attr("x", (d) => Math.max(ServiceWidth, d.getWidth()) / 2)
+      .attr("y", (d) => d.getHeight() / 2)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
-      .text(d => d.shortName);
+      .text((d) => d.shortName);
 
     const links = this.serviceLinks.links;
     // draw circle on right if this serviceType
     // is a source of a link
     serviceTypesEnter
-      .filter(d => {
-        return links.some(l => l.source.name === d.name);
+      .filter((d) => {
+        return links.some((l) => l.source.name === d.name);
       })
       .append("svg:circle")
       .attr("class", "end-point source")
       .attr("r", 6)
-      .attr("cx", d => Math.max(ServiceWidth, d.getWidth()))
+      .attr("cx", (d) => Math.max(ServiceWidth, d.getWidth()))
       .attr("cy", 20);
 
     // draw diamond on left if this serviceType
     // is a target of a link
     serviceTypesEnter
-      .filter(d => {
-        return links.some(l => l.target.name === d.name);
+      .filter((d) => {
+        return links.some((l) => l.target.name === d.name);
       })
       .append("svg:rect")
       .attr("class", "end-point source")
@@ -272,7 +265,7 @@ export class Service {
       .attr("transform", "translate(0,13) rotate(45)");
 
     serviceTypesEnter
-      .on("mousedown", d => {
+      .on("mousedown", (d) => {
         if (this.view === "servicesankey") {
           d3.event.stopPropagation();
           d3.event.preventDefault();
@@ -300,7 +293,7 @@ export class Service {
         d3.event.preventDefault();
       });
 
-    selection.classed("selected", d => d.selected);
+    selection.classed("selected", (d) => d.selected);
 
     // adjust service name text based on its size
     selection.select("text.service-type").text(function(d) {
@@ -324,12 +317,12 @@ export class Service {
     return selection;
   };
 
-  setupLinksSelection = viewer => {
+  setupLinksSelection = (viewer) => {
     // serviceLinksSelection is a selection of all g elements under the g.links svg:group
     // here we associate the links.links array with the {g.links g} selection
     // based on the link.uid
     const links = this.serviceLinks.links;
-    const selection = this.linksSelection.data(links, d => d.uid);
+    const selection = this.linksSelection.data(links, (d) => d.uid);
     // remove old links
     selection.exit().remove();
 
@@ -342,19 +335,19 @@ export class Service {
     enterpath
       .append("path")
       .attr("class", "servicesankeyDir")
-      .classed("tcp", d => d.target.protocol === "tcp")
+      .classed("tcp", (d) => d.target.protocol === "tcp")
       .attr("stroke-width", 2)
-      .attr("id", d => `dir-${d.source.name}-${d.target.name}`)
+      .attr("id", (d) => `dir-${d.source.name}-${d.target.name}`)
       // reset the markers based on current highlighted/selected
       .attr(
         "marker-end",
-        d => `url(#${d.target.protocol === "tcp" ? "tcp-end" : "end--15"})`
+        (d) => `url(#${d.target.protocol === "tcp" ? "tcp-end" : "end--15"})`
       );
 
     enterpath
       .append("path")
       .attr("class", "hittarget")
-      .attr("id", d => `hitpath-${d.source.uid()}-${d.target.uid()}`)
+      .attr("id", (d) => `hitpath-${d.source.uid()}-${d.target.uid()}`)
       .on("mouseover", function(d) {
         // mouse over a path
         //d.selected = true;
@@ -371,7 +364,7 @@ export class Service {
         //viewer.restart();
       })
       // left click a path
-      .on("click", d => {
+      .on("click", (d) => {
         d3.event.stopPropagation();
         viewer.clearPopups();
         viewer.showLinkInfo(d);
@@ -386,7 +379,7 @@ export class Service {
       .attr("text-anchor", "middle")
       .attr("startOffset", "50%")
       .attr("text-length", "100%")
-      .attr("href", d => `#statPath-${d.source.name}-${d.target.name}`);
+      .attr("href", (d) => `#statPath-${d.source.name}-${d.target.name}`);
 
     // update each existing {g.links g.link} element
     selection
@@ -398,13 +391,13 @@ export class Service {
         return d.highlighted;
       });
 
-    selection.select(".hittarget").classed("selected", d => d.selected);
+    selection.select(".hittarget").classed("selected", (d) => d.selected);
     viewer.setLinkStat();
     return selection;
   };
 
   selectionSetBlack = () => {
-    d3.selectAll("path.service").classed("forceBlack", d => d.black);
+    d3.selectAll("path.service").classed("forceBlack", (d) => d.black);
   };
   serviceHeight = (n, expanded) => {
     if (expanded === undefined) {
@@ -420,28 +413,28 @@ export class Service {
     return ServiceWidth;
   };
 
-  savePosition = d => {
+  savePosition = (d) => {
     setSaved(`${SERVICE_POSITION}-${d.name}`, {
       x: d.x,
       y: d.y,
       x0: d.x0,
-      y0: d.y0
+      y0: d.y0,
     });
   };
-  dragStart = d => {
+  dragStart = (d) => {
     d.x = d.x0;
     d.y = d.y0;
     this.savePosition(d);
   };
 
-  drag = d => {
+  drag = (d) => {
     d.x = d.x0 = d.px;
     d.y = d.y0 = d.py;
     this.savePosition(d);
   };
 
   tick() {
-    this.servicesSelection.attr("transform", d => {
+    this.servicesSelection.attr("transform", (d) => {
       d.x0 = d.x;
       d.y0 = d.y;
       d.x1 = d.x0 + d.getWidth();
@@ -450,27 +443,27 @@ export class Service {
     });
     updateSankey({
       nodes: this.serviceNodes.nodes,
-      links: this.serviceLinks.links
+      links: this.serviceLinks.links,
     });
   }
 
   drawViewPath(sankey) {
     circularize(this.serviceLinks.links);
-    this.linksSelection.selectAll("path.service").attr("d", d => {
+    this.linksSelection.selectAll("path.service").attr("d", (d) => {
       if (sankey) {
         return genPath({ link: d, useSankeyY: true, sankey: true });
       } else {
         return null;
       }
     });
-    this.linksSelection.selectAll("path.hittarget").attr("d", d => {
+    this.linksSelection.selectAll("path.hittarget").attr("d", (d) => {
       if (sankey) {
         return genPath({ link: d, useSankeyY: true });
       } else {
         return genPath({ link: d });
       }
     });
-    this.linksSelection.selectAll("path.servicesankeyDir").attr("d", d => {
+    this.linksSelection.selectAll("path.servicesankeyDir").attr("d", (d) => {
       if (sankey) {
         return genPath({ link: d, useSankeyY: true });
       } else {
@@ -480,18 +473,18 @@ export class Service {
   }
 
   collapseNodes() {
-    this.serviceNodes.nodes.forEach(n => {
+    this.serviceNodes.nodes.forEach((n) => {
       n.expanded = false;
     });
   }
   expandNodes() {
-    this.serviceNodes.nodes.forEach(n => {
+    this.serviceNodes.nodes.forEach((n) => {
       n.expanded = true;
     });
   }
 
-  setBlack = black => {
-    this.serviceLinks.links.forEach(l => (l.black = black));
+  setBlack = (black) => {
+    this.serviceLinks.links.forEach((l) => (l.black = black));
   };
 
   setLinkStat = (sankey, props) => {
@@ -509,18 +502,19 @@ export class Service {
   highlightLink(highlight, link, d, sankey, color) {
     this.linksSelection
       .selectAll("path.service")
-      .filter(d1 => d1 === d)
+      .filter((d1) => d1 === d)
       .attr("opacity", highlight ? (sankey ? 0.8 : 0) : sankey ? 0.5 : 0);
 
     this.linksSelection
       .selectAll("path.servicesankeyDir")
-      .filter(d1 => d1 === d)
+      .filter((d1) => d1 === d)
       .attr("opacity", 1);
 
     // highlight/blur the services on each end of the link
     this.servicesSelection
       .filter(
-        d1 => d1.address === d.source.address || d1.address === d.target.address
+        (d1) =>
+          d1.address === d.source.address || d1.address === d.target.address
       )
       .attr("opacity", 1);
   }
@@ -544,16 +538,16 @@ export class Service {
   }
 
   toService = (initial, setLinkStat, color) => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       // Note: all the transitions happen concurrently
       d3.selectAll("g.service-type")
-        .attr("transform", d => `translate(${d.x},${d.y})`)
+        .attr("transform", (d) => `translate(${d.x},${d.y})`)
         .attr("opacity", 1);
 
       d3.selectAll("path.servicesankeyDir")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke", d => (color ? d.getColor() : "black")) //d.target.color))
+        .attr("stroke", (d) => (color ? d.getColor() : "black")) //d.target.color))
         .attr("stroke-width", 2)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -571,39 +565,39 @@ export class Service {
 
       // shrink the hittarget paths
       d3.selectAll("path.hittarget")
-        .attr("d", d => genPath({ link: d }))
+        .attr("d", (d) => genPath({ link: d }))
         .attr("stroke-width", 6)
-        .attr("stroke", d => (color ? d.getColor() : null))
+        .attr("stroke", (d) => (color ? d.getColor() : null))
         .attr("opacity", color ? 0.25 : null);
 
       // collapse the rects (getWidth() and getHeight() will return non-expanded sizes)
       d3.selectAll("rect.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("fill", d => d.lightColor)
-        .attr("width", d => d.getWidth())
-        .attr("height", d => d.getHeight())
+        .attr("fill", (d) => d.lightColor)
+        .attr("width", (d) => d.getWidth())
+        .attr("height", (d) => d.getHeight())
         .attr("opacity", 1);
 
       // move the address text to the middle
       d3.selectAll("text.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("y", d => d.getHeight() / 2)
+        .attr("y", (d) => d.getHeight() / 2)
         .attr("opacity", 1);
 
       // change the path's width and location
       d3.selectAll("path.service")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke", d => (color ? d.getColor() : null))
+        .attr("stroke", (d) => (color ? d.getColor() : null))
         .attr("stroke-width", 0)
         .attr("opacity", 0)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d, sankey: true, width: 2 });
           const ip = interpolatePath(previous, current);
-          return t => {
+          return (t) => {
             setLinkStat();
             return ip(t);
           };
@@ -612,7 +606,7 @@ export class Service {
   };
 
   toServiceSankey = (initial, setLinkStat) => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       d3.selectAll(".end-point")
         .transition()
         .duration(VIEW_DURATION)
@@ -622,7 +616,7 @@ export class Service {
       d3.selectAll("g.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("transform", d => `translate(${d.x0},${d.y0})`)
+        .attr("transform", (d) => `translate(${d.x0},${d.y0})`)
         .call(endall, () => {
           resolve();
         });
@@ -631,21 +625,21 @@ export class Service {
       d3.selectAll("rect.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("height", d => d.getHeight())
-        .attr("fill", d => d.lightColor)
+        .attr("height", (d) => d.getHeight())
+        .attr("fill", (d) => d.lightColor)
         .attr("opacity", 1);
 
       // put service names in middle of rect
       d3.selectAll("text.service-type")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("y", d => d.getHeight() / 2)
+        .attr("y", (d) => d.getHeight() / 2)
         .attr("opacity", 1);
 
       // expand the hittarget paths
       d3.selectAll("path.hittarget")
-        .attr("d", d => genPath({ link: d, useSankeyY: true }))
-        .attr("stroke-width", d => Math.max(6, d.width))
+        .attr("d", (d) => genPath({ link: d, useSankeyY: true }))
+        .attr("stroke-width", (d) => Math.max(6, d.width))
         .attr("stroke", "transparent")
         .attr("opacity", null);
 
@@ -653,8 +647,8 @@ export class Service {
       d3.selectAll("path.service")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("stroke", d => d.target.color)
-        .attr("fill", d => d.target.color)
+        .attr("stroke", (d) => d.target.color)
+        .attr("fill", (d) => d.target.color)
         .attr("stroke-width", 0)
         .attr("opacity", 0.5)
         .attrTween("d", function(d, i) {
@@ -662,11 +656,11 @@ export class Service {
             link: d,
             useSankeyY: true,
             sankey: true,
-            width: 2
+            width: 2,
           });
           const current = genPath({ link: d, useSankeyY: true, sankey: true }); //d.sankeyPath;
           const ip = interpolatePath(previous, current);
-          return t => {
+          return (t) => {
             setLinkStat();
             return ip(t);
           };
@@ -687,12 +681,12 @@ export class Service {
   };
 
   doFetch = (page, perPage) => {
-    const data = this.serviceNodes.nodes.map(n => ({
+    const data = this.serviceNodes.nodes.map((n) => ({
       address: n.address,
       protocol: n.protocol,
-      deployedAt: n.cluster ? n.cluster.site_name : ""
+      deployedAt: n.cluster ? n.cluster.site_name : "",
     }));
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       resolve({ data, page, perPage });
     });
   };
