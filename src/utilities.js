@@ -798,16 +798,17 @@ export const circularize = links => {
   });
 };
 
-export const updateSankey = ({ nodes, links, excludeExtra = false }) => {
-  if (excludeExtra) {
-    nodes = nodes.filter(n => !n.extra);
-  }
+export const updateSankey = ({ nodes, links }) => {
   circularize(links);
+
   // use the sankeyHeight when updating sankey path
   nodes.forEach(n => {
     n.y1 = n.y0 + n.sankeyHeight;
   });
-  sankey().update({ nodes, links });
+  const linkNodes = nodes.filter(n =>
+    links.some(l => l.source === n || n.target === n)
+  );
+  sankey().update({ nodes: linkNodes, links });
   // restore the node height
   nodes.forEach(n => {
     n.y1 = n.y0 + n.getHeight();

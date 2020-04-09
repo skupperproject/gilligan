@@ -130,6 +130,7 @@ export class Site {
     });
     // site-to-site traffic
     const interSiteLinks = this.interSiteLinks();
+    // modify nodes.x and .y based on links and width and height
     adjustPositions({
       nodes: this.siteNodes.nodes,
       links: interSiteLinks.links,
@@ -147,6 +148,7 @@ export class Site {
         nodes: linkedNodes,
         links: links.links
       };
+      // set the y0, y1, width of the links, set the x0 y0, x1 y1 of the nodes
       initSankey({
         graph,
         width: vsize.width,
@@ -159,6 +161,11 @@ export class Site {
         bottom: 10
       });
     }
+    // adjust the link widths to be no bigger than the sites
+    links.links.forEach(l => {
+      l.width = Math.min(l.source.r * 2, l.target.r * 2, l.width);
+    });
+
     // move the sankey starting points to the site location
     this.siteNodes.nodes.forEach(n => {
       const pos = getSaved(`${SITE_POSITION}-${n.site_id}`);
@@ -383,7 +390,12 @@ export class Site {
 
   setupTrafficLinks = viewer => {
     const links = this.trafficLinks.links;
-    const selection = this.trafficLinksSelection.data(links, d => d.uid);
+    const selection = this.trafficLinksSelection.data(
+      links.sort((a, b) =>
+        a.width < b.width ? 1 : a.width > b.width ? -1 : 0
+      ),
+      d => d.uid
+    );
     selection.exit().remove();
 
     const enter = selection.enter().append("g");

@@ -16,7 +16,7 @@ class RESTService {
           // this was only used to get the data when the console
           // was served by yarn start
           if (!alt) {
-            alt = "hipster-store"; //"tcp-http-mixed"; //"data2";
+            alt = "bookinfo1"; //"hipster-store"; //"tcp-http-mixed"; //"data2";
           }
           this.fetchFrom(`/data/${alt}.json`)
             .then(resolve)
