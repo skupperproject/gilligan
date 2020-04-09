@@ -312,11 +312,11 @@ export const adjustPositions = ({
         const avgTargets = Math.max(avg(n, "targetNodes"), bottomY + minGap);
         set(n, "y", avgTargets);
         bottomY = avgTargets + n.getHeight() + minGap;
-        if (bottomY > vheight) {
-          vheight = bottomY;
-          vwidth = (width * vheight) / height;
-        }
       });
+      if (bottomY > vheight) {
+        vheight = bottomY;
+        vwidth = (width * vheight) / height;
+      }
     }
   }
 
@@ -463,7 +463,8 @@ export const fixPath = (l) => {
   return d;
 };
 
-export const genPath = ({ link, key, mask, useSankeyY, sankey, width }) => {
+export const genPath = ({ link, key, mask, sankey, width }) => {
+  if (!width) width = link.width;
   if (mask) {
     if (!width) width = link.width;
     let x0, y0, x1, y1;
@@ -490,7 +491,6 @@ export const genPath = ({ link, key, mask, useSankeyY, sankey, width }) => {
 const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
 const bezier = (link, key, sankey, width) => {
-  if (!width) width = link.width;
   const x0 = get(link.source, "x1", key); // right side of source
   const y0 = link.source.expanded
     ? link.y0
@@ -532,9 +532,6 @@ const bezier = (link, key, sankey, width) => {
 const circular = (link, key, sankey, width) => {
   const minR = 10;
   const maxR = 80;
-  if (!width) {
-    width = link.width;
-  }
   const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
   const gap = 8;
   const sourceX = get(link.source, "x1", key);
@@ -802,25 +799,19 @@ export const circularize = (links) => {
 
 export const updateSankey = ({ nodes, links }) => {
   circularize(links);
-
   // use the sankeyHeight when updating sankey path
   nodes.forEach((n) => {
     n.y1 = n.y0 + n.sankeyHeight;
   });
-  const linkNodes = nodes.filter((n) =>
-    links.some((l) => l.source === n || n.target === n)
-  );
-  sankey().update({ nodes: linkNodes, links });
-  // restore the node height
-  nodes.forEach((n) => {
-    n.y1 = n.y0 + n.getHeight();
-  });
-  links.forEach((l) => {
-    //l.sankeyPath = fixPath(l);
-    l.path = genPath({ link: l, useSankeyY: true });
-  });
+  try {
+    sankey().update({ nodes, links });
+  } catch (e) {
+    console.log(`error in sankey.update`);
+    console.log(e);
+  }
 };
 
+// call callback when transition ends for all items in selection
 export const endall = (transition, callback) => {
   if (typeof callback !== "function")
     throw new Error("Wrong callback in endall");

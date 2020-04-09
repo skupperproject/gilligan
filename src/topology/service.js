@@ -23,7 +23,6 @@ import {
   genPath,
   getSaved,
   linkColor,
-  circularize,
   initSankey,
   serviceColor,
   Sankey,
@@ -433,7 +432,7 @@ export class Service {
     this.savePosition(d);
   };
 
-  tick() {
+  tick(sankey) {
     this.servicesSelection.attr("transform", (d) => {
       d.x0 = d.x;
       d.y0 = d.y;
@@ -441,31 +440,30 @@ export class Service {
       d.y1 = d.y0 + d.getHeight();
       return `translate(${d.x},${d.y})`;
     });
+  }
+
+  drawViewPath(sankey) {
     updateSankey({
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
-  }
-
-  drawViewPath(sankey) {
-    circularize(this.serviceLinks.links);
     this.linksSelection.selectAll("path.service").attr("d", (d) => {
       if (sankey) {
-        return genPath({ link: d, useSankeyY: true, sankey: true });
+        return genPath({ link: d, sankey: true });
       } else {
         return null;
       }
     });
     this.linksSelection.selectAll("path.hittarget").attr("d", (d) => {
       if (sankey) {
-        return genPath({ link: d, useSankeyY: true });
+        return genPath({ link: d });
       } else {
         return genPath({ link: d });
       }
     });
     this.linksSelection.selectAll("path.servicesankeyDir").attr("d", (d) => {
       if (sankey) {
-        return genPath({ link: d, useSankeyY: true });
+        return genPath({ link: d });
       } else {
         return genPath({ link: d });
       }
@@ -638,7 +636,7 @@ export class Service {
 
       // expand the hittarget paths
       d3.selectAll("path.hittarget")
-        .attr("d", (d) => genPath({ link: d, useSankeyY: true }))
+        .attr("d", (d) => genPath({ link: d }))
         .attr("stroke-width", (d) => Math.max(6, d.width))
         .attr("stroke", "transparent")
         .attr("opacity", null);
@@ -654,11 +652,10 @@ export class Service {
         .attrTween("d", function(d, i) {
           const previous = genPath({
             link: d,
-            useSankeyY: true,
             sankey: true,
             width: 2,
           });
-          const current = genPath({ link: d, useSankeyY: true, sankey: true }); //d.sankeyPath;
+          const current = genPath({ link: d, sankey: true }); //d.sankeyPath;
           const ip = interpolatePath(previous, current);
           return (t) => {
             setLinkStat();
@@ -674,7 +671,7 @@ export class Service {
         .attr("stroke", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, useSankeyY: true });
+          const current = genPath({ link: d });
           return interpolatePath(previous, current);
         });
     });
