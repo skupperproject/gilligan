@@ -37,6 +37,8 @@ import {
   ServiceWidth,
   ClusterPadding,
   SiteRadius,
+  reconcileArrays,
+  reconcileLinks
 } from "../utilities";
 import { interpolatePath } from "d3-interpolate-path";
 
@@ -55,36 +57,59 @@ export class Site {
     this.fields = [
       { title: "Name", field: "site_name" },
       { title: "Site ID", field: "site_id" },
-      { title: "Servers", field: "servers" },
+      { title: "Servers", field: "servers" }
     ];
   }
 
-  createSelections = (svg) => {
+  createSelections = svg => {
     this.masksSelection = this.createMasksSelection(svg);
     this.sitesSelection = this.createSitesSelection(svg);
     this.routerLinksSelection = this.createRouterLinksSelection(svg);
     this.trafficLinksSelection = this.createTrafficLinksSelection(svg);
   };
 
-  setupSelections = (viewer) => {
+  setupSelections = viewer => {
     this.masksSelection = this.setupMasks(viewer);
     this.sitesSelection = this.setupSitesSelection(viewer);
     this.trafficLinksSelection = this.setupTrafficLinks(viewer);
     this.routerLinksSelection = this.setupRouterLinks(viewer);
   };
 
-  initNodesAndLinks = (viewer) => {
-    this.initNodes(viewer);
+  initNodesAndLinks = viewer => {
+    this.initNodes(this.siteNodes);
     let vsize = { width: viewer.width, height: viewer.height };
-    vsize = this.initRouterLinks(viewer, vsize);
-    vsize = this.initTrafficLinks(viewer, vsize);
+    vsize = this.initRouterLinks(this.siteNodes, this.routerLinks, vsize);
+    vsize = this.initTrafficLinks(this.siteNodes, this.trafficLinks, vsize);
     return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
 
-  initNodes = (viewer) => {
+  updateNodesAndLinks = (viewer, adapter) => {
+    this.adapter = adapter;
+    const newNodes = new Nodes();
+    const newRouterLinks = new Links();
+    const newTrafficLinks = new Links();
+    this.initNodes(newNodes);
+    let vsize = { width: viewer.width, height: viewer.height };
+    vsize = this.initRouterLinks(newNodes, newRouterLinks, vsize);
+    this.initTrafficLinks(newNodes, newTrafficLinks, vsize);
+
+    reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
+    reconcileLinks(
+      this.routerLinks.links,
+      newRouterLinks.links,
+      this.siteNodes.nodes
+    );
+    reconcileLinks(
+      this.trafficLinks.links,
+      newTrafficLinks.links,
+      this.siteNodes.nodes
+    );
+    viewer.restart();
+  };
+
+  initNodes = siteNodes => {
     const clusters = this.adapter.data.sites; //.filter(s => !s.derived);
-    const siteNodes = this.siteNodes;
-    clusters.forEach((cluster) => {
+    clusters.forEach(cluster => {
       const name = cluster.site_name;
 
       const clusterNode = siteNodes.addUsing({
@@ -92,7 +117,7 @@ export class Site {
         nodeType: "cluster",
         fixed: true,
         heightFn: this.clusterHeight,
-        widthFn: this.clusterWidth,
+        widthFn: this.clusterWidth
       });
       clusterNode.mergeWith(cluster);
       clusterNode.color = siteColor(name);
@@ -100,12 +125,11 @@ export class Site {
     });
   };
 
-  initTrafficLinks = (viewer, vsize) => {
-    const links = this.trafficLinks;
+  initTrafficLinks = (nodes, links, vsize) => {
     const siteMatrix = this.adapter.siteMatrix();
-    siteMatrix.forEach((record) => {
+    siteMatrix.forEach(record => {
       const found = links.links.find(
-        (l) =>
+        l =>
           l.source.site_name === record.ingress &&
           l.target.site_name === record.egress
       );
@@ -114,15 +138,11 @@ export class Site {
         this.adapter.aggregateAttributes(record.request, found.request);
       } else {
         const linkIndex = links.addLink({
-          source: this.siteNodes.nodes.find(
-            (n) => n.site_name === record.ingress
-          ),
-          target: this.siteNodes.nodes.find(
-            (n) => n.site_name === record.egress
-          ),
+          source: nodes.nodes.find(n => n.site_name === record.ingress),
+          target: nodes.nodes.find(n => n.site_name === record.egress),
           dir: "in",
           cls: "siteTraffic",
-          uid: `SiteLink-${record.ingress}-${record.egress}`,
+          uid: `SiteLink-${record.ingress}-${record.egress}`
         });
         const link = links.links[linkIndex];
         link.value = record.messages;
@@ -131,19 +151,19 @@ export class Site {
       }
     });
     // site-to-site traffic
-    const interSiteLinks = this.interSiteLinks();
+    const interSiteLinks = this.interSiteLinks(nodes);
     // modify nodes.x and .y based on links and width and height
     adjustPositions({
-      nodes: this.siteNodes.nodes,
+      nodes: nodes.nodes,
       links: interSiteLinks.links,
-      width: viewer.width,
-      height: viewer.height,
+      width: vsize.width,
+      height: vsize.height
     });
 
     if (links.links.length > 0) {
       // set the y0, y1, width of the links, set the x0 y0, x1 y1 of the nodes
       initSankey({
-        nodes: this.siteNodes.nodes,
+        nodes: nodes.nodes,
         links: links.links,
         width: vsize.width,
         height: vsize.height,
@@ -152,16 +172,16 @@ export class Site {
         left: 50,
         top: 20,
         right: 50,
-        bottom: 10,
+        bottom: 10
       });
     }
     // adjust the link widths to be no bigger than the sites
-    links.links.forEach((l) => {
+    links.links.forEach(l => {
       l.width = Math.min(l.source.r * 2, l.target.r * 2, l.width);
     });
 
     // move the sankey starting points to the site location
-    this.siteNodes.nodes.forEach((n) => {
+    nodes.nodes.forEach(n => {
       const pos = getSaved(`${SITE_POSITION}-${n.site_id}`);
       if (pos) {
         n.x = pos.x;
@@ -178,21 +198,18 @@ export class Site {
     if (links.links.length > 0) {
       // update the links
       Sankey().update({
-        nodes: this.siteNodes.nodes,
-        links: links.links,
+        nodes: nodes.nodes,
+        links: links.links
       });
     }
     return vsize;
   };
 
-  initRouterLinks = (viewer, vsize) => {
-    const nodes = this.siteNodes;
-    const links = this.routerLinks;
-
+  initRouterLinks = (nodes, links, vsize) => {
     this.adapter.data.sites.forEach((site, i) => {
-      const source = nodes.nodes.find((n) => n.site_id === site.site_id);
-      site.connected.forEach((targetSite) => {
-        const target = nodes.nodes.find((s) => s.site_id === targetSite);
+      const source = nodes.nodes.find(n => n.site_id === site.site_id);
+      site.connected.forEach(targetSite => {
+        const target = nodes.nodes.find(s => s.site_id === targetSite);
         links.getLink(
           source,
           target,
@@ -205,46 +222,46 @@ export class Site {
     return vsize;
   };
 
-  createSitesSelection = (svg) =>
+  createSitesSelection = svg =>
     svg
       .append("svg:g")
       .attr("class", "clusters")
       .selectAll("g.cluster")
-      .attr("transform", (d) => `translate(${d.x},${d.y})`);
+      .attr("transform", d => `translate(${d.x},${d.y})`);
 
-  createRouterLinksSelection = (svg) =>
+  createRouterLinksSelection = svg =>
     svg
       .append("svg:g")
       .attr("class", "siteLinks")
       .selectAll("g");
 
-  createTrafficLinksSelection = (svg) =>
+  createTrafficLinksSelection = svg =>
     svg
       .append("svg:g")
       .attr("class", "siteTrafficLinks")
       .selectAll("g");
 
-  createMasksSelection = (svg) =>
+  createMasksSelection = svg =>
     svg
       .append("svg:g")
       .attr("class", "masks")
       .selectAll("g");
 
-  setupMasks = (viewer) => {
+  setupMasks = viewer => {
     const links = this.trafficLinks.links;
-    const sources = links.map((l) => ({
+    const sources = links.map(l => ({
       mask: "source",
       link: l,
-      uid: `MaskSource-${l.uid}`,
+      uid: `MaskSource-${l.uid}`
     }));
-    const targets = links.map((l) => ({
+    const targets = links.map(l => ({
       mask: "target",
       link: l,
-      uid: `MaskTarget-${l.uid}`,
+      uid: `MaskTarget-${l.uid}`
     }));
     const selection = this.masksSelection.data(
       [...sources, ...targets],
-      (d) => d.uid
+      d => d.uid
     );
     selection.exit().remove();
     const enter = selection.enter().append("g");
@@ -253,7 +270,7 @@ export class Site {
     return selection;
   };
 
-  setupSitesSelection = (viewer) => {
+  setupSitesSelection = viewer => {
     const selection = this.sitesSelection.data(this.siteNodes.nodes, function(
       d
     ) {
@@ -271,12 +288,12 @@ export class Site {
       .attr("class", "cluster site")
       .attr(
         "transform",
-        (d) =>
+        d =>
           `translate(${viewer.width / 2 - d.getWidth() / 2},${viewer.height /
             2 -
             d.getHeight() / 2})`
       )
-      .attr("id", (d) => `$cluster-${d.name}`);
+      .attr("id", d => `$cluster-${d.name}`);
 
     const rects = enterCircle
       .append("svg:g")
@@ -286,21 +303,21 @@ export class Site {
     rects
       .append("svg:circle")
       .attr("class", "network")
-      .attr("r", (d) => d.r)
-      .attr("cx", (d) => d.r)
-      .attr("cy", (d) => d.r)
-      .attr("fill", (d) => lighten(0.9, d.color))
-      .attr("stroke", (d) => d.color)
+      .attr("r", d => d.r)
+      .attr("cx", d => d.r)
+      .attr("cy", d => d.r)
+      .attr("fill", d => lighten(0.9, d.color))
+      .attr("stroke", d => d.color)
       .attr("opacity", 1);
 
     rects
       .append("svg:text")
       .attr("class", "cluster-name")
-      .attr("x", (d) => d.getWidth() / 2)
-      .attr("y", (d) => d.getHeight() / 2)
+      .attr("x", d => d.getWidth() / 2)
+      .attr("y", d => d.getHeight() / 2)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
-      .text((d) => d.name);
+      .text(d => d.name);
 
     enterCircle
       .on("mouseover", function(d) {
@@ -318,7 +335,7 @@ export class Site {
         viewer.mouseover_node = null;
         viewer.restart();
       })
-      .on("mousedown", (d) => {
+      .on("mousedown", d => {
         // mouse down for circle
         viewer.current_node = d;
         if (d3.event.button !== 0) {
@@ -331,7 +348,7 @@ export class Site {
           .mouse(viewer.topologyRef.parentNode.parentNode.parentNode)
           .slice();
       })
-      .on("mouseup", (d) => {
+      .on("mouseup", d => {
         // mouse up for circle
         if (!viewer.mousedown_node) return;
 
@@ -357,7 +374,7 @@ export class Site {
         // apply any data changes to the interface
         viewer.restart();
       })
-      .on("dblclick", (d) => {
+      .on("dblclick", d => {
         // circle
         d3.event.preventDefault();
         if (d.fixed) {
@@ -366,7 +383,7 @@ export class Site {
           viewer.force.start(); // let the nodes move to a new position
         }
       })
-      .on("click", (d) => {
+      .on("click", d => {
         // circle
         if (d3.event.defaultPrevented) return; // click suppressed
         viewer.clearPopups();
@@ -375,20 +392,20 @@ export class Site {
         d3.event.stopPropagation();
       });
 
-    selection.classed("highlighted", (d) => d.highlighted);
+    selection.classed("highlighted", d => d.highlighted);
     selection
       .selectAll("circle.network")
       .classed("dim", viewer.view === "deployment");
     return selection;
   };
 
-  setupTrafficLinks = (viewer) => {
+  setupTrafficLinks = viewer => {
     const links = this.trafficLinks.links;
     const selection = this.trafficLinksSelection.data(
       links.sort((a, b) =>
         a.width < b.width ? 1 : a.width > b.width ? -1 : 0
       ),
-      (d) => d.uid
+      d => d.uid
     );
     selection.exit().remove();
 
@@ -396,8 +413,8 @@ export class Site {
     enter
       .append("path")
       .attr("class", "siteTrafficLink")
-      .attr("fill", (d) => d.getColor())
-      .attr("d", (d) => {
+      .attr("fill", d => d.getColor())
+      .attr("d", d => {
         return genPath({ link: d });
       });
 
@@ -412,15 +429,15 @@ export class Site {
       .append("path")
       .attr("class", "hittarget")
       //.attr("id", d => `dir-${d.source.name}-${d.target.name}`)
-      .on("click", (d) => {
+      .on("click", d => {
         d3.event.stopPropagation();
         viewer.clearPopups();
         viewer.showLinkInfo(d);
       })
-      .on("mouseover", (d) => {
+      .on("mouseover", d => {
         viewer.showLinkInfo(d);
       })
-      .on("mouseout", (d) => {
+      .on("mouseout", d => {
         viewer.clearPopups();
       });
 
@@ -433,19 +450,19 @@ export class Site {
       .attr("text-anchor", "middle")
       .attr("startOffset", "50%")
       .attr("text-length", "100%")
-      .attr("href", (d) => `#statPath-${d.source.name}-${d.target.name}`);
+      .attr("href", d => `#statPath-${d.source.name}-${d.target.name}`);
 
     selection
       .selectAll(".siteTrafficLink")
-      .classed("selected", (d) => d.selected);
-    d3.selectAll("path.mask").classed("selected", (d) => d.link.selected);
+      .classed("selected", d => d.selected);
+    d3.selectAll("path.mask").classed("selected", d => d.link.selected);
 
     return selection;
   };
 
-  setupRouterLinks = (viewer) => {
+  setupRouterLinks = viewer => {
     const links = this.routerLinks.links;
-    const selection = this.routerLinksSelection.data(links, (d) => d.uid);
+    const selection = this.routerLinksSelection.data(links, d => d.uid);
 
     selection.exit().remove();
     const enter = selection.enter().append("g");
@@ -457,34 +474,31 @@ export class Site {
       .attr("marker-end", "url(#site-end)")
       .attr("class", "site-hittarget")
       .attr("stroke-width", 6)
-      .on("click", (d) => {
+      .on("click", d => {
         d3.event.stopPropagation();
         viewer.clearPopups();
         viewer.showLinkInfo(d);
       })
-      .on("mouseover", (d) => {
+      .on("mouseover", d => {
         d.highlighted = true;
         viewer.restart();
       })
-      .on("mouseout", (d) => {
+      .on("mouseout", d => {
         d.highlighted = false;
         viewer.restart();
       });
 
-    selection
-      .selectAll("path.site")
-      .classed("highlighted", (d) => d.highlighted);
+    selection.selectAll("path.site").classed("highlighted", d => d.highlighted);
 
     return selection;
   };
 
-  interSiteLinks = () => {
-    const siteNodes = this.siteNodes;
+  interSiteLinks = siteNodes => {
     // set the site non-sankey x,y based on its new size
     // using site-to-site traffic as the links
     const interSiteLinks = new Links();
-    siteNodes.nodes.forEach((fromSite) => {
-      siteNodes.nodes.forEach((toSite) => {
+    siteNodes.nodes.forEach(fromSite => {
+      siteNodes.nodes.forEach(toSite => {
         if (fromSite.site_id !== toSite.site_id) {
           const value = this.adapter.siteToSite(fromSite, toSite);
           if (value) {
@@ -493,7 +507,7 @@ export class Site {
               target: toSite,
               dir: "out",
               cls: "cls",
-              uid: "uid",
+              uid: "uid"
             });
             interSiteLinks.links[linkIndex].value = value;
           }
@@ -503,16 +517,16 @@ export class Site {
     return interSiteLinks;
   };
 
-  savePosition = (d) => {
+  savePosition = d => {
     setSaved(`${SITE_POSITION}-${d.site_id}`, {
       x: d.x,
       y: d.y,
       x0: d.x0,
-      y0: d.y0,
+      y0: d.y0
     });
   };
 
-  dragStart = (d) => {
+  dragStart = d => {
     d.x = d.x0;
     d.y = d.y0;
     this.savePosition(d);
@@ -524,8 +538,8 @@ export class Site {
     if (!skipSave) this.savePosition(d);
   };
 
-  tick = (sankey) => {
-    this.sitesSelection.attr("transform", (d) => {
+  tick = sankey => {
+    this.sitesSelection.attr("transform", d => {
       // move the site circle
       d.x0 = d.x;
       d.y0 = d.y;
@@ -535,26 +549,26 @@ export class Site {
     });
   };
 
-  drawViewPath = (sankey) => {
+  drawViewPath = sankey => {
     this.routerLinksSelection
       .selectAll("path") // this includes the .site and .site-hittarget
-      .attr("d", (d) => pathBetween(d.source, d.target));
+      .attr("d", d => pathBetween(d.source, d.target));
 
     circularize(this.trafficLinks.links);
     this.trafficLinksSelection
       .selectAll("path.siteTrafficLink")
-      .attr("d", (d) => genPath({ link: d, sankey: true }));
+      .attr("d", d => genPath({ link: d, sankey: true }));
     this.trafficLinksSelection
       .selectAll("path.siteTrafficDir")
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("d", d => genPath({ link: d }));
     this.trafficLinksSelection
       .selectAll("path.hittarget")
-      .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("stroke-width", d => (sankey ? Math.max(d.width, 6) : 6))
+      .attr("d", d => genPath({ link: d }));
 
     this.masksSelection
       .selectAll("path")
-      .attr("d", (d) => genPath({ link: d.link, mask: d.mask }));
+      .attr("d", d => genPath({ link: d.link, mask: d.mask }));
   };
 
   setLinkStat = (sankey, props) => {
@@ -566,27 +580,19 @@ export class Site {
     );
   };
 
-  setupDrag = (drag) => {
+  setupDrag = drag => {
     this.sitesSelection.call(drag);
   };
 
   collapseNodes = () => {
-    this.siteNodes.nodes.forEach((n) => {
+    this.siteNodes.nodes.forEach(n => {
       n.expanded = false;
     });
   };
   expandNodes = () => {
-    this.siteNodes.nodes.forEach((n) => {
+    this.siteNodes.nodes.forEach(n => {
       n.expanded = true;
     });
-  };
-
-  setBlack = (black) => {
-    this.trafficLinks.links.forEach((l) => (l.black = black));
-  };
-
-  selectionSetBlack = () => {
-    d3.selectAll("path.siteTrafficLink").classed("forceBlack", (d) => d.black);
   };
 
   clusterHeight = (n, expanded) =>
@@ -596,12 +602,12 @@ export class Site {
   highlightLink(highlight, link, d, sankey, color) {
     this.trafficLinksSelection
       .selectAll("path.siteTrafficLink")
-      .filter((d1) => d1 === d)
+      .filter(d1 => d1 === d)
       .attr("opacity", highlight ? (sankey ? 0.8 : 0) : sankey ? 0.5 : 0);
 
     this.trafficLinksSelection
       .selectAll("path.siteTrafficDir")
-      .filter((d1) => d1 === d)
+      .filter(d1 => d1 === d)
       .attr("opacity", 1);
   }
 
@@ -631,7 +637,7 @@ export class Site {
 
   // show traffic as a single colored line
   toSiteColor = (initial, setLinkStat) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       d3.select("g.siteTrafficLinks").style("display", "block");
       // hide the wide traffic paths
       d3.selectAll("path.siteTrafficLink")
@@ -647,7 +653,7 @@ export class Site {
       d3.selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", 6)
-        .attr("d", (d) => genPath({ link: d }));
+        .attr("d", d => genPath({ link: d }));
 
       // show the traffic direction in color
       d3.selectAll("path.siteTrafficDir")
@@ -655,12 +661,19 @@ export class Site {
         .duration(VIEW_DURATION)
         .attr("opacity", 1)
         .attr("stroke-width", 2)
-        .attr("stroke", (d) => d.getColor())
+        .attr("stroke", d => d.getColor())
+        .filter(function(d) {
+          d.current = genPath({ link: d });
+          if (d3.select(this).attr("d") === d.current) {
+            setLinkStat();
+            return false;
+          }
+          return true;
+        })
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d });
-          const ip = interpolatePath(previous, current);
-          return (t) => {
+          const ip = interpolatePath(previous, d.current);
+          return t => {
             setLinkStat();
             return ip(t);
           };
@@ -690,7 +703,7 @@ export class Site {
 
   // no traffic view
   toSite = (initial, setLinkStat) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       // hide all traffic paths
       d3.select("g.siteTrafficLinks").style("display", "none");
 
@@ -707,7 +720,7 @@ export class Site {
       d3.selectAll(".cluster")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("transform", (d) => `translate(${d.x},${d.y})`)
+        .attr("transform", d => `translate(${d.x},${d.y})`)
         .each("end", function() {
           d3.select(this)
             .style("display", "block")
@@ -723,13 +736,13 @@ export class Site {
         .attr("stroke-width", 0)
         .transition()
         .duration(VIEW_DURATION)
-        .attr("fill", (d) => d.link.target.color)
+        .attr("fill", d => d.link.target.color)
         .attr("opacity", 0)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d.link, mask: d.mask });
           const ip = interpolatePath(previous, current);
-          return (t) => {
+          return t => {
             setLinkStat();
             return ip(t);
           };
@@ -738,10 +751,10 @@ export class Site {
       d3.selectAll("rect.network")
         .transition()
         .duration(VIEW_DURATION)
-        .attr("width", (d) => d.getWidth())
-        .attr("height", (d) => d.getHeight());
+        .attr("width", d => d.getWidth())
+        .attr("height", d => d.getHeight());
 
-      d3.selectAll("text.cluster-name").attr("y", (d) => d.getHeight() / 2);
+      d3.selectAll("text.cluster-name").attr("y", d => d.getHeight() / 2);
 
       // hide services
       d3.selectAll("g.services").style("display", "none");
@@ -750,7 +763,7 @@ export class Site {
 
   // show traffic as wide lines
   toSiteSankey = (initial, setLinkStat) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       d3.select("g.siteTrafficLinks").style("display", "block");
       d3.select("g.siteLinks")
         .transition()
@@ -778,41 +791,45 @@ export class Site {
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 0.5)
-        .attr("fill", (d) => d.target.color)
+        .attr("fill", d => d.target.color)
         .attrTween("d", function(d, i) {
-          const previous = genPath({
-            link: d,
-            sankey: true,
-            width: 2,
-          });
-          const current = genPath({
-            link: d,
-            sankey: true,
-          });
-          const ip = interpolatePath(previous, current);
-          return (t) => {
-            setLinkStat();
-            return ip(t);
-          };
+          let previous = d3.select(this).attr("d");
+          if (!previous || previous === "") {
+            console.log(`previous was empty so genPath`);
+            previous = genPath({
+              link: d,
+              sankey: true,
+              width: 2
+            });
+          }
+          const current = genPath({ link: d, sankey: true });
+          if (previous === current) {
+            return t => {
+              setLinkStat();
+              return current;
+            };
+          } else {
+            const ip = interpolatePath(previous, current);
+            return t => {
+              setLinkStat();
+              return ip(t);
+            };
+          }
         });
 
       d3.selectAll("path.hittarget")
         .style("display", "block")
-        .attr("stroke-width", (d) => Math.max(d.width, 6))
-        .attr("d", (d) => genPath({ link: d }));
+        .attr("stroke-width", d => Math.max(d.width, 6))
+        .attr("d", d => genPath({ link: d }));
 
       d3.selectAll("path.mask")
         .attr("stroke-width", 0)
         .transition()
         .duration(VIEW_DURATION)
         .attr("opacity", 0.5)
-        .attr("fill", (d) => d.link.target.color)
+        .attr("fill", d => d.link.target.color)
         .attrTween("d", function(d, i) {
-          const previous = genPath({
-            link: d.link,
-            mask: d.mask,
-            width: 2,
-          });
+          const previous = d3.select(this).attr("d");
           const current = genPath({ link: d.link, mask: d.mask });
           return interpolatePath(previous, current);
         });
@@ -820,16 +837,14 @@ export class Site {
   };
 
   doFetch = (page, perPage) => {
-    const data = this.siteNodes.nodes.map((n) => ({
+    const data = this.siteNodes.nodes.map(n => ({
       site_name: n.site_name,
       site_id: n.site_id,
       servers: [
-        ...new Set(
-          n.servers.map((s) => this.adapter.serviceNameFromClientId(s))
-        ),
-      ].join(", "),
+        ...new Set(n.servers.map(s => this.adapter.serviceNameFromClientId(s)))
+      ].join(", ")
     }));
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       resolve({ data, page, perPage });
     });
   };

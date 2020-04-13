@@ -41,6 +41,22 @@ export class QDRService {
       );
     });
   }
+  update() {
+    return new Promise((resolve, reject) => {
+      if (this.rest) {
+        this.rest.getData().then(
+          data => {
+            delete this.adapter;
+            this.adapter = new Adapter(data);
+            this.VAN = data;
+            this.initColors(data);
+            resolve(data);
+          },
+          error => reject(error)
+        );
+      }
+    });
+  }
 
   initColors = data => {
     data.sites.forEach(site => {

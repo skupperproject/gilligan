@@ -38,6 +38,7 @@ export class Node {
     this.gap = 20;
     this.sourceNodes = [];
     this.targetNodes = [];
+    this.uuid = name;
   }
 
   toolTip(verbose) {
@@ -93,8 +94,7 @@ export class Node {
     });
   }
   uid() {
-    if (!this.uuid) this.uuid = `${this.name}`;
-    return this.uuid;
+    return this.name;
   }
   setFixed(fixed) {
     if (!fixed & 1) this.lat = this.lon = null;

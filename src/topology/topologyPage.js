@@ -35,7 +35,8 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
-import { Icap, strDate } from "../utilities";
+import { Icap } from "../utilities";
+import LastUpdated from "../lastUpdated";
 import TableViewer from "../tableViewer";
 
 class TopologyPage extends Component {
@@ -43,7 +44,6 @@ class TopologyPage extends Component {
     super(props);
     this.state = {
       isDropDownOpen: false,
-      lastUpdated: new Date(),
       options: {
         graph: {
           traffic: false,
@@ -139,6 +139,10 @@ class TopologyPage extends Component {
     });
   };
 
+  handleChangeLastUpdated = () => {
+    this.updatedRef.update();
+  };
+
   render() {
     return (
       <PageSection
@@ -158,12 +162,7 @@ class TopologyPage extends Component {
               <SplitItem isFilled>View: {this.buildDropdown()}</SplitItem>
               <SplitItem>
                 <TextContent>
-                  <Text
-                    className="overview-loading"
-                    component={TextVariants.pre}
-                  >
-                    {`Updated ${strDate(this.state.lastUpdated)}`}
-                  </Text>
+                  <LastUpdated ref={el => (this.updatedRef = el)} />
                 </TextContent>
               </SplitItem>
             </Split>
@@ -189,6 +188,7 @@ class TopologyPage extends Component {
                 handleChangeColor={this.props.handleChangeColor}
                 handleChangeWidth={this.props.handleChangeWidth}
                 handleChangeViewType={this.props.handleChangeViewType}
+                handleChangeLastUpdated={this.handleChangeLastUpdated}
               />
             )}
             {this.props.getViewType() === "table" && (

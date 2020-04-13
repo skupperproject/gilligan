@@ -30,7 +30,7 @@ const SankeyAttributes = [
   "x1",
   "y0",
   "y1",
-  "sankeyHeight",
+  "sankeyHeight"
 ];
 export const VIEW_DURATION = 500;
 export const EXPAND_DURATION = 500;
@@ -75,7 +75,7 @@ export const safePlural = (count, str) => {
   return str + "s";
 };
 
-export const Icap = (s) => `${s[0].toUpperCase()}${s.slice(1)}`;
+export const Icap = s => `${s[0].toUpperCase()}${s.slice(1)}`;
 
 export const pretty = (v, format = ",") => {
   var formatComma = d3.format(format);
@@ -83,24 +83,24 @@ export const pretty = (v, format = ",") => {
   return v;
 };
 
-export const strDate = (date) => {
+export const strDate = date => {
   return `${(date.getHours() + "").padStart(2, "0")}:${(
     date.getMinutes() + ""
   ).padStart(2, "0")}:${(date.getSeconds() + "").padStart(2, "0")}`;
 };
 
-export const copy = (obj) => {
+export const copy = obj => {
   if (obj) return JSON.parse(JSON.stringify(obj));
 };
 
-export const getUrlParts = (fullUrl) => {
+export const getUrlParts = fullUrl => {
   fullUrl = fullUrl || window.location;
   const url = document.createElement("a");
   url.setAttribute("href", fullUrl);
   return url;
 };
 
-export const getSizes = (component) => {
+export const getSizes = component => {
   const gap = 5;
   let legendWidth = 4;
   let topoWidth = component.offsetWidth;
@@ -118,12 +118,12 @@ export const getSizes = (component) => {
 export const adjustY = ({ nodes, height, yAttr }) => {
   let nodesHeight = 0;
   const minGap = 10;
-  nodes.forEach((n) => (nodesHeight += n.getHeight()));
+  nodes.forEach(n => (nodesHeight += n.getHeight()));
   const gaps = nodes.length + 1;
   let gapHeight = (height - nodesHeight) / gaps;
   gapHeight = Math.max(minGap, gapHeight);
   let curY = gapHeight;
-  nodes.forEach((n) => {
+  nodes.forEach(n => {
     n[yAttr] = curY;
     curY += n.getHeight() + gapHeight;
   });
@@ -137,14 +137,14 @@ export const adjustPositions = ({
   height,
   xyKey = "",
   align = "",
-  sort = false,
+  sort = false
 }) => {
   const set = (n, attr, value) =>
     xyKey !== "" ? (n[xyKey][attr] = value) : (n[attr] = value);
   const get = (n, attr) => (xyKey !== "" ? n[xyKey][attr] : n[attr]);
 
   const sourcesTargets = () => {
-    nodes.forEach((n) => {
+    nodes.forEach(n => {
       if (xyKey !== "" && n[xyKey] === undefined) {
         n[xyKey] = { x: 0, y: 0 };
       }
@@ -153,7 +153,7 @@ export const adjustPositions = ({
     });
 
     // for all the nodes, construct 2 lists: souce nodes, and target nodes
-    links.forEach((l) => {
+    links.forEach(l => {
       if (isNaN(l.source)) {
         l.source.targetNodes.push(l.target);
         l.target.sourceNodes.push(l.source);
@@ -168,7 +168,7 @@ export const adjustPositions = ({
   // handle loops
   const loops = []; // list of list of links involved in loops
   const linkBetween = (source, target) =>
-    links.find((l) => l.source === source && l.target === target);
+    links.find(l => l.source === source && l.target === target);
 
   const loopCheck = (originalSource, currentTarget, linkChain) => {
     for (let t = 0; t < currentTarget.targetNodes.length; t++) {
@@ -181,26 +181,26 @@ export const adjustPositions = ({
       }
     }
   };
-  links.forEach((l) => {
-    if (!loops.some((loop) => loop.includes(l))) {
+  links.forEach(l => {
+    if (!loops.some(loop => loop.includes(l))) {
       const linkChain = [l];
       loopCheck(l.source, l.target, linkChain);
     }
   });
   // eliminate the weakest links
-  loops.forEach((loop) => {
-    const minVal = Math.min(...loop.map((link) => link.value));
-    loop.find((l) => l.value === minVal).weakest = true;
+  loops.forEach(loop => {
+    const minVal = Math.min(...loop.map(link => link.value));
+    loop.find(l => l.value === minVal).weakest = true;
   });
-  links = [...links.filter((l) => !l.weakest)];
+  links = [...links.filter(l => !l.weakest)];
   sourcesTargets();
 
   // find node(s) with fewest number of sources
-  const minSources = Math.min(...nodes.map((n) => n.sourceNodes.length));
-  const leftMost = nodes.filter((n) => n.sourceNodes.length === minSources);
+  const minSources = Math.min(...nodes.map(n => n.sourceNodes.length));
+  const leftMost = nodes.filter(n => n.sourceNodes.length === minSources);
 
   // put leftMost in 1st column
-  leftMost.forEach((n) => (n.col = 0));
+  leftMost.forEach(n => (n.col = 0));
 
   // special case: all the nodes are in the 1st column
   // and they are not connected to each other.
@@ -213,8 +213,8 @@ export const adjustPositions = ({
   let colNodes = leftMost;
   while (colNodes.length > 0) {
     let foundNodes = [];
-    colNodes.forEach((p) => {
-      nodes.forEach((n) => {
+    colNodes.forEach(p => {
+      nodes.forEach(n => {
         if (p.targetNodes.includes(n)) {
           if (align === "left" || n.col === undefined) {
             n.col = p.col + 1;
@@ -227,7 +227,7 @@ export const adjustPositions = ({
   }
   // in case we have stranded nodes, i.e. nodes that are not descendants
   // of any of the nodes in the leftmost column
-  const stranded = nodes.filter((n) => n.col === undefined);
+  const stranded = nodes.filter(n => n.col === undefined);
   if (stranded.length > 0) {
     const vsize = adjustPositions({
       nodes: stranded,
@@ -236,20 +236,20 @@ export const adjustPositions = ({
       height,
       xyKey,
       align,
-      sort,
+      sort
     });
     width = vsize.width;
     height = vsize.height;
   }
 
-  const colCount = Math.max(...nodes.map((n) => n.col)) + 1;
+  const colCount = Math.max(...nodes.map(n => n.col)) + 1;
 
   if (align === "right") {
     // put nodes with source but no target in right column
     const rightMost = nodes.filter(
-      (n) => n.sourceNodes.length > 0 && n.targetNodes.length === 0
+      n => n.sourceNodes.length > 0 && n.targetNodes.length === 0
     );
-    rightMost.forEach((n) => (n.col = colCount - 1));
+    rightMost.forEach(n => (n.col = colCount - 1));
   }
 
   const minGap = 10;
@@ -258,7 +258,7 @@ export const adjustPositions = ({
 
   const sum = (a, sourceTarget) =>
     a[sourceTarget]
-      .map((n) => get(n, "y") - (a.col - n.col))
+      .map(n => get(n, "y") - (a.col - n.col))
       .reduce((total, y) => total + y, 0);
   const avg = (a, sourceTarget) =>
     a[sourceTarget].length > 0
@@ -278,9 +278,9 @@ export const adjustPositions = ({
   const colWidths = [];
   for (let col = 0; col < colCount; col++) {
     // only nodes in this column
-    colNodes = nodes.filter((n) => n.col === col);
+    colNodes = nodes.filter(n => n.col === col);
     let nodesHeight = 0;
-    colNodes.forEach((n) => (nodesHeight += n.getHeight()));
+    colNodes.forEach(n => (nodesHeight += n.getHeight()));
     const gaps = colNodes.length + 1;
     let gapHeight = (height - nodesHeight) / gaps;
     if (gapHeight < minGap) {
@@ -294,7 +294,7 @@ export const adjustPositions = ({
 
     let curY = gapHeight;
     colWidths[col] = 0;
-    colNodes.forEach((n) => {
+    colNodes.forEach(n => {
       colWidths[col] = Math.max(colWidths[col], n.getWidth());
       set(n, "y", curY);
       curY += n.getHeight() + gapHeight;
@@ -306,9 +306,9 @@ export const adjustPositions = ({
   if (sort) {
     for (let col = colCount - 2; col >= 0; col--) {
       let bottomY = minGap;
-      colNodes = nodes.filter((n) => n.col === col);
+      colNodes = nodes.filter(n => n.col === col);
       sortByHeights(colNodes, "targetNodes");
-      colNodes.forEach((n) => {
+      colNodes.forEach(n => {
         const avgTargets = Math.max(avg(n, "targetNodes"), bottomY + minGap);
         set(n, "y", avgTargets);
         bottomY = avgTargets + n.getHeight() + minGap;
@@ -321,7 +321,7 @@ export const adjustPositions = ({
   }
 
   let nodesWidth = 0;
-  colWidths.forEach((c) => {
+  colWidths.forEach(c => {
     nodesWidth += c;
   });
   let hGap = (vwidth - nodesWidth) / (colCount + 1);
@@ -346,11 +346,11 @@ export const adjustPositions = ({
 
 // get list of all subnodes
 // mark duplicate subnodes
-export const getSubNodes = (nodes) => {
+export const getSubNodes = nodes => {
   const subNodes = [];
-  nodes.nodes.forEach((node) => {
+  nodes.nodes.forEach(node => {
     node.subNodes.forEach((subNode, i) => {
-      const original = subNodes.find((s) => s.address === subNode.address);
+      const original = subNodes.find(s => s.address === subNode.address);
       subNode.extra = original ? true : false;
       subNode.original = original;
       subNodes.push(subNode);
@@ -360,17 +360,17 @@ export const getSubNodes = (nodes) => {
 };
 
 export const saveSankey = (nodes, key) => {
-  nodes.forEach((n) => {
+  nodes.forEach(n => {
     n[key] = {};
-    SankeyAttributes.forEach((a) => {
+    SankeyAttributes.forEach(a => {
       n[key][a] = n[a];
     });
   });
 };
 export const restoreSankey = (nodes, key) => {
-  nodes.forEach((n) => {
+  nodes.forEach(n => {
     if (n[key]) {
-      SankeyAttributes.forEach((a) => {
+      SankeyAttributes.forEach(a => {
         n[a] = n[key][a];
       });
     } else {
@@ -386,21 +386,21 @@ for (let i = 0; i < 20; i++) {
   colorGen(i);
 }
 
-export const siteColor = (name) => {
+export const siteColor = name => {
   if (!(name in siteColors)) {
     siteColors[name] = colorGen(Object.keys(siteColors).length * 2);
   }
   return siteColors[name];
 };
 
-export const serviceColor = (name) => {
+export const serviceColor = name => {
   if (!(name in serviceColors)) {
     serviceColors[name] = colorGen(19 - Object.keys(serviceColors).length * 2);
   }
   return serviceColors[name];
 };
 
-export const shortName = (name) => {
+export const shortName = name => {
   const parts = name.split("-");
   return parts[0];
 };
@@ -429,38 +429,6 @@ export const RGB_Linear_Shade = (p, c) => {
     r(i(cs) * P1 + t) +
     (d ? "," + d : ")")
   );
-};
-
-const parsePath = (d) => {
-  const cmdRegEx = /([MLQTCSAZVH])([^MLQTCSAZVH]*)/gi;
-  const commands = d.match(cmdRegEx);
-  commands.forEach((command, i) => {
-    commands[i] = command.trim();
-  });
-  return commands;
-};
-
-export const fixPath = (l) => {
-  let d = l.path;
-  if (l.circular) {
-    const commands = parsePath(d);
-    if (commands.length === 10) {
-      const l3 = commands[9].substr(1).split(/[\s,]+/);
-      const y3 = parseFloat(l3[1]);
-
-      const l1 = commands[5].substr(1).split(/[\s,]+/);
-      const x1 = parseFloat(l1[0]);
-      const y1 = parseFloat(l1[1]);
-
-      const maxr = Math.min(x1, (y1 - y3) / 2);
-      commands[6] = ["A", maxr, maxr, 0, 0, 1, x1 - maxr, y1 - maxr].join(" ");
-      commands[8] = ["A", maxr, maxr, 0, 0, 1, x1, y3].join(" ");
-      commands[7] = ["L", x1 - maxr, y3 + maxr].join(" ");
-      d = commands.join(" ");
-      l.path = d;
-    }
-  }
-  return d;
 };
 
 export const genPath = ({ link, key, mask, sankey, width }) => {
@@ -580,7 +548,7 @@ const circular = (link, key, sankey, width) => {
 export const expandSite = (site, key) => {
   if (site.subNodes && site.subNodes.length > 0) {
     let curY = ServiceStart;
-    site.subNodes.forEach((n) => {
+    site.subNodes.forEach(n => {
       n.expandedY = curY;
       n.y0 = n[key].y0 = n.parentNode.y0 + n.expandedY;
       n.y1 = n[key].y1 = n.y0 + n.sankeyHeight;
@@ -596,7 +564,7 @@ export const setLinkStat = (selection, view, stat, shown) => {
     requests: { one: "req", more: "reqs" },
     bytes_in: "bytes in",
     bytes_out: "bytes out",
-    latency_max: "ms latency (max)",
+    latency_max: "ms latency (max)"
   };
 
   // calculate a point "away" distance from given pt, that is perpendicular
@@ -616,7 +584,7 @@ export const setLinkStat = (selection, view, stat, shown) => {
     .attr("class", "stats");
 
   // set or clear the stat text
-  selection.selectAll("textPath.stats").text((d) => {
+  selection.selectAll("textPath.stats").text(d => {
     if (stat && shown) {
       const val = d.request[stat];
       let text = linkOptions[stat];
@@ -677,7 +645,7 @@ export const positionPopup = ({
   popupSelector,
   constrainX = true,
   constrainY = true,
-  padding = 0,
+  padding = 0
 }) => {
   // after the content has rendered, position it
   let selection = d3.select(containerSelector);
@@ -708,7 +676,7 @@ export const positionPopup = ({
 };
 
 export const linkColor = (link, links) => {
-  const vals = links.map((l) => l.value);
+  const vals = links.map(l => l.value);
   const min = Math.min(...vals);
   const max = Math.max(...vals);
   if (max > min) {
@@ -718,7 +686,7 @@ export const linkColor = (link, links) => {
   }
 };
 
-const fillColor = (v) => {
+const fillColor = v => {
   if (v < 0.333) return "#888888";
   if (v < 0.666) return "#00FF00";
   return "#0000FF";
@@ -759,26 +727,31 @@ export const initSankey = ({
   left = 0,
   top = 0,
   right = 0,
-  bottom = 0,
+  bottom = 0
 }) => {
   if (links.length > 0) {
-    const linkNodes = nodes.filter((n) =>
-      links.some((l) => l.source === n || l.target === n)
+    const linkNodes = nodes.filter(n =>
+      links.some(l => l.source === n || l.target === n)
     );
-    sankey()
-      .nodeWidth(nodeWidth)
-      .nodePadding(nodePadding)
-      .iterations(3)
-      .extent([
-        [left, top],
-        [width - right - left, height - bottom - top],
-      ])({ nodes: linkNodes, links });
+    try {
+      sankey()
+        .nodeWidth(nodeWidth)
+        .nodePadding(nodePadding)
+        .iterations(3)
+        .extent([
+          [left, top],
+          [width - right - left, height - bottom - top]
+        ])({ nodes: linkNodes, links });
+    } catch (e) {
+      console.log("error in initSankey");
+      console.log(e);
+    }
   }
 };
 
-export const circularize = (links) => {
+export const circularize = links => {
   let circularLinkID = 0;
-  links.forEach((l) => {
+  links.forEach(l => {
     if (l.source.x1 > l.target.x0) {
       l.circular = true;
       l.circularLinkID = circularLinkID++;
@@ -800,7 +773,7 @@ export const circularize = (links) => {
 export const updateSankey = ({ nodes, links }) => {
   circularize(links);
   // use the sankeyHeight when updating sankey path
-  nodes.forEach((n) => {
+  nodes.forEach(n => {
     n.y1 = n.y0 + n.sankeyHeight;
   });
   try {
@@ -836,3 +809,53 @@ export const getSaved = (key, defaultValue) => {
 export const setSaved = (key, value) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
+
+export function reconcileArrays(existing, newArray) {
+  const attrs = ["value", "width", "request"];
+  // remove from existing, any elements that are not in newArray
+  for (let i = existing.length - 1; i >= 0; --i) {
+    if (!newArray.some(n => n.uuid === existing[i].uuid)) {
+      existing.splice(i, 1);
+    }
+  }
+  // add to existing, any elements that are only in newArray
+  newArray.forEach(n => {
+    const old = existing.find(e => e.uuid === n.uuid);
+    if (!old) {
+      existing.push(n);
+    } else {
+      // update existing attributes
+      attrs.forEach(attr => {
+        if (n[attr] !== undefined) {
+          old[attr] = n[attr];
+        }
+      });
+    }
+  });
+}
+
+// Links are 'special' in that each link contians a reference
+// to the two nodes that it is linking.
+// So we need to fix the new links' source and target
+export function reconcileLinks(existingLinks, newLinks) {
+  // find links that are mirror images
+  newLinks.forEach(n => {
+    existingLinks.forEach(e => {
+      if (
+        e.source.uuid === n.target.uuid &&
+        e.target.uuid === n.source.uuid &&
+        e.left === n.right &&
+        e.right === n.left
+      ) {
+        e.left = n.left;
+        e.right = n.right;
+        e.uid = n.uid;
+        e.uuid = n.uuid;
+        const tmp = e.source;
+        e.source = e.target;
+        e.target = tmp;
+      }
+    });
+  });
+  reconcileArrays(existingLinks, newLinks);
+}

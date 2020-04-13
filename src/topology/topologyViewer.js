@@ -35,6 +35,7 @@ import ChordViewer from "../chord/chordViewer.js";
 import ServiceCard from "../serviceCard";
 import LinkInfo from "./linkInfo";
 import { viewsMap as VIEWS } from "../views";
+const UPDATE_INTERVAL = 2000;
 
 class TopologyPage extends Component {
   constructor(props) {
@@ -80,7 +81,6 @@ class TopologyPage extends Component {
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
     this.viewObj = new VIEWS[this.view](this.props.service.adapter);
     this.resetScale = 1;
-    this.showConnDir = false;
   }
 
   // called only once when the component is initialized
@@ -91,17 +91,30 @@ class TopologyPage extends Component {
     this.init();
     // call the to### transition
     this.callTransitions(true);
+    this.timer = setInterval(() => {
+      this.doUpdate();
+    }, UPDATE_INTERVAL);
   };
 
   componentWillUnmount = () => {
     //window.removeEventListener("resize", this.resize);
+    this.unmounting = true;
     d3.select(".pf-c-page__main").style("background-color", "white");
+    clearInterval(this.timer);
   };
 
   callTransitions = initial => {
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
     const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
     this[to](initial);
+  };
+
+  doUpdate = () => {
+    if (!this.viewObj.dragging) {
+      this.props.service.update().then(data => {
+        if (!this.unmounting) this.update();
+      });
+    }
   };
 
   resize = () => {
@@ -222,15 +235,28 @@ class TopologyPage extends Component {
         // don't pan while dragging
         d3.event.sourceEvent.stopPropagation();
         this.viewObj.dragStart(d, this.sankey);
+        this.viewObj.dragging = true;
       })
       .on("drag", d => {
         //setSaved(`${d.nodeType}:${d.name}`, { x: d.x, y: d.y });
         this.viewObj.drag(d, this.sankey);
         this.tick();
         this.setLinkStat();
+      })
+      .on("dragend", d => {
+        this.viewObj.dragging = false;
       });
     // create svg elements
     this.restart();
+  };
+
+  update = () => {
+    this.viewObj.updateNodesAndLinks(this, this.props.service.adapter);
+    this.force
+      .nodes(this.viewObj.nodes().nodes)
+      .links(this.viewObj.links().links);
+    this.viewObj.transition(this.sankey, false, this.getShowColor(), this);
+    this.props.handleChangeLastUpdated();
   };
 
   resetMouseVars = () => {
@@ -247,9 +273,6 @@ class TopologyPage extends Component {
 
   highlightConnection = (highlight, link, d, self) => {
     if (this.transitioning) return;
-    /*
-    this.viewObj.highlightConnection(highlight, link, d, this.sankey, this.getShowColor(), self)
-    */
     this.viewObj.blurAll(highlight, link, this.sankey, this.getShowColor());
     this.viewObj.highlightLink(
       highlight,
@@ -258,12 +281,6 @@ class TopologyPage extends Component {
       this.sankey,
       this.getShowColor()
     );
-
-    /*
-    this.blurAll(highlight, d);
-    this.highlightLink(highlight, link, d);
-    link.selectAll("text").attr("font-weight", highlight ? "bold" : null);
-    */
   };
 
   opaqueServiceType = d => {
@@ -281,48 +298,6 @@ class TopologyPage extends Component {
       this.sankey,
       this.getShowColor()
     );
-    /*
-    link.selectAll("text.stats").style("stroke", null);
-    link.selectAll("path.servicesankeyDir").attr("opacity", 1);
-    // highlight the link
-    link
-      .selectAll("path.service")
-      .attr("opacity", highlight ? 1 : this.sankey ? 0.5 : 1);
-
-    // highlight/blur the services on each end of the link
-    const services = d3
-      .select("#SVG_ID")
-      .selectAll("g.service-type")
-      .filter(
-        d1 => d1.address === d.source.address || d1.address === d.target.address
-      )
-      .attr("opacity", 1);
-
-    // bold/normal the text on each end of the link
-    services
-      .selectAll("text")
-      .attr("font-weight", highlight ? "bold" : "normal");
-
-    // highlight/blur the connection circles and diamonds
-    if (!this.sankey && this.view === "service") {
-      services
-        .selectAll("circle.end-point")
-        .filter(
-          d1 =>
-            d1.address === d.source.address &&
-            d1.targetNodes.some(t => t.address === d.target.address)
-        )
-        .attr("opacity", 1);
-      services
-        .selectAll("rect.end-point")
-        .filter(
-          d1 =>
-            d1.address === d.target.address &&
-            d1.sourceNodes.some(t => t.address === d.source.address)
-        )
-        .attr("opacity", 1);
-    }
-    */
   };
 
   highlightServiceType = (highlight, st, d, self) => {
@@ -349,27 +324,6 @@ class TopologyPage extends Component {
 
   blurAll = (blur, d) => {
     this.viewObj.blurAll(blur, d, this.sankey, this.getShowColor());
-    /*
-    const opacity = blur ? 0.25 : 1;
-    const pathOpacity = blur ? 0.25 : this.sankey ? 0.5 : 1;
-    const svg = d3.select("#SVG_ID");
-    svg.selectAll(".cluster-rects").attr("opacity", opacity);
-    svg.selectAll("g.service-type").attr("opacity", opacity);
-    svg.selectAll("path.service").attr("opacity", pathOpacity);
-    svg
-      .selectAll("path.mask")
-      .attr("opacity", blur ? 0 : this.sankey ? 0.5 : 1);
-    svg
-      .selectAll("path.servicesankeyDir")
-      .attr("opacity", !blur ? 1 : pathOpacity);
-    if (!this.sankey && this.view === "service")
-      svg.selectAll(".end-point").attr("opacity", pathOpacity);
-    svg.selectAll("text").attr("font-weight", "normal");
-    svg
-      .selectAll("text.stats")
-      .style("stroke", blur ? "#CCCCCC" : null)
-      .attr("font-weight", "unset");
-    */
   };
 
   setDragBehavior = () => {

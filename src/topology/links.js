@@ -29,6 +29,7 @@ export class Link {
     this.right = dir === "out" || dir === "both";
     this.cls = cls;
     this.uid = uid;
+    this.uuid = uid;
   }
   markerId(end) {
     let selhigh = this.highlighted
@@ -36,7 +37,7 @@ export class Link {
       : this.selected
       ? "selected"
       : "";
-    if (selhigh === "" && (!this.left && !this.right)) selhigh = "unknown";
+    if (selhigh === "" && !this.left && !this.right) selhigh = "unknown";
     //if (this.cls === "target") selhigh = "unknown";
     return `-${selhigh}-${
       end === "end" ? this.target.radius() : this.source.radius()
