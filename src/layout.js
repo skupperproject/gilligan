@@ -32,7 +32,7 @@ import {
   Nav,
   NavItem,
   NavList,
-  PageSidebar
+  PageSidebar,
 } from "@patternfly/react-core";
 
 import {
@@ -40,7 +40,7 @@ import {
   Switch,
   Route,
   Link,
-  Redirect
+  Redirect,
 } from "react-router-dom";
 
 import accessibleStyles from "@patternfly/patternfly/utilities/Accessibility/accessibility.css";
@@ -52,6 +52,7 @@ import ListPage from "./listPage";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
 import { getSaved, setSaved } from "./utilities";
+import Modifier from "./modify";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
 const TOOLBAR_CHECKS = "toolbarChecks";
@@ -60,28 +61,37 @@ const LAST_VIEW = "lastView";
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
-    this.lastView = getSaved(LAST_VIEW, "service");
+    this.lastView = getSaved(LAST_VIEW, "deployment");
     this.state = {
       connected: false,
       connectPath: "",
       activeItem: this.lastView,
       isConnectFormOpen: false,
-      username: ""
+      username: "",
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
+
+    // TODO: remove this before a production build
+    if (
+      window.location.hostname === "localhost" &&
+      this.props.location.search.includes("simulate=true")
+    ) {
+      this.service.modifier = new Modifier();
+      console.log("WARNING ^^^ simulating traffic ^^^");
+    }
     this.views = [
       { name: "Services", view: "service" },
       { name: "Sites", view: "site" },
       { name: "Deployments", view: "deployment" },
-      { name: "Processes", view: "process" }
+      { name: "Processes", view: "process" },
     ];
     const checks = getSaved(TOOLBAR_CHECKS, {
       sankey: false,
       stat: false,
       width: false,
       color: true,
-      viewType: "graph"
+      viewType: "graph",
     });
     //checks.sankey = true;
     this.showSankey = checks.sankey;
@@ -95,22 +105,22 @@ class PageLayout extends React.Component {
     this.doConnect();
   };
 
-  setLocation = where => {
+  setLocation = (where) => {
     //this.setState({ connectPath: where })
   };
 
   doConnect = () => {
     this.service.connect().then(
-      r => {
+      (r) => {
         this.handleConnect(this.props.fromPath, true);
       },
-      e => {
+      (e) => {
         console.log(e);
       }
     );
   };
 
-  handleConnect = connectPath => {
+  handleConnect = (connectPath) => {
     if (this.state.connected) {
       this.setState({ connected: false }, () => {
         this.handleConnectCancel();
@@ -130,21 +140,21 @@ class PageLayout extends React.Component {
         activeItem,
         connectPath,
         connected: true,
-        isConnectFormOpen: false
+        isConnectFormOpen: false,
       });
     }
   };
 
-  onNavSelect = result => {
+  onNavSelect = (result) => {
     this.lastView = result.itemId;
     setSaved(LAST_VIEW, this.lastView);
     this.setState({
       activeItem: result.itemId,
-      connectPath: ""
+      connectPath: "",
     });
   };
 
-  toggleConnectForm = event => {
+  toggleConnectForm = (event) => {
     this.setState({ isConnectFormOpen: !this.state.isConnectFormOpen });
   };
 
@@ -157,27 +167,27 @@ class PageLayout extends React.Component {
       stat: this.showStat,
       width: this.showWidth,
       color: this.showColor,
-      viewType: this.viewType
+      viewType: this.viewType,
     });
   };
-  handleChangeViewType = viewType => {
+  handleChangeViewType = (viewType) => {
     this.viewType = viewType;
     this.saveChecks();
   };
-  handleChangeShowStat = showStat => {
+  handleChangeShowStat = (showStat) => {
     this.showStat = showStat;
     this.saveChecks();
   };
-  handleChangeSankey = showSankey => {
+  handleChangeSankey = (showSankey) => {
     this.showSankey = showSankey;
     this.saveChecks();
   };
-  handleChangeWidth = showWidth => {
+  handleChangeWidth = (showWidth) => {
     this.showWidth = showWidth;
     this.showColor = !showWidth;
     this.saveChecks();
   };
-  handleChangeColor = showColor => {
+  handleChangeColor = (showColor) => {
     this.showColor = showColor;
     this.showWidth = !showColor;
     this.saveChecks();
@@ -195,7 +205,7 @@ class PageLayout extends React.Component {
     return this.showColor;
   };
 
-  toL = s => s[0].toLowerCase() + s.slice(1);
+  toL = (s) => s[0].toLowerCase() + s.slice(1);
 
   render() {
     const { activeItem } = this.state;
@@ -204,7 +214,7 @@ class PageLayout extends React.Component {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
           <NavList>
-            {this.views.map(viewInfo => {
+            {this.views.map((viewInfo) => {
               const { view, name } = viewInfo;
               return (
                 <NavItem
@@ -261,7 +271,7 @@ class PageLayout extends React.Component {
       <SkipToContent href={`#${pageId}`}>Skip to Content</SkipToContent>
     );
 
-    const sidebar = PageNav => {
+    const sidebar = (PageNav) => {
       if (this.state.connected) {
         return (
           <PageSidebar nav={PageNav()} theme="dark" className="pf-m-dark" />
@@ -275,7 +285,7 @@ class PageLayout extends React.Component {
       <Route
         path={rpath}
         {...(more.exact ? "exact" : "")}
-        render={props =>
+        render={(props) =>
           this.state.connected ? (
             <Component
               service={this.service}
@@ -298,8 +308,8 @@ class PageLayout extends React.Component {
                 pathname: "/login",
                 state: {
                   from: props.location,
-                  connected: this.state.connected
-                }
+                  connected: this.state.connected,
+                },
               }}
             />
           )
@@ -362,7 +372,7 @@ class PageLayout extends React.Component {
             <PrivateRoute path="/process" component={ListPage} />
             <Route
               path="/login"
-              render={props => (
+              render={(props) => (
                 <ConnectPage
                   {...props}
                   service={this.service}

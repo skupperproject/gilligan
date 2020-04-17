@@ -19,7 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import * as d3path from "d3-path";
-import { sankeyCircular as sankey } from "d3-sankey-circular";
+import { sankey } from "d3-sankey";
 export const Sankey = sankey;
 const SankeyAttributes = [
   "value",
@@ -30,7 +30,7 @@ const SankeyAttributes = [
   "x1",
   "y0",
   "y1",
-  "sankeyHeight"
+  "sankeyHeight",
 ];
 export const VIEW_DURATION = 500;
 export const EXPAND_DURATION = 500;
@@ -75,7 +75,7 @@ export const safePlural = (count, str) => {
   return str + "s";
 };
 
-export const Icap = s => `${s[0].toUpperCase()}${s.slice(1)}`;
+export const Icap = (s) => `${s[0].toUpperCase()}${s.slice(1)}`;
 
 export const pretty = (v, format = ",") => {
   var formatComma = d3.format(format);
@@ -83,24 +83,24 @@ export const pretty = (v, format = ",") => {
   return v;
 };
 
-export const strDate = date => {
+export const strDate = (date) => {
   return `${(date.getHours() + "").padStart(2, "0")}:${(
     date.getMinutes() + ""
   ).padStart(2, "0")}:${(date.getSeconds() + "").padStart(2, "0")}`;
 };
 
-export const copy = obj => {
+export const copy = (obj) => {
   if (obj) return JSON.parse(JSON.stringify(obj));
 };
 
-export const getUrlParts = fullUrl => {
+export const getUrlParts = (fullUrl) => {
   fullUrl = fullUrl || window.location;
   const url = document.createElement("a");
   url.setAttribute("href", fullUrl);
   return url;
 };
 
-export const getSizes = component => {
+export const getSizes = (component) => {
   const gap = 5;
   let legendWidth = 4;
   let topoWidth = component.offsetWidth;
@@ -118,12 +118,12 @@ export const getSizes = component => {
 export const adjustY = ({ nodes, height, yAttr }) => {
   let nodesHeight = 0;
   const minGap = 10;
-  nodes.forEach(n => (nodesHeight += n.getHeight()));
+  nodes.forEach((n) => (nodesHeight += n.getHeight()));
   const gaps = nodes.length + 1;
   let gapHeight = (height - nodesHeight) / gaps;
   gapHeight = Math.max(minGap, gapHeight);
   let curY = gapHeight;
-  nodes.forEach(n => {
+  nodes.forEach((n) => {
     n[yAttr] = curY;
     curY += n.getHeight() + gapHeight;
   });
@@ -137,14 +137,14 @@ export const adjustPositions = ({
   height,
   xyKey = "",
   align = "",
-  sort = false
+  sort = false,
 }) => {
   const set = (n, attr, value) =>
     xyKey !== "" ? (n[xyKey][attr] = value) : (n[attr] = value);
   const get = (n, attr) => (xyKey !== "" ? n[xyKey][attr] : n[attr]);
 
   const sourcesTargets = () => {
-    nodes.forEach(n => {
+    nodes.forEach((n) => {
       if (xyKey !== "" && n[xyKey] === undefined) {
         n[xyKey] = { x: 0, y: 0 };
       }
@@ -153,7 +153,7 @@ export const adjustPositions = ({
     });
 
     // for all the nodes, construct 2 lists: souce nodes, and target nodes
-    links.forEach(l => {
+    links.forEach((l) => {
       if (isNaN(l.source)) {
         l.source.targetNodes.push(l.target);
         l.target.sourceNodes.push(l.source);
@@ -168,7 +168,7 @@ export const adjustPositions = ({
   // handle loops
   const loops = []; // list of list of links involved in loops
   const linkBetween = (source, target) =>
-    links.find(l => l.source === source && l.target === target);
+    links.find((l) => l.source === source && l.target === target);
 
   const loopCheck = (originalSource, currentTarget, linkChain) => {
     for (let t = 0; t < currentTarget.targetNodes.length; t++) {
@@ -181,26 +181,26 @@ export const adjustPositions = ({
       }
     }
   };
-  links.forEach(l => {
-    if (!loops.some(loop => loop.includes(l))) {
+  links.forEach((l) => {
+    if (!loops.some((loop) => loop.includes(l))) {
       const linkChain = [l];
       loopCheck(l.source, l.target, linkChain);
     }
   });
   // eliminate the weakest links
-  loops.forEach(loop => {
-    const minVal = Math.min(...loop.map(link => link.value));
-    loop.find(l => l.value === minVal).weakest = true;
+  loops.forEach((loop) => {
+    const minVal = Math.min(...loop.map((link) => link.value));
+    loop.find((l) => l.value === minVal).weakest = true;
   });
-  links = [...links.filter(l => !l.weakest)];
+  links = [...links.filter((l) => !l.weakest)];
   sourcesTargets();
 
   // find node(s) with fewest number of sources
-  const minSources = Math.min(...nodes.map(n => n.sourceNodes.length));
-  const leftMost = nodes.filter(n => n.sourceNodes.length === minSources);
+  const minSources = Math.min(...nodes.map((n) => n.sourceNodes.length));
+  const leftMost = nodes.filter((n) => n.sourceNodes.length === minSources);
 
   // put leftMost in 1st column
-  leftMost.forEach(n => (n.col = 0));
+  leftMost.forEach((n) => (n.col = 0));
 
   // special case: all the nodes are in the 1st column
   // and they are not connected to each other.
@@ -213,8 +213,8 @@ export const adjustPositions = ({
   let colNodes = leftMost;
   while (colNodes.length > 0) {
     let foundNodes = [];
-    colNodes.forEach(p => {
-      nodes.forEach(n => {
+    colNodes.forEach((p) => {
+      nodes.forEach((n) => {
         if (p.targetNodes.includes(n)) {
           if (align === "left" || n.col === undefined) {
             n.col = p.col + 1;
@@ -227,7 +227,7 @@ export const adjustPositions = ({
   }
   // in case we have stranded nodes, i.e. nodes that are not descendants
   // of any of the nodes in the leftmost column
-  const stranded = nodes.filter(n => n.col === undefined);
+  const stranded = nodes.filter((n) => n.col === undefined);
   if (stranded.length > 0) {
     const vsize = adjustPositions({
       nodes: stranded,
@@ -236,20 +236,20 @@ export const adjustPositions = ({
       height,
       xyKey,
       align,
-      sort
+      sort,
     });
     width = vsize.width;
     height = vsize.height;
   }
 
-  const colCount = Math.max(...nodes.map(n => n.col)) + 1;
+  const colCount = Math.max(...nodes.map((n) => n.col)) + 1;
 
   if (align === "right") {
     // put nodes with source but no target in right column
     const rightMost = nodes.filter(
-      n => n.sourceNodes.length > 0 && n.targetNodes.length === 0
+      (n) => n.sourceNodes.length > 0 && n.targetNodes.length === 0
     );
-    rightMost.forEach(n => (n.col = colCount - 1));
+    rightMost.forEach((n) => (n.col = colCount - 1));
   }
 
   const minGap = 10;
@@ -258,7 +258,7 @@ export const adjustPositions = ({
 
   const sum = (a, sourceTarget) =>
     a[sourceTarget]
-      .map(n => get(n, "y") - (a.col - n.col))
+      .map((n) => get(n, "y") - (a.col - n.col))
       .reduce((total, y) => total + y, 0);
   const avg = (a, sourceTarget) =>
     a[sourceTarget].length > 0
@@ -278,9 +278,9 @@ export const adjustPositions = ({
   const colWidths = [];
   for (let col = 0; col < colCount; col++) {
     // only nodes in this column
-    colNodes = nodes.filter(n => n.col === col);
+    colNodes = nodes.filter((n) => n.col === col);
     let nodesHeight = 0;
-    colNodes.forEach(n => (nodesHeight += n.getHeight()));
+    colNodes.forEach((n) => (nodesHeight += n.getHeight()));
     const gaps = colNodes.length + 1;
     let gapHeight = (height - nodesHeight) / gaps;
     if (gapHeight < minGap) {
@@ -294,7 +294,7 @@ export const adjustPositions = ({
 
     let curY = gapHeight;
     colWidths[col] = 0;
-    colNodes.forEach(n => {
+    colNodes.forEach((n) => {
       colWidths[col] = Math.max(colWidths[col], n.getWidth());
       set(n, "y", curY);
       curY += n.getHeight() + gapHeight;
@@ -306,9 +306,9 @@ export const adjustPositions = ({
   if (sort) {
     for (let col = colCount - 2; col >= 0; col--) {
       let bottomY = minGap;
-      colNodes = nodes.filter(n => n.col === col);
+      colNodes = nodes.filter((n) => n.col === col);
       sortByHeights(colNodes, "targetNodes");
-      colNodes.forEach(n => {
+      colNodes.forEach((n) => {
         const avgTargets = Math.max(avg(n, "targetNodes"), bottomY + minGap);
         set(n, "y", avgTargets);
         bottomY = avgTargets + n.getHeight() + minGap;
@@ -321,7 +321,7 @@ export const adjustPositions = ({
   }
 
   let nodesWidth = 0;
-  colWidths.forEach(c => {
+  colWidths.forEach((c) => {
     nodesWidth += c;
   });
   let hGap = (vwidth - nodesWidth) / (colCount + 1);
@@ -346,11 +346,11 @@ export const adjustPositions = ({
 
 // get list of all subnodes
 // mark duplicate subnodes
-export const getSubNodes = nodes => {
+export const getSubNodes = (nodes) => {
   const subNodes = [];
-  nodes.nodes.forEach(node => {
+  nodes.nodes.forEach((node) => {
     node.subNodes.forEach((subNode, i) => {
-      const original = subNodes.find(s => s.address === subNode.address);
+      const original = subNodes.find((s) => s.address === subNode.address);
       subNode.extra = original ? true : false;
       subNode.original = original;
       subNodes.push(subNode);
@@ -360,17 +360,17 @@ export const getSubNodes = nodes => {
 };
 
 export const saveSankey = (nodes, key) => {
-  nodes.forEach(n => {
+  nodes.forEach((n) => {
     n[key] = {};
-    SankeyAttributes.forEach(a => {
+    SankeyAttributes.forEach((a) => {
       n[key][a] = n[a];
     });
   });
 };
 export const restoreSankey = (nodes, key) => {
-  nodes.forEach(n => {
+  nodes.forEach((n) => {
     if (n[key]) {
-      SankeyAttributes.forEach(a => {
+      SankeyAttributes.forEach((a) => {
         n[a] = n[key][a];
       });
     } else {
@@ -386,21 +386,21 @@ for (let i = 0; i < 20; i++) {
   colorGen(i);
 }
 
-export const siteColor = name => {
+export const siteColor = (name) => {
   if (!(name in siteColors)) {
     siteColors[name] = colorGen(Object.keys(siteColors).length * 2);
   }
   return siteColors[name];
 };
 
-export const serviceColor = name => {
+export const serviceColor = (name) => {
   if (!(name in serviceColors)) {
     serviceColors[name] = colorGen(19 - Object.keys(serviceColors).length * 2);
   }
   return serviceColors[name];
 };
 
-export const shortName = name => {
+export const shortName = (name) => {
   const parts = name.split("-");
   return parts[0];
 };
@@ -431,42 +431,91 @@ export const RGB_Linear_Shade = (p, c) => {
   );
 };
 
-export const genPath = ({ link, key, mask, sankey, width }) => {
+// calculate a point "away" distance from given pt, that is perpendicular
+// to the line going from pt with given slope
+const ptAway = (pt, away, slope) => {
+  const m = -1 / slope;
+  const y = (away * m) / Math.sqrt(1 + m * m) + pt.y;
+  const x = away / Math.sqrt(1 + m * m) + pt.x;
+  return { x, y };
+};
+
+const distance = (pt1, pt2) => {
+  let xdiff = pt2.x - pt1.x;
+  let ydiff = pt2.y - pt1.y;
+  return Math.sqrt(xdiff * xdiff + ydiff * ydiff);
+};
+
+export const genPath = ({
+  link,
+  key,
+  mask,
+  sankey,
+  width,
+  reverse,
+  offsetY,
+  selection,
+}) => {
   if (!width) width = link.width;
-  if (mask) {
-    if (!width) width = link.width;
-    let x0, y0, x1, y1;
-    if (mask === "source") {
-      x1 = get(link.source, "x1", key);
-      x0 = x1 - link.source.getWidth() / 2;
-      y0 =
-        get(link.source, "y0", key) + link.source.getHeight() / 2 - width / 2;
-      y1 = y0 + width;
-    } else {
-      x0 = get(link.target, "x0", key);
-      x1 = x0 + link.target.getWidth() / 2;
-      y0 =
-        get(link.target, "y0", key) + link.target.getHeight() / 2 - width / 2;
-      y1 = y0 + width;
-    }
-    return `M ${x0},${y0} L ${x1},${y0} L ${x1},${y1} L ${x0},${y1} z`;
-  } else
-    return !link.circular
-      ? bezier(link, key, sankey, width)
-      : circular(link, key, sankey, width);
+  if (!offsetY) offsetY = 0;
+  if (mask) return genMask(link, key, mask, width, selection);
+  if (link.circular)
+    return circular(link, key, sankey, width, reverse, offsetY);
+  return bezier(link, key, sankey, width, offsetY);
 };
 
 const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
-const bezier = (link, key, sankey, width) => {
-  const x0 = get(link.source, "x1", key); // right side of source
+// construct an arrow on the surface of the target circle
+// oriented along the bezier curve connecting the source and target circles
+const genMask = (link, key, mask, width, selection) => {
+  let away = 5; // 1/2 the arrows base width
+  let r = link.target.getWidth() / 2; // target circle radius
+  let tc = {
+    // center of target circle
+    x: link.target.x + r,
+    y: link.target.y + r,
+  };
+  // create the path on which we will be placing the arrow
+  d3.select(selection).attr("d", (d) => genPath({ link }));
+  const len = selection.getTotalLength(); // length of the path
+  let intersect = len - r; // 1st guess at where the point of the arrow should be on the path
+  let p1 = selection.getPointAtLength(intersect); // x,y position at that distance
+  let dist = distance(p1, tc); // distance between p1 and the target's center
+  // when we first start, the locations may be extreme
+  // after the circles are in their final position, this while loop is skipped
+  while (Math.abs(dist - r) > 1) {
+    intersect += dist > r ? 1 : -1;
+    p1 = selection.getPointAtLength(intersect);
+    dist = distance(p1, tc);
+  }
+  // p1 is now on the circle, p1 is the point of the arrow
+  const p2 = selection.getPointAtLength(intersect - 10); // the base of the arrow
+  if (p2.x === p1.x) {
+    ++p2.x;
+  }
+  const slope = (p2.y - p1.y) / (p2.x - p1.x);
+  const pt1 = ptAway(p2, -away, slope); // the corners
+  const pt2 = ptAway(p2, away, slope);
+
+  return `M ${p1.x} ${p1.y} L ${pt2.x} ${pt2.y} L ${pt1.x} ${pt1.y} z`;
+};
+
+const bezier = (link, key, sankey, width, offsetY) => {
+  let x0 = get(link.source, "x1", key); // right side of source
+  if (link.source.expanded && link.source.nodeType === "cluster") {
+    x0 -= link.source.getWidth() / 2;
+  }
   const y0 = link.source.expanded
-    ? link.y0
-    : get(link.source, "y0", key) + link.source.getHeight() / 2;
-  const x1 = get(link.target, "x0", key); // left side of target
+    ? link.y0 - offsetY
+    : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
+  let x1 = get(link.target, "x0", key); // left side of target
+  if (link.source.expanded && link.target.nodeType === "cluster") {
+    x1 += link.target.getWidth() / 2;
+  }
   const y1 = link.target.expanded
-    ? link.y1
-    : get(link.target, "y0", key) + link.target.getHeight() / 2;
+    ? link.y1 - offsetY
+    : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
   const mid = (x0 + x1) / 2;
   const path = d3path.path();
   if (sankey) {
@@ -497,40 +546,59 @@ const bezier = (link, key, sankey, width) => {
   return path.toString();
 };
 
-const circular = (link, key, sankey, width) => {
+const circular = (link, key, sankey, width, reverse, offsetY) => {
   const minR = 10;
   const maxR = 80;
   const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
   const gap = 8;
-  const sourceX = get(link.source, "x1", key);
-  const sourceY = get(link.source, "y0", key) + link.source.getHeight() / 2;
-  const targetX = get(link.target, "x0", key);
-  const targetY = get(link.target, "y0", key) + link.target.getHeight() / 2;
+  let sourceX = get(link.source, "x1", key); // right side of source
+  if (link.source.expanded && link.source.nodeType === "cluster") {
+    sourceX -= link.source.getWidth() / 2;
+  }
+  let targetX = get(link.target, "x0", key); // left side of target
+  if (link.target.expanded && link.target.nodeType === "cluster") {
+    targetX += link.target.getWidth() / 2;
+  }
+  const sourceY = link.source.expanded
+    ? link.y0
+    : get(link.source, "y0", key) + link.source.getHeight() / 2;
+  const targetY = link.target.expanded
+    ? link.y1
+    : get(link.target, "y0", key) + link.target.getHeight() / 2;
+  console.log(
+    `--- circular ${link.source.name}-${link.target.name} sx ${sourceX} sy ${sourceY} tx ${targetX} ty ${targetY}`
+  );
   const bottomY = Math.max(sourceY + r + gap + r, targetY + r + gap + r);
   const offset = sankey ? width / 2 : 0;
-  let sy = sourceY - offset;
-  let ty = targetY - offset;
-  let by = bottomY + offset;
+  let sy = sourceY - offset - offsetY;
+  let ty = targetY - offset - offsetY;
+  let by = bottomY + offset - offsetY;
   let sr = r + offset;
 
   let path = d3path.path();
-  path.moveTo(sourceX, sy);
-  path.lineTo(sourceX + gap, sy);
-  path.arcTo(sourceX + gap + sr, sy, sourceX + gap + sr, sy + sr, sr);
-  path.lineTo(sourceX + gap + sr, by - sr);
-  path.arcTo(sourceX + gap + sr, by, sourceX + gap, by, sr);
-  path.lineTo(targetX - gap, by);
-  path.arcTo(targetX - gap - sr, by, targetX - gap - sr, by - sr, sr);
-  path.lineTo(targetX - gap - sr, ty + sr);
-  path.arcTo(targetX - gap - sr, ty, targetX - gap, ty, sr);
-  path.lineTo(targetX, ty);
 
-  if (sankey) {
-    sy = sourceY + offset;
-    ty = targetY + offset;
-    by = bottomY - offset;
-    sr = Math.max(r - offset, minR);
+  if (!reverse) {
+    path.moveTo(sourceX, sy);
+    path.lineTo(sourceX + gap, sy);
+    path.arcTo(sourceX + gap + sr, sy, sourceX + gap + sr, sy + sr, sr);
+    path.lineTo(sourceX + gap + sr, by - sr);
+    path.arcTo(sourceX + gap + sr, by, sourceX + gap, by, sr);
+    path.lineTo(targetX - gap, by);
+    path.arcTo(targetX - gap - sr, by, targetX - gap - sr, by - sr, sr);
+    path.lineTo(targetX - gap - sr, ty + sr);
+    path.arcTo(targetX - gap - sr, ty, targetX - gap, ty, sr);
     path.lineTo(targetX, ty);
+  }
+  if (sankey || reverse) {
+    if (!reverse) {
+      sy = sourceY + offset;
+      ty = targetY + offset;
+      by = bottomY - offset;
+      sr = Math.max(r - offset, minR);
+      path.lineTo(targetX, ty);
+    } else {
+      path.moveTo(targetX, ty);
+    }
     path.lineTo(targetX - gap, ty);
     path.arcTo(targetX - gap - sr, ty, targetX - gap - sr, ty + sr, sr);
     path.lineTo(targetX - gap - sr, by - sr);
@@ -540,41 +608,35 @@ const circular = (link, key, sankey, width) => {
     path.lineTo(sourceX + gap + sr, sy + sr);
     path.arcTo(sourceX + gap + sr, sy, sourceX + gap, sy, sr);
     path.lineTo(sourceX, sy);
-    path.closePath();
+    if (!reverse) path.closePath();
   }
   return path.toString();
 };
 
-export const expandSite = (site, key) => {
-  if (site.subNodes && site.subNodes.length > 0) {
-    let curY = ServiceStart;
-    site.subNodes.forEach(n => {
-      n.expandedY = curY;
-      n.y0 = n[key].y0 = n.parentNode.y0 + n.expandedY;
-      n.y1 = n[key].y1 = n.y0 + n.sankeyHeight;
-      curY += n.sankeyHeight + ServiceGap;
-      n.x0 = n[key].x0 = n.parentNode.x0 + n.orgx;
-      n.x1 = n[key].x1 = n.x0 + n.getWidth();
-    });
-  }
-};
-
+// set or clear the stats text for each path.view in the selection
 export const setLinkStat = (selection, view, stat, shown) => {
   const linkOptions = {
     requests: { one: "req", more: "reqs" },
-    bytes_in: "bytes in",
-    bytes_out: "bytes out",
-    latency_max: "ms latency (max)"
+    bytes_in: "in",
+    bytes_out: "out",
+    latency_max: "ms latency (max)",
   };
 
-  // calculate a point "away" distance from given pt, that is perpendicular
-  // to the line going from pt with given slope
-  const ptAway = (pt, away, slope) => {
-    const m = -1 / slope;
-    const y = (away * m) / Math.sqrt(1 + m * m) + pt.y;
-    const x = away / Math.sqrt(1 + m * m) + pt.x;
-    return { x, y };
-  };
+  // set or clear the stat text
+  selection.selectAll("textPath.stats").text((d) => {
+    if (stat && shown) {
+      const val = d.request[stat];
+      let text = linkOptions[stat];
+      if (typeof text === "object") {
+        text = val === 1 ? text.one : text.more;
+      }
+      return `${formatBytes(val)} ${text}`;
+    } else {
+      return "";
+    }
+  });
+
+  if (!shown) return;
 
   // create a defs sections to hold the text paths
   d3.select("defs.stats").remove();
@@ -583,61 +645,26 @@ export const setLinkStat = (selection, view, stat, shown) => {
     .insert("defs", "defs.marker-defs")
     .attr("class", "stats");
 
-  // set or clear the stat text
-  selection.selectAll("textPath.stats").text(d => {
-    if (stat && shown) {
-      const val = d.request[stat];
-      let text = linkOptions[stat];
-      if (typeof text === "object") {
-        text = val === 1 ? text.one : text.more;
-      }
-      return `${pretty(val)} ${text}`;
-    } else {
-      return "";
-    }
-  });
-
-  if (!shown) return;
   // put the stat text along a path that is parallel to the path
   selection.selectAll(`path.${view}`).each(function(d) {
-    let p1, p2;
-    const len = this.getTotalLength();
-    if (len > 0) {
-      p1 = this.getPointAtLength(len / 2 - Math.min(len / 2, 50));
-      p2 = this.getPointAtLength(len / 2 + Math.min(len / 2, 50));
-    } else {
-      return;
-    }
-    let away = 10;
-    let pt1, pt2;
-    // vertical line. slope would be infinite
-    if (Math.abs(p2.x - p1.x) < 0.05) {
-      pt1 = { x: p1.x + away, y: p1.y };
-      pt2 = { x: p2.x + away, y: p2.y };
-    } else {
-      const slope = (p2.y - p1.y) / (p2.x - p1.x);
-      if (Math.abs(slope) < 0.001) {
-        pt1 = { x: p1.x, y: p1.y + away };
-        pt2 = { x: p2.x, y: p2.y + away };
-      } else {
-        // always draw above the path
-        if (slope < 0) away = -away;
-        pt1 = ptAway(p1, away, slope);
-        pt2 = ptAway(p2, away, slope);
-      }
-      // path goes from right to left?
-      // swap the points so the text is going the right direction
-      if (pt1.x > pt2.x) {
-        const tmp = copy(pt1);
-        pt1 = copy(pt2);
-        pt2 = tmp;
-      }
-      statDefs
-        .append("path")
-        .attr("id", `statPath-${d.source.name}-${d.target.name}`)
-        .attr("d", `M${pt1.x} ${pt1.y} L${pt2.x} ${pt2.y}`);
-    }
+    statDefs
+      .append("path")
+      .attr("id", statId(d))
+      .attr("d", genPath({ link: d, reverse: d.circular, offsetY: 4 }));
   });
+};
+
+export const statId = (link) => {
+  const parts = ["statPath"];
+  if (link.source.parentNode) {
+    parts.push(link.source.parentNode.site_id);
+  }
+  parts.push(link.source.name);
+  if (link.target.parentNode) {
+    parts.push(link.target.parentNode.site_id);
+  }
+  parts.push(link.target.name);
+  return parts.join("-");
 };
 
 export const positionPopup = ({
@@ -645,7 +672,7 @@ export const positionPopup = ({
   popupSelector,
   constrainX = true,
   constrainY = true,
-  padding = 0
+  padding = 0,
 }) => {
   // after the content has rendered, position it
   let selection = d3.select(containerSelector);
@@ -676,7 +703,7 @@ export const positionPopup = ({
 };
 
 export const linkColor = (link, links) => {
-  const vals = links.map(l => l.value);
+  const vals = links.map((l) => l.value);
   const min = Math.min(...vals);
   const max = Math.max(...vals);
   if (max > min) {
@@ -686,7 +713,7 @@ export const linkColor = (link, links) => {
   }
 };
 
-const fillColor = v => {
+const fillColor = (v) => {
   if (v < 0.333) return "#888888";
   if (v < 0.666) return "#00FF00";
   return "#0000FF";
@@ -709,6 +736,7 @@ export const pathBetween = (source, target) => {
 
 // intersection of circle at x1,y1 with radius r and line
 // between x1,y1 and y2,y2
+// This is used to draw the router connection lines between sites
 const circleIntercept = (x1, y1, r, x2, y2) => {
   const pt = {};
   const dist = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -727,11 +755,11 @@ export const initSankey = ({
   left = 0,
   top = 0,
   right = 0,
-  bottom = 0
+  bottom = 0,
 }) => {
   if (links.length > 0) {
-    const linkNodes = nodes.filter(n =>
-      links.some(l => l.source === n || l.target === n)
+    const linkNodes = nodes.filter((n) =>
+      links.some((l) => l.source === n || l.target === n)
     );
     try {
       sankey()
@@ -740,7 +768,7 @@ export const initSankey = ({
         .iterations(3)
         .extent([
           [left, top],
-          [width - right - left, height - bottom - top]
+          [width - right - left, height - bottom - top],
         ])({ nodes: linkNodes, links });
     } catch (e) {
       console.log("error in initSankey");
@@ -749,35 +777,44 @@ export const initSankey = ({
   }
 };
 
-export const circularize = links => {
-  let circularLinkID = 0;
-  links.forEach(l => {
-    if (l.source.x1 > l.target.x0) {
+export const circularize = (links) => {
+  links.forEach((l) => {
+    let sx = l.source.x1;
+    let tx = l.target.x0;
+    // use center of cluster to determine if link is circular
+    if (l.source.nodeType === "cluster") {
+      sx = l.source.x1 - l.source.getWidth() / 2;
+      tx = l.target.x0 + l.target.getWidth() / 2;
+    }
+    if (sx > tx) {
       l.circular = true;
-      l.circularLinkID = circularLinkID++;
-      l.circularLinkType = "bottom";
-      l.source.partOfCycle = true;
-      l.target.partOfCycle = true;
-      l.source.circularLinkType = "bottom";
-      l.target.circularLinkType = "bottom";
+      if (l.source.y0 > l.target.y0) {
+        l.circularLinkType = "top";
+      } else {
+        l.circularLinkType = "bottom";
+      }
     } else {
       if (l.circular) {
         l.circular = false;
-        delete l.circularLinkID;
-        delete l.circularLinkType;
       }
     }
   });
 };
 
 export const updateSankey = ({ nodes, links }) => {
-  circularize(links);
-  // use the sankeyHeight when updating sankey path
-  nodes.forEach(n => {
+  nodes.forEach((n) => {
+    n.x0 = n.x;
+    n.y0 = n.y;
+    n.x1 = n.x0 + n.getWidth();
     n.y1 = n.y0 + n.sankeyHeight;
   });
+  circularize(links);
+  // use the sankeyHeight when updating sankey path
+  const linkNodes = nodes.filter((n) =>
+    links.some((l) => l.source === n || l.target === n)
+  );
   try {
-    sankey().update({ nodes, links });
+    sankey().update({ nodes: linkNodes, links });
   } catch (e) {
     console.log(`error in sankey.update`);
     console.log(e);
@@ -802,30 +839,41 @@ export const endall = (transition, callback) => {
 };
 
 export const getSaved = (key, defaultValue) => {
-  const savedStr = localStorage.getItem(key);
+  let savedStr = localStorage.getItem(key);
+  if (savedStr === "undefined") savedStr = undefined;
   return savedStr ? JSON.parse(savedStr) : defaultValue;
 };
 
 export const setSaved = (key, value) => {
-  localStorage.setItem(key, JSON.stringify(value));
+  if (value !== undefined) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
 };
 
 export function reconcileArrays(existing, newArray) {
-  const attrs = ["value", "width", "request"];
+  const attrs = [
+    "value",
+    "width",
+    "request",
+    "sankeyHeight",
+    "r",
+    "sankeyR",
+    "normalR",
+  ];
   // remove from existing, any elements that are not in newArray
   for (let i = existing.length - 1; i >= 0; --i) {
-    if (!newArray.some(n => n.uuid === existing[i].uuid)) {
+    if (!newArray.some((n) => n.uuid === existing[i].uuid)) {
       existing.splice(i, 1);
     }
   }
   // add to existing, any elements that are only in newArray
-  newArray.forEach(n => {
-    const old = existing.find(e => e.uuid === n.uuid);
+  newArray.forEach((n) => {
+    const old = existing.find((e) => e.uuid === n.uuid);
     if (!old) {
       existing.push(n);
     } else {
       // update existing attributes
-      attrs.forEach(attr => {
+      attrs.forEach((attr) => {
         if (n[attr] !== undefined) {
           old[attr] = n[attr];
         }
@@ -839,8 +887,8 @@ export function reconcileArrays(existing, newArray) {
 // So we need to fix the new links' source and target
 export function reconcileLinks(existingLinks, newLinks) {
   // find links that are mirror images
-  newLinks.forEach(n => {
-    existingLinks.forEach(e => {
+  newLinks.forEach((n) => {
+    existingLinks.forEach((e) => {
       if (
         e.source.uuid === n.target.uuid &&
         e.target.uuid === n.source.uuid &&
@@ -858,4 +906,16 @@ export function reconcileLinks(existingLinks, newLinks) {
     });
   });
   reconcileArrays(existingLinks, newLinks);
+}
+
+export function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }

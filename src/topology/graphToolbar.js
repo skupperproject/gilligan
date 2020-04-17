@@ -21,10 +21,6 @@ import React, { Component } from "react";
 import {
   Checkbox,
   Radio,
-  Dropdown,
-  DropdownPosition,
-  DropdownToggle,
-  DropdownItem,
   Toolbar,
   ToolbarGroup,
   ToolbarItem
@@ -36,47 +32,9 @@ class GraphToolbar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isDropDownOpen: false,
       checkChanged: false
     };
-    this.dropdownItems = [
-      {
-        key: "graph",
-        description: "Graph",
-        selected: this.props.viewType === "graph",
-        enabled: true
-      },
-      {
-        key: "card",
-        description: "Card",
-        selected: this.props.viewType === "card"
-      },
-      {
-        key: "table",
-        description: "Table",
-        selected: this.props.viewType === "table",
-        enabled: true
-      }
-    ];
   }
-
-  onDropDownToggle = isOpen => {
-    this.setState({
-      isDropDownOpen: isOpen
-    });
-  };
-
-  onDropDownSelect = event => {
-    this.setState({
-      isDropDownOpen: !this.state.isDropDownOpen
-    });
-    const desc = event.target.text;
-    this.dropdownItems.forEach(item => {
-      item.selected = item.description === desc;
-    });
-    const selected = this.dropdownItems.find(item => item.selected);
-    this.props.handleChangeView(selected.key);
-  };
 
   // checkbox was checked
   handleChange = (checked, event) => {
@@ -91,40 +49,6 @@ class GraphToolbar extends Component {
       this.props.handleChangeColor(checked);
     }
     this.setState({ checkChanged: !this.state.checkChanged });
-  };
-
-  onToggle = () => {
-    this.setState({
-      isOptionsOpen: !this.state.isOptionsOpen
-    });
-  };
-
-  buildDropdown = () => {
-    const { isDropDownOpen } = this.state;
-    return (
-      <Dropdown
-        onSelect={this.onDropDownSelect}
-        position={DropdownPosition.left}
-        toggle={
-          <DropdownToggle onToggle={this.onDropDownToggle}>
-            {
-              this.dropdownItems.find(item => item.selected === true)
-                .description
-            }
-          </DropdownToggle>
-        }
-        isOpen={isDropDownOpen}
-        dropdownItems={this.dropdownItems.map(item => (
-          <DropdownItem
-            className={item.selected ? "selected" : ""}
-            key={item.key}
-            isDisabled={!item.enabled}
-          >
-            {item.description}
-          </DropdownItem>
-        ))}
-      />
-    );
   };
 
   render() {

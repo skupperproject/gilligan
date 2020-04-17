@@ -174,6 +174,7 @@ class TopologyPage extends Component {
                 type={this.props.type}
                 service={this.props.service}
                 view={this.props.view}
+                location={this.props.location}
                 viewType={this.props.getViewType()}
                 options={this.state.options}
                 handleChangeView={this.handleChangeView}

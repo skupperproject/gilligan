@@ -30,13 +30,16 @@ import {
   ServiceGap,
   ServiceHeight,
   reconcileArrays,
-  reconcileLinks
+  reconcileLinks,
+  genPath,
 } from "../utilities";
 import { Site } from "./site";
 import { Service } from "./service";
 import { Nodes } from "./nodes";
 import { Links } from "./links";
-const DEPLOYMENT_POSITION = "dpl";
+const DEPLOYMENT_POSITION = "dp";
+const ZOOM_SCALE = "dscale";
+const ZOOM_TRANSLATE = "dtrans";
 
 export class Deployment extends Service {
   constructor(adapter) {
@@ -45,11 +48,11 @@ export class Deployment extends Service {
     this.fields = [
       { title: "Address", field: "address" },
       { title: "Protocol", field: "protocol" },
-      { title: "Deployed at", field: "site_name" }
+      { title: "Deployed at", field: "site_name" },
     ];
   }
 
-  initNodesAndLinks = viewer => {
+  initNodesAndLinks = (viewer) => {
     this.initNodes(this.Site.siteNodes, this.serviceNodes, viewer);
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initServiceLinks(
@@ -58,14 +61,13 @@ export class Deployment extends Service {
       this.serviceLinks,
       vsize
     );
+    this.setSitePositions(viewer.sankey);
+    this.setServicePositions(viewer.sankey);
     /*
     console.log(this.Site.siteNodes);
     console.log(this.serviceNodes);
     console.log(this.serviceLinks);
     */
-    this.setupNodePositions(true);
-    this.setupNodePositions(false);
-
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
@@ -85,18 +87,17 @@ export class Deployment extends Service {
     reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
     reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
     reconcileLinks(this.serviceLinks.links, newServiceLinks.links);
-    this.setupNodePositions(true);
-    this.setupNodePositions(false);
-
+    this.setSitePositions(viewer.sankey);
+    this.setServicePositions(viewer.sankey);
     viewer.restart();
   };
 
-  createSelections = svg => {
+  createSelections = (svg) => {
     this.Site.sitesSelection = this.Site.createSitesSelection(svg);
     super.createSelections(svg);
   };
 
-  setupSelections = viewer => {
+  setupSelections = (viewer) => {
     this.Site.sitesSelection = this.Site.setupSitesSelection(viewer);
     super.setupSelections(viewer);
   };
@@ -109,10 +110,10 @@ export class Deployment extends Service {
   };
 
   setParentNodes = (siteNodes, serviceNodes, viewer) => {
-    serviceNodes.nodes.forEach(service => {
+    serviceNodes.nodes.forEach((service) => {
       if (service.cluster) {
         const siteNode = siteNodes.nodes.find(
-          s => s.site_id === service.cluster.site_id
+          (s) => s.site_id === service.cluster.site_id
         );
         if (siteNode) {
           service.parentNode = siteNode;
@@ -125,7 +126,7 @@ export class Deployment extends Service {
           site_id: "",
           site_name: "",
           getWidth: () => viewer.width,
-          getHeight: () => viewer.height
+          getHeight: () => viewer.height,
         };
       }
     });
@@ -134,11 +135,11 @@ export class Deployment extends Service {
   // move the sites and move the services inside their respective site
   adjustSites = (siteNodes, serviceNodes, viewer) => {
     // size the sites based on the services deployed in them
-    siteNodes.nodes.forEach(site => {
+    siteNodes.nodes.forEach((site) => {
       const links = [];
       // services deployed in this site
       const subServices = serviceNodes.nodes.filter(
-        sn => sn.parentNode.site_id === site.site_id
+        (sn) => sn.parentNode.site_id === site.site_id
       );
       // get links between services within each site
       subServices.forEach((fromService, s) => {
@@ -153,7 +154,7 @@ export class Deployment extends Service {
             links.push({
               source: fromService,
               target: toService,
-              value: stat
+              value: stat,
             });
           }
         });
@@ -164,9 +165,10 @@ export class Deployment extends Service {
         links,
         width: site.r * 2,
         height: site.r * 2,
-        align: "left"
+        align: "left",
       });
       site.r = Math.max(site.r, Math.max(siteSize.width, siteSize.height) / 2);
+      site.normalR = site.r;
       site.subServiceLinks = links;
     });
 
@@ -176,13 +178,13 @@ export class Deployment extends Service {
       nodes: siteNodes.nodes,
       links: interSiteLinks.links,
       width: viewer.width,
-      height: viewer.height
+      height: viewer.height,
     });
 
     // position services
-    siteNodes.nodes.forEach(cluster => {
+    siteNodes.nodes.forEach((cluster) => {
       const subServices = serviceNodes.nodes.filter(
-        sn => sn.parentNode.site_id === cluster.site_id
+        (sn) => sn.parentNode.site_id === cluster.site_id
       );
       // position subServices in sites
       // using the site size as the width and height
@@ -191,16 +193,16 @@ export class Deployment extends Service {
         links: cluster.subServiceLinks,
         width: cluster.r * 2,
         height: cluster.r * 2,
-        xyKey: "siteOffset"
+        xyKey: "siteOffset",
       });
     });
-    const orphans = serviceNodes.nodes.filter(n => !n.siteOffset);
+    const orphans = serviceNodes.nodes.filter((n) => !n.siteOffset);
     adjustPositions({
       nodes: orphans,
       links: [],
       width: ServiceWidth,
       height: ServiceHeight,
-      xyKey: "siteOffset"
+      xyKey: "siteOffset",
     });
   };
 
@@ -208,8 +210,8 @@ export class Deployment extends Service {
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
     // create links between all services
-    subNodes.forEach(fromNode => {
-      subNodes.forEach(toNode => {
+    subNodes.forEach((fromNode) => {
+      subNodes.forEach((toNode) => {
         const { stat, request } = this.adapter.fromTo(
           fromNode.name,
           fromNode.parentNode ? fromNode.parentNode.site_id : null,
@@ -224,7 +226,7 @@ export class Deployment extends Service {
             cls: "node2node",
             uid: `Link-${fromNode.parentNode.site_id}-${fromNode.uid()}-${
               toNode.parentNode.site_id
-            }-${toNode.uid()}`
+            }-${toNode.uid()}`,
           });
           const link = links.links[linkIndex];
           link.request = request;
@@ -233,7 +235,7 @@ export class Deployment extends Service {
         }
       });
     });
-    // get the sankey height of each node
+    // get the sankey height of each node based on link.value
     initSankey({
       nodes: subNodes,
       links: links.links,
@@ -242,10 +244,10 @@ export class Deployment extends Service {
       nodeWidth: ServiceWidth,
       nodePadding: ServiceGap,
       left: 20,
-      bottom: 60
+      bottom: 60,
     });
     // save the height and expand the subnodes
-    subNodes.forEach(n => {
+    subNodes.forEach((n) => {
       if (n.y0 === undefined) {
         n.y0 = n.y;
         n.y1 = n.y + ServiceHeight;
@@ -253,25 +255,27 @@ export class Deployment extends Service {
       n.sankeyHeight = n.y1 - n.y0;
       n.expanded = true;
     });
-    // set the sankey.r of the sites to accommodate expanded services
-    sites.nodes.forEach(site => {
+
+    // set the sankeyR of the sites to accommodate expanded services
+    sites.nodes.forEach((site) => {
       site.expanded = true;
 
       const subServices = subNodes.filter(
-        n => n.parentNode.site_id === site.site_id
+        (n) => n.parentNode.site_id === site.site_id
       );
       const siteSize = adjustPositions({
         nodes: subServices,
         links: site.subServiceLinks,
         width: site.r * 2,
         height: site.r * 2,
-        xyKey: "sankeySiteOffset"
+        xyKey: "sankeySiteOffset",
       });
-      site.sankey = {
-        r: Math.max(site.r, Math.max(siteSize.width, siteSize.height) / 2)
-      };
+      site.sankeyR = Math.max(
+        site.r,
+        Math.max(siteSize.width, siteSize.height) / 2
+      );
     });
-    // now each site has a site.sankey.r that is big enough
+    // now each site has a site.sankeyR that is big enough
     // to encompass all its expanded deployments
     // adjust the positions of the sites using the new site.sankey.r
     const interSiteLinks = this.Site.interSiteLinks(siteNodes);
@@ -281,202 +285,179 @@ export class Deployment extends Service {
       links: interSiteLinks.links,
       width: vsize.width,
       height: vsize.height - 20,
-      xyKey: "sankey"
     });
 
-    sites.nodes.forEach(site => {
+    sites.nodes.forEach((site) => {
       site.expanded = false;
-      site.sankey.y += 20;
-      // keep expanded/contracted site location difference
-      // so that we can drag nodes and then expand/contract correctly
-      site.sankeySiteOffset = {
-        x: site.x - site.sankey.x,
-        y: site.y - site.sankey.y
-      };
+      site.y += 20;
     });
 
-    const orphans = subNodes.filter(n => !n.sankeySiteOffset);
+    const orphans = subNodes.filter((n) => !n.sankeySiteOffset);
     adjustPositions({
       nodes: orphans,
       links: [],
       width: ServiceWidth,
       height: ServiceHeight, //viewer.height,
-      xyKey: "sankeySiteOffset"
+      xyKey: "sankeySiteOffset",
     });
     // restore the saved positions
-    subNodes.forEach(n => {
-      const pos = getSaved(`${DEPLOYMENT_POSITION}-${n.name}`);
+    subNodes.forEach((n) => {
+      const pos = getSaved(
+        `${DEPLOYMENT_POSITION}-${n.cluster.site_id}-${n.name}`
+      );
       if (pos) {
-        n.x = pos.x;
-        n.x0 = pos.x0;
-        n.y = pos.y;
-        n.y0 = pos.y0;
         n.sankeySiteOffset = {
-          x: pos.ssox,
-          y: pos.ssoy
+          x: pos.sox,
+          y: pos.soy,
         };
         n.siteOffset = {
-          x: pos.sox,
-          y: pos.soy
+          x: pos.ox,
+          y: pos.oy,
         };
       }
     });
-    /*
-    sites.nodes.forEach(s => {
+    sites.nodes.forEach((s) => {
       const pos = getSaved(`${DEPLOYMENT_POSITION}-${s.site_id}`);
-      if (pos) {
-        s.x = pos.x;
-        s.y = pos.y;
-        s.x0 = pos.x0;
-        s.y0 = pos.y0;
-        s.sankey = { x: pos.sx, y: pos.sy };
+      if (pos && pos.cx) {
+        s.cx = pos.cx;
+        s.cy = pos.cy;
+      } else {
+        s.cx = s.x + s.r;
+        s.cy = s.y + s.r;
       }
     });
-    */
-    this.regenPaths(true);
-    subNodes.forEach(n => {
+    subNodes.forEach((n) => {
       n.expanded = false;
     });
     return expandedSize;
   };
 
-  regenPaths = sankey => {
-    this.serviceNodes.nodes.forEach(n => {
-      this.dragStart(n, sankey);
-      n.y1 = n.y0 + n.getHeight();
-      n.x1 = n.x0 + n.getWidth();
-    });
-    if (sankey) {
-      updateSankey({
-        nodes: this.serviceNodes.nodes,
-        links: this.serviceLinks.links
-      });
-    }
-  };
   // don't allow dragging deployment rect outside of parent site circle
   constrainDeployment = (d, sankey) => {
-    const left = sankey ? d.parentNode.sankey.x : d.parentNode.x;
-    const top = sankey ? d.parentNode.sankey.y : d.parentNode.y;
     const bbox = {
-      left,
-      right: left + d.parentNode.getWidth(),
-      top,
-      bottom: top + d.parentNode.getHeight()
+      left: d.parentNode.x,
+      right: d.parentNode.x + d.parentNode.getWidth(),
+      top: d.parentNode.y,
+      bottom: d.parentNode.y + d.parentNode.getHeight(),
     };
+
     if (d.px + d.getWidth() > bbox.right) {
-      d.px = bbox.right - d.getWidth();
+      d.x = bbox.right - d.getWidth();
     }
     if (d.px < bbox.left) {
-      d.px = bbox.left;
+      d.x = bbox.left;
     }
     if (d.py + d.getHeight() > bbox.bottom) {
-      d.py = bbox.bottom - d.getHeight();
+      d.y = bbox.bottom - d.getHeight();
     }
     if (d.py < bbox.top) {
-      d.py = bbox.top;
+      d.y = bbox.top;
     }
-    d.x = d.x0 = d.px;
-    d.y = d.y0 = d.py;
-    d.x1 = d.x + d.getWidth();
-    d.y1 = d.y + d.getHeight();
-    if (sankey) {
-      d.sankeySiteOffset.x = d.x - d.parentNode.sankey.x;
-      d.sankeySiteOffset.y = d.y - d.parentNode.sankey.y;
-    } else {
-      d.siteOffset.x = d.x - d.parentNode.x;
-      d.siteOffset.y = d.y - d.parentNode.y;
-    }
+    // update the offsets within the site
+    const key = sankey ? "sankeySiteOffset" : "siteOffset";
+    d[key].x = d.x - d.parentNode.x;
+    d[key].y = d.y - d.parentNode.y;
   };
 
-  setupNodePositions = sankey => {
-    this.Site.siteNodes.nodes.forEach(s => {
-      this.dragStart(s, sankey);
+  saveAllPositions = () => {
+    this.Site.siteNodes.nodes.forEach((site) => {
+      this.savePosition(site);
     });
-    /*
-    this.serviceNodes.nodes.forEach(n => {
-      this.dragStart(n, sankey);
+    this.serviceNodes.nodes.forEach((n) => {
+      this.savePosition(n);
     });
-    */
-    this.regenPaths(sankey);
   };
 
-  savePosition = d => {
-    const save =
-      d.nodeType === "service"
-        ? {
-            x: d.x,
-            y: d.y,
-            x0: d.x0,
-            y0: d.y0,
-            ssox: d.sankeySiteOffset.x,
-            ssoy: d.sankeySiteOffset.y,
-            sox: d.siteOffset.x,
-            soy: d.siteOffset.y
-          }
-        : {
-            x: d.x,
-            y: d.y,
-            x0: d.x0,
-            y0: d.y0,
-            sx: d.sankey.x,
-            sy: d.sankey.y
-          };
-    setSaved(
-      `${DEPLOYMENT_POSITION}-${d.nodeType === "service" ? d.name : d.site_id}`,
-      save
-    );
-  };
-
-  dragStart = (d, sankey) => {
+  savePosition = (d) => {
+    let save;
+    let key;
     if (d.nodeType === "service") {
-      if (sankey) {
-        d.x = d.x0 = d.parentNode.sankey.x + d.sankeySiteOffset.x;
-        d.y = d.y0 = d.parentNode.sankey.y + d.sankeySiteOffset.y;
-      } else {
-        d.x = d.x0 = d.parentNode.x + d.siteOffset.x;
-        d.y = d.y0 = d.parentNode.y + d.siteOffset.y;
-      }
+      save = {
+        sox: d.sankeySiteOffset.x,
+        soy: d.sankeySiteOffset.y,
+        ox: d.siteOffset.x,
+        oy: d.siteOffset.y,
+      };
+      key = `${DEPLOYMENT_POSITION}-${d.cluster.site_id}-${d.name}`;
     } else {
-      if (sankey) {
-        d.x = d.x0 = d.sankey.x;
-        d.y = d.y0 = d.sankey.y;
-      } else {
-        d.x = d.x0;
-        d.y = d.y0;
-      }
+      save = { cx: d.x + d.r, cy: d.y + d.r };
+      key = `${DEPLOYMENT_POSITION}-${d.site_id}`;
     }
-    this.savePosition(d);
+    setSaved(key, save);
+  };
+
+  setupDrag(drag) {
+    this.Site.setupDrag(drag);
+    this.servicesSelection.call(drag);
+  }
+  setSitePositions = (sankey) => {
+    this.Site.siteNodes.nodes.forEach((d) => {
+      d.r = sankey ? d.sankeyR : d.normalR;
+      d.x = d.cx - d.r;
+      d.y = d.cy - d.r;
+    });
+  };
+  setServicePositions = (sankey) => {
+    this.serviceNodes.nodes.forEach((d) => {
+      const key = sankey ? "sankeySiteOffset" : "siteOffset";
+      d.x = d.parentNode.x + d[key].x;
+      d.y = d.parentNode.y + d[key].y;
+    });
+  };
+  dragStart = (d, sankey) => {
+    this.setSitePositions(sankey);
+    this.setServicePositions(sankey);
   };
 
   drag = (d, sankey) => {
     if (d.nodeType === "service") {
       this.constrainDeployment(d, sankey);
+      this.setServicePositions(sankey);
     } else {
-      // move the circle
-      this.Site.drag(d, sankey, true);
-      // set the new sankey position
-      d.sankey.x = d.x;
-      d.sankey.y = d.y;
-      // now move the deployments that are in the circle
-      const subNodes = this.serviceNodes.nodes.filter(
-        n => n.parentNode.site_id === d.site_id
-      );
-      subNodes.forEach(n => {
-        this.dragStart(n, sankey);
-      });
+      // we are dragging a site
+      d.x = d.px;
+      d.y = d.py;
+      d.cx = d.x + d.r;
+      d.cy = d.y + d.r;
+      // set the services.x,y
+      this.setServicePositions(sankey);
     }
-    this.regenPaths(sankey);
-    this.savePosition(d);
+  };
+  dragEnd = (d, sankey) => {
+    this.setServicePositions(sankey);
+    this.saveAllPositions(sankey);
   };
 
-  tick = sankey => {
-    this.Site.tick(sankey);
-    super.tick(sankey);
+  // called whenever we need to draw the sites/services
+  drawViewNodes = (sankey) => {
+    this.Site.sitesSelection.attr("transform", (d) => {
+      return `translate(${d.x},${d.y})`;
+    });
+    this.servicesSelection.attr("transform", (d) => {
+      return `translate(${d.x},${d.y})`;
+    });
   };
 
-  setupDrag = drag => {
-    super.setupDrag(drag);
-    this.Site.setupDrag(drag);
+  // draw all the paths between nodes
+  drawViewPaths = (sankey) => {
+    updateSankey({
+      nodes: this.serviceNodes.nodes,
+      links: this.serviceLinks.links,
+    });
+    // for the non-sankey mode, path.service is hidden
+    this.linksSelection
+      .selectAll("path.service")
+      .style("display", sankey ? null : "none")
+      .attr("d", (d) => genPath({ link: d, sankey: true }));
+
+    this.linksSelection.selectAll("path.servicesankeyDir").attr("d", (d) => {
+      return genPath({ link: d });
+    });
+
+    this.linksSelection
+      .selectAll("path.hittarget")
+      .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
+      .attr("d", (d) => genPath({ link: d }));
   };
 
   collapseNodes = () => {
@@ -489,13 +470,20 @@ export class Deployment extends Service {
   };
 
   transition = (sankey, initial, color, viewer) => {
-    this.setupNodePositions(sankey);
+    this.setSitePositions(sankey);
+    this.setServicePositions(sankey);
+    updateSankey({
+      nodes: this.serviceNodes.nodes,
+      links: this.serviceLinks.links,
+    });
+
     if (sankey) {
       this.toSankey(initial, viewer.setLinkStat);
+      return this.toServiceSankey(initial, viewer.setLinkStat);
     } else {
       this.toColor(initial, viewer.setLinkStat, color);
+      return this.toServiceColor(initial, viewer.setLinkStat, color);
     }
-    return super.transition(sankey, false, color, viewer);
   };
 
   toColor = () => {
@@ -508,7 +496,7 @@ export class Deployment extends Service {
     d3.selectAll(".cluster")
       .transition()
       .duration(VIEW_DURATION)
-      .attr("transform", d => `translate(${d.x},${d.y})`)
+      .attr("transform", (d) => `translate(${d.x},${d.y})`)
       .each("end", function() {
         d3.select(this)
           .style("display", "block")
@@ -522,16 +510,16 @@ export class Deployment extends Service {
       .selectAll("circle.network")
       .transition()
       .duration(VIEW_DURATION)
-      .attr("r", d => d.r)
-      .attr("cx", d => d.r)
-      .attr("cy", d => d.r);
+      .attr("r", (d) => d.r)
+      .attr("cx", (d) => d.r)
+      .attr("cy", (d) => d.r);
 
     d3.select("g.clusters")
       .selectAll("text.cluster-name")
       .transition()
       .duration(VIEW_DURATION)
       .attr("y", -10)
-      .attr("x", d => d.getWidth() / 2);
+      .attr("x", (d) => d.getWidth() / 2);
   };
 
   toSankey = () => {
@@ -539,31 +527,31 @@ export class Deployment extends Service {
       .selectAll("circle.network")
       .transition()
       .duration(VIEW_DURATION)
-      .attr("r", d => d.sankey.r)
-      .attr("cx", d => d.sankey.r)
-      .attr("cy", d => d.sankey.r);
+      .attr("r", (d) => d.r)
+      .attr("cx", (d) => d.r)
+      .attr("cy", (d) => d.r);
 
     d3.select("g.clusters")
       .selectAll("g.cluster")
       .transition()
       .duration(VIEW_DURATION)
-      .attr("transform", d => `translate(${d.sankey.x},${d.sankey.y})`);
+      .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
     d3.select("g.clusters")
       .selectAll("text.cluster-name")
       .transition()
       .duration(VIEW_DURATION)
       .attr("y", -10)
-      .attr("x", d => d.getWidth(true) / 2);
+      .attr("x", (d) => d.getWidth(true) / 2);
   };
 
   // get records for the table view
   doFetch = (page, perPage) => {
-    return new Promise(resolve => {
-      const data = this.serviceNodes.nodes.map(n => ({
+    return new Promise((resolve) => {
+      const data = this.serviceNodes.nodes.map((n) => ({
         address: n.address,
         protocol: n.protocol,
-        site_name: n.parentNode.site_name
+        site_name: n.parentNode.site_name,
       }));
       resolve({ data, page, perPage });
     });
@@ -597,4 +585,13 @@ export class Deployment extends Service {
       }
     });
   }
+  getSavedZoom = (defaultScale) => {
+    const savedScale = getSaved(ZOOM_SCALE, defaultScale);
+    const savedTranslate = getSaved(ZOOM_TRANSLATE, [0, 0]);
+    return { savedScale, savedTranslate };
+  };
+  saveZoom = (zoom) => {
+    setSaved(ZOOM_SCALE, zoom.scale());
+    setSaved(ZOOM_TRANSLATE, zoom.translate());
+  };
 }

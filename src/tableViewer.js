@@ -56,7 +56,7 @@ class TableViewer extends React.Component {
   componentDidMount = () => {
     this.mounted = true;
     if (!this.dataSource) return;
-    this.dataSource.initNodes(this);
+    this.dataSource.initNodesAndLinks(this);
     // initialize the columns and get the data
     this.dataSource.fields.forEach(f => {
       f.transforms = [];

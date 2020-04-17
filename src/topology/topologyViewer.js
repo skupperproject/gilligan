@@ -22,20 +22,24 @@ import {
   TopologyView,
   TopologyControlBar,
   createTopologyControlButtons,
-  TopologySideBar
+  TopologySideBar,
 } from "@patternfly/react-topology";
-
 import * as d3 from "d3";
+
 import { addDefs } from "./svgUtils.js";
-import { getSizes, positionPopup } from "../utilities";
+import { getSizes, positionPopup, getSaved, setSaved } from "../utilities";
 import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
 import ClientInfoComponent from "./clientInfoComponent";
 import ChordViewer from "../chord/chordViewer.js";
+import SplitterBar from "../spliterBar";
 import ServiceCard from "../serviceCard";
 import LinkInfo from "./linkInfo";
 import { viewsMap as VIEWS } from "../views";
 const UPDATE_INTERVAL = 2000;
+const SPLITTER_POSITION = "split";
+const SPLITTER_LEFT = "div.pf-topology-content";
+const SPLITTER_RIGHT = "div.pf-topology-side-bar";
 
 class TopologyPage extends Component {
   constructor(props) {
@@ -47,9 +51,8 @@ class TopologyPage extends Component {
       showLinkInfo: false,
       showRouterInfo: false,
       showClientInfo: false,
-      lastUpdated: new Date(),
       chordData: null,
-      linkInfo: null
+      linkInfo: null,
     };
     this.popupCancelled = true;
 
@@ -58,24 +61,24 @@ class TopologyPage extends Component {
       {
         title: "Freeze in place",
         action: this.setFixed,
-        enabled: data => !this.isFixed(data)
+        enabled: (data) => !this.isFixed(data),
       },
       {
         title: "Unfreeze",
         action: this.setFixed,
         enabled: this.isFixed,
-        endGroup: true
+        endGroup: true,
       },
       {
         title: "Unselect",
         action: this.setSelected,
-        enabled: this.isSelected
+        enabled: this.isSelected,
       },
       {
         title: "Select",
         action: this.setSelected,
-        enabled: data => !this.isSelected(data)
-      }
+        enabled: (data) => !this.isSelected(data),
+      },
     ];
     this.view = this.props.view;
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
@@ -85,33 +88,37 @@ class TopologyPage extends Component {
 
   // called only once when the component is initialized
   componentDidMount = () => {
-    //window.addEventListener("resize", this.resize);
+    window.addEventListener("resize", this.resize);
+    const width = getSaved(`${SPLITTER_POSITION}`, 360);
+    this.handleSplitterChange(width - 360);
+    this.chordRef.init();
 
     // create the svg
     this.init();
     // call the to### transition
     this.callTransitions(true);
+    if (this.timer) clearInterval(this.timer);
     this.timer = setInterval(() => {
       this.doUpdate();
     }, UPDATE_INTERVAL);
   };
 
   componentWillUnmount = () => {
-    //window.removeEventListener("resize", this.resize);
+    window.removeEventListener("resize", this.resize);
     this.unmounting = true;
     d3.select(".pf-c-page__main").style("background-color", "white");
     clearInterval(this.timer);
   };
 
-  callTransitions = initial => {
+  callTransitions = (initial) => {
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
     const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
     this[to](initial);
   };
 
   doUpdate = () => {
-    if (!this.viewObj.dragging) {
-      this.props.service.update().then(data => {
+    if (!this.viewObj.dragging && !this.viewObj.transitioning) {
+      this.props.service.update().then((data) => {
         if (!this.unmounting) this.update();
       });
     }
@@ -120,14 +127,16 @@ class TopologyPage extends Component {
   resize = () => {
     if (!this.svg) return;
     let sizes = getSizes(this.topologyRef);
+    console.log(`resize got sizes at ${sizes[0]}, ${sizes[1]}`);
     this.width = sizes[0];
     this.height = sizes[1];
     if (this.width > 0) {
       // set attrs and 'resume' force
-      this.svg.attr("width", this.width);
-      this.svg.attr("height", this.height);
+      d3.select("#SVG_ID").attr("width", this.width);
+      d3.select("#SVG_ID").attr("height", this.height);
       this.force.size(sizes).resume();
     }
+    this.update();
     //this.updateLegend();
   };
 
@@ -135,7 +144,7 @@ class TopologyPage extends Component {
     data.setFixed(item.title !== "Unfreeze");
   };
 
-  isFixed = data => {
+  isFixed = (data) => {
     return data.isFixed();
   };
 
@@ -149,7 +158,7 @@ class TopologyPage extends Component {
     this.selected_node = data.selected ? data : null;
     this.restart();
   };
-  isSelected = data => {
+  isSelected = (data) => {
     return data.selected ? true : false;
   };
 
@@ -160,7 +169,7 @@ class TopologyPage extends Component {
     this.setState({ showLinkInfo: false, showCard: false });
   };
 
-  // initialize the nodes and links array from the QDRService.topology._nodeInfo object
+  // initialize the nodes and links array
   init = () => {
     let sizes = getSizes(this.topologyRef);
     this.width = sizes[0]; // - width of sidebar
@@ -206,7 +215,12 @@ class TopologyPage extends Component {
     // the required height may be larger than the available height
     // adjust the scale of make sure the entire graph is visible
     this.resetScale = this.height / size.height;
-    this.zoom.scale(this.resetScale);
+    const { savedScale, savedTranslate } = this.viewObj.getSavedZoom(
+      this.resetScale
+    );
+    //this.resetTranslate = savedTranslate;
+    this.zoom.scale(savedScale);
+    this.zoom.translate(savedTranslate);
     this.zoomed();
 
     // init D3 force layout
@@ -215,36 +229,41 @@ class TopologyPage extends Component {
       .nodes(this.viewObj.nodes().nodes)
       .links(this.viewObj.links().links)
       .size([this.width, this.height])
-      .linkDistance(d => {
+      .linkDistance((d) => {
         return this.viewObj.nodes().linkDistance(d, nodeCount);
       })
-      .charge(d => {
+      .charge((d) => {
         return this.viewObj.nodes().charge(d, nodeCount);
       })
       .friction(0.1)
-      .gravity(d => {
+      .gravity((d) => {
         return this.viewObj.nodes().gravity(d, nodeCount);
-      })
-      .on("tick", this._tick);
+      });
+    //.on("tick", this._tick);
 
-    //this.force.stop();
-    //this.force.start();
+    this.force.stop();
+    this.force.start();
     this.drag = this.force
       .drag()
-      .on("dragstart", d => {
+      .on("dragstart", (d) => {
         // don't pan while dragging
         d3.event.sourceEvent.stopPropagation();
         this.viewObj.dragStart(d, this.sankey);
         this.viewObj.dragging = true;
       })
-      .on("drag", d => {
+      .on("drag", (d) => {
         //setSaved(`${d.nodeType}:${d.name}`, { x: d.x, y: d.y });
         this.viewObj.drag(d, this.sankey);
-        this.tick();
+        this.drawNodesAndPaths();
         this.setLinkStat();
       })
-      .on("dragend", d => {
+      .on("dragend", (d) => {
+        this.viewObj.dragEnd(d, this.sankey);
         this.viewObj.dragging = false;
+        // force d3 to honor the new positions
+        // of nodes that were moved but not directly dragged
+        this.force.start();
+        this.force.stop();
       });
     // create svg elements
     this.restart();
@@ -265,7 +284,7 @@ class TopologyPage extends Component {
     this.mouseup_node = null;
   };
 
-  handleMouseOutPath = d => {
+  handleMouseOutPath = (d) => {
     // mouse out of a path
     this.popupCancelled = true;
     d.selected = false;
@@ -283,10 +302,10 @@ class TopologyPage extends Component {
     );
   };
 
-  opaqueServiceType = d => {
+  opaqueServiceType = (d) => {
     d3.select("#SVG_ID")
       .selectAll("g.service-type")
-      .filter(d1 => d1 === d)
+      .filter((d1) => d1 === d)
       .attr("opacity", 1);
   };
 
@@ -306,7 +325,8 @@ class TopologyPage extends Component {
     d3.select("#SVG_ID")
       .selectAll(`g.links g`)
       .filter(
-        d1 => d1.source.address === d.address || d1.target.address === d.address
+        (d1) =>
+          d1.source.address === d.address || d1.target.address === d.address
       )
       .each(function(d1) {
         self.highlightLink(highlight, d3.select(this), d1);
@@ -338,7 +358,7 @@ class TopologyPage extends Component {
     this.setDragBehavior();
   };
 
-  showChord = chordData => {
+  showChord = (chordData) => {
     this.setState({ showChord: true, chordData }, () => {
       this.chordRef.doUpdate();
     });
@@ -347,16 +367,16 @@ class TopologyPage extends Component {
   positionPopupContent = () => {
     positionPopup({
       containerSelector: ".diagram",
-      popupSelector: "#topo_popover-div"
+      popupSelector: "#topo_popover-div",
     });
   };
-  showCard = cardService => {
+  showCard = (cardService) => {
     this.setState({ showLinkInfo: false, showCard: true, cardService }, () => {
       // after the content has rendered, position it
       this.positionPopupContent();
     });
   };
-  showLinkInfo = linkInfo => {
+  showLinkInfo = (linkInfo) => {
     this.setState({ showCard: false, showLinkInfo: true, linkInfo }, () => {
       this.positionPopupContent();
     });
@@ -364,12 +384,11 @@ class TopologyPage extends Component {
 
   _tick = () => {};
   // update force layout (called automatically each iteration)
-  tick = () => {
+  drawNodesAndPaths = () => {
     // move the sites or services
-    this.viewObj.tick(this.sankey);
+    this.viewObj.drawViewNodes(this.sankey);
     // draw lines between services
-    this.viewObj.drawViewPath(this.sankey);
-    this.force.stop();
+    this.viewObj.drawViewPaths(this.sankey);
   };
 
   // show the details dialog for a client or group of clients
@@ -381,7 +400,7 @@ class TopologyPage extends Component {
       this.setState({ showClientInfo: true });
     }
   };
-  handleCloseRouterInfo = type => {
+  handleCloseRouterInfo = (type) => {
     this.setState({ showRouterInfo: false });
   };
   handleCloseClientInfo = () => {
@@ -389,13 +408,13 @@ class TopologyPage extends Component {
   };
 
   clearAllHighlights = () => {
-    this.viewObj.links().links.forEach(l => (l.highlighted = false));
-    this.viewObj.nodes().nodes.forEach(n => (n.highlighted = false));
+    this.viewObj.links().links.forEach((l) => (l.highlighted = false));
+    this.viewObj.nodes().nodes.forEach((n) => (n.highlighted = false));
     d3.selectAll(".hittarget").classed("highlighted", false);
   };
 
   // clicked on the Legend button in the control bar
-  handleLegendClick = id => {
+  handleLegendClick = (id) => {
     this.setState({ showLegend: !this.state.showLegend });
   };
 
@@ -414,8 +433,8 @@ class TopologyPage extends Component {
     this.zoomed();
   };
 
-  zoomed = duration => {
-    if (isNaN(duration)) duration = 100;
+  zoomed = (duration) => {
+    if (isNaN(duration)) duration = 1;
     this.svg
       .transition()
       .duration(duration)
@@ -423,15 +442,16 @@ class TopologyPage extends Component {
         "transform",
         `translate(${this.zoom.translate()}) scale(${this.zoom.scale()})`
       );
+    this.viewObj.saveZoom(this.zoom);
   };
 
-  resetViewCallback = duration => {
+  resetViewCallback = (duration) => {
     this.zoom.scale(this.resetScale);
-    this.zoom.translate([0, 0]);
+    this.zoom.translate([0, 0]); //this.resetTranslate);
     this.zoomed(duration);
   };
 
-  toservice = initial => {
+  toservice = (initial) => {
     this.view = "service";
     this.transitioning = true;
 
@@ -446,36 +466,63 @@ class TopologyPage extends Component {
       });
   };
 
-  todeployment = initial => {
+  todeployment = (initial) => {
     this.showChord(null);
     this.view = "deployment";
     this.viewObj.collapseNodes();
     // transition rects and paths
+    this.viewObj.transitioning = true;
     this.viewObj
       .transition(this.sankey, initial, this.getShowColor(), this)
-      .then(() => {});
+      .then(() => {
+        this.viewObj.transitioning = false;
+      });
+  };
+  todeploymentsankey = (initial) => {
+    this.view = "deployment";
+    this.showChord(null);
+    this.viewObj.expandNodes();
+    // transition rects and paths
+    this.viewObj.transitioning = true;
+    this.viewObj
+      .transition(this.sankey, initial, this.getShowColor(), this)
+      .then(() => {
+        this.viewObj.transitioning = false;
+      });
   };
 
-  tosite = initial => {
+  tosite = (initial) => {
     this.view = "site";
-    this.tick();
+    this.drawNodesAndPaths();
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
-    this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
+    this.viewObj.collapseNodes();
+    this.viewObj.transitioning = true;
+    this.viewObj
+      .transition(this.sankey, initial, this.getShowColor(), this)
+      .then(() => {
+        this.viewObj.transitioning = false;
+      });
     this.restart();
   };
 
-  tositesankey = initial => {
+  tositesankey = (initial) => {
     if (this.props.getShowColor()) {
       this.sankey = false;
       return this.tosite(initial);
     }
     this.view = "site";
-    this.tick();
-    this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
+    this.drawNodesAndPaths();
+    this.viewObj.expandNodes();
+    this.viewObj.transitioning = true;
+    this.viewObj
+      .transition(this.sankey, initial, this.getShowColor(), this)
+      .then(() => {
+        this.viewObj.transitioning = false;
+      });
     this.restart();
   };
 
-  toservicesankey = initial => {
+  toservicesankey = (initial) => {
     this.view = "service";
 
     // expand the service rects to sankeyHeight
@@ -486,19 +533,6 @@ class TopologyPage extends Component {
     this.restart();
   };
 
-  todeploymentsankey = initial => {
-    this.view = "deployment";
-    this.showChord(null);
-    this.viewObj.expandNodes();
-
-    // transition rects and paths
-    this.viewObj
-      .transition(this.sankey, initial, this.getShowColor(), this)
-      .then(() => {
-        this.restart();
-      });
-  };
-
   handleCloseSidebar = () => {
     this.setState({ showChord: false });
   };
@@ -507,19 +541,19 @@ class TopologyPage extends Component {
     this.showChord(null);
   };
 
-  handleChangeShowStat = checked => {
+  handleChangeShowStat = (checked) => {
     this.props.handleChangeShowStat(checked);
     this.setLinkStat();
   };
-  handleChangeSankey = checked => {
+  handleChangeSankey = (checked) => {
     this.props.handleChangeSankey(checked);
     this.callTransitions();
   };
-  handleChangeWidth = checked => {
+  handleChangeWidth = (checked) => {
     this.props.handleChangeWidth(checked);
     this.callTransitions();
   };
-  handleChangeColor = checked => {
+  handleChangeColor = (checked) => {
     this.props.handleChangeColor(checked);
     this.callTransitions();
   };
@@ -537,6 +571,25 @@ class TopologyPage extends Component {
     this.viewObj.arcOver(arc, over, this);
   };
 
+  handleSplitterChange = (moved) => {
+    const minRight = 240;
+    const maxRight = 400;
+    const leftPane = d3.select(SPLITTER_LEFT);
+    const rightPane = d3.select(SPLITTER_RIGHT);
+    const rightWidth = Math.min(
+      Math.max(parseInt(rightPane.style("max-width"), 10) + moved, minRight),
+      maxRight
+    );
+    leftPane.style("min-width", `calc(100% - ${rightWidth}px)`);
+    rightPane.style("max-width", `${rightWidth}px`);
+    setSaved(SPLITTER_POSITION, rightWidth);
+  };
+
+  handleSplitterEnd = () => {
+    this.chordRef.init();
+    this.resize();
+  };
+
   render() {
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,
@@ -544,7 +597,7 @@ class TopologyPage extends Component {
       resetViewCallback: this.resetViewCallback,
       fitToScreenHidden: true,
       legendCallback: this.handleLegendClick,
-      legendAriaLabel: "topology-legend"
+      legendAriaLabel: "topology-legend",
     });
 
     return (
@@ -553,7 +606,6 @@ class TopologyPage extends Component {
         viewToolbar={
           <GraphToolbar
             service={this.props.service}
-            handleChangeView={this.props.handleChangeView}
             handleChangeSankey={this.handleChangeSankey}
             handleChangeTraffic={this.handleChangeTraffic}
             handleChangeShowStat={this.handleChangeShowStat}
@@ -573,7 +625,7 @@ class TopologyPage extends Component {
         sideBar={
           <TopologySideBar id="sk-sidebar" show={this.state.showChord}>
             <ChordViewer
-              ref={el => (this.chordRef = el)}
+              ref={(el) => (this.chordRef = el)}
               service={this.props.service}
               data={this.state.chordData}
               deploymentLinks={this.viewObj.links().links}
@@ -588,8 +640,12 @@ class TopologyPage extends Component {
         sideBarOpen={this.state.showChord}
         className="qdrTopology"
       >
+        <SplitterBar
+          onDrag={this.handleSplitterChange}
+          onDragEnd={this.handleSplitterEnd}
+        />
         <div className="diagram">
-          <div ref={el => (this.topologyRef = el)} id="topology"></div>
+          <div ref={(el) => (this.topologyRef = el)} id="topology" />
           <div
             id="topo_popover-div"
             className={

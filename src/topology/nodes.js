@@ -134,12 +134,12 @@ export class Node {
 const nodeProperties = {
   // router types
   cluster: {
-    radius: 28,
+    radius: 100,
     refX: {
       end: 12,
       start: -19
     },
-    linkDistance: [150, 70],
+    linkDistance: [300, 300],
     charge: [-1800, -900]
   },
   edge: {

@@ -24,7 +24,7 @@ import {
   pretty,
   positionPopup,
   siteColors,
-  serviceColors
+  serviceColors,
 } from "../utilities";
 import { aggregateAddresses, separateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
@@ -49,7 +49,7 @@ class ChordViewer extends Component {
     service: PropTypes.object.isRequired,
     data: PropTypes.object,
     site: PropTypes.bool.isRequired,
-    handleShowAll: PropTypes.func.isRequired
+    handleShowAll: PropTypes.func.isRequired,
   };
 
   constructor(props) {
@@ -60,7 +60,7 @@ class ChordViewer extends Component {
       popupContent: "",
       showEmpty: false,
       emptyText: "",
-      activeTabKey: 0
+      activeTabKey: 0,
     };
     this.excludedAddresses = [];
     this.chordData = new ChordData(
@@ -90,7 +90,7 @@ class ChordViewer extends Component {
 
   // called only once when the component is initialized
   componentDidMount() {
-    this.init();
+    //this.init();
   }
 
   componentWillUnmount() {
@@ -113,10 +113,10 @@ class ChordViewer extends Component {
     // used to transition arcs along a circular path instead of linear
     this.arcReference = d3.svg
       .arc()
-      .startAngle(d => {
+      .startAngle((d) => {
         return d.startAngle;
       })
-      .endAngle(d => {
+      .endAngle((d) => {
         return d.endAngle;
       })
       .innerRadius(this.innerRadius)
@@ -191,7 +191,7 @@ class ChordViewer extends Component {
           // for specific site
           this.chordData
             .getSiteMatrixForSite(this.props.data, aggregateAddresses)
-            .then(matrix => {
+            .then((matrix) => {
               this.renderChord(matrix);
             });
         }
@@ -202,9 +202,11 @@ class ChordViewer extends Component {
         this.chordData.getAllServiceMatrix().then(this.renderChord);
       } else {
         // for specific service
-        this.chordData.getMatrix(this.props.data).then(this.renderChord, e => {
-          console.log(ERROR_RENDERING + e);
-        });
+        this.chordData
+          .getMatrix(this.props.data)
+          .then(this.renderChord, (e) => {
+            console.log(ERROR_RENDERING + e);
+          });
       }
     }
   };
@@ -218,7 +220,7 @@ class ChordViewer extends Component {
 
   handleTabClick = (event, tabIndex) => {
     this.setState({
-      activeTabKey: tabIndex
+      activeTabKey: tabIndex,
     });
   };
   // size the diagram based on the browser window size
@@ -226,10 +228,11 @@ class ChordViewer extends Component {
     const sizes = getSizes(d3.select("#chordContainer").node());
     const width = sizes[0];
     const height = sizes[1];
-    return Math.max(
+    const radius = Math.max(
       Math.floor((Math.min(width, height) * 0.9) / 2),
       MIN_RADIUS
     );
+    return radius;
   };
 
   // diagram sizes that change when browser is resized
@@ -243,14 +246,14 @@ class ChordViewer extends Component {
   };
 
   // arc colors are taken from every other color starting at 0
-  getArcColor = n => {
+  getArcColor = (n) => {
     if (this.props.deployment) {
       n = n.split(":")[0];
     }
     return siteColors[n];
   };
   // chord colors are taken from every other color starting at 19 and going backwards
-  getChordColor = n => {
+  getChordColor = (n) => {
     return serviceColors[n];
   };
 
@@ -320,7 +323,7 @@ class ChordViewer extends Component {
     const sourceKey = routerNames[0];
     const targetKey = routerNames[1];
     const row = matrix.rows.find(
-      r => r.ingress === sourceKey && r.egress === targetKey
+      (r) => r.ingress === sourceKey && r.egress === targetKey
     );
     if (row) {
       return row.info;
@@ -328,7 +331,7 @@ class ChordViewer extends Component {
   };
 
   arcInfo = (fg, matrix) => {
-    const row = matrix.rows.find(r => r.ingress === fg.key);
+    const row = matrix.rows.find((r) => r.ingress === fg.key);
     if (row) {
       return row.info;
     }
@@ -400,7 +403,7 @@ class ChordViewer extends Component {
 
   decorateArcData = (fn, matrix) => {
     let fixedGroups = fn();
-    fixedGroups.forEach(fg => {
+    fixedGroups.forEach((fg) => {
       fg.orgIndex = fg.index;
       fg.angle = (fg.endAngle + fg.startAngle) / 2;
       fg.key = matrix.routerName(fg.index);
@@ -415,12 +418,12 @@ class ChordViewer extends Component {
   };
 
   // create and/or update the chord diagram
-  renderChord = matrix => {
+  renderChord = (matrix) => {
     this.setState({ addresses: this.chordData.getAddresses() }, () => {
       return this.doRenderChord(matrix);
     });
   };
-  doRenderChord = matrix => {
+  doRenderChord = (matrix) => {
     // populate the arcColors object with a color for each router
     // if all the addresses are excluded, update the message
     let addressLen = Object.keys(this.state.addresses).length;
@@ -466,20 +469,20 @@ class ChordViewer extends Component {
     // join the decorated data with a d3 selection
     let arcsGroup = this.svg
       .selectAll("g.arc")
-      .data(rechord.arcData, d => d.key);
+      .data(rechord.arcData, (d) => d.key);
 
     // get a d3 selection of all the new arcs that have been added
     let newArcs = arcsGroup
       .enter()
       .append("svg:g")
       .attr("class", "arc")
-      .attr("aria-label", d => d.key);
+      .attr("aria-label", (d) => d.key);
 
     // each new arc is an svg:path that has a fixed color
     newArcs
       .append("svg:path")
-      .style("fill", d => d.color)
-      .style("stroke", d => d.color);
+      .style("fill", (d) => d.color)
+      .style("stroke", (d) => d.color);
 
     /*
       newArcs
@@ -490,11 +493,11 @@ class ChordViewer extends Component {
     // attach event listeners to all arcs (new or old)
     arcsGroup
       .on("mouseover", this.mouseoverArc)
-      .on("mousemove", d => {
+      .on("mousemove", (d) => {
         let popupContent = this.arcTitle(d, matrix);
         this.showToolTip(popupContent);
       })
-      .on("mouseout", d => {
+      .on("mouseout", (d) => {
         this.popoverArc = null;
         this.setState({ showPopup: false });
         this.props.handleArcOver(d, false);
@@ -516,7 +519,7 @@ class ChordViewer extends Component {
       .attrTween("transform", this.tickTween(this.last_labels));
       */
     // check if the mouse is hovering over an arc. if so, update the tooltip
-    arcsGroup.each(d => {
+    arcsGroup.each((d) => {
       if (this.popoverArc && this.popoverArc.index === d.index) {
         //let popoverContent = this.arcTitle(d, matrix);
         //this.displayTooltip(d3.event, popoverContent);
@@ -530,7 +533,7 @@ class ChordViewer extends Component {
       .transition()
       .duration(duration / 2)
       .attrTween("opacity", () => {
-        return t => {
+        return (t) => {
           return 1 - t;
         };
       });
@@ -550,7 +553,7 @@ class ChordViewer extends Component {
     rechord.chordData = this.decorateChordData(rechord, matrix);
     let chordPaths = this.svg
       .selectAll("path.chord")
-      .data(rechord.chordData, d => d.key);
+      .data(rechord.chordData, (d) => d.key);
 
     // new chords are paths
     chordPaths
@@ -567,11 +570,11 @@ class ChordViewer extends Component {
     } else {
       // switchByAddress is only true when we have new chords
       chordPaths
-        .attr("d", d => {
+        .attr("d", (d) => {
           return this.chordReference(d);
         })
-        .attr("stroke", d => d3.rgb(d.color).darker(1))
-        .attr("fill", d => d.color)
+        .attr("stroke", (d) => d3.rgb(d.color).darker(1))
+        .attr("fill", (d) => d.color)
         .attr("opacity", 1e-6)
         .transition()
         .duration(duration / 2)
@@ -579,7 +582,7 @@ class ChordViewer extends Component {
     }
 
     // if the mouse is hovering over a chord, update it's tooltip
-    chordPaths.each(d => {
+    chordPaths.each((d) => {
       if (
         this.popoverChord &&
         this.popoverChord.source.orgindex === d.source.orgindex &&
@@ -592,15 +595,15 @@ class ChordViewer extends Component {
 
     // attach mouse event handlers to the chords
     chordPaths
-      .on("mouseover", d => {
+      .on("mouseover", (d) => {
         this.mouseoverChord(d);
       })
-      .on("mousemove", d => {
+      .on("mousemove", (d) => {
         this.popoverChord = d;
         let popoverContent = this.chordTitle(d, matrix);
         this.showToolTip(popoverContent);
       })
-      .on("mouseout", d => {
+      .on("mouseout", (d) => {
         this.popoverChord = null;
         this.setState({ showPopup: false });
         this.props.handleChordOver(d, false);
@@ -632,63 +635,63 @@ class ChordViewer extends Component {
     this.switchedByAddress = false;
   };
 
-  showToolTip = content => {
+  showToolTip = (content) => {
     // setting the popupContent state will cause the popup to render
     this.setState({ showPopup: true, popupContent: content }, () => {
       // after the content has rendered, position it
       positionPopup({
         containerSelector: "#chordContainer",
         popupSelector: "#popover-div",
-        constrainY: false
+        constrainY: false,
       });
     });
   };
 
   // animate the disappearance of an arc by shrinking it to its center point
-  arcTweenExit = d => {
+  arcTweenExit = (d) => {
     let angle = (d.startAngle + d.endAngle) / 2;
     let to = { startAngle: angle, endAngle: angle, value: 0 };
     let from = {
       startAngle: d.startAngle,
       endAngle: d.endAngle,
-      value: d.value
+      value: d.value,
     };
     let tween = d3.interpolate(from, to);
-    return t => {
+    return (t) => {
       return this.arcReference(tween(t));
     };
   };
   // animate the exit of a chord by shrinking it to the center points of its arcs
-  chordTweenExit = d => {
-    let angle = d => (d.startAngle + d.endAngle) / 2;
+  chordTweenExit = (d) => {
+    let angle = (d) => (d.startAngle + d.endAngle) / 2;
     let from = {
       source: {
         startAngle: d.source.startAngle,
-        endAngle: d.source.endAngle
+        endAngle: d.source.endAngle,
       },
-      target: { startAngle: d.target.startAngle, endAngle: d.target.endAngle }
+      target: { startAngle: d.target.startAngle, endAngle: d.target.endAngle },
     };
     let to = {
       source: { startAngle: angle(d.source), endAngle: angle(d.source) },
-      target: { startAngle: angle(d.target), endAngle: angle(d.target) }
+      target: { startAngle: angle(d.target), endAngle: angle(d.target) },
     };
     let tween = d3.interpolate(from, to);
 
-    return t => {
+    return (t) => {
       return this.chordReference(tween(t));
     };
   };
 
   // Animate an arc from its old location to its new.
   // If the arc is new, grow the arc from its startAngle to its full size
-  arcTween = oldLayout => {
+  arcTween = (oldLayout) => {
     var oldGroups = {};
     if (oldLayout) {
-      oldLayout.arcData.forEach(groupData => {
+      oldLayout.arcData.forEach((groupData) => {
         oldGroups[groupData.index] = groupData;
       });
     }
-    return d => {
+    return (d) => {
       var tween;
       var old = oldGroups[d.index];
       if (old) {
@@ -704,7 +707,7 @@ class ChordViewer extends Component {
         tween = d3.interpolate(emptyArc, d);
       }
 
-      return t => {
+      return (t) => {
         return this.arcReference(tween(t));
       };
     };
@@ -714,7 +717,7 @@ class ChordViewer extends Component {
   tweenChordEnds = (chords, duration, last_layout) => {
     let oldChords = {};
     if (last_layout) {
-      last_layout.chordData.forEach(d => {
+      last_layout.chordData.forEach((d) => {
         oldChords[d.key] = d;
       });
     }
@@ -747,11 +750,11 @@ class ChordViewer extends Component {
             let midEnd = (d.target.startAngle + d.target.endAngle) / 2;
             old = {
               source: { startAngle: midStart, endAngle: midStart },
-              target: { startAngle: midEnd, endAngle: midEnd }
+              target: { startAngle: midEnd, endAngle: midEnd },
             };
           }
           interpolate = d3.interpolate(old, d);
-          return t => {
+          return (t) => {
             chord.attr("d", self.chordReference(interpolate(t)));
           };
         });
@@ -762,7 +765,7 @@ class ChordViewer extends Component {
   tweenChordColor = (chords, duration, last_layout, style) => {
     let oldChords = {};
     if (last_layout) {
-      last_layout.chordData.forEach(d => {
+      last_layout.chordData.forEach((d) => {
         oldChords[d.key] = d;
       });
     }
@@ -784,7 +787,7 @@ class ChordViewer extends Component {
             newColor = d3.rgb(newColor).darker(1);
           }
           interpolate = d3.interpolate(oldColor, newColor);
-          return t => {
+          return (t) => {
             chord.style(style, interpolate(t));
           };
         });
@@ -792,15 +795,15 @@ class ChordViewer extends Component {
   };
 
   // animate the arc labels to their new locations
-  tickTween = oldArcs => {
+  tickTween = (oldArcs) => {
     var oldTicks = {};
     if (oldArcs) {
-      oldArcs.forEach(d => {
+      oldArcs.forEach((d) => {
         oldTicks[d.key] = d;
       });
     }
-    let angle = d => (d.startAngle + d.endAngle) / 2;
-    return d => {
+    let angle = (d) => (d.startAngle + d.endAngle) / 2;
+    return (d) => {
       var tween;
       var old = oldTicks[d.key];
       let start = angle(d);
@@ -820,7 +823,7 @@ class ChordViewer extends Component {
         this.textRadius + 10
       );
 
-      return t => {
+      return (t) => {
         let rot = same ? start : tween(t);
         if (isNaN(rot)) rot = 0;
         let tra = tsame ? this.textRadius + 10 : transTween(t);
@@ -831,21 +834,21 @@ class ChordViewer extends Component {
   };
 
   // fade all chords that don't belong to the given arc index
-  mouseoverArc = d => {
+  mouseoverArc = (d) => {
     d3.selectAll("path.chord").classed(
       "fade",
-      p => d.index !== p.source.index && d.index !== p.target.index
+      (p) => d.index !== p.source.index && d.index !== p.target.index
     );
     this.props.handleArcOver(d, true);
   };
 
   // fade all chords except the given one
-  mouseoverChord = d => {
+  mouseoverChord = (d) => {
     this.svg
       .selectAll("path.chord")
       .classed(
         "fade",
-        p =>
+        (p) =>
           !(
             p.source.orgindex === d.source.orgindex &&
             p.target.orgindex === d.target.orgindex
@@ -877,11 +880,11 @@ class ChordViewer extends Component {
     }
   };
   handleHoverSite = (site, over) => {
-    console.log(`handleHoverSite ${site}, ${over}`);
+    //console.log(`handleHoverSite ${site}, ${over}`);
   };
 
   // called when mouse enters one of the router legends
-  enterRouter = router => {
+  enterRouter = (router) => {
     if (!this.props.data || !this.props.data.address) return;
     let indexes = [];
     // fade all chords that are not associated with this router
@@ -895,7 +898,7 @@ class ChordViewer extends Component {
     });
     d3.selectAll("path.chord").classed(
       "fade",
-      p =>
+      (p) =>
         indexes.indexOf(p.source.orgindex) < 0 &&
         indexes.indexOf(p.target.orgindex) < 0
     );
@@ -956,7 +959,7 @@ class ChordViewer extends Component {
         <div
           id="popover-div"
           className={this.state.showPopup ? "" : "hidden"}
-          ref={el => (this.popupRef = el)}
+          ref={(el) => (this.popupRef = el)}
         >
           <QDRPopup content={this.state.popupContent}></QDRPopup>
         </div>
