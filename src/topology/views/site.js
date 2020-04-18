@@ -438,7 +438,7 @@ export class Site {
       .attr("class", "siteTrafficLink")
       .attr("fill", (d) => d.getColor())
       .attr("d", (d) => {
-        return genPath({ link: d });
+        return genPath({ link: d, bezier: true });
       });
 
     enter
@@ -587,17 +587,22 @@ export class Site {
 
     this.trafficLinksSelection
       .selectAll("path.siteTrafficLink")
-      .attr("d", (d) => genPath({ link: d, sankey: true }));
+      .attr("d", (d) => genPath({ link: d, sankey: true, bezier: true }));
     this.trafficLinksSelection
       .selectAll("path.siteTrafficDir")
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("d", (d) => genPath({ link: d, bezier: true }));
     this.trafficLinksSelection
       .selectAll("path.hittarget")
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("d", (d) => genPath({ link: d, bezier: true }));
 
     this.masksSelection.selectAll("path").attr("d", function(d) {
-      return genPath({ link: d.link, mask: d.mask, selection: this });
+      return genPath({
+        link: d.link,
+        mask: d.mask,
+        selection: this,
+        bezier: true,
+      });
     });
 
     d3.select("defs.statPaths")
@@ -607,6 +612,7 @@ export class Site {
           link: d,
           reverse: d.circular,
           offsetY: 4,
+          bezier: true,
         })
       );
   };
@@ -735,7 +741,7 @@ export class Site {
       d3.selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", 6)
-        .attr("d", (d) => genPath({ link: d }));
+        .attr("d", (d) => genPath({ link: d, bezier: true }));
 
       d3.select("defs.statPaths")
         .selectAll("path")
@@ -743,7 +749,12 @@ export class Site {
         .duration(duration)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, reverse: d.circular, offsetY: 4 });
+          const current = genPath({
+            link: d,
+            reverse: d.circular,
+            offsetY: 4,
+            bezier: true,
+          });
           return interpolatePath(previous, current);
         });
 
@@ -756,7 +767,7 @@ export class Site {
         .attr("stroke", (d) => d.getColor())
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d });
+          const current = genPath({ link: d, bezier: true });
           return interpolatePath(previous, current);
         });
 
@@ -881,7 +892,12 @@ export class Site {
         .duration(duration)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, reverse: d.circular, offsetY: 4 });
+          const current = genPath({
+            link: d,
+            reverse: d.circular,
+            offsetY: 4,
+            bezier: true,
+          });
           return interpolatePath(previous, current);
         });
 
@@ -893,7 +909,7 @@ export class Site {
         .attr("stroke-width", 1)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d });
+          const current = genPath({ link: d, bezier: true });
           return interpolatePath(previous, current);
         });
 
@@ -911,14 +927,14 @@ export class Site {
         .attr("fill", (d) => d.target.color)
         .attrTween("d", function(d, i) {
           let previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, sankey: true });
+          const current = genPath({ link: d, sankey: true, bezier: true });
           return interpolatePath(previous, current);
         });
 
       d3.selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", (d) => Math.max(d.width, 6))
-        .attr("d", (d) => genPath({ link: d }));
+        .attr("d", (d) => genPath({ link: d, bezier: true }));
 
       d3.selectAll("path.mask")
         .attr("stroke-width", 0)
@@ -932,6 +948,7 @@ export class Site {
             link: d.link,
             mask: d.mask,
             selection: this,
+            bezier: true,
           });
           return interpolatePath(previous, current);
         });

@@ -455,20 +455,21 @@ export const genPath = ({
   reverse,
   offsetY,
   selection,
+  bezier,
 }) => {
   if (!width) width = link.width;
   if (!offsetY) offsetY = 0;
-  if (mask) return genMask(link, key, mask, width, selection);
-  if (link.circular)
+  if (mask) return genMask(link, key, mask, width, selection, bezier);
+  if (link.circular && !bezier)
     return circular(link, key, sankey, width, reverse, offsetY);
-  return bezier(link, key, sankey, width, offsetY);
+  return bezierPath(link, key, sankey, width, reverse, offsetY);
 };
 
 const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
 // construct an arrow on the surface of the target circle
 // oriented along the bezier curve connecting the source and target circles
-const genMask = (link, key, mask, width, selection) => {
+const genMask = (link, key, mask, width, selection, bezier) => {
   let away = 5; // 1/2 the arrows base width
   let r = link.target.getWidth() / 2; // target circle radius
   let tc = {
@@ -477,17 +478,19 @@ const genMask = (link, key, mask, width, selection) => {
     y: link.target.y + r,
   };
   // create the path on which we will be placing the arrow
-  d3.select(selection).attr("d", (d) => genPath({ link }));
+  d3.select(selection).attr("d", (d) => genPath({ link, bezier }));
   const len = selection.getTotalLength(); // length of the path
   let intersect = len - r; // 1st guess at where the point of the arrow should be on the path
   let p1 = selection.getPointAtLength(intersect); // x,y position at that distance
   let dist = distance(p1, tc); // distance between p1 and the target's center
   // when we first start, the locations may be extreme
   // after the circles are in their final position, this while loop is skipped
-  while (Math.abs(dist - r) > 1) {
+  let iterations = 0;
+  while (Math.abs(dist - r) > 1 && iterations < 100) {
     intersect += dist > r ? 1 : -1;
     p1 = selection.getPointAtLength(intersect);
     dist = distance(p1, tc);
+    ++iterations;
   }
   // p1 is now on the circle, p1 is the point of the arrow
   const p2 = selection.getPointAtLength(intersect - 10); // the base of the arrow
@@ -502,7 +505,7 @@ const genMask = (link, key, mask, width, selection) => {
 };
 
 // create a bezier path between link.source and link.target
-const bezier = (link, key, sankey, width, offsetY) => {
+const bezierPath = (link, key, sankey, width, reverse, offsetY) => {
   let x0 = get(link.source, "x1", key); // right side of source
   if (link.source.expanded && link.source.nodeType === "cluster") {
     x0 -= link.source.getWidth() / 2;
@@ -541,8 +544,13 @@ const bezier = (link, key, sankey, width, offsetY) => {
     );
     path.closePath();
   } else {
-    path.moveTo(x0, y0);
-    path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
+    if (reverse) {
+      path.moveTo(x1, y1);
+      path.bezierCurveTo(mid, y1, mid, y0, x0, y0);
+    } else {
+      path.moveTo(x0, y0);
+      path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
+    }
   }
   return path.toString();
 };
