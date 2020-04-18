@@ -29,10 +29,17 @@ import {
   Toolbar,
   ToolbarGroup,
   ToolbarItem,
-  Nav,
-  NavItem,
-  NavList,
   PageSidebar,
+} from "@patternfly/react-core";
+
+import {
+  Nav,
+  NavExpandable,
+  NavItem,
+  NavItemSeparator,
+  NavList,
+  NavGroup,
+  NavVariants,
 } from "@patternfly/react-core";
 
 import {
@@ -48,6 +55,7 @@ import { css } from "@patternfly/react-styles";
 import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./connectPage";
 import TopologyPage from "./topology/topologyPage";
+import TablePage from "./table/tablePage";
 import ListPage from "./listPage";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
@@ -57,14 +65,17 @@ const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
 const TOOLBAR_CHECKS = "toolbarChecks";
 const LAST_VIEW = "lastView";
+const LAST_GROUP = "lastGroup";
 
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
     this.lastView = getSaved(LAST_VIEW, "deployment");
+    this.lastGroup = getSaved(LAST_GROUP, "deployment");
     this.state = {
       connected: false,
       connectPath: "",
+      activeGroup: this.lastGroup,
       activeItem: this.lastView,
       isConnectFormOpen: false,
       username: "",
@@ -84,7 +95,7 @@ class PageLayout extends React.Component {
       { name: "Services", view: "service" },
       { name: "Sites", view: "site" },
       { name: "Deployments", view: "deployment" },
-      { name: "Processes", view: "process" },
+      //{ name: "Processes", view: "process" },
     ];
     const checks = getSaved(TOOLBAR_CHECKS, {
       sankey: false,
@@ -147,9 +158,12 @@ class PageLayout extends React.Component {
 
   onNavSelect = (result) => {
     this.lastView = result.itemId;
+    this.lastGroup = result.groupId;
     setSaved(LAST_VIEW, this.lastView);
+    setSaved(LAST_GROUP, this.lastGroup);
     this.setState({
       activeItem: result.itemId,
+      activeGroup: result.groupId,
       connectPath: "",
     });
   };
@@ -208,7 +222,7 @@ class PageLayout extends React.Component {
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
   render() {
-    const { activeItem } = this.state;
+    const { activeItem, activeGroup } = this.state;
 
     const PageNav = () => {
       return (
@@ -217,14 +231,29 @@ class PageLayout extends React.Component {
             {this.views.map((viewInfo) => {
               const { view, name } = viewInfo;
               return (
-                <NavItem
-                  id={`${name}NavItem`}
-                  itemId={view}
-                  isActive={activeItem === view}
-                  key={view}
+                <NavExpandable
+                  title={name}
+                  groupId={`grp-${view}`}
+                  isActive={activeGroup === `grp-${view}`}
+                  isExpanded
                 >
-                  <Link to={`/${view}`}>{name}</Link>
-                </NavItem>
+                  <NavItem
+                    id={`${name}NavItem`}
+                    itemId={view}
+                    isActive={activeItem === view}
+                    key={view}
+                  >
+                    <Link to={`/${view}`}>Graph</Link>
+                  </NavItem>
+                  <NavItem
+                    id={`${name}NavItemTable`}
+                    itemId={`${view}Table`}
+                    isActive={activeItem === `${view}Table`}
+                    key={`${view}Table`}
+                  >
+                    <Link to={`/${view}Table`}>Table</Link>
+                  </NavItem>
+                </NavExpandable>
               );
             })}
           </NavList>
@@ -363,10 +392,21 @@ class PageLayout extends React.Component {
               component={TopologyPage}
               view="service"
             />
+            <PrivateRoute
+              path="/serviceTable"
+              component={TablePage}
+              view="service"
+            />
             <PrivateRoute path="/site" component={TopologyPage} view="site" />
+            <PrivateRoute path="/siteTable" component={TablePage} view="site" />
             <PrivateRoute
               path="/deployment"
               component={TopologyPage}
+              view="deployment"
+            />
+            <PrivateRoute
+              path="/deploymentTable"
+              component={TablePage}
               view="deployment"
             />
             <PrivateRoute path="/process" component={ListPage} />
