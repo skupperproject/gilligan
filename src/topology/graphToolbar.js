@@ -23,7 +23,7 @@ import {
   Radio,
   Toolbar,
   ToolbarGroup,
-  ToolbarItem
+  ToolbarItem,
 } from "@patternfly/react-core";
 
 import LinkOptions from "./linkOptions";
@@ -32,7 +32,7 @@ class GraphToolbar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      checkChanged: false
+      checkChanged: false,
     };
   }
 
@@ -47,99 +47,139 @@ class GraphToolbar extends Component {
       this.props.handleChangeWidth(checked);
     } else if (name === "showColor") {
       this.props.handleChangeColor(checked);
+    } else if (name === "showRouterLinks") {
+      this.props.handleChangeSankey(!checked);
     }
     this.setState({ checkChanged: !this.state.checkChanged });
   };
 
   render() {
+    const routerLinksRadio = () => {
+      if (this.props.view === "site") {
+        return (
+          <Radio
+            label="Show router connections"
+            isChecked={!this.props.getShowSankey()}
+            onChange={this.handleChange}
+            aria-label="router links"
+            id="showRouterLinks"
+            name="showRouterLinks"
+            className="router-links"
+          />
+        );
+      }
+    };
+    const trafficCheckOrRadio = () => {
+      if (this.props.view === "site") {
+        return (
+          <Radio
+            label="Show relative traffic"
+            isChecked={this.props.getShowSankey()}
+            onChange={this.handleChange}
+            aria-label="show relative traffic"
+            id="showSankey"
+            name="showSankey"
+          />
+        );
+      } else {
+        return (
+          <Checkbox
+            label="Show relative traffic"
+            isChecked={this.props.getShowSankey()}
+            onChange={this.handleChange}
+            aria-label="show relative traffic"
+            id="showSankey"
+            name="showSankey"
+          />
+        );
+      }
+    };
     const sankeyCheck = () => (
       <ToolbarItem className="toolbar-item tall-item">
-        <Checkbox
-          label="Show relative traffic"
-          isChecked={this.props.getShowSankey()}
-          onChange={this.handleChange}
-          aria-label="show relative traffic"
-          id="showSankey"
-          name="showSankey"
-        />
-        <Radio
-          label="using width"
-          isChecked={this.props.getShowWidth()}
-          isDisabled={!this.props.getShowSankey()}
-          onChange={this.handleChange}
-          aria-label="wide traffic"
-          id="showWidth"
-          name="showWidth"
-        />
-        <div className="color-gradient">
-          <Radio
-            label="using color"
-            isChecked={this.props.getShowColor()}
-            isDisabled={!this.props.getShowSankey()}
-            onChange={this.handleChange}
-            aria-label="colored traffic"
-            id="showColor"
-            name="showColor"
-          />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            version="1.1"
-            preserveAspectRatio="xMidYMid meet"
-            width="140"
-            height="44"
-          >
-            <defs>
-              <linearGradient
+        {routerLinksRadio()}
+        <div className="traffic-group">
+          {trafficCheckOrRadio()}
+          <div className="indent-group">
+            <Radio
+              label="using width"
+              isChecked={this.props.getShowWidth()}
+              isDisabled={!this.props.getShowSankey()}
+              onChange={this.handleChange}
+              aria-label="wide traffic"
+              id="showWidth"
+              name="showWidth"
+            />
+            <div className="color-gradient">
+              <Radio
+                label="using color"
+                isChecked={this.props.getShowColor()}
+                isDisabled={!this.props.getShowSankey()}
+                onChange={this.handleChange}
+                aria-label="colored traffic"
+                id="showColor"
+                name="showColor"
+              />
+              <svg
                 xmlns="http://www.w3.org/2000/svg"
-                id="colorGradient"
-                gradientUnits="userSpaceOnUse"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <stop
-                  style={{ stopColor: "#888888", stopOpacity: 1 }}
-                  offset="0"
-                />
-                <stop
-                  style={{ stopColor: "#888888", stopOpacity: 1 }}
-                  offset="0.333"
-                />
-                <stop
-                  style={{ stopColor: "#00FF00", stopOpacity: 1 }}
-                  offset="0.334"
-                />
-                <stop
-                  style={{ stopColor: "#00FF00", stopOpacity: 1 }}
-                  offset="0.666"
-                />
-                <stop
-                  style={{ stopColor: "#0000FF", stopOpacity: 1 }}
-                  offset="0.667"
-                />
-                <stop
-                  style={{ stopColor: "#0000FF", stopOpacity: 1 }}
-                  offset="1"
-                />
-              </linearGradient>
-            </defs>
-            <g>
-              <rect
+                version="1.1"
+                preserveAspectRatio="xMidYMid meet"
                 width="140"
-                height="20"
-                x="0"
-                y="0"
-                fill="url(#colorGradient)"
-              ></rect>
-              <text x="1" y="30" textAnchor="start">
-                Low
-              </text>
-              <text x="130" y="30" textAnchor="end">
-                High
-              </text>
-            </g>
-          </svg>
+                height="44"
+              >
+                <defs>
+                  <linearGradient
+                    xmlns="http://www.w3.org/2000/svg"
+                    id="colorGradient"
+                    gradientUnits="userSpaceOnUse"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
+                    <stop
+                      style={{ stopColor: "#888888", stopOpacity: 1 }}
+                      offset="0"
+                    />
+                    <stop
+                      style={{ stopColor: "#888888", stopOpacity: 1 }}
+                      offset="0.333"
+                    />
+                    <stop
+                      style={{ stopColor: "#00FF00", stopOpacity: 1 }}
+                      offset="0.334"
+                    />
+                    <stop
+                      style={{ stopColor: "#00FF00", stopOpacity: 1 }}
+                      offset="0.666"
+                    />
+                    <stop
+                      style={{ stopColor: "#0000FF", stopOpacity: 1 }}
+                      offset="0.667"
+                    />
+                    <stop
+                      style={{ stopColor: "#0000FF", stopOpacity: 1 }}
+                      offset="1"
+                    />
+                  </linearGradient>
+                </defs>
+                <g>
+                  <rect
+                    width="140"
+                    height="20"
+                    x="0"
+                    y="0"
+                    fill="url(#colorGradient)"
+                  ></rect>
+                  <text x="1" y="30" textAnchor="start">
+                    Low
+                  </text>
+                  <text x="130" y="30" textAnchor="end">
+                    High
+                  </text>
+                </g>
+              </svg>
+            </div>
+          </div>
         </div>
       </ToolbarItem>
     );

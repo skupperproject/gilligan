@@ -1472,15 +1472,24 @@ circle.end-point {
 .graph-toolbar {
   border-bottom: 1px solid #cccccc;
 }
+/*
 .graph-toolbar .pf-c-radio {
   margin-left: 1.5em;
 }
+*/
 .graph-toolbar svg {
   padding-top: 0.5em;
   padding-left: 0.5em;
 }
 .graph-toolbar div.color-gradient {
   display: flex;
+  position: relative;
+  width: 15em;
+}
+.graph-toolbar svg {
+  position: absolute;
+  right: 0;
+  top: -0.5em;
 }
 .graph-toolbar .tall-item {
   border-right: 1px solid black;
@@ -1492,6 +1501,18 @@ circle.end-point {
 
 .graph-toolbar .show-traffic {
   padding-right: 1em;
+}
+.graph-toolbar .indent-group {
+  padding-left: 1.3em;
+}
+.graph-toolbar .traffic-group:not(:first-child) {
+  margin-left: 14em;
+}
+.graph-toolbar .router-links {
+  position: absolute;
+}
+.toolbar-item:not(:first-child) {
+  padding-left: 1em;
 }
 
 a.selected.pf-c-dropdown__menu-item {
@@ -1630,10 +1651,6 @@ path.sitesankey {
 path.hittarget {
   pointer-events: stroke;
   fill: transparent;
-}
-
-.toolbar-item {
-  padding-left: 1em;
 }
 
 .link-info {

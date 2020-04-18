@@ -27,12 +27,6 @@ import {
   TextContent,
   TextVariants,
 } from "@patternfly/react-core";
-import {
-  Dropdown,
-  DropdownPosition,
-  DropdownToggle,
-  DropdownItem,
-} from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
 import { Icap } from "../utilities";
@@ -51,7 +45,6 @@ class TopologyPage extends Component {
         link: { stat: "bytes_out" },
       },
     };
-    const viewType = this.props.getViewType();
   }
 
   handleChangeView = (viewType) => {

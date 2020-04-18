@@ -32,15 +32,7 @@ import {
   PageSidebar,
 } from "@patternfly/react-core";
 
-import {
-  Nav,
-  NavExpandable,
-  NavItem,
-  NavItemSeparator,
-  NavList,
-  NavGroup,
-  NavVariants,
-} from "@patternfly/react-core";
+import { Nav, NavExpandable, NavItem, NavList } from "@patternfly/react-core";
 
 import {
   HashRouter as Router,
@@ -236,12 +228,12 @@ class PageLayout extends React.Component {
                   groupId={`grp-${view}`}
                   isActive={activeGroup === `grp-${view}`}
                   isExpanded
+                  key={view}
                 >
                   <NavItem
                     id={`${name}NavItem`}
                     itemId={view}
                     isActive={activeItem === view}
-                    key={view}
                   >
                     <Link to={`/${view}`}>Graph</Link>
                   </NavItem>
@@ -249,7 +241,6 @@ class PageLayout extends React.Component {
                     id={`${name}NavItemTable`}
                     itemId={`${view}Table`}
                     isActive={activeItem === `${view}Table`}
-                    key={`${view}Table`}
                   >
                     <Link to={`/${view}Table`}>Table</Link>
                   </NavItem>
