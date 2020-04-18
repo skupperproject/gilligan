@@ -1484,7 +1484,7 @@ circle.end-point {
 .graph-toolbar div.color-gradient {
   display: flex;
   position: relative;
-  width: 15em;
+  width: 16em;
 }
 .graph-toolbar svg {
   position: absolute;
