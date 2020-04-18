@@ -43,8 +43,8 @@ class SplitterBar extends React.Component {
     document.removeEventListener("mouseup", this.handleDocumentMouseUp);
   };
   handleDocumentMouseUp = (e) => {
+    if (this.props.onDragEnd && this.dragging) this.props.onDragEnd();
     this.dragging = false;
-    if (this.props.onDragEnd) this.props.onDragEnd();
   };
 
   handleDocumentMouseMove = (e) => {

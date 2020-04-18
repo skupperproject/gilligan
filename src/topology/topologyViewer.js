@@ -119,7 +119,14 @@ class TopologyPage extends Component {
   doUpdate = () => {
     if (!this.viewObj.dragging && !this.viewObj.transitioning) {
       this.props.service.update().then((data) => {
-        if (!this.unmounting) this.update();
+        if (!this.unmounting) {
+          this.update();
+          this.chordRef.doUpdate();
+          this.setState({
+            linkInfo: this.state.linkInfo,
+            cardService: this.state.cardService,
+          });
+        }
       });
     }
   };
@@ -493,7 +500,6 @@ class TopologyPage extends Component {
 
   tosite = (initial) => {
     this.view = "site";
-    this.drawNodesAndPaths();
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
     this.viewObj.collapseNodes();
     this.viewObj.transitioning = true;
@@ -502,7 +508,7 @@ class TopologyPage extends Component {
       .then(() => {
         this.viewObj.transitioning = false;
       });
-    this.restart();
+    //this.restart();
   };
 
   tositesankey = (initial) => {
@@ -511,7 +517,6 @@ class TopologyPage extends Component {
       return this.tosite(initial);
     }
     this.view = "site";
-    this.drawNodesAndPaths();
     this.viewObj.expandNodes();
     this.viewObj.transitioning = true;
     this.viewObj
@@ -519,7 +524,7 @@ class TopologyPage extends Component {
       .then(() => {
         this.viewObj.transitioning = false;
       });
-    this.restart();
+    //this.restart();
   };
 
   toservicesankey = (initial) => {

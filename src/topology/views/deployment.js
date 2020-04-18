@@ -32,11 +32,11 @@ import {
   reconcileArrays,
   reconcileLinks,
   genPath,
-} from "../utilities";
+} from "../../utilities";
 import { Site } from "./site";
 import { Service } from "./service";
-import { Nodes } from "./nodes";
-import { Links } from "./links";
+import { Nodes } from "../nodes";
+import { Links } from "../links";
 const DEPLOYMENT_POSITION = "dp";
 const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
@@ -458,6 +458,16 @@ export class Deployment extends Service {
       .selectAll("path.hittarget")
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
       .attr("d", (d) => genPath({ link: d }));
+
+    d3.select("defs.statPaths")
+      .selectAll("path")
+      .attr("d", (d) =>
+        genPath({
+          link: d,
+          reverse: d.circular,
+          offsetY: 4,
+        })
+      );
   };
 
   collapseNodes = () => {
@@ -472,30 +482,33 @@ export class Deployment extends Service {
   transition = (sankey, initial, color, viewer) => {
     this.setSitePositions(sankey);
     this.setServicePositions(sankey);
+    viewer.setLinkStat();
+
     updateSankey({
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
 
+    const duration = initial ? 0 : VIEW_DURATION;
     if (sankey) {
-      this.toSankey(initial, viewer.setLinkStat);
-      return this.toServiceSankey(initial, viewer.setLinkStat);
+      this.toSankey(duration);
+      return this.toServiceSankey(duration);
     } else {
-      this.toColor(initial, viewer.setLinkStat, color);
-      return this.toServiceColor(initial, viewer.setLinkStat, color);
+      this.toColor(duration, color);
+      return this.toServiceColor(duration, color);
     }
   };
 
-  toColor = () => {
+  toColor = (duration) => {
     d3.select("g.clusters")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("opacity", 1);
 
     // transition the containers to their proper position
     d3.selectAll(".cluster")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
       .each("end", function() {
         d3.select(this)
@@ -509,7 +522,7 @@ export class Deployment extends Service {
     d3.select("g.clusters")
       .selectAll("circle.network")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("r", (d) => d.r)
       .attr("cx", (d) => d.r)
       .attr("cy", (d) => d.r);
@@ -517,16 +530,16 @@ export class Deployment extends Service {
     d3.select("g.clusters")
       .selectAll("text.cluster-name")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("y", -10)
       .attr("x", (d) => d.getWidth() / 2);
   };
 
-  toSankey = () => {
+  toSankey = (duration) => {
     d3.select("g.clusters")
       .selectAll("circle.network")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("r", (d) => d.r)
       .attr("cx", (d) => d.r)
       .attr("cy", (d) => d.r);
@@ -534,13 +547,13 @@ export class Deployment extends Service {
     d3.select("g.clusters")
       .selectAll("g.cluster")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
     d3.select("g.clusters")
       .selectAll("text.cluster-name")
       .transition()
-      .duration(VIEW_DURATION)
+      .duration(duration)
       .attr("y", -10)
       .attr("x", (d) => d.getWidth(true) / 2);
   };

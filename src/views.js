@@ -17,12 +17,12 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import { Site } from "./topology/site";
-import { Service } from "./topology/service";
-import { Deployment } from "./topology/deployment";
+import { Site } from "./topology/views/site";
+import { Service } from "./topology/views/service";
+import { Deployment } from "./topology/views/deployment";
 
 export const viewsMap = {
   site: Site,
   service: Service,
-  deployment: Deployment
+  deployment: Deployment,
 };

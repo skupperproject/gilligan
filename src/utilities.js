@@ -501,6 +501,7 @@ const genMask = (link, key, mask, width, selection) => {
   return `M ${p1.x} ${p1.y} L ${pt2.x} ${pt2.y} L ${pt1.x} ${pt1.y} z`;
 };
 
+// create a bezier path between link.source and link.target
 const bezier = (link, key, sankey, width, offsetY) => {
   let x0 = get(link.source, "x1", key); // right side of source
   if (link.source.expanded && link.source.nodeType === "cluster") {
@@ -546,6 +547,8 @@ const bezier = (link, key, sankey, width, offsetY) => {
   return path.toString();
 };
 
+// create a complex path exiting source on the right
+// and curving around to enter the target on the left
 const circular = (link, key, sankey, width, reverse, offsetY) => {
   const minR = 10;
   const maxR = 80;
@@ -634,23 +637,6 @@ export const setLinkStat = (selection, view, stat, shown) => {
     } else {
       return "";
     }
-  });
-
-  if (!shown) return;
-
-  // create a defs sections to hold the text paths
-  d3.select("defs.stats").remove();
-  const statDefs = d3
-    .select("g.zoom")
-    .insert("defs", "defs.marker-defs")
-    .attr("class", "stats");
-
-  // put the stat text along a path that is parallel to the path
-  selection.selectAll(`path.${view}`).each(function(d) {
-    statDefs
-      .append("path")
-      .attr("id", statId(d))
-      .attr("d", genPath({ link: d, reverse: d.circular, offsetY: 4 }));
   });
 };
 
@@ -761,11 +747,13 @@ export const initSankey = ({
     const linkNodes = nodes.filter((n) =>
       links.some((l) => l.source === n || l.target === n)
     );
+    // sort nodes based on their .y
     try {
       sankey()
         .nodeWidth(nodeWidth)
         .nodePadding(nodePadding)
         .iterations(3)
+        .nodeSort(null)
         .extent([
           [left, top],
           [width - right - left, height - bottom - top],
