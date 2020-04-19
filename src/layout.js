@@ -52,9 +52,9 @@ import ListPage from "./listPage";
 import { QDRService } from "./qdrService";
 import ConnectForm from "./connect-form";
 import { getSaved, setSaved } from "./utilities";
-import Modifier from "./modify";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
+const UPDATE_INTERVAL = 2000;
 const TOOLBAR_CHECKS = "toolbarChecks";
 const LAST_VIEW = "lastView";
 const LAST_GROUP = "lastGroup";
@@ -75,14 +75,6 @@ class PageLayout extends React.Component {
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
 
-    // TODO: remove this before a production build
-    if (
-      window.location.hostname === "localhost" &&
-      this.props.location.search.includes("simulate=true")
-    ) {
-      this.service.modifier = new Modifier();
-      console.log("WARNING ^^^ simulating traffic ^^^");
-    }
     this.views = [
       { name: "Services", view: "service" },
       { name: "Sites", view: "site" },
@@ -108,8 +100,22 @@ class PageLayout extends React.Component {
     this.doConnect();
   };
 
+  componentWillUnmount = () => {
+    this.clearInterval(this.timer);
+    this.unmounted = true;
+  };
   setLocation = (where) => {
     //this.setState({ connectPath: where })
+  };
+
+  update = () => {
+    this.service.update().then((data) => {
+      if (!this.unmounted) {
+        if (this.pageRef && this.pageRef.update) {
+          this.pageRef.update();
+        }
+      }
+    });
   };
 
   doConnect = () => {
@@ -138,6 +144,8 @@ class PageLayout extends React.Component {
         connectPath = `/${this.lastView}`;
       const activeItem = connectPath.split("/").pop();
       this.props.history.replace(connectPath);
+      clearInterval(this.timer);
+      this.timer = setInterval(this.update, UPDATE_INTERVAL);
       this.setState({
         username: "Bob Denver",
         activeItem,
@@ -308,6 +316,7 @@ class PageLayout extends React.Component {
         render={(props) =>
           this.state.connected ? (
             <Component
+              ref={(el) => (this.pageRef = el)}
               service={this.service}
               {...props}
               {...more}

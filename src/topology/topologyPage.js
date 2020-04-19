@@ -64,6 +64,11 @@ class TopologyPage extends Component {
     this.updatedRef.update();
   };
 
+  update = () => {
+    this.graphRef.update();
+    this.handleChangeLastUpdated();
+  };
+
   render() {
     return (
       <PageSection

@@ -44,6 +44,10 @@ class TablePage extends Component {
     this.updatedRef.update();
   };
 
+  update = () => {
+    this.tableRef.update();
+    this.handleChangeLastUpdated();
+  };
   render() {
     return (
       <PageSection
@@ -69,6 +73,7 @@ class TablePage extends Component {
           </StackItem>
           <StackItem className="overview-table">
             <TableViewer
+              ref={(el) => (this.tableRef = el)}
               service={this.props.service}
               view={this.props.view}
               handleAddNotification={() => {}}

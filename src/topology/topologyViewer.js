@@ -36,7 +36,6 @@ import SplitterBar from "../spliterBar";
 import ServiceCard from "../serviceCard";
 import LinkInfo from "./linkInfo";
 import { viewsMap as VIEWS } from "../views";
-const UPDATE_INTERVAL = 2000;
 const SPLITTER_POSITION = "split";
 const SPLITTER_LEFT = "div.pf-topology-content";
 const SPLITTER_RIGHT = "div.pf-topology-side-bar";
@@ -97,17 +96,12 @@ class TopologyPage extends Component {
     this.init();
     // call the to### transition
     this.callTransitions(true);
-    if (this.timer) clearInterval(this.timer);
-    this.timer = setInterval(() => {
-      this.doUpdate();
-    }, UPDATE_INTERVAL);
   };
 
   componentWillUnmount = () => {
     window.removeEventListener("resize", this.resize);
     this.unmounting = true;
     d3.select(".pf-c-page__main").style("background-color", "white");
-    clearInterval(this.timer);
   };
 
   callTransitions = (initial) => {
@@ -116,18 +110,16 @@ class TopologyPage extends Component {
     this[to](initial);
   };
 
-  doUpdate = () => {
+  update = () => {
     if (!this.viewObj.dragging && !this.viewObj.transitioning) {
-      this.props.service.update().then((data) => {
-        if (!this.unmounting) {
-          this.update();
-          this.chordRef.doUpdate();
-          this.setState({
-            linkInfo: this.state.linkInfo,
-            cardService: this.state.cardService,
-          });
-        }
-      });
+      if (!this.unmounting) {
+        this.doUpdate();
+        this.chordRef.doUpdate();
+        this.setState({
+          linkInfo: this.state.linkInfo,
+          cardService: this.state.cardService,
+        });
+      }
     }
   };
 
@@ -143,7 +135,7 @@ class TopologyPage extends Component {
       d3.select("#SVG_ID").attr("height", this.height);
       this.force.size(sizes).resume();
     }
-    this.update();
+    this.doUpdate();
     //this.updateLegend();
   };
 
@@ -276,7 +268,7 @@ class TopologyPage extends Component {
     this.restart();
   };
 
-  update = () => {
+  doUpdate = () => {
     this.viewObj.updateNodesAndLinks(this, this.props.service.adapter);
     this.force
       .nodes(this.viewObj.nodes().nodes)

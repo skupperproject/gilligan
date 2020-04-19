@@ -24,7 +24,7 @@ import {
   Table,
   TableHeader,
   TableBody,
-  TableVariant
+  TableVariant,
 } from "@patternfly/react-table";
 import { Button, Pagination } from "@patternfly/react-core";
 import { Redirect } from "react-router-dom";
@@ -37,7 +37,7 @@ class TableViewer extends React.Component {
     this.state = {
       sortBy: {
         index: 0,
-        direction: SortByDirection.asc
+        direction: SortByDirection.asc,
       },
       filterBy: {},
       perPage: 10,
@@ -47,7 +47,7 @@ class TableViewer extends React.Component {
       allRows: [],
       rows: [],
       redirect: false,
-      redirectState: {}
+      redirectState: {},
     };
     this.view = this.props.view;
     this.dataSource = new VIEWS[this.view](this.props.service.adapter);
@@ -58,7 +58,7 @@ class TableViewer extends React.Component {
     if (!this.dataSource) return;
     this.dataSource.initNodesAndLinks(this);
     // initialize the columns and get the data
-    this.dataSource.fields.forEach(f => {
+    this.dataSource.fields.forEach((f) => {
       f.transforms = [];
       f.cellFormatters = [];
       if (!f.noSort) f.transforms.push(sortable);
@@ -99,7 +99,7 @@ class TableViewer extends React.Component {
   fetch = (page, perPage) => {
     // get the data. Note: The current page number might change if
     // the number of rows is less than before
-    this.dataSource.doFetch(page, perPage).then(results => {
+    this.dataSource.doFetch(page, perPage).then((results) => {
       const sliced = this.slice(results.data, results.page, results.perPage);
       // if fetch was called and the component was unmounted before
       // the results arrived, don't call setState
@@ -111,7 +111,7 @@ class TableViewer extends React.Component {
           page,
           perPage,
           total,
-          allRows
+          allRows,
         });
       //this.props.lastUpdated(new Date());
     });
@@ -139,8 +139,8 @@ class TableViewer extends React.Component {
         sortBy: this.state.sortBy,
         filterBy: this.state.filterBy,
         perPage: this.state.perPage,
-        property: extraInfo.property
-      }
+        property: extraInfo.property,
+      },
     });
   };
 
@@ -193,28 +193,28 @@ class TableViewer extends React.Component {
     );
   }
 
-  onSetPage = value => {
+  onSetPage = (value) => {
     this.fetch(value, this.state.perPage);
   };
-  onPerPageSelect = value => {
+  onPerPageSelect = (value) => {
     this.fetch(1, value);
   };
   handleChangeFilterValue = (field, value) => {
     this.setState({ filterBy: { field, value } }, this.update);
   };
 
-  field2Row = field => ({
-    cells: this.dataSource.fields.map(f => field[f.field]),
-    data: field
+  field2Row = (field) => ({
+    cells: this.dataSource.fields.map((f) => field[f.field]),
+    data: field,
   });
 
-  cellIndex = field => {
-    return this.dataSource.fields.findIndex(f => {
+  cellIndex = (field) => {
+    return this.dataSource.fields.findIndex((f) => {
       return f.title === field;
     });
   };
 
-  filter = rows => {
+  filter = (rows) => {
     const filterField = this.state.filterBy.field;
     const filterValue = this.state.filterBy.value;
     if (
@@ -223,7 +223,7 @@ class TableViewer extends React.Component {
       filterValue !== ""
     ) {
       const cellIndex = this.cellIndex(filterField);
-      rows = rows.filter(r => {
+      rows = rows.filter((r) => {
         return r.cells[cellIndex].includes(filterValue);
       });
     }
@@ -239,7 +239,7 @@ class TableViewer extends React.Component {
   };
 
   slice = (fields, page, perPage) => {
-    let allRows = fields.map(f => this.field2Row(f));
+    let allRows = fields.map((f) => this.field2Row(f));
     let rows = this.filter(allRows);
     const total = rows.length;
     rows = this.sort(rows);
@@ -247,7 +247,7 @@ class TableViewer extends React.Component {
     return { rows, page, total, allRows };
   };
 
-  sort = rows => {
+  sort = (rows) => {
     const { index, direction } = this.state.sortBy;
     if (typeof index === "undefined" || typeof direction === "undefined") {
       return rows;
@@ -275,7 +275,7 @@ class TableViewer extends React.Component {
           to={{
             pathname:
               (this.dataSource && this.dataSource.detailPath) || "/details",
-            state: this.state.redirectState
+            state: this.state.redirectState,
           }}
         />
       );

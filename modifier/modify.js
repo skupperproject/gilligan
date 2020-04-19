@@ -1,4 +1,10 @@
-export default class Modifier {
+"use strict";
+
+const fs = require("fs");
+const INTERVAL = 2000;
+const fileName = process.argv[2] || "../public/data/DATA.json";
+
+class Modifier {
   update = (data) => {
     if (!this.originalData) {
       this.originalData = JSON.parse(JSON.stringify(data));
@@ -154,3 +160,48 @@ export default class Modifier {
   findRequest = (service, request, key) =>
     service[key].find((r) => r.site_id === request.site_id);
 }
+
+fs.copyFile(fileName, `${fileName}.bak`, (err) => {
+  if (err) throw err;
+  console.log(`${fileName} was backed up`);
+});
+
+const exitHandler = (options, exitCode) => {
+  clearInterval(timer);
+  fs.copyFile(`${fileName}.bak`, fileName, (err) => {
+    if (err) throw err;
+    console.log(`${fileName} was backed restored`);
+    if (options.cleanup) console.log("clean");
+    if (exitCode || exitCode === 0) console.log(exitCode);
+    if (options.exit) process.exit();
+  });
+};
+
+//do something when app is closing
+process.on("exit", exitHandler.bind(null, { cleanup: true }));
+
+//catches ctrl+c event
+process.on("SIGINT", exitHandler.bind(null, { exit: true }));
+
+// catches "kill pid" (for example: nodemon restart)
+process.on("SIGUSR1", exitHandler.bind(null, { exit: true }));
+process.on("SIGUSR2", exitHandler.bind(null, { exit: true }));
+
+//catches uncaught exceptions
+process.on("uncaughtException", exitHandler.bind(null, { exit: true }));
+
+const modifier = new Modifier();
+const timer = setInterval(() => {
+  fs.readFile(fileName, (err, strdata) => {
+    if (err) throw err;
+    let data = JSON.parse(strdata);
+
+    modifier.update(data);
+
+    strdata = JSON.stringify(data);
+    fs.writeFile(fileName, strdata, (err) => {
+      if (err) throw err;
+      console.log("Data updated");
+    });
+  });
+}, INTERVAL);
