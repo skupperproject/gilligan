@@ -190,6 +190,7 @@ export class Site {
     // set the site.sankeyR based on traffic
     nodes.nodes.forEach((n) => {
       n.sankeyR = n.y0 !== undefined ? (n.y1 - n.y0) / 2 : n.r;
+      n.sankeyR = Math.max(50, n.sankeyR);
       n.normalR = n.r;
     });
     /*

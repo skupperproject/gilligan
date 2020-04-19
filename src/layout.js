@@ -62,8 +62,8 @@ const LAST_GROUP = "lastGroup";
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
-    this.lastView = getSaved(LAST_VIEW, "deployment");
-    this.lastGroup = getSaved(LAST_GROUP, "deployment");
+    this.lastView = getSaved(LAST_VIEW, "service");
+    this.lastGroup = getSaved(LAST_GROUP, "service");
     this.state = {
       connected: false,
       connectPath: "",
@@ -101,7 +101,7 @@ class PageLayout extends React.Component {
   };
 
   componentWillUnmount = () => {
-    this.clearInterval(this.timer);
+    clearInterval(this.timer);
     this.unmounted = true;
   };
   setLocation = (where) => {

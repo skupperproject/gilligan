@@ -272,7 +272,8 @@ export class Deployment extends Service {
       });
       site.sankeyR = Math.max(
         site.r,
-        Math.max(siteSize.width, siteSize.height) / 2
+        Math.max(siteSize.width, siteSize.height) / 2,
+        50
       );
     });
     // now each site has a site.sankeyR that is big enough

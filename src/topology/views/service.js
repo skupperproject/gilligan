@@ -94,14 +94,19 @@ export class Service {
     viewer.restart();
   };
 
-  initNodes(serviceNodes, includeExtra) {
+  initNodes(serviceNodes, includeDuplicate) {
     this.adapter.data.services.forEach((service) => {
+      // if we haven't already added this service || or we want duplicates
       if (
-        includeExtra ||
+        includeDuplicate ||
         !serviceNodes.nodes.some((n) => n.name === service.address)
       ) {
+        if (this.adapter.getServiceSites(service).length === 0) {
+          debugger;
+        }
+        // get the sites in which this service is deployed
         let serviceSites = this.adapter.getServiceSites(service);
-        if (!includeExtra || serviceSites.length === 0) {
+        if (serviceSites.length === 0) {
           serviceSites = [
             this.adapter.data.sites.find((site) =>
               site.services.includes(service)
@@ -109,6 +114,11 @@ export class Service {
           ];
         }
         serviceSites.forEach((site) => {
+          if (!site) {
+            console.log(serviceSites);
+            debugger;
+            this.adapter.getServiceSites(service);
+          }
           const subNode = new Node({
             name: service.address,
             nodeType: "service",
@@ -121,7 +131,7 @@ export class Service {
           subNode.color = serviceColor(subNode.name);
           subNode.cluster = site;
           subNode.shortName = this.adapter.shortName(subNode.name);
-          if (includeExtra) {
+          if (includeDuplicate) {
             const original = serviceNodes.nodeFor(subNode.name);
             if (original) {
               subNode.extra = true;
@@ -146,7 +156,7 @@ export class Service {
           site.services.includes(service)
         );
         subNode.shortName = this.adapter.shortName(subNode.name);
-        if (includeExtra) {
+        if (includeDuplicate) {
           const original = serviceNodes.nodeFor(subNode.name);
           if (original) {
             subNode.extra = true;
@@ -518,7 +528,6 @@ export class Service {
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
-
     this.linksSelection
       .selectAll("path.service")
       .attr("d", (d) => genPath({ link: d, sankey: true }));

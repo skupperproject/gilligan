@@ -33,9 +33,6 @@ class Adapter {
         service.targets = [];
       }
       if (service.targets.length === 0) {
-        console.log(
-          `empty targets for service ${service.address}. Reconstructing from request_handled.`
-        );
         if (service.requests_handled) {
           service.requests_handled.forEach((request) => {
             for (const server in request.by_server) {
@@ -43,10 +40,57 @@ class Adapter {
                 name: server,
                 site_id: request.site_id,
               });
-              console.log(
-                `for ${service.address} added ${server} at ${request.site_id}`
-              );
+              service.targets.push({
+                name: service.address,
+                site_id: request.site_id,
+              });
             }
+          });
+        } else {
+          // tcp service without targets
+          if (service.connections_egress.length > 0) {
+            service.connections_egress.forEach((egress) => {
+              for (let connection_id in egress.connections) {
+                const connection = egress.connections[connection_id];
+                if (
+                  !service.targets.some(
+                    (target) => target.name === connection.server
+                  )
+                ) {
+                  service.targets.push({
+                    name: connection.server,
+                    site_id: egress.site_id,
+                  });
+                }
+              }
+              service.targets.push({
+                name: service.address,
+                site_id: egress.site_id,
+              });
+            });
+          } else {
+            // put this tcp service in an "unknown" site
+            if (!this.data.sites.some((site) => site.site_name === "unknown")) {
+              this.data.sites.push({
+                site_name: "unknown",
+                site_id: "unknownID",
+                connected: [],
+                namespace: "",
+                url: "",
+                edge: false,
+              });
+            }
+            service.targets.push({
+              name: service.address,
+              site_id: "unknownID",
+            });
+          }
+        }
+      } else {
+        if (!service.targets.some((t) => t.name === service.address)) {
+          service.targets.push({
+            name: service.address,
+            site_id: service.targets[0].site_id,
           });
         }
       }
@@ -217,11 +261,13 @@ class Adapter {
         const source = this.data.services.find(
           (s) => s.address === sourceAddress
         );
-        service.sourceServices.push(source);
-        if (!source.targetServices) {
-          source.targetServices = [];
+        if (source) {
+          service.sourceServices.push(source);
+          if (!source.targetServices) {
+            source.targetServices = [];
+          }
+          source.targetServices.push(service);
         }
-        source.targetServices.push(service);
       });
     });
   };
@@ -332,15 +378,45 @@ class Adapter {
       service.targets.some((t) => t.name === server && t.site_id === site_id)
     );
 
+  findSite = (site_id) => this.data.sites.find((s) => s.site_id === site_id);
+  findInTargets = (service) =>
+    service.targets.find((t) => t.name === service.address);
   getServiceSites = (service) => {
     const sites = [];
-    service.requests_handled.forEach((request) => {
-      sites.push(this.data.sites.find((s) => s.site_id === request.site_id));
-    });
+    // for tcp services
+    if (service.connections_egress) {
+      if (service.connections_egress.length > 0) {
+        service.connections_egress.forEach((connection) => {
+          sites.push(this.findSite(connection.site_id));
+        });
+      } else {
+        const target = this.findInTargets(service);
+        if (target) {
+          sites.push(this.findSite(target.site_id));
+        }
+      }
+    } else {
+      // for http services
+      if (service.requests_handled.length === 0) {
+        // service that only sends requests
+        const target = this.findInTargets(service);
+        if (target) {
+          sites.push(this.findSite(target.site_id));
+        }
+      }
+      service.requests_handled.forEach((request) => {
+        sites.push(this.findSite(request.site_id));
+      });
+    }
     return sites;
   };
-  siteNameFromId = (site_id) =>
-    this.data.sites.find((site) => site.site_id === site_id).site_name;
+  siteNameFromId = (site_id) => {
+    const site = this.data.sites.find((site) => site.site_id === site_id);
+    if (site) {
+      return site.site_name;
+    }
+    return `${site_id} doesn't exist`;
+  };
 
   // gather raw data for all services that are involved with the given service
   matrix = (involvingService, stat) => {

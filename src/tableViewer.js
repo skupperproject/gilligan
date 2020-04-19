@@ -83,13 +83,11 @@ class TableViewer extends React.Component {
 
     this.setState({ columns: this.dataSource.fields }, () => {
       this.update();
-      //this.timer = setInterval(this.update, 5000);
     });
   };
 
   componentWillUnmount = () => {
     this.mounted = false;
-    clearInterval(this.timer);
   };
 
   update = () => {

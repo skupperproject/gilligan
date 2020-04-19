@@ -95,7 +95,6 @@ class ChordViewer extends Component {
 
   componentWillUnmount() {
     // stop updated the data
-    //clearInterval(this.interval);
     // clean up memory associated with the svg
     //d3.select("#chord").remove();
     //d3.select(window).on("resize.updatesvg", null);
@@ -158,7 +157,6 @@ class ChordViewer extends Component {
 
     // get the raw data and render the svg
     this.getMatrix();
-    //this.interval = setInterval(this.doUpdate, TRANSITION_DURATION);
   };
 
   getMatrix = () => {

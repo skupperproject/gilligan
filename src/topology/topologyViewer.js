@@ -30,7 +30,6 @@ import { addDefs } from "./svgUtils.js";
 import { getSizes, positionPopup, getSaved, setSaved } from "../utilities";
 import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
-import ClientInfoComponent from "./clientInfoComponent";
 import ChordViewer from "../chord/chordViewer.js";
 import SplitterBar from "../spliterBar";
 import ServiceCard from "../serviceCard";
@@ -48,8 +47,6 @@ class TopologyPage extends Component {
       showLegend: false,
       showChord: true,
       showLinkInfo: false,
-      showRouterInfo: false,
-      showClientInfo: false,
       chordData: null,
       linkInfo: null,
     };
@@ -390,22 +387,6 @@ class TopologyPage extends Component {
     this.viewObj.drawViewPaths(this.sankey);
   };
 
-  // show the details dialog for a client or group of clients
-  doDialog = (d, type) => {
-    this.d = d;
-    if (type === "router") {
-      this.setState({ showRouterInfo: true });
-    } else if (type === "client") {
-      this.setState({ showClientInfo: true });
-    }
-  };
-  handleCloseRouterInfo = (type) => {
-    this.setState({ showRouterInfo: false });
-  };
-  handleCloseClientInfo = () => {
-    this.setState({ showClientInfo: false, showRouterInfo: false });
-  };
-
   clearAllHighlights = () => {
     this.viewObj.links().links.forEach((l) => (l.highlighted = false));
     this.viewObj.nodes().nodes.forEach((n) => (n.highlighted = false));
@@ -669,14 +650,6 @@ class TopologyPage extends Component {
             nodes={this.viewObj.nodes()}
             handleCloseLegend={this.handleCloseLegend}
           />
-        )}
-        {this.state.showClientInfo || this.state.showRouterInfo ? (
-          <ClientInfoComponent
-            d={this.d}
-            handleCloseClientInfo={this.handleCloseClientInfo}
-          />
-        ) : (
-          <div />
         )}
       </TopologyView>
     );

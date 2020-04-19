@@ -19,7 +19,8 @@ under the License.
 
 import * as d3 from "d3";
 import * as d3path from "d3-path";
-import { sankey } from "d3-sankey";
+//import { sankey } from "d3-sankey";
+import { sankeyCircular as sankey } from "d3-sankey-circular";
 export const Sankey = sankey;
 const SankeyAttributes = [
   "value",
@@ -455,8 +456,9 @@ export const genPath = ({
   reverse,
   offsetY,
   selection,
-  bezier,
+  _bezier,
 }) => {
+  const bezier = false;
   if (!width) width = link.width;
   if (!offsetY) offsetY = 0;
   if (mask) return genMask(link, key, mask, width, selection, bezier);
@@ -576,9 +578,6 @@ const circular = (link, key, sankey, width, reverse, offsetY) => {
   const targetY = link.target.expanded
     ? link.y1
     : get(link.target, "y0", key) + link.target.getHeight() / 2;
-  console.log(
-    `--- circular ${link.source.name}-${link.target.name} sx ${sourceX} sy ${sourceY} tx ${targetX} ty ${targetY}`
-  );
   const bottomY = Math.max(sourceY + r + gap + r, targetY + r + gap + r);
   const offset = sankey ? width / 2 : 0;
   let sy = sourceY - offset - offsetY;
@@ -755,13 +754,12 @@ export const initSankey = ({
     const linkNodes = nodes.filter((n) =>
       links.some((l) => l.source === n || l.target === n)
     );
-    // sort nodes based on their .y
+    //const nonCircular = links.filter((l) => l.source.name !== l.target.name);
     try {
       sankey()
         .nodeWidth(nodeWidth)
         .nodePadding(nodePadding)
         .iterations(3)
-        .nodeSort(null)
         .extent([
           [left, top],
           [width - right - left, height - bottom - top],

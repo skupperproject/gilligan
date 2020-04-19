@@ -24,23 +24,20 @@ class ClientInfoComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      toolTip: null
+      toolTip: null,
     };
   }
 
   componentDidMount = () => {
-    this.timer = setInterval(this.getTooltip, 5000);
     this.getTooltip();
   };
 
-  componentWillUnmount = () => {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
+  update = () => {
+    this.getTooltip();
   };
+
   getTooltip = () => {
-    this.props.d.toolTip(true).then(toolTip => {
+    this.props.d.toolTip(true).then((toolTip) => {
       this.setState({ toolTip });
     });
   };
