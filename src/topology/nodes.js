@@ -42,11 +42,11 @@ export class Node {
   }
 
   toolTip(verbose) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (this.nodeType === "service" || this.nodeType === "client") {
         resolve(this.clientTooltip());
       } else {
-        this.clusterTooltip(verbose).then(toolTip => {
+        this.clusterTooltip(verbose).then((toolTip) => {
           resolve(toolTip);
         });
       }
@@ -62,7 +62,7 @@ export class Node {
       } else if (prop === "namespace") {
         rows.push([
           "Namespace",
-          this.parentNode.properties.cluster.namespaces[this.properties[prop]]
+          this.parentNode.properties.cluster.namespaces[this.properties[prop]],
         ]);
       } else {
         rows.push([prop, this.properties[prop]]);
@@ -72,7 +72,7 @@ export class Node {
   }
 
   clusterTooltip(verbose) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const rows = [];
       if (this.dataType === "cluster") {
         rows.push(["Provider", this.properties.cluster.provider]);
@@ -81,10 +81,10 @@ export class Node {
           rows.push([
             "Namespaces",
             <ul>
-              {this.properties.cluster.namespaces.map(ns => (
+              {this.properties.cluster.namespaces.map((ns) => (
                 <li>{ns}</li>
               ))}
-            </ul>
+            </ul>,
           ]);
         } else {
           rows.push(["Namespace", this.properties.cluster.namespaces[0]]);
@@ -94,7 +94,7 @@ export class Node {
     });
   }
   uid() {
-    return this.name;
+    return this.nodeType === "cluster" ? this.site_id : this.address;
   }
   setFixed(fixed) {
     if (!fixed & 1) this.lat = this.lon = null;
@@ -112,18 +112,18 @@ export class Node {
   radius() {
     return nodeProperties[this.nodeType].radius;
   }
-  getHeight = expanded => this.heightFn(this, expanded);
-  getWidth = expanded => this.widthFn(this, expanded);
+  getHeight = (expanded) => this.heightFn(this, expanded);
+  getWidth = (expanded) => this.widthFn(this, expanded);
 
   mergeWith(obj) {
     for (const key in obj) {
       this[key] = obj[key];
     }
   }
-  setSubNodePositions = key => {
+  setSubNodePositions = (key) => {
     if (this.subNodes && this.subNodes.length > 0) {
       let curY = this.subNodes[0].y0;
-      this.subNodes.forEach(n => {
+      this.subNodes.forEach((n) => {
         n[key].y1 = n.y1 = curY + (n.y1 - n.y0);
         n[key].y0 = n.y0 = curY;
         curY += n.getHeight() + ServiceGap;
@@ -137,34 +137,34 @@ const nodeProperties = {
     radius: 100,
     refX: {
       end: 12,
-      start: -19
+      start: -19,
     },
     linkDistance: [300, 300],
-    charge: [-1800, -900]
+    charge: [-1800, -900],
   },
   edge: {
     radius: 20,
     refX: {
       end: 24,
-      start: -12
+      start: -12,
     },
     linkDistance: [110, 55],
-    charge: [-1350, -900]
+    charge: [-1350, -900],
   },
   // generated nodes from connections. key is from connection.role
   service: {
     radius: 15,
     refX: {
       end: 10,
-      start: -7
+      start: -7,
     },
     linkDistance: [250, 250],
-    charge: [-1900, -1900]
+    charge: [-1900, -1900],
   },
   cloud: {
     charge: [-1900, -900],
-    linkDistance: [150, 70]
-  }
+    linkDistance: [150, 70],
+  },
 };
 
 export class Nodes {
@@ -247,7 +247,7 @@ export class Nodes {
     return undefined;
   }
   nodeFor(name) {
-    return this.nodes.find(n => n.name === name);
+    return this.nodes.find((n) => n.name === name);
     /*
     for (let i = 0; i < this.nodes.length; ++i) {
       if (this.nodes[i].name === name) return this.nodes[i];
@@ -264,7 +264,7 @@ export class Nodes {
       localStorage[d.name] = JSON.stringify({
         x: Math.round(d.x),
         y: Math.round(d.y),
-        fixed: d.fixed
+        fixed: d.fixed,
       });
     });
   }
@@ -286,7 +286,7 @@ export class Nodes {
       y,
       fixed,
       heightFn,
-      widthFn
+      widthFn,
     });
     return this.add(obj);
   }

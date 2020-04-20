@@ -387,11 +387,14 @@ for (let i = 0; i < 20; i++) {
   colorGen(i);
 }
 
-export const siteColor = (name) => {
-  if (!(name in siteColors)) {
-    siteColors[name] = colorGen(Object.keys(siteColors).length * 2);
+export const siteColor = (name, site_id) => {
+  if (!(site_id in siteColors)) {
+    siteColors[site_id] = {
+      name: name,
+      color: colorGen(Object.keys(siteColors).length * 2),
+    };
   }
-  return siteColors[name];
+  return siteColors[site_id].color;
 };
 
 export const serviceColor = (name) => {
@@ -772,24 +775,32 @@ export const initSankey = ({
 };
 
 export const circularize = (links) => {
+  let circularLinkID = 0;
   links.forEach((l) => {
-    let sx = l.source.x1;
-    let tx = l.target.x0;
-    // use center of cluster to determine if link is circular
-    if (l.source.nodeType === "cluster") {
-      sx = l.source.x1 - l.source.getWidth() / 2;
-      tx = l.target.x0 + l.target.getWidth() / 2;
-    }
-    if (sx > tx) {
+    //if (l.source.name === "one" && l.target.name === "one") debugger;
+    const sx =
+      l.source.nodeType === "cluster"
+        ? l.source.x1 - l.source.getWidth() / 2
+        : l.source.x1;
+    const tx =
+      l.source.nodeType === "cluster"
+        ? l.target.x0 + l.target.getWidth() / 2
+        : l.target.x0;
+    if (sx >= tx || l.source === l.target) {
       l.circular = true;
-      if (l.source.y0 > l.target.y0) {
-        l.circularLinkType = "top";
-      } else {
-        l.circularLinkType = "bottom";
-      }
+      l.circularLinkID = circularLinkID++;
+      const circularLinkType = l.source.y0 > l.target.y0 ? "top" : "bottom";
+
+      l.circularLinkType = circularLinkType;
+      l.source.partOfCycle = true;
+      l.target.partOfCycle = true;
+      l.source.circularLinkType = circularLinkType;
+      l.target.circularLinkType = circularLinkType;
     } else {
       if (l.circular) {
         l.circular = false;
+        delete l.circularLinkID;
+        delete l.circularLinkType;
       }
     }
   });

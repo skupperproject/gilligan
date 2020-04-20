@@ -48,7 +48,7 @@ export class QDRService {
 
   initColors = (data) => {
     data.sites.forEach((site) => {
-      siteColor(site.site_name);
+      siteColor(site.site_name, site.site_id);
     });
     data.services.forEach((service) => {
       serviceColor(service.address);

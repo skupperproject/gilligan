@@ -244,11 +244,8 @@ class ChordViewer extends Component {
   };
 
   // arc colors are taken from every other color starting at 0
-  getArcColor = (n) => {
-    if (this.props.deployment) {
-      n = n.split(":")[0];
-    }
-    return siteColors[n];
+  getArcColor = (info) => {
+    return siteColors[info.target.site_id].color;
   };
   // chord colors are taken from every other color starting at 19 and going backwards
   getChordColor = (n) => {
@@ -267,8 +264,9 @@ class ChordViewer extends Component {
   // return the color associated with a router
   fillArc = (matrixValues, row) => {
     let router = matrixValues.routerName(row);
+    const info = matrixValues.rows[row].info;
     return this.props.site
-      ? this.getArcColor(router)
+      ? this.getArcColor(info)
       : this.getChordColor(router);
   };
 
@@ -286,7 +284,6 @@ class ChordViewer extends Component {
       : matrixValues.rows[d.orgIndex].ingress;
       */
     let addr = matrixValues.getAddress(d.source.orgindex, d.source.orgsubindex);
-    //return this.getArcColor(addr);
     return this.getChordColor(addr);
   };
 
@@ -329,7 +326,9 @@ class ChordViewer extends Component {
   };
 
   arcInfo = (fg, matrix) => {
-    const row = matrix.rows.find((r) => r.ingress === fg.key);
+    const row = matrix.rows.find(
+      (r) => (!matrix.aggregate ? r.ingress : r.chordName) === fg.key
+    );
     if (row) {
       return row.info;
     }
@@ -409,7 +408,7 @@ class ChordViewer extends Component {
       fg.router = matrix.aggregate ? fg.key : matrix.getEgress(fg.index);
       fg.info = this.arcInfo(fg, matrix);
       fg.color = this.props.site
-        ? this.getArcColor(fg.router)
+        ? this.getArcColor(fg.info)
         : this.getChordColor(fg.router);
     });
     return fixedGroups;
@@ -906,6 +905,19 @@ class ChordViewer extends Component {
   };
 
   render() {
+    const getArcColors = () => {
+      if (this.props.site) {
+        const colors = {};
+        for (let site_id in siteColors) {
+          let name = siteColors[site_id].name;
+          const color = siteColors[site_id].color;
+          colors[name] = color;
+        }
+        return colors;
+      }
+      return serviceColors;
+    };
+
     const getTitle = () => {
       if (this.props.site) {
         if (this.props.data === null) {
@@ -962,7 +974,7 @@ class ChordViewer extends Component {
           <QDRPopup content={this.state.popupContent}></QDRPopup>
         </div>
         <RoutersComponent
-          arcColors={this.props.site ? siteColors : serviceColors}
+          arcColors={getArcColors()}
           handleHoverRouter={this.handleHoverRouter}
         ></RoutersComponent>
       </div>

@@ -65,9 +65,9 @@ export class Site {
 
   createSelections = (svg) => {
     this.createStatsGroup(svg);
-    this.masksSelection = this.createMasksSelection(svg);
     this.routerLinksSelection = this.createRouterLinksSelection(svg);
     this.trafficLinksSelection = this.createTrafficLinksSelection(svg);
+    this.masksSelection = this.createMasksSelection(svg);
     this.sitesSelection = this.createSitesSelection(svg);
   };
 
@@ -117,7 +117,7 @@ export class Site {
   };
 
   initNodes = (siteNodes) => {
-    const clusters = this.adapter.data.sites; //.filter(s => !s.derived);
+    const clusters = this.adapter.data.sites;
     clusters.forEach((cluster) => {
       const name = cluster.site_name;
 
@@ -129,7 +129,7 @@ export class Site {
         widthFn: this.clusterWidth,
       });
       clusterNode.mergeWith(cluster);
-      clusterNode.color = siteColor(name);
+      clusterNode.color = siteColor(name, cluster.site_id);
       clusterNode.r = SiteRadius;
       clusterNode.normalR = SiteRadius;
       clusterNode.sankeyR = SiteRadius;
@@ -141,19 +141,23 @@ export class Site {
     siteMatrix.forEach((record) => {
       const found = links.links.find(
         (l) =>
-          l.source.site_name === record.ingress &&
-          l.target.site_name === record.egress
+          l.source.site_id === record.info.source.site_id &&
+          l.target.site_id === record.info.target.site_id
       );
       if (found) {
         found.value += record.messages;
         this.adapter.aggregateAttributes(record.request, found.request);
       } else {
         const linkIndex = links.addLink({
-          source: nodes.nodes.find((n) => n.site_name === record.ingress),
-          target: nodes.nodes.find((n) => n.site_name === record.egress),
+          source: nodes.nodes.find(
+            (n) => n.site_id === record.info.source.site_id
+          ),
+          target: nodes.nodes.find(
+            (n) => n.site_id === record.info.target.site_id
+          ),
           dir: "in",
           cls: "siteTraffic",
-          uid: `SiteLink-${record.ingress}-${record.egress}`,
+          uid: `SiteLink-${record.info.source.site_id}-${record.info.target.site_id}`,
         });
         const link = links.links[linkIndex];
         link.value = record.messages;
@@ -191,14 +195,9 @@ export class Site {
     nodes.nodes.forEach((n) => {
       n.sankeyR = n.y0 !== undefined ? (n.y1 - n.y0) / 2 : n.r;
       n.sankeyR = Math.max(50, n.sankeyR);
+      n.sankeyHeight = n.sankeyR * 2;
       n.normalR = n.r;
     });
-    /*
-    // adjust the link widths to be no bigger than the sites
-    links.links.forEach((l) => {
-      l.width = Math.min(l.source.r * 2, l.target.r * 2, l.width);
-    });
-    */
 
     // move the sankey starting points to the site location
     nodes.nodes.forEach((n) => {
@@ -446,8 +445,8 @@ export class Site {
       .append("path")
       .attr("class", "siteTrafficDir")
       .attr("stroke", "black")
-      .attr("stroke-width", 1)
-      .attr("marker-end", "url(#end--15)");
+      .attr("stroke-width", 1);
+    //.attr("marker-end", "url(#end--15)");
 
     enter
       .append("path")
@@ -588,16 +587,18 @@ export class Site {
 
     this.trafficLinksSelection
       .selectAll("path.siteTrafficLink")
-      .attr("d", (d) => genPath({ link: d, sankey: true, bezier: true }));
+      .attr("d", (d) => genPath({ link: d, sankey: true }));
+
     this.trafficLinksSelection
       .selectAll("path.siteTrafficDir")
-      .attr("d", (d) => genPath({ link: d, bezier: true }));
+      .attr("d", (d) => genPath({ link: d }));
+
     this.trafficLinksSelection
       .selectAll("path.hittarget")
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
-      .attr("d", (d) => genPath({ link: d, bezier: true }));
+      .attr("d", (d) => genPath({ link: d }));
 
-    this.masksSelection.selectAll("path").attr("d", function(d) {
+    d3.selectAll("path.mask").attr("d", function(d) {
       return genPath({
         link: d.link,
         mask: d.mask,
@@ -780,11 +781,23 @@ export class Site {
         .attr("opacity", 1);
 
       // hide the wide masks
+
       d3.selectAll("path.mask")
+        .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", 0)
-        .attr("stroke-width", 0);
+        .attr("opacity", 1)
+        .attr("fill", "black")
+        .attrTween("d", function(d, i) {
+          const previous = d3.select(this).attr("d");
+          const current = genPath({
+            link: d.link,
+            mask: d.mask,
+            selection: this,
+            bezier: true,
+          });
+          return interpolatePath(previous, current);
+        });
 
       // hide all inter-router paths
       d3.select("g.siteRouterLinks")
@@ -842,10 +855,10 @@ export class Site {
         });
 
       //d3.selectAll("path.hittarget").style("display", "none");
+
       d3.selectAll("path.mask")
         .transition()
         .duration(duration)
-        .attr("fill", "black")
         .attr("opacity", 0);
 
       d3.select("g.clusters")

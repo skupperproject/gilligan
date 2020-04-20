@@ -92,7 +92,7 @@ class ChordData {
   }
   getSiteMatrixForSite(d, converter) {
     let self = this;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const values = self.QDRService.adapter.siteMatrixForSite(d);
       const matrix = convert(self, values, converter);
       resolve(matrix);
@@ -101,7 +101,7 @@ class ChordData {
 
   getAllServiceMatrix(converter) {
     let self = this;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const values = self.QDRService.adapter.allServiceMatrix();
       const matrix = convert(self, values, converter);
       resolve(matrix);
@@ -110,7 +110,7 @@ class ChordData {
 
   getSiteMatrix(converter) {
     let self = this;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const values = self.QDRService.adapter.siteMatrix();
       const matrix = convert(self, values, converter);
       resolve(matrix);
@@ -119,15 +119,27 @@ class ChordData {
 
   getDeploymentMatrix(d, converter, deploymentLinks) {
     let self = this;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const values = [];
-      deploymentLinks.forEach(link => {
+      deploymentLinks.forEach((link) => {
         if (link.source === d || link.target === d) {
           values.push({
             ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
             egress: `${link.target.parentNode.site_name}:${link.target.address}`,
             address: d.address,
-            messages: link.value
+            info: {
+              source: {
+                site_name: link.source.parentNode.site_name,
+                site_id: link.source.parentNode.site_id,
+                address: link.source.address,
+              },
+              target: {
+                site_name: link.target.parentNode.site_name,
+                site_id: link.target.parentNode.site_id,
+                address: link.target.address,
+              },
+            },
+            messages: link.value,
           });
         }
       });
@@ -138,9 +150,9 @@ class ChordData {
 
   getAllDeploymentMatrix(deploymentLinks, converter) {
     let self = this;
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const values = [];
-      deploymentLinks.forEach(link => {
+      deploymentLinks.forEach((link) => {
         values.push({
           ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
           egress: `${link.target.parentNode.site_name}:${link.target.address}`,
@@ -148,14 +160,16 @@ class ChordData {
           info: {
             source: {
               site_name: link.source.parentNode.site_name,
-              address: link.source.address
+              site_id: link.source.parentNode.site_id,
+              address: link.source.address,
             },
             target: {
               site_name: link.target.parentNode.site_name,
-              address: link.target.address
-            }
+              site_id: link.target.parentNode.site_id,
+              address: link.target.address,
+            },
           },
-          messages: link.value
+          messages: link.value,
         });
       });
       const matrix = convert(self, values, converter);
@@ -218,7 +232,7 @@ let calcRate = function(values, last_values, snapshots) {
       ingress: value.ingress,
       egress: value.egress,
       address: value.address,
-      messages: Math.max(rate, MIN_CHORD_THRESHOLD)
+      messages: Math.max(rate, MIN_CHORD_THRESHOLD),
     });
   });
   return rateValues;

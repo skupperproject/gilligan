@@ -3,6 +3,7 @@ class Adapter {
   constructor(data) {
     this.data = data;
     this.instance = ++INSTANCE;
+    this.decorateSiteNames();
     this.fixTargets();
     this.normalizeServices();
     this.removeEmptyServices();
@@ -17,6 +18,21 @@ class Adapter {
     //console.log(this.data);
   }
 
+  // if multiple sites have the same name,
+  // append (#) to the site names
+  decorateSiteNames = () => {
+    this.data.sites.forEach((site, i) => {
+      const sameNames = this.data.sites.filter(
+        (s) => s.name === site.name && !site.nameDecorated
+      );
+      if (sameNames.length > 1) {
+        sameNames.forEach((s, i) => {
+          s.nameDecorated = true;
+          s.site_name = `${s.site_name} (${i + 1})`;
+        });
+      }
+    });
+  };
   sortSites = () => {
     this.data.sites.sort((a, b) =>
       a.site_name < b.site_name ? -1 : a.site_name > b.site_name ? 1 : 0
@@ -472,6 +488,7 @@ class Adapter {
     const matrix = [];
     if (!stat) stat = "bytes_out";
     this.data.services.forEach((service) => {
+      //if (service.connections_egress)
       service.requests_received.forEach((request) => {
         const from_site_id = request.site_id;
         for (const client_id in request.by_client) {
@@ -481,6 +498,18 @@ class Adapter {
               ingress: this.siteNameFromId(from_site_id),
               egress: this.siteNameFromId(to_site_id),
               address: service.address,
+              info: {
+                source: {
+                  site_name: this.siteNameFromId(from_site_id),
+                  site_id: from_site_id,
+                  address: service.address,
+                },
+                target: {
+                  site_name: this.siteNameFromId(to_site_id),
+                  site_id: to_site_id,
+                  address: service.address,
+                },
+              },
               messages: from_client_request.by_handling_site[to_site_id][stat],
               request: from_client_request.by_handling_site[to_site_id],
             });
@@ -496,6 +525,7 @@ class Adapter {
     if (!stat) stat = "bytes_out";
     this.data.services.forEach((service) => {
       service.requests_received.forEach((request) => {
+        const from_site_id = request.site_id;
         for (const from_client in request.by_client) {
           const from_client_req = request.by_client[from_client];
           for (const to_site_id in from_client_req.by_handling_site) {
@@ -503,6 +533,16 @@ class Adapter {
               ingress: this.serviceNameFromClientId(from_client),
               egress: service.address,
               address: this.siteNameFromId(to_site_id),
+              info: {
+                source: {
+                  site_name: this.siteNameFromId(from_site_id),
+                  site_id: from_site_id,
+                },
+                target: {
+                  site_name: this.siteNameFromId(to_site_id),
+                  site_id: to_site_id,
+                },
+              },
               messages: from_client_req.by_handling_site[to_site_id][stat],
             });
           }
