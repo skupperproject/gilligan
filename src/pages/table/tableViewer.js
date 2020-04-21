@@ -29,7 +29,7 @@ import {
 import { Button, Pagination } from "@patternfly/react-core";
 import { Redirect } from "react-router-dom";
 import TableToolbar from "./tableToolbar";
-import { viewsMap as VIEWS } from "./views";
+import { viewsMap as VIEWS } from "../topology/views/views";
 
 class TableViewer extends React.Component {
   constructor(props) {

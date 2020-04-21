@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import { pretty } from "../utilities";
+import { pretty } from "../../utilities";
 
 class LinkInfo extends React.Component {
   constructor(props) {
@@ -44,7 +44,7 @@ class LinkInfo extends React.Component {
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
-          second: "numeric"
+          second: "numeric",
         };
         val = new Date(value).toLocaleDateString("en-US", options);
       } else if (typeof value === "object") {
@@ -54,7 +54,7 @@ class LinkInfo extends React.Component {
       }
       return val;
     };
-    const getProtocol = title => {
+    const getProtocol = (title) => {
       if (this.props.linkInfo.target.protocol) {
         return title ? "Protocol" : this.props.linkInfo.target.protocol;
       }
@@ -80,7 +80,7 @@ class LinkInfo extends React.Component {
               <td>{getProtocol(true)}</td>
               <td>{getProtocol()}</td>
             </tr>
-            {Object.keys(this.props.linkInfo.request).map(k => {
+            {Object.keys(this.props.linkInfo.request).map((k) => {
               if (k !== "by_handling_site") {
                 let val = obj2Str(k, this.props.linkInfo.request[k]);
                 return (

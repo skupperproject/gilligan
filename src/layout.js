@@ -45,12 +45,12 @@ import {
 import accessibleStyles from "@patternfly/patternfly/utilities/Accessibility/accessibility.css";
 import { css } from "@patternfly/react-styles";
 import { BellIcon } from "@patternfly/react-icons";
-import ConnectPage from "./connectPage";
-import TopologyPage from "./topology/topologyPage";
-import TablePage from "./table/tablePage";
-import ListPage from "./listPage";
+import ConnectPage from "./pages/connect/connectPage";
+import TopologyPage from "./pages/topology/topologyPage";
+import TablePage from "./pages/table/tablePage";
+import ListPage from "./pages/list/listPage";
 import { QDRService } from "./qdrService";
-import ConnectForm from "./connect-form";
+import ConnectForm from "./pages/connect/connect-form";
 import { getSaved, setSaved } from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");

@@ -1506,7 +1506,7 @@ circle.end-point {
   padding-left: 1.3em;
 }
 .graph-toolbar .traffic-group:not(:first-child) {
-  margin-left: 15em;
+  margin-left: 12em;
 }
 .graph-toolbar .router-links {
   position: absolute;

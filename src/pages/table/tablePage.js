@@ -28,47 +28,26 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
-import TopologyViewer from "./topologyViewer";
-import { Icap } from "../utilities";
-import LastUpdated from "../lastUpdated";
+import { Icap } from "../../utilities";
+import LastUpdated from "../../lastUpdated";
+import TableViewer from "./tableViewer";
 
-class TopologyPage extends Component {
+class TablePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isDropDownOpen: false,
-      options: {
-        graph: {
-          traffic: false,
-          utilization: false,
-        },
-        link: { stat: "bytes_out" },
-      },
     };
   }
-
-  handleChangeView = (viewType) => {
-    this.props.handleChangeViewType(viewType);
-    //this.setState({ viewType });
-  };
-
-  handleChangeOption = (option) => {
-    const { options } = this.state;
-    options.link.stat = option;
-    this.setState({ options }, () => {
-      this.graphRef.restart();
-    });
-  };
 
   handleChangeLastUpdated = () => {
     this.updatedRef.update();
   };
 
   update = () => {
-    this.graphRef.update();
+    this.tableRef.update();
     this.handleChangeLastUpdated();
   };
-
   render() {
     return (
       <PageSection
@@ -93,27 +72,11 @@ class TopologyPage extends Component {
             </Split>
           </StackItem>
           <StackItem className="overview-table">
-            <TopologyViewer
-              ref={(el) => (this.graphRef = el)}
-              type={this.props.type}
+            <TableViewer
+              ref={(el) => (this.tableRef = el)}
               service={this.props.service}
               view={this.props.view}
-              location={this.props.location}
-              viewType={this.props.getViewType()}
-              options={this.state.options}
-              handleChangeView={this.handleChangeView}
-              handleChangeOption={this.handleChangeOption}
-              getShowStat={this.props.getShowStat}
-              getShowSankey={this.props.getShowSankey}
-              getShowWidth={this.props.getShowWidth}
-              getShowColor={this.props.getShowColor}
-              getViewType={this.props.getViewType}
-              handleChangeShowStat={this.props.handleChangeShowStat}
-              handleChangeSankey={this.props.handleChangeSankey}
-              handleChangeColor={this.props.handleChangeColor}
-              handleChangeWidth={this.props.handleChangeWidth}
-              handleChangeViewType={this.props.handleChangeViewType}
-              handleChangeLastUpdated={this.handleChangeLastUpdated}
+              handleAddNotification={() => {}}
             />
           </StackItem>
         </Stack>
@@ -122,4 +85,4 @@ class TopologyPage extends Component {
   }
 }
 
-export default TopologyPage;
+export default TablePage;

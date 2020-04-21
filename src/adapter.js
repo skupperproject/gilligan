@@ -5,7 +5,7 @@ class Adapter {
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
-    this.normalizeServices();
+    //this.normalizeServices();
     this.removeEmptyServices();
     this.addSendersServices();
     this.sortSites();
@@ -23,7 +23,7 @@ class Adapter {
   decorateSiteNames = () => {
     this.data.sites.forEach((site, i) => {
       const sameNames = this.data.sites.filter(
-        (s) => s.name === site.name && !site.nameDecorated
+        (s) => s.site_name === site.site_name && !s.nameDecorated
       );
       if (sameNames.length > 1) {
         sameNames.forEach((s, i) => {
@@ -119,7 +119,18 @@ class Adapter {
       }
     });
   };
+
   normalize = (tcpService) => {
+    /*
+    tcpService.requests_received = [];
+    tcpService.requests_handled = [];
+    tcpService.connections_egress.forEach((egress) => {
+      const atSite = egress.site_id;
+      egress.connections.forEach((connection) => {});
+    });
+    */
+  };
+  _normalize = (tcpService) => {
     tcpService.requests_received = [];
     tcpService.requests_handled = [];
     tcpService.connections_ingress.forEach((connection) => {
@@ -177,7 +188,7 @@ class Adapter {
     this.data.emptyHttpServices = [];
     for (let i = this.data.services.length - 1; i >= 0; i--) {
       const service = this.data.services[i];
-      if (service.requests_received.length === 0) {
+      if (service.requests_received && service.requests_received.length === 0) {
         this.data.emptyHttpServices.push(JSON.parse(JSON.stringify(service)));
         this.data.services.splice(i, 1);
       }
@@ -192,32 +203,34 @@ class Adapter {
   // in a site.
   addSendersServices = () => {
     this.data.services.forEach((service) => {
-      service.requests_received.forEach((request) => {
-        for (const clientKey in request.by_client) {
-          const clientName = this.serviceNameFromClientId(clientKey);
-          const found = this.data.services.find(
-            (s) => s.address === clientName
-          );
-          if (!found) {
-            // this is a new service. add it
-            this.data.services.unshift({
-              derived: true,
-              address: clientName,
-              protocol: service.protocol,
-              requests_received: [],
-              requests_handled: [],
-              targets: [{ name: clientKey, site_id: request.site_id }],
-            });
-          } else if (found.derived) {
-            if (!found.targets.some((t) => t.name === clientKey)) {
-              found.targets.push({
-                name: clientKey,
-                site_id: request.site_id,
+      if (service.requests_received) {
+        service.requests_received.forEach((request) => {
+          for (const clientKey in request.by_client) {
+            const clientName = this.serviceNameFromClientId(clientKey);
+            const found = this.data.services.find(
+              (s) => s.address === clientName
+            );
+            if (!found) {
+              // this is a new service. add it
+              this.data.services.unshift({
+                derived: true,
+                address: clientName,
+                protocol: service.protocol,
+                requests_received: [],
+                requests_handled: [],
+                targets: [{ name: clientKey, site_id: request.site_id }],
               });
+            } else if (found.derived) {
+              if (!found.targets.some((t) => t.name === clientKey)) {
+                found.targets.push({
+                  name: clientKey,
+                  site_id: request.site_id,
+                });
+              }
             }
           }
-        }
-      });
+        });
+      }
     });
   };
 
@@ -259,6 +272,28 @@ class Adapter {
     });
   };
 
+  findCallingServices = (service) => {
+    let serviceAddresses = [];
+    if (service.requests_received) {
+      serviceAddresses = this.servicesFromRequests(service.requests_received);
+    } else if (service.connections_egress) {
+      service.connections_egress.forEach((egress) => {
+        for (let connectionID in egress.connections) {
+          service.connections_ingress.forEach((ingress) => {
+            const ingressConnection = ingress.connections[connectionID];
+            if (ingressConnection) {
+              const client = ingressConnection.client;
+              const sourceService = this.serviceNameFromClientId(client);
+              if (sourceService) {
+                serviceAddresses.push(sourceService);
+              }
+            }
+          });
+        }
+      });
+    }
+    return [...new Set(serviceAddresses)];
+  };
   // add source and target list for each service
   addSourcesTargets = () => {
     this.data.services.forEach((service) => {
@@ -269,9 +304,7 @@ class Adapter {
         service.targetServices = [];
       }
       // find all services that call this service
-      const sourcesAddresses = this.servicesFromRequests(
-        service.requests_received
-      );
+      const sourcesAddresses = this.findCallingServices(service);
       // add a referece to the sources and targets
       sourcesAddresses.forEach((sourceAddress) => {
         const source = this.data.services.find(
@@ -316,26 +349,55 @@ class Adapter {
   // return a list of service names in a requests list
   servicesFromRequests = (requests) => {
     let serviceList = [];
-    requests.forEach((request) => {
-      const names = Object.keys(request.by_client).map((key) =>
-        this.serviceNameFromClientId(key)
-      );
-      serviceList.push(...names);
-    });
+    if (requests) {
+      requests.forEach((request) => {
+        const names = Object.keys(request.by_client).map((key) =>
+          this.serviceNameFromClientId(key)
+        );
+        serviceList.push(...names);
+      });
+    }
     return serviceList;
   };
 
   // return a request record for traffic between source and target services
   linkRequest = (sourceAddress, target) => {
     let req = {};
-    if (!target) debugger;
-    target.requests_received.forEach((request) => {
-      for (const client_id in request.by_client) {
-        if (this.serviceNameFromClientId(client_id) === sourceAddress) {
-          this.aggregateAttributes(request.by_client[client_id], req);
+    if (target.requests_received) {
+      target.requests_received.forEach((request) => {
+        for (const client_id in request.by_client) {
+          if (this.serviceNameFromClientId(client_id) === sourceAddress) {
+            this.aggregateAttributes(request.by_client[client_id], req);
+          }
         }
-      }
-    });
+      });
+    } else {
+      target.connections_egress.forEach((egress) => {
+        for (let connectionID in egress.connections) {
+          for (let i = 0; i < target.connections_ingress.length; i++) {
+            const ingress = target.connections_ingress[i];
+            const ingressConnection = ingress.connections[connectionID];
+            if (ingressConnection) {
+              const client = ingressConnection.client;
+              const sourceService = this.serviceNameFromClientId(client);
+              if (sourceService) {
+                if (sourceService === sourceAddress) {
+                  const match = egress.connections[connectionID];
+                  if (req.start_time) {
+                    req.bytes_out += match.bytes_out;
+                    req.bytes_in += match.bytes_in;
+                  } else {
+                    req = JSON.parse(
+                      JSON.stringify(egress.connections[connectionID])
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    }
     if (req.start_time) {
       const o = req.bytes_out;
       req.bytes_out = req.bytes_in;
@@ -397,6 +459,8 @@ class Adapter {
   findSite = (site_id) => this.data.sites.find((s) => s.site_id === site_id);
   findInTargets = (service) =>
     service.targets.find((t) => t.name === service.address);
+
+  // get a list of sites the given service is resident in
   getServiceSites = (service) => {
     const sites = [];
     // for tcp services
@@ -488,34 +552,37 @@ class Adapter {
     const matrix = [];
     if (!stat) stat = "bytes_out";
     this.data.services.forEach((service) => {
-      //if (service.connections_egress)
-      service.requests_received.forEach((request) => {
-        const from_site_id = request.site_id;
-        for (const client_id in request.by_client) {
-          const from_client_request = request.by_client[client_id];
-          for (const to_site_id in from_client_request.by_handling_site) {
-            matrix.push({
-              ingress: this.siteNameFromId(from_site_id),
-              egress: this.siteNameFromId(to_site_id),
-              address: service.address,
-              info: {
-                source: {
-                  site_name: this.siteNameFromId(from_site_id),
-                  site_id: from_site_id,
-                  address: service.address,
+      if (service.connections_egress) {
+      } else {
+        service.requests_received.forEach((request) => {
+          const from_site_id = request.site_id;
+          for (const client_id in request.by_client) {
+            const from_client_request = request.by_client[client_id];
+            for (const to_site_id in from_client_request.by_handling_site) {
+              matrix.push({
+                ingress: this.siteNameFromId(from_site_id),
+                egress: this.siteNameFromId(to_site_id),
+                address: service.address,
+                info: {
+                  source: {
+                    site_name: this.siteNameFromId(from_site_id),
+                    site_id: from_site_id,
+                    address: service.address,
+                  },
+                  target: {
+                    site_name: this.siteNameFromId(to_site_id),
+                    site_id: to_site_id,
+                    address: service.address,
+                  },
                 },
-                target: {
-                  site_name: this.siteNameFromId(to_site_id),
-                  site_id: to_site_id,
-                  address: service.address,
-                },
-              },
-              messages: from_client_request.by_handling_site[to_site_id][stat],
-              request: from_client_request.by_handling_site[to_site_id],
-            });
+                messages:
+                  from_client_request.by_handling_site[to_site_id][stat],
+                request: from_client_request.by_handling_site[to_site_id],
+              });
+            }
           }
-        }
-      });
+        });
+      }
     });
     return matrix;
   };
@@ -524,30 +591,32 @@ class Adapter {
     const matrix = [];
     if (!stat) stat = "bytes_out";
     this.data.services.forEach((service) => {
-      service.requests_received.forEach((request) => {
-        const from_site_id = request.site_id;
-        for (const from_client in request.by_client) {
-          const from_client_req = request.by_client[from_client];
-          for (const to_site_id in from_client_req.by_handling_site) {
-            matrix.push({
-              ingress: this.serviceNameFromClientId(from_client),
-              egress: service.address,
-              address: this.siteNameFromId(to_site_id),
-              info: {
-                source: {
-                  site_name: this.siteNameFromId(from_site_id),
-                  site_id: from_site_id,
+      if (service.requests_received) {
+        service.requests_received.forEach((request) => {
+          const from_site_id = request.site_id;
+          for (const from_client in request.by_client) {
+            const from_client_req = request.by_client[from_client];
+            for (const to_site_id in from_client_req.by_handling_site) {
+              matrix.push({
+                ingress: this.serviceNameFromClientId(from_client),
+                egress: service.address,
+                address: this.siteNameFromId(to_site_id),
+                info: {
+                  source: {
+                    site_name: this.siteNameFromId(from_site_id),
+                    site_id: from_site_id,
+                  },
+                  target: {
+                    site_name: this.siteNameFromId(to_site_id),
+                    site_id: to_site_id,
+                  },
                 },
-                target: {
-                  site_name: this.siteNameFromId(to_site_id),
-                  site_id: to_site_id,
-                },
-              },
-              messages: from_client_req.by_handling_site[to_site_id][stat],
-            });
+                messages: from_client_req.by_handling_site[to_site_id][stat],
+              });
+            }
           }
-        }
-      });
+        });
+      }
     });
     return matrix;
   };
@@ -557,21 +626,23 @@ class Adapter {
     if (!stat) stat = "bytes_out";
     let value = null;
     this.data.services.forEach((service) => {
-      service.requests_received.forEach((request) => {
-        if (request.site_id === from.site_id) {
-          for (let client_id in request.by_client) {
-            const client_request = request.by_client[client_id];
-            for (let handling_site_id in client_request.by_handling_site) {
-              if (handling_site_id === to.site_id) {
-                const handling_request =
-                  client_request.by_handling_site[handling_site_id];
-                if (!value) value = 0;
-                value += handling_request[stat];
+      if (service.requests_received) {
+        service.requests_received.forEach((request) => {
+          if (request.site_id === from.site_id) {
+            for (let client_id in request.by_client) {
+              const client_request = request.by_client[client_id];
+              for (let handling_site_id in client_request.by_handling_site) {
+                if (handling_site_id === to.site_id) {
+                  const handling_request =
+                    client_request.by_handling_site[handling_site_id];
+                  if (!value) value = 0;
+                  value += handling_request[stat];
+                }
               }
             }
           }
-        }
-      });
+        });
+      }
     });
     return value;
   };
@@ -580,17 +651,19 @@ class Adapter {
     if (!stat) stat = "bytes_out";
     const toService = this.data.services.find((s) => s.address === to_name);
     if (toService) {
-      const request = toService.requests_received.find(
-        (r) => r.site_id === from_site_id
-      );
-      if (request) {
-        for (let clientKey in request.by_client) {
-          const address = this.serviceNameFromClientId(clientKey);
-          if (from_name === address) {
-            const client_request = request.by_client[clientKey];
-            const from_request = client_request.by_handling_site[to_site_id];
-            if (from_request) {
-              return { stat: from_request[stat], request: from_request };
+      if (toService.requests_received) {
+        const request = toService.requests_received.find(
+          (r) => r.site_id === from_site_id
+        );
+        if (request) {
+          for (let clientKey in request.by_client) {
+            const address = this.serviceNameFromClientId(clientKey);
+            if (from_name === address) {
+              const client_request = request.by_client[clientKey];
+              const from_request = client_request.by_handling_site[to_site_id];
+              if (from_request) {
+                return { stat: from_request[stat], request: from_request };
+              }
             }
           }
         }
@@ -600,6 +673,7 @@ class Adapter {
   };
 
   serviceNames = () => this.data.services.map((s) => s.address);
+
   requestSum = (req) => {
     let sum = 0;
     for (let server in req.by_server) {
@@ -607,52 +681,17 @@ class Adapter {
     }
     return sum;
   };
+  requestSums = (service, key) => {
+    const sums = [];
+    if (service[key]) {
+      service[key].forEach((request) => {
+        sums.push({
+          site_name: this.siteNameFromId(request.site_id),
+          sum: this.requestSum(request),
+        });
+      });
+    }
+    return sums;
+  };
 }
-
-/*
-"connections_ingress": [
-        {
-          "site_id": "public1ID",
-          "connections": {
-            "10.129.2.5:48236@public1ID": {
-              "id": "10.129.2.5:48236@public1ID",
-              "start_time": 1583964005238,
-              "bytes_in": 42,
-              "bytes_out": 18,
-              "client": "frontend-5d68fd5b7d-r7njx",
-              "last_in": 1583964005291,
-              "last_out": 1583964005290
-            }
-          }
-        }
-      ],
-
-"requests_received": [
-        {
-          "site_id": "public2ID",
-          "by_client": {
-            "reviews-v3-6b6458969c-c4hp7": {
-              "bytes_out": 1,
-              "bytes_in": 0,
-              "bytes_out": 48,
-              "details": {
-                "GET:200": 1
-              },
-              "latency_max": 33,
-              "by_handling_site": {
-                "public1ID": {
-                  "bytes_out": 1,
-                  "bytes_in": 0,
-                  "bytes_out": 48,
-                  "details": {
-                    "GET:200": 1
-                  },
-                  "latency_max": 33
-                }
-              }
-            }
-          }
-        }
-      ],      
-*/
 export default Adapter;

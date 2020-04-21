@@ -30,11 +30,11 @@ import {
   StackItem,
   Text,
   TextContent,
-  TextVariants
+  TextVariants,
 } from "@patternfly/react-core";
-import CardHealth from "./cardHealth";
+import CardHealth from "../../cardHealth";
 import ListToolbar from "./listToolbar";
-import { safePlural, Icap, strDate } from "./utilities";
+import { safePlural, Icap, strDate } from "../../utilities";
 
 // make sure you've installed @patternfly/patternfly
 class ListPage extends React.Component {
@@ -43,89 +43,84 @@ class ListPage extends React.Component {
     this.state = {
       cardSize: "compact",
       cardShow: "all",
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
     this.cardAttributes = {
       cluster: {
         compact: ["namespace"],
-        expanded: ["url", "edge"]
+        expanded: ["url", "edge"],
       },
       service: {
         compact: [
           "protocol",
-          { title: this.getDeployedTitle, getFn: this.getSites }
+          { title: this.getDeployedTitle, getFn: this.getSites },
         ],
-        expanded: [{ title: this.getRequestTitle, getFn: this.getRequests }]
-      }
+        expanded: [{ title: this.getRequestTitle, getFn: this.getRequests }],
+      },
     };
   }
 
-  subNodes = cluster => cluster.services.length;
+  subNodes = (cluster) => cluster.services.length;
 
-  siteList = service =>
+  siteList = (service) =>
     Array.from(
       new Set(
         service.targets.map(
-          site =>
+          (site) =>
             this.props.service.VAN.sites.find(
-              VANSite => VANSite.site_id === site.site_id
+              (VANSite) => VANSite.site_id === site.site_id
             ).site_name
         )
       )
     );
 
-  getSites = service => this.siteList(service).join(", ");
+  getSites = (service) => this.siteList(service).join(", ");
 
-  getRequestTitle = service => {
+  getRequestTitle = (service) => {
     return service.requests_sent
       ? "Sites originating requests"
       : "Sites handling requests";
   };
 
-  getDeployedTitle = service => {
+  getDeployedTitle = (service) => {
     const siteCount = this.siteList(service).length;
     return safePlural(siteCount, "Deployed at site");
   };
 
-  getRequests = service => {
+  getRequests = (service) => {
     if (service.requests_sent) {
       return this.getRequestsSent(service);
     }
     return this.getRequestsHandled(service);
   };
-
-  getRequestsHandled = service => {
-    const handled = [];
-    service.requests_handled.forEach(request => {
-      handled.push(
-        <div className="card-request">
-          <span className="card-request-site">
-            {this.props.service.adapter.siteNameFromId(request.site_id)}
-          </span>
-          <span className="card-request-requests">{request.requests}</span>
-        </div>
-      );
-    });
-    return handled;
+  getRequestsHandled = (service) => {
+    const requestSums = this.props.service.adapter.requestSums(
+      service,
+      "requests_handled"
+    );
+    return requestSums.map((rs, i) => (
+      <div className="card-request" key={`req-${i}`}>
+        <span className="card-request-site">{rs.site_name}</span>
+        <span className="card-request-requests">{rs.sum}</span>
+      </div>
+    ));
   };
-  getRequestsSent = service => {
-    const handled = [];
-    service.requests_sent.forEach(request => {
-      handled.push(
-        <div className="card-request">
-          <span className="card-request-site">
-            {this.props.service.adapter.siteNameFromId(request.site_id)}
-          </span>
-          <span className="card-request-requests">{`(${request.requests})`}</span>
-        </div>
-      );
-    });
-    return handled;
+  getRequestsSent = (service) => {
+    const requestSums = this.props.service.adapter.requestSums(
+      service,
+      "requests_sent"
+    );
+    return requestSums.map((rs, i) => (
+      <div className="card-request" key={`req-${i}`}>
+        <span className="card-request-site">{rs.site_name}</span>
+        <span className="card-request-requests">{rs.sum}</span>
+      </div>
+    ));
   };
-  handleChangeSize = event => {
+  handleChangeSize = (event) => {
     this.setState({ cardSize: event.target.id });
   };
-  handleChangeShow = event => {
+  handleChangeShow = (event) => {
     this.setState({ cardShow: event.target.id });
   };
 
@@ -151,28 +146,28 @@ class ListPage extends React.Component {
     );
   };
 
-  siteBodies = cluster => {
+  siteBodies = (cluster) => {
     const expanded = this.state.cardSize === "expanded";
-    let bodies = this.cardAttributes.cluster.compact.map(attr => (
+    let bodies = this.cardAttributes.cluster.compact.map((attr) => (
       <CardBody key={attr}>{this.bodyLine(expanded, attr, cluster)}</CardBody>
     ));
     if (expanded) {
       bodies = [
         ...bodies,
-        ...this.cardAttributes.cluster.expanded.map(attr => (
+        ...this.cardAttributes.cluster.expanded.map((attr) => (
           <CardBody key={attr}>
             {this.bodyLine(expanded, attr, cluster)}
           </CardBody>
-        ))
+        )),
       ];
     }
 
     return bodies;
   };
 
-  serviceBodies = service => {
+  serviceBodies = (service) => {
     const expanded = this.state.cardSize === "expanded";
-    let bodies = this.cardAttributes.service.compact.map(attr => {
+    let bodies = this.cardAttributes.service.compact.map((attr) => {
       return (
         <CardBody key={typeof attr === "string" ? attr : attr.title}>
           {this.bodyLine(expanded, attr, service)}
@@ -182,11 +177,11 @@ class ListPage extends React.Component {
     if (expanded) {
       bodies = [
         ...bodies,
-        ...this.cardAttributes.service.expanded.map(attr => (
+        ...this.cardAttributes.service.expanded.map((attr) => (
           <CardBody key={attr}>
             {this.bodyLine(expanded, attr, service)}
           </CardBody>
-        ))
+        )),
       ];
     }
 

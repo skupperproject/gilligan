@@ -25,7 +25,6 @@ import {
   linkColor,
   initSankey,
   serviceColor,
-  Sankey,
   setLinkStat,
   statId,
   updateSankey,
@@ -37,7 +36,7 @@ import {
   setSaved,
   reconcileArrays,
   reconcileLinks,
-} from "../../utilities";
+} from "../../../utilities";
 import { interpolatePath } from "d3-interpolate-path";
 import { Node, Nodes } from "../nodes.js";
 import { Links } from "../links.js";
@@ -101,24 +100,9 @@ export class Service {
         includeDuplicate ||
         !serviceNodes.nodes.some((n) => n.name === service.address)
       ) {
-        if (this.adapter.getServiceSites(service).length === 0) {
-          debugger;
-        }
         // get the sites in which this service is deployed
         let serviceSites = this.adapter.getServiceSites(service);
-        if (serviceSites.length === 0) {
-          serviceSites = [
-            this.adapter.data.sites.find((site) =>
-              site.services.includes(service)
-            ),
-          ];
-        }
         serviceSites.forEach((site) => {
-          if (!site) {
-            console.log(serviceSites);
-            debugger;
-            this.adapter.getServiceSites(service);
-          }
           const subNode = new Node({
             name: service.address,
             nodeType: "service",
@@ -169,9 +153,8 @@ export class Service {
     });
   }
 
+  // initialize the service to service links for the service view
   initLinks = (serviceNodes, links, vsize) => {
-    // initialize the service to service links for the service view
-    // get the links between services for the service view
     serviceNodes.forEach((subNode, source) => {
       subNode.targetServices.forEach((targetService) => {
         const target = serviceNodes.findIndex(
@@ -244,7 +227,8 @@ export class Service {
     });
 
     // regen the link.paths
-    Sankey().update({ nodes: serviceNodes, links: links.links });
+    updateSankey({ nodes: serviceNodes, links: links.links });
+    //Sankey().update({ nodes: serviceNodes, links: links.links });
     return newSize;
   };
   uid = (n) => `${n.cluster.site_id}-${n.name}`;

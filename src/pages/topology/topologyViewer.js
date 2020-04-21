@@ -27,14 +27,14 @@ import {
 import * as d3 from "d3";
 
 import { addDefs } from "./svgUtils.js";
-import { getSizes, positionPopup, getSaved, setSaved } from "../utilities";
+import { getSizes, positionPopup, getSaved, setSaved } from "../../utilities";
 import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
-import ChordViewer from "../chord/chordViewer.js";
-import SplitterBar from "../spliterBar";
-import ServiceCard from "../serviceCard";
+import ChordViewer from "./chord/chordViewer.js";
+import SplitterBar from "./spliterBar";
+import ServiceCard from "../../serviceCard";
 import LinkInfo from "./linkInfo";
-import { viewsMap as VIEWS } from "../views";
+import { viewsMap as VIEWS } from "./views/views";
 const SPLITTER_POSITION = "split";
 const SPLITTER_LEFT = "div.pf-topology-content";
 const SPLITTER_RIGHT = "div.pf-topology-side-bar";

@@ -22,11 +22,11 @@ import {
   Accordion,
   AccordionItem,
   AccordionContent,
-  AccordionToggle
+  AccordionToggle,
 } from "@patternfly/react-core";
 import OptionsComponent from "./optionsComponent";
 import RoutersComponent from "./routersComponent";
-import AddressesComponent from "../addressesComponent";
+import AddressesComponent from "../../../addressesComponent";
 
 class LegendComponent extends Component {
   constructor(props) {
@@ -35,7 +35,7 @@ class LegendComponent extends Component {
   }
 
   render() {
-    const toggle = id => {
+    const toggle = (id) => {
       const idOpen = this.props[`${id}Open`];
       this.props.handleOpenChange(id, !idOpen);
     };

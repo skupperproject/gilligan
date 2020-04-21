@@ -17,9 +17,9 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import { Site } from "./topology/views/site";
-import { Service } from "./topology/views/service";
-import { Deployment } from "./topology/views/deployment";
+import { Site } from "./site";
+import { Service } from "./service";
+import { Deployment } from "./deployment";
 
 export const viewsMap = {
   site: Site,

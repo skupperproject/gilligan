@@ -33,29 +33,29 @@ class ServiceCard extends React.Component {
         expanded: [
           "url",
           "edge",
-          { title: this.getDeploymentTitle, getFn: this.getDeployments }
-        ]
+          { title: this.getDeploymentTitle, getFn: this.getDeployments },
+        ],
       },
       service: {
         compact: [
           "protocol",
-          { title: this.getDeployedTitle, getFn: this.getSites }
+          { title: this.getDeployedTitle, getFn: this.getSites },
         ],
-        expanded: [{ title: this.getRequestTitle, getFn: this.getRequests }]
-      }
+        expanded: [{ title: this.getRequestTitle, getFn: this.getRequests }],
+      },
     };
   }
-  subNodes = cluster => cluster.services.length;
+  subNodes = (cluster) => cluster.services.length;
 
-  getRequestTitle = service => {
+  getRequestTitle = (service) => {
     return service.requests_sent
       ? "Sites originating requests"
       : "Sites handling requests";
   };
-  getDeploymentTitle = site => {
+  getDeploymentTitle = (site) => {
     return `Deployed ${safePlural(this.subNodes(site), "service")}`;
   };
-  getDeployments = site => {
+  getDeployments = (site) => {
     const deployed = [];
     site.services.forEach((service, i) => {
       deployed.push(
@@ -66,55 +66,50 @@ class ServiceCard extends React.Component {
     });
     return deployed;
   };
-  getSites = service => this.siteList(service).join(", ");
-  siteList = service =>
+  getSites = (service) => this.siteList(service).join(", ");
+  siteList = (service) =>
     Array.from(
       new Set(
         service.targets.map(
-          site =>
+          (site) =>
             this.props.service.VAN.sites.find(
-              VANSite => VANSite.site_id === site.site_id
+              (VANSite) => VANSite.site_id === site.site_id
             ).site_name
         )
       )
     );
 
-  getRequests = service => {
+  getRequests = (service) => {
     if (service.requests_sent) {
       return this.getRequestsSent(service);
     }
     return this.getRequestsHandled(service);
   };
-  getRequestsHandled = service => {
-    const handled = [];
-    service.requests_handled.forEach((request, i) => {
-      const reqSum = this.props.service.adapter.requestSum(request);
-      handled.push(
-        <div className="card-request" key={`req-${i}`}>
-          <span className="card-request-site">
-            {this.props.service.adapter.siteNameFromId(request.site_id)}
-          </span>
-          <span className="card-request-requests">{reqSum}</span>
-        </div>
-      );
-    });
-    return handled;
+  getRequestsHandled = (service) => {
+    const requestSums = this.props.service.adapter.requestSums(
+      service,
+      "requests_handled"
+    );
+    return requestSums.map((rs, i) => (
+      <div className="card-request" key={`req-${i}`}>
+        <span className="card-request-site">{rs.site_name}</span>
+        <span className="card-request-requests">{rs.sum}</span>
+      </div>
+    ));
   };
-  getRequestsSent = service => {
-    const handled = [];
-    service.requests_sent.forEach((request, i) => {
-      handled.push(
-        <div className="card-request" key={`req-sent-${i}`}>
-          <span className="card-request-site">
-            {this.props.service.adapter.siteNameFromId(request.site_id)}
-          </span>
-          <span className="card-request-requests">{`(${request.requests})`}</span>
-        </div>
-      );
-    });
-    return handled;
+  getRequestsSent = (service) => {
+    const requestSums = this.props.service.adapter.requestSums(
+      service,
+      "requests_sent"
+    );
+    return requestSums.map((rs, i) => (
+      <div className="card-request" key={`req-${i}`}>
+        <span className="card-request-site">{rs.site_name}</span>
+        <span className="card-request-requests">{rs.sum}</span>
+      </div>
+    ));
   };
-  getDeployedTitle = service => {
+  getDeployedTitle = (service) => {
     const siteCount = this.siteList(service).length;
     return safePlural(siteCount, "Deployed at site");
   };
@@ -139,7 +134,7 @@ class ServiceCard extends React.Component {
       </div>
     );
   };
-  serviceBodies = service => {
+  serviceBodies = (service) => {
     const expanded = this.props.cardSize === "expanded";
     if (service.address) {
       let bodies = this.cardAttributes.service.compact.map((attr, i) => {
@@ -158,14 +153,14 @@ class ServiceCard extends React.Component {
             <CardBody key={`expanded-${attr}-${i}`}>
               {this.bodyLine(expanded, attr, service)}
             </CardBody>
-          ))
+          )),
         ];
       }
 
       return bodies;
     }
   };
-  siteServices = site =>
+  siteServices = (site) =>
     site.site_id && (
       <CardBody>
         <div className="body-line">
@@ -189,7 +184,7 @@ class ServiceCard extends React.Component {
       </CardBody>
     );
 
-  siteBodies = cluster => {
+  siteBodies = (cluster) => {
     const expanded = this.props.cardSize === "expanded";
     if (cluster.site_id) {
       let bodies = this.cardAttributes.cluster.compact.map((attr, i) => (
@@ -200,11 +195,11 @@ class ServiceCard extends React.Component {
       if (expanded) {
         bodies = [
           ...bodies,
-          ...this.cardAttributes.cluster.expanded.map(attr => (
+          ...this.cardAttributes.cluster.expanded.map((attr) => (
             <CardBody key={attr}>
               {this.bodyLine(expanded, attr, cluster)}
             </CardBody>
-          ))
+          )),
         ];
       }
 

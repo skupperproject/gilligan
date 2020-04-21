@@ -21,7 +21,6 @@ import * as d3 from "d3";
 import * as d3path from "d3-path";
 //import { sankey } from "d3-sankey";
 import { sankeyCircular as sankey } from "d3-sankey-circular";
-export const Sankey = sankey;
 const SankeyAttributes = [
   "value",
   "depth",
@@ -459,22 +458,21 @@ export const genPath = ({
   reverse,
   offsetY,
   selection,
-  _bezier,
+  site,
 }) => {
-  const bezier = false;
   if (!width) width = link.width;
   if (!offsetY) offsetY = 0;
-  if (mask) return genMask(link, key, mask, width, selection, bezier);
-  if (link.circular && !bezier)
-    return circular(link, key, sankey, width, reverse, offsetY);
+  if (mask) return genMask(link, key, mask, width, selection);
+  if (link.circular)
+    return circular(link, key, sankey, width, reverse, offsetY, site);
   return bezierPath(link, key, sankey, width, reverse, offsetY);
 };
 
 const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
 // construct an arrow on the surface of the target circle
-// oriented along the bezier curve connecting the source and target circles
-const genMask = (link, key, mask, width, selection, bezier) => {
+// oriented along the path connecting the source and target circles
+const genMask = (link, key, mask, width, selection, site) => {
   let away = 5; // 1/2 the arrows base width
   let r = link.target.getWidth() / 2; // target circle radius
   let tc = {
@@ -483,7 +481,7 @@ const genMask = (link, key, mask, width, selection, bezier) => {
     y: link.target.y + r,
   };
   // create the path on which we will be placing the arrow
-  d3.select(selection).attr("d", (d) => genPath({ link, bezier }));
+  d3.select(selection).attr("d", (d) => genPath({ link, site }));
   const len = selection.getTotalLength(); // length of the path
   let intersect = len - r; // 1st guess at where the point of the arrow should be on the path
   let p1 = selection.getPointAtLength(intersect); // x,y position at that distance
@@ -562,11 +560,16 @@ const bezierPath = (link, key, sankey, width, reverse, offsetY) => {
 
 // create a complex path exiting source on the right
 // and curving around to enter the target on the left
-const circular = (link, key, sankey, width, reverse, offsetY) => {
+const circular = (link, key, sankey, width, reverse, offsetY, site) => {
   const minR = 10;
   const maxR = 80;
+  const gapSource = site ? link.source.r : 8;
+  const gapTarget = site ? link.target.r : 8;
+  const gapBottom = Math.max(
+    link.source.getHeight() / 2,
+    link.target.getHeight() / 2
+  );
   const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
-  const gap = 8;
   let sourceX = get(link.source, "x1", key); // right side of source
   if (link.source.expanded && link.source.nodeType === "cluster") {
     sourceX -= link.source.getWidth() / 2;
@@ -581,7 +584,10 @@ const circular = (link, key, sankey, width, reverse, offsetY) => {
   const targetY = link.target.expanded
     ? link.y1
     : get(link.target, "y0", key) + link.target.getHeight() / 2;
-  const bottomY = Math.max(sourceY + r + gap + r, targetY + r + gap + r);
+  const bottomY = Math.max(
+    sourceY + r + gapBottom + r,
+    targetY + r + gapBottom + r
+  );
   const offset = sankey ? width / 2 : 0;
   let sy = sourceY - offset - offsetY;
   let ty = targetY - offset - offsetY;
@@ -592,14 +598,26 @@ const circular = (link, key, sankey, width, reverse, offsetY) => {
 
   if (!reverse) {
     path.moveTo(sourceX, sy);
-    path.lineTo(sourceX + gap, sy);
-    path.arcTo(sourceX + gap + sr, sy, sourceX + gap + sr, sy + sr, sr);
-    path.lineTo(sourceX + gap + sr, by - sr);
-    path.arcTo(sourceX + gap + sr, by, sourceX + gap, by, sr);
-    path.lineTo(targetX - gap, by);
-    path.arcTo(targetX - gap - sr, by, targetX - gap - sr, by - sr, sr);
-    path.lineTo(targetX - gap - sr, ty + sr);
-    path.arcTo(targetX - gap - sr, ty, targetX - gap, ty, sr);
+    path.lineTo(sourceX + gapSource, sy);
+    path.arcTo(
+      sourceX + gapSource + sr,
+      sy,
+      sourceX + gapSource + sr,
+      sy + sr,
+      sr
+    );
+    path.lineTo(sourceX + gapSource + sr, by - sr);
+    path.arcTo(sourceX + gapSource + sr, by, sourceX + gapSource, by, sr);
+    path.lineTo(targetX - gapTarget, by);
+    path.arcTo(
+      targetX - gapTarget - sr,
+      by,
+      targetX - gapTarget - sr,
+      by - sr,
+      sr
+    );
+    path.lineTo(targetX - gapTarget - sr, ty + sr);
+    path.arcTo(targetX - gapTarget - sr, ty, targetX - gapTarget, ty, sr);
     path.lineTo(targetX, ty);
   }
   if (sankey || reverse) {
@@ -612,14 +630,26 @@ const circular = (link, key, sankey, width, reverse, offsetY) => {
     } else {
       path.moveTo(targetX, ty);
     }
-    path.lineTo(targetX - gap, ty);
-    path.arcTo(targetX - gap - sr, ty, targetX - gap - sr, ty + sr, sr);
-    path.lineTo(targetX - gap - sr, by - sr);
-    path.arcTo(targetX - gap - sr, by, targetX - gap, by, sr);
-    path.lineTo(sourceX + gap, by);
-    path.arcTo(sourceX + gap + sr, by, sourceX + gap + sr, by - sr, sr);
-    path.lineTo(sourceX + gap + sr, sy + sr);
-    path.arcTo(sourceX + gap + sr, sy, sourceX + gap, sy, sr);
+    path.lineTo(targetX - gapTarget, ty);
+    path.arcTo(
+      targetX - gapTarget - sr,
+      ty,
+      targetX - gapTarget - sr,
+      ty + sr,
+      sr
+    );
+    path.lineTo(targetX - gapTarget - sr, by - sr);
+    path.arcTo(targetX - gapTarget - sr, by, targetX - gapTarget, by, sr);
+    path.lineTo(sourceX + gapSource, by);
+    path.arcTo(
+      sourceX + gapSource + sr,
+      by,
+      sourceX + gapSource + sr,
+      by - sr,
+      sr
+    );
+    path.lineTo(sourceX + gapSource + sr, sy + sr);
+    path.arcTo(sourceX + gapSource + sr, sy, sourceX + gapSource, sy, sr);
     path.lineTo(sourceX, sy);
     if (!reverse) path.closePath();
   }

@@ -1,5 +1,5 @@
 import React from "react";
-import brandImg from "./assets/skupper.svg";
+import brandImg from "../../assets/skupper.svg";
 import { LoginPage, BackgroundImageSrc } from "@patternfly/react-core";
 
 import { withRouter } from "react-router-dom";
@@ -14,15 +14,15 @@ class ConnectPage extends React.Component {
       isValidUsername: true,
       passwordValue: "",
       isValidPassword: true,
-      isRememberMeChecked: false
+      isRememberMeChecked: false,
     };
 
-    this.onLoginButtonClick = event => {
+    this.onLoginButtonClick = (event) => {
       event.preventDefault();
       this.setState({ isValidUsername: !!this.state.usernameValue });
       this.setState({ isValidPassword: !!this.state.passwordValue });
       this.setState({
-        showHelperText: !this.state.usernameValue || !this.state.passwordValue
+        showHelperText: !this.state.usernameValue || !this.state.passwordValue,
       });
     };
   }
@@ -39,7 +39,7 @@ class ConnectPage extends React.Component {
       [BackgroundImageSrc.sm]: "./assets/skupper.svg",
       [BackgroundImageSrc.sm2x]: "./assets/skupper.svg",
       [BackgroundImageSrc.xs]: "./assets/skupper.svg",
-      [BackgroundImageSrc.xs2x]: "./assets/skupper.svg"
+      [BackgroundImageSrc.xs2x]: "./assets/skupper.svg",
     };
 
     return (

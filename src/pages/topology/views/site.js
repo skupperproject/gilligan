@@ -39,7 +39,7 @@ import {
   SiteRadius,
   reconcileArrays,
   reconcileLinks,
-} from "../../utilities";
+} from "../../../utilities";
 import { interpolatePath } from "d3-interpolate-path";
 
 import { Nodes } from "../nodes.js";
@@ -438,7 +438,7 @@ export class Site {
       .attr("class", "siteTrafficLink")
       .attr("fill", (d) => d.getColor())
       .attr("d", (d) => {
-        return genPath({ link: d, bezier: true });
+        return genPath({ link: d });
       });
 
     enter
@@ -575,7 +575,15 @@ export class Site {
     });
   };
 
+  genTraffic = (d, sankey) => genPath({ link: d, sankey: true, site: sankey });
+  genTrafficDir = (d, sankey) => genPath({ link: d, site: sankey });
+  genMask = (d, selection, sankey) =>
+    genPath({ link: d.link, mask: d.mask, selection, site: sankey });
+  genStatPath = (d, sankey) =>
+    genPath({ link: d, reverse: d.circular, offsetY: 4, site: sankey });
+
   drawViewPaths = (sankey) => {
+    const self = this;
     updateSankey({
       nodes: this.siteNodes.nodes,
       links: this.trafficLinks.links,
@@ -587,36 +595,24 @@ export class Site {
 
     this.trafficLinksSelection
       .selectAll("path.siteTrafficLink")
-      .attr("d", (d) => genPath({ link: d, sankey: true }));
+      .attr("d", (d) => this.genTraffic(d, sankey));
 
     this.trafficLinksSelection
       .selectAll("path.siteTrafficDir")
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("d", (d) => this.genTrafficDir(d, sankey));
 
     this.trafficLinksSelection
       .selectAll("path.hittarget")
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("d", (d) => this.genTrafficDir(d, sankey));
 
     d3.selectAll("path.mask").attr("d", function(d) {
-      return genPath({
-        link: d.link,
-        mask: d.mask,
-        selection: this,
-        bezier: true,
-      });
+      return self.genMask(d, this, sankey);
     });
 
     d3.select("defs.statPaths")
       .selectAll("path")
-      .attr("d", (d) =>
-        genPath({
-          link: d,
-          reverse: d.circular,
-          offsetY: 4,
-          bezier: true,
-        })
-      );
+      .attr("d", (d) => this.genStatPath(d, sankey));
   };
 
   setLinkStat = (sankey, props) => {
@@ -692,8 +688,9 @@ export class Site {
   };
 
   // show traffic as a single colored line
-  toSiteColor = (duration, setLinkStat) => {
+  toSiteColor = (duration) => {
     return new Promise((resolve) => {
+      const self = this;
       d3.select("g.siteTrafficLinks")
         .style("display", null)
         .transition()
@@ -743,7 +740,7 @@ export class Site {
       d3.selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", 6)
-        .attr("d", (d) => genPath({ link: d, bezier: true }));
+        .attr("d", (d) => this.genTrafficDir(d, false));
 
       d3.select("defs.statPaths")
         .selectAll("path")
@@ -751,12 +748,7 @@ export class Site {
         .duration(duration)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({
-            link: d,
-            reverse: d.circular,
-            offsetY: 4,
-            bezier: true,
-          });
+          const current = self.genStatPath(d, false);
           return interpolatePath(previous, current);
         });
 
@@ -769,7 +761,7 @@ export class Site {
         .attr("stroke", (d) => d.getColor())
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, bezier: true });
+          const current = self.genTrafficDir(d, false);
           return interpolatePath(previous, current);
         });
 
@@ -790,12 +782,7 @@ export class Site {
         .attr("fill", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({
-            link: d.link,
-            mask: d.mask,
-            selection: this,
-            bezier: true,
-          });
+          const current = self.genMask(d, this, false);
           return interpolatePath(previous, current);
         });
 
@@ -886,6 +873,7 @@ export class Site {
   // show traffic as wide lines
   toSiteSankey = (duration) => {
     return new Promise((resolve) => {
+      const self = this;
       d3.select("g.siteTrafficLinks")
         .style("display", null)
         .transition()
@@ -906,12 +894,7 @@ export class Site {
         .duration(duration)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({
-            link: d,
-            reverse: d.circular,
-            offsetY: 4,
-            bezier: true,
-          });
+          const current = self.genStatPath(d, true);
           return interpolatePath(previous, current);
         });
 
@@ -923,7 +906,7 @@ export class Site {
         .attr("stroke-width", 1)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, bezier: true });
+          const current = self.genTrafficDir(d, true);
           return interpolatePath(previous, current);
         });
 
@@ -941,14 +924,14 @@ export class Site {
         .attr("fill", (d) => d.target.color)
         .attrTween("d", function(d, i) {
           let previous = d3.select(this).attr("d");
-          const current = genPath({ link: d, sankey: true, bezier: true });
+          const current = self.genTraffic(d, true);
           return interpolatePath(previous, current);
         });
 
       d3.selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", (d) => Math.max(d.width, 6))
-        .attr("d", (d) => genPath({ link: d, bezier: true }));
+        .attr("d", (d) => this.genTrafficDir(d, true));
 
       d3.selectAll("path.mask")
         .attr("stroke-width", 0)
@@ -958,12 +941,7 @@ export class Site {
         .attr("fill", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({
-            link: d.link,
-            mask: d.mask,
-            selection: this,
-            bezier: true,
-          });
+          const current = self.genMask(d, this, true);
           return interpolatePath(previous, current);
         });
 

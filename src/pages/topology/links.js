@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import TooltipTable from "../tooltipTable";
+import TooltipTable from "./tooltipTable";
 
 var React = require("react");
 
@@ -44,7 +44,7 @@ export class Link {
     }`;
   }
   toolTip(event) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const rows = [];
       if (this.address)
         rows.push([
@@ -52,7 +52,7 @@ export class Link {
           `${this.target.name.toLowerCase()}/get${this.source.name.replace(
             " ",
             ""
-          )}`
+          )}`,
         ]);
       resolve(<TooltipTable rows={rows} />);
     });

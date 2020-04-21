@@ -25,12 +25,12 @@ import {
   positionPopup,
   siteColors,
   serviceColors,
-} from "../utilities";
+} from "../../../utilities";
 import { aggregateAddresses, separateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
 import { qdrRibbon } from "./ribbon/ribbon.js";
 import { qdrlayoutChord } from "./layout/layout.js";
-import QDRPopup from "../qdrPopup";
+import QDRPopup from "../../../qdrPopup";
 import * as d3 from "d3";
 import RoutersComponent from "./routersComponent";
 //import PieBreakdownComponent from "./pieComponent";
@@ -749,6 +749,12 @@ class ChordViewer extends Component {
               source: { startAngle: midStart, endAngle: midStart },
               target: { startAngle: midEnd, endAngle: midEnd },
             };
+          }
+          // d3.interpolate can't interpolate from undefined to an object
+          if (d.info && !old.info) {
+            old.info = {};
+          } else if (old.info && !d.info) {
+            d.info = {};
           }
           interpolate = d3.interpolate(old, d);
           return (t) => {

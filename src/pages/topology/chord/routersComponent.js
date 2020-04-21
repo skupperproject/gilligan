@@ -18,7 +18,7 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { shortName } from "../utilities";
+import { shortName } from "../../../utilities";
 
 class RoutersComponent extends Component {
   constructor(props) {

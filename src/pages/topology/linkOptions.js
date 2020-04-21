@@ -1,23 +1,23 @@
 import React from "react";
 import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
-import { Icap } from "../utilities";
+import { Icap } from "../../utilities";
 
 class LinkOptions extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       isOptionsOpen: false,
-      linkOptions: this.props.service.adapter.requestAttributes()
+      linkOptions: this.props.service.adapter.requestAttributes(),
     };
   }
 
-  onToggle = isOptionsOpen => {
+  onToggle = (isOptionsOpen) => {
     this.setState({
-      isOptionsOpen
+      isOptionsOpen,
     });
   };
-  onSelect = event => {
+  onSelect = (event) => {
     const which = event.target.text.toLowerCase();
     this.props.handleChangeOption(which);
     this.setState({ isOptionsOpen: !this.state.isOptionsOpen });

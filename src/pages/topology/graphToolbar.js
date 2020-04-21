@@ -58,7 +58,7 @@ class GraphToolbar extends Component {
       if (this.props.view === "site") {
         return (
           <Radio
-            label="Show router connections"
+            label="Show connections"
             isChecked={!this.props.getShowSankey()}
             onChange={this.handleChange}
             aria-label="router links"
