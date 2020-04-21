@@ -137,7 +137,6 @@ export class Deployment extends Service {
     siteNodes.nodes.forEach((site) => {
       const links = [];
       // services deployed in this site
-      console.log(site);
       const subServices = serviceNodes.nodes.filter(
         (sn) => sn.parentNode.site_id === site.site_id
       );

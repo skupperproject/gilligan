@@ -2,6 +2,8 @@ let INSTANCE = 0;
 class Adapter {
   constructor(data) {
     this.data = data;
+    console.log("original data");
+    console.log(JSON.parse(JSON.stringify(data)));
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
@@ -14,8 +16,8 @@ class Adapter {
     //this.adoptOrphanServices();
     this.addServersToSites();
     this.addSourcesTargets();
-    //console.log("finished parsing data");
-    //console.log(this.data);
+    console.log("finished parsing data");
+    console.log(this.data);
   }
 
   // if multiple sites have the same name,
@@ -199,6 +201,8 @@ class Adapter {
     return {};
   };
 
+  // used to add a derived service in the case where there are clients
+  // that don't receive messages / have no connections_egress
   newService = ({ address, protocol = "http", client, site_id }) => {
     const service = {
       derived: true,
@@ -238,15 +242,6 @@ class Adapter {
                   client: clientKey,
                   site_id: request.site_id,
                 })
-                /*
-                {
-                derived: true,
-                address: clientName,
-                protocol: service.protocol,
-                requests_received: [],
-                requests_handled: [],
-                targets: [{ name: clientKey, site_id: request.site_id }],
-                }*/
               );
             } else if (found.derived) {
               if (!found.targets.some((t) => t.name === clientKey)) {
@@ -488,9 +483,17 @@ class Adapter {
     return serviceName;
   };
 
+  //hello-world-frontend-759cdcf7f9-phcjq
   shortName = (name) => {
     const parts = name.split("-");
-    return parts.length > 2 ? `${parts[0]}-${parts[1]}` : name;
+    if (parts.length > 2) {
+      const len = parts.length;
+      if (parts[len - 1].length === 5 && parts[len - 2].length === 10) {
+        parts.splice(len - 2, 2);
+        return parts.join("-");
+      }
+    }
+    return name;
   };
 
   // is the address a valid ip address?

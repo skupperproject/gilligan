@@ -536,9 +536,14 @@ svg {
 }
 
 svg:not(.active):not(.ctrl) {
-  cursor: crosshair;
+  cursor: move;
 }
 
+path.hittarget,
+svg g.cluster,
+svg g.service-type {
+  cursor: pointer;
+}
 svg.address-svg {
   cursor: pointer;
 }
