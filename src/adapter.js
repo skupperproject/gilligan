@@ -188,6 +188,33 @@ class Adapter {
     }
   };
 
+  findClientInTargets = (client) => {
+    for (let i = 0; i < this.data.services.length; i++) {
+      const service = this.data.services[i];
+      const target = service.targets.find((t) => t.name === client);
+      if (target) {
+        return { service, target };
+      }
+    }
+    return {};
+  };
+
+  newService = ({ address, protocol = "http", client, site_id }) => {
+    const service = {
+      derived: true,
+      address,
+      protocol,
+      targets: [{ name: client, site_id }],
+    };
+    if (protocol === "http") {
+      service.requests_received = [];
+      service.requests_handled = [];
+    } else {
+      service.connections_ingress = [];
+      service.connections_egress = [];
+    }
+    return service;
+  };
   // add a service for each client that sends requests but
   // isn't in the service list.
   // The data structure only contains services that recieve requests.
@@ -205,14 +232,22 @@ class Adapter {
             );
             if (!found) {
               // this is a new service. add it
-              this.data.services.unshift({
+              this.data.services.unshift(
+                this.newService({
+                  address: clientName,
+                  client: clientKey,
+                  site_id: request.site_id,
+                })
+                /*
+                {
                 derived: true,
                 address: clientName,
                 protocol: service.protocol,
                 requests_received: [],
                 requests_handled: [],
                 targets: [{ name: clientKey, site_id: request.site_id }],
-              });
+                }*/
+              );
             } else if (found.derived) {
               if (!found.targets.some((t) => t.name === clientKey)) {
                 found.targets.push({
@@ -220,6 +255,24 @@ class Adapter {
                   site_id: request.site_id,
                 });
               }
+            }
+          }
+        });
+      } else {
+        service.connections_ingress.forEach((ingress) => {
+          for (let connectionID in ingress.connections) {
+            const client = ingress.connections[connectionID].client;
+            // look for client in a target section
+            const targetInfo = this.findClientInTargets(client);
+            if (!targetInfo.target) {
+              this.data.services.unshift(
+                this.newService({
+                  address: client,
+                  protocol: "tcp",
+                  client,
+                  site_id: ingress.site_id,
+                })
+              );
             }
           }
         });
@@ -666,7 +719,7 @@ class Adapter {
         }
       } else {
         // tcp service
-        const req = this.linkRequest(from_name, toService);
+        const req = this.linkRequest(from_name, toService, to_site_id);
         if (req && req.id) {
           return { stat: req[stat], request: req };
         }

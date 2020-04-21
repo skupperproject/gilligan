@@ -25,6 +25,7 @@ import {
   linkColor,
   initSankey,
   serviceColor,
+  removeServiceColor,
   setLinkStat,
   statId,
   updateSankey,
@@ -45,8 +46,8 @@ const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
 
 export class Service {
-  constructor(adapter) {
-    this.adapter = adapter;
+  constructor(data) {
+    this.data = data; // qdrService
     this.serviceNodes = new Nodes();
     this.serviceLinks = new Links();
     this.nodes = () => this.serviceNodes;
@@ -80,8 +81,7 @@ export class Service {
     return { nodeCount: this.serviceNodes.nodes.length, size };
   };
 
-  updateNodesAndLinks = (viewer, adapter) => {
-    this.adapter = adapter;
+  updateNodesAndLinks = (viewer) => {
     const newNodes = new Nodes();
     const newLinks = new Links();
     this.initNodes(newNodes, false);
@@ -94,14 +94,14 @@ export class Service {
   };
 
   initNodes(serviceNodes, includeDuplicate) {
-    this.adapter.data.services.forEach((service) => {
+    this.data.adapter.data.services.forEach((service) => {
       // if we haven't already added this service || or we want duplicates
       if (
         includeDuplicate ||
         !serviceNodes.nodes.some((n) => n.name === service.address)
       ) {
         // get the sites in which this service is deployed
-        let serviceSites = this.adapter.getServiceSites(service);
+        let serviceSites = this.data.adapter.getServiceSites(service);
         serviceSites.forEach((site) => {
           const subNode = new Node({
             name: service.address,
@@ -114,7 +114,7 @@ export class Service {
           subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
           subNode.color = serviceColor(subNode.name);
           subNode.cluster = site;
-          subNode.shortName = this.adapter.shortName(subNode.name);
+          subNode.shortName = this.data.adapter.shortName(subNode.name);
           if (includeDuplicate) {
             const original = serviceNodes.nodeFor(subNode.name);
             if (original) {
@@ -136,10 +136,10 @@ export class Service {
         subNode.mergeWith(service);
         subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
         subNode.color = serviceColor(subNode.name);
-        subNode.cluster = this.adapter.data.sites.find(site =>
+        subNode.cluster = this.data.adapter.data.sites.find(site =>
           site.services.includes(service)
         );
-        subNode.shortName = this.adapter.shortName(subNode.name);
+        subNode.shortName = this.data.adapter.shortName(subNode.name);
         if (includeDuplicate) {
           const original = serviceNodes.nodeFor(subNode.name);
           if (original) {
@@ -168,7 +168,7 @@ export class Service {
           `Link-${source}-${target}`
         );
         const link = links.links[Math.abs(linkIndex)];
-        link.request = this.adapter.linkRequest(
+        link.request = this.data.adapter.linkRequest(
           subNode.address,
           serviceNodes[target]
         );
@@ -265,6 +265,9 @@ export class Service {
       (d) => `${d.cluster.site_id}-${d.address}`
     );
 
+    selection.exit().each((d) => {
+      removeServiceColor(d.address);
+    });
     selection.exit().remove();
     const serviceTypesEnter = selection
       .enter()

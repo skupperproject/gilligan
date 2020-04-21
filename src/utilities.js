@@ -20,7 +20,7 @@ under the License.
 import * as d3 from "d3";
 import * as d3path from "d3-path";
 //import { sankey } from "d3-sankey";
-import { sankeyCircular as sankey } from "d3-sankey-circular";
+import { sankeyCircular as sankey } from "@plotly/d3-sankey-circular";
 const SankeyAttributes = [
   "value",
   "depth",
@@ -386,7 +386,14 @@ for (let i = 0; i < 20; i++) {
   colorGen(i);
 }
 
+export const removeSiteColor = (site_id) => {
+  if (siteColors[site_id]) {
+    delete siteColors[site_id];
+  }
+};
+
 export const siteColor = (name, site_id) => {
+  if (site_id === "unknownID") return "#FFFFFF";
   if (!(site_id in siteColors)) {
     siteColors[site_id] = {
       name: name,
@@ -396,6 +403,11 @@ export const siteColor = (name, site_id) => {
   return siteColors[site_id].color;
 };
 
+export const removeServiceColor = (name) => {
+  if (serviceColors[name]) {
+    delete serviceColors[name];
+  }
+};
 export const serviceColor = (name) => {
   if (!(name in serviceColors)) {
     serviceColors[name] = colorGen(19 - Object.keys(serviceColors).length * 2);

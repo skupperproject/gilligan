@@ -30,6 +30,7 @@ import {
   pathBetween,
   updateSankey,
   siteColor,
+  removeSiteColor,
   setLinkStat,
   statId,
   endall,
@@ -49,8 +50,8 @@ const ZOOM_SCALE = "sitescale";
 const ZOOM_TRANSLATE = "sitetrans";
 
 export class Site {
-  constructor(adapter) {
-    this.adapter = adapter;
+  constructor(data) {
+    this.data = data;
     this.siteNodes = new Nodes();
     this.routerLinks = new Links();
     this.trafficLinks = new Links();
@@ -92,8 +93,7 @@ export class Site {
     return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
 
-  updateNodesAndLinks = (viewer, adapter) => {
-    this.adapter = adapter;
+  updateNodesAndLinks = (viewer) => {
     const newNodes = new Nodes();
     const newRouterLinks = new Links();
     const newTrafficLinks = new Links();
@@ -117,7 +117,7 @@ export class Site {
   };
 
   initNodes = (siteNodes) => {
-    const clusters = this.adapter.data.sites;
+    const clusters = this.data.adapter.data.sites;
     clusters.forEach((cluster) => {
       const name = cluster.site_name;
 
@@ -137,7 +137,7 @@ export class Site {
   };
 
   initTrafficLinks = (nodes, routerLinks, links, vsize) => {
-    const siteMatrix = this.adapter.siteMatrix();
+    const siteMatrix = this.data.adapter.siteMatrix();
     siteMatrix.forEach((record) => {
       const found = links.links.find(
         (l) =>
@@ -146,7 +146,7 @@ export class Site {
       );
       if (found) {
         found.value += record.messages;
-        this.adapter.aggregateAttributes(record.request, found.request);
+        this.data.adapter.aggregateAttributes(record.request, found.request);
       } else {
         const linkIndex = links.addLink({
           source: nodes.nodes.find(
@@ -223,7 +223,7 @@ export class Site {
   };
 
   initRouterLinks = (nodes, links, vsize) => {
-    this.adapter.data.sites.forEach((site, i) => {
+    this.data.adapter.data.sites.forEach((site, i) => {
       const source = nodes.nodes.find((n) => n.site_id === site.site_id);
       site.connected.forEach((targetSite) => {
         const target = nodes.nodes.find((s) => s.site_id === targetSite);
@@ -273,7 +273,9 @@ export class Site {
         this.trafficLinks.links,
         (d) => `${d.source.site_id}-${d.target.site_id}`
       );
+
     selection.exit().remove();
+
     selection
       .enter()
       .append("path")
@@ -301,6 +303,9 @@ export class Site {
     );
 
     // remove old nodes
+    selection.exit().each((d) => {
+      removeSiteColor(d.site_id);
+    });
     selection.exit().remove();
 
     // add new circle nodes
@@ -528,7 +533,7 @@ export class Site {
     siteNodes.nodes.forEach((fromSite) => {
       siteNodes.nodes.forEach((toSite) => {
         if (fromSite.site_id !== toSite.site_id) {
-          const value = this.adapter.siteToSite(fromSite, toSite);
+          const value = this.data.adapter.siteToSite(fromSite, toSite);
           if (value) {
             const linkIndex = interSiteLinks.addLink({
               source: fromSite,
@@ -977,7 +982,7 @@ export class Site {
       site_id: n.site_id,
       servers: [
         ...new Set(
-          n.servers.map((s) => this.adapter.serviceNameFromClientId(s))
+          n.servers.map((s) => this.data.adapter.serviceNameFromClientId(s))
         ),
       ].join(", "),
     }));

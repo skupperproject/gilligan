@@ -42,9 +42,9 @@ const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
 
 export class Deployment extends Service {
-  constructor(adapter) {
-    super(adapter);
-    this.Site = new Site(adapter);
+  constructor(data) {
+    super(data);
+    this.Site = new Site(data);
     this.fields = [
       { title: "Address", field: "address" },
       { title: "Protocol", field: "protocol" },
@@ -71,8 +71,7 @@ export class Deployment extends Service {
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
-  updateNodesAndLinks = (viewer, adapter) => {
-    this.adapter = adapter;
+  updateNodesAndLinks = (viewer) => {
     const newSiteNodes = new Nodes();
     const newServiceNodes = new Nodes();
     const newServiceLinks = new Links();
@@ -138,13 +137,14 @@ export class Deployment extends Service {
     siteNodes.nodes.forEach((site) => {
       const links = [];
       // services deployed in this site
+      console.log(site);
       const subServices = serviceNodes.nodes.filter(
         (sn) => sn.parentNode.site_id === site.site_id
       );
       // get links between services within each site
       subServices.forEach((fromService, s) => {
         subServices.forEach((toService, t) => {
-          const { stat } = this.adapter.fromTo(
+          const { stat } = this.data.adapter.fromTo(
             fromService.address,
             site.site_id,
             toService.address,
@@ -212,7 +212,7 @@ export class Deployment extends Service {
     // create links between all services
     subNodes.forEach((fromNode) => {
       subNodes.forEach((toNode) => {
-        const { stat, request } = this.adapter.fromTo(
+        const { stat, request } = this.data.adapter.fromTo(
           fromNode.name,
           fromNode.parentNode ? fromNode.parentNode.site_id : null,
           toNode.name,
@@ -342,17 +342,17 @@ export class Deployment extends Service {
       bottom: d.parentNode.y + d.parentNode.getHeight(),
     };
 
-    if (d.px + d.getWidth() > bbox.right) {
-      d.x = bbox.right - d.getWidth();
+    if (d.px > bbox.right) {
+      d.x = bbox.right;
     }
-    if (d.px < bbox.left) {
-      d.x = bbox.left;
+    if (d.px < bbox.left - d.getWidth()) {
+      d.x = bbox.left - d.getWidth();
     }
-    if (d.py + d.getHeight() > bbox.bottom) {
-      d.y = bbox.bottom - d.getHeight();
+    if (d.py > bbox.bottom) {
+      d.y = bbox.bottom;
     }
-    if (d.py < bbox.top) {
-      d.y = bbox.top;
+    if (d.py < bbox.top - d.getHeight()) {
+      d.y = bbox.top - d.getHeight();
     }
     // update the offsets within the site
     const key = sankey ? "sankeySiteOffset" : "siteOffset";

@@ -78,7 +78,7 @@ class TopologyPage extends Component {
     ];
     this.view = this.props.view;
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
-    this.viewObj = new VIEWS[this.view](this.props.service.adapter);
+    this.viewObj = new VIEWS[this.view](this.props.service);
     this.resetScale = 1;
   }
 
@@ -266,7 +266,7 @@ class TopologyPage extends Component {
   };
 
   doUpdate = () => {
-    this.viewObj.updateNodesAndLinks(this, this.props.service.adapter);
+    this.viewObj.updateNodesAndLinks(this);
     this.force
       .nodes(this.viewObj.nodes().nodes)
       .links(this.viewObj.links().links);
