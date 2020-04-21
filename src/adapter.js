@@ -112,6 +112,8 @@ class Adapter {
       }
     });
   };
+
+  /*  
   normalizeServices = () => {
     this.data.services.forEach((service) => {
       if (service.protocol === "tcp") {
@@ -121,16 +123,6 @@ class Adapter {
   };
 
   normalize = (tcpService) => {
-    /*
-    tcpService.requests_received = [];
-    tcpService.requests_handled = [];
-    tcpService.connections_egress.forEach((egress) => {
-      const atSite = egress.site_id;
-      egress.connections.forEach((connection) => {});
-    });
-    */
-  };
-  _normalize = (tcpService) => {
     tcpService.requests_received = [];
     tcpService.requests_handled = [];
     tcpService.connections_ingress.forEach((connection) => {
@@ -183,6 +175,7 @@ class Adapter {
       tcpService.requests_received.push(request);
     });
   };
+*/
 
   removeEmptyServices = () => {
     this.data.emptyHttpServices = [];
@@ -361,7 +354,7 @@ class Adapter {
   };
 
   // return a request record for traffic between source and target services
-  linkRequest = (sourceAddress, target) => {
+  linkRequest = (sourceAddress, target, target_site, source_site) => {
     let req = {};
     if (target.requests_received) {
       target.requests_received.forEach((request) => {
@@ -373,23 +366,27 @@ class Adapter {
       });
     } else {
       target.connections_egress.forEach((egress) => {
-        for (let connectionID in egress.connections) {
-          for (let i = 0; i < target.connections_ingress.length; i++) {
-            const ingress = target.connections_ingress[i];
-            const ingressConnection = ingress.connections[connectionID];
-            if (ingressConnection) {
-              const client = ingressConnection.client;
-              const sourceService = this.serviceNameFromClientId(client);
-              if (sourceService) {
-                if (sourceService === sourceAddress) {
-                  const match = egress.connections[connectionID];
-                  if (req.start_time) {
-                    req.bytes_out += match.bytes_out;
-                    req.bytes_in += match.bytes_in;
-                  } else {
-                    req = JSON.parse(
-                      JSON.stringify(egress.connections[connectionID])
-                    );
+        if (!target_site || target_site === egress.site_id) {
+          for (let connectionID in egress.connections) {
+            for (let i = 0; i < target.connections_ingress.length; i++) {
+              const ingress = target.connections_ingress[i];
+              if (!source_site || ingress.site_id === source_site) {
+                const ingressConnection = ingress.connections[connectionID];
+                if (ingressConnection) {
+                  const client = ingressConnection.client;
+                  const sourceService = this.serviceNameFromClientId(client);
+                  if (sourceService) {
+                    if (sourceService === sourceAddress) {
+                      const match = egress.connections[connectionID];
+                      if (req.start_time) {
+                        req.bytes_out += match.bytes_out;
+                        req.bytes_in += match.bytes_in;
+                      } else {
+                        req = JSON.parse(
+                          JSON.stringify(egress.connections[connectionID])
+                        );
+                      }
+                    }
                   }
                 }
               }
@@ -666,6 +663,12 @@ class Adapter {
               }
             }
           }
+        }
+      } else {
+        // tcp service
+        const req = this.linkRequest(from_name, toService);
+        if (req && req.id) {
+          return { stat: req[stat], request: req };
         }
       }
     }

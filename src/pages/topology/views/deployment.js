@@ -150,7 +150,7 @@ export class Deployment extends Service {
             toService.address,
             site.site_id
           );
-          if (stat) {
+          if (stat !== undefined) {
             links.push({
               source: fromService,
               target: toService,
@@ -218,7 +218,7 @@ export class Deployment extends Service {
           toNode.name,
           toNode.parentNode ? toNode.parentNode.site_id : null
         );
-        if (stat) {
+        if (stat !== undefined) {
           const linkIndex = links.addLink({
             source: fromNode,
             target: toNode,

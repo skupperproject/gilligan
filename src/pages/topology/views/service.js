@@ -372,6 +372,7 @@ export class Service {
       return d.ellipseName;
     });
 
+    selection.classed("hidden", (d) => d.cluster.site_name === "unknown");
     return selection;
   };
 
@@ -581,9 +582,11 @@ export class Service {
   blurAll(blur, d, sankey, color) {
     const opacity = blur ? 0.25 : 1;
     this.servicesSelection.attr("opacity", opacity);
-    this.linksSelection
-      .selectAll("path.service")
-      .attr("opacity", blur ? (color ? 0 : 0.25) : sankey ? 0.5 : 0);
+    if (sankey) {
+      this.linksSelection
+        .selectAll("path.service")
+        .attr("opacity", blur ? (color ? 0 : 0.25) : 0.5);
+    }
     this.linksSelection
       .selectAll("path.servicesankeyDir")
       .attr("opacity", blur ? 0.25 : 1);

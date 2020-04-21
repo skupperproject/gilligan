@@ -419,6 +419,9 @@ export class Site {
     selection
       .selectAll("circle.network")
       .classed("dim", viewer.view === "deployment");
+
+    selection.classed("hidden", (d) => d.site_name === "unknown");
+
     return selection;
   };
 
