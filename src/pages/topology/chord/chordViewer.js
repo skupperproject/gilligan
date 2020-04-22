@@ -42,7 +42,7 @@ const ERROR_RENDERING = "Error while rendering ";
 const ARCPADDING = 0.06;
 const SMALL_OFFSET = 210;
 const MIN_RADIUS = 50;
-const TRANSITION_DURATION = 1000;
+const TRANSITION_DURATION = 500;
 
 class ChordViewer extends Component {
   static propTypes = {
