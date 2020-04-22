@@ -35,6 +35,7 @@ import {
   ClusterPadding,
   ServiceHeight,
   setSaved,
+  shortName,
   reconcileArrays,
   reconcileLinks,
 } from "../../../utilities";
@@ -114,7 +115,7 @@ export class Service {
           subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
           subNode.color = serviceColor(subNode.name);
           subNode.cluster = site;
-          subNode.shortName = this.data.adapter.shortName(subNode.name);
+          subNode.shortName = shortName(subNode.name);
           if (includeDuplicate) {
             const original = serviceNodes.nodeFor(subNode.name);
             if (original) {
@@ -139,7 +140,7 @@ export class Service {
         subNode.cluster = this.data.adapter.data.sites.find(site =>
           site.services.includes(service)
         );
-        subNode.shortName = this.data.adapter.shortName(subNode.name);
+        subNode.shortName = shortName(subNode.name);
         if (includeDuplicate) {
           const original = serviceNodes.nodeFor(subNode.name);
           if (original) {
@@ -278,7 +279,7 @@ export class Service {
         return `translate(${d.x},${d.y})`;
       });
 
-    serviceTypesEnter.append("svg:title").text((d) => d.name);
+    serviceTypesEnter.append("svg:title").text((d) => d.shortName);
 
     serviceTypesEnter
       .append("svg:rect")

@@ -25,6 +25,7 @@ import {
   positionPopup,
   siteColors,
   serviceColors,
+  shortName,
 } from "../../../utilities";
 import { aggregateAddresses, separateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
@@ -366,6 +367,9 @@ class ChordViewer extends Component {
       address = "";
       //address += "<br/>";
     }
+    address = shortName(address);
+    to = shortName(to);
+    from = shortName(from);
     let title =
       address + from + " → " + to + ": " + this.formatNumber(d.source.value);
     if (d.target.value > 0 && to !== from) {
@@ -378,7 +382,7 @@ class ChordViewer extends Component {
     let egress,
       value = 0;
     if (matrix.aggregate) {
-      egress = matrix.rows[d.index].chordName;
+      egress = shortName(matrix.rows[d.index].chordName);
       value = d.value;
     } else {
       egress = matrix.routerName(d.index);

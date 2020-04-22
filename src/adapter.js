@@ -1,9 +1,10 @@
+import { shortName } from "./utilities";
 let INSTANCE = 0;
 class Adapter {
   constructor(data) {
     this.data = data;
-    console.log("original data");
-    console.log(JSON.parse(JSON.stringify(data)));
+    //console.log("original data");
+    //console.log(JSON.parse(JSON.stringify(data)));
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
@@ -16,8 +17,8 @@ class Adapter {
     //this.adoptOrphanServices();
     this.addServersToSites();
     this.addSourcesTargets();
-    console.log("finished parsing data");
-    console.log(this.data);
+    //console.log("finished parsing data");
+    //console.log(this.data);
   }
 
   // if multiple sites have the same name,
@@ -254,7 +255,7 @@ class Adapter {
               this.data.services.unshift(newService);
               this.addTargetToService(
                 newService,
-                this.shortName(clientName),
+                shortName(clientName),
                 request.site_id
               );
             } else if (found.derived) {
@@ -490,19 +491,6 @@ class Adapter {
       });
     });
     return serviceName;
-  };
-
-  //hello-world-frontend-759cdcf7f9-phcjq
-  shortName = (name) => {
-    const parts = name.split("-");
-    if (parts.length > 2) {
-      const len = parts.length;
-      if (parts[len - 1].length === 5 && parts[len - 2].length === 10) {
-        parts.splice(len - 2, 2);
-        return parts.join("-");
-      }
-    }
-    return name;
   };
 
   // is the address a valid ip address?

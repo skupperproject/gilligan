@@ -415,9 +415,17 @@ export const serviceColor = (name) => {
   return serviceColors[name];
 };
 
+//hello-world-frontend-759cdcf7f9-phcjq
 export const shortName = (name) => {
   const parts = name.split("-");
-  return parts[0];
+  if (parts.length > 2) {
+    const len = parts.length;
+    if (parts[len - 1].length === 5 && parts[len - 2].length === 10) {
+      parts.splice(len - 2, 2);
+      return parts.join("-");
+    }
+  }
+  return name;
 };
 
 export const lighten = (percent, color) => {
