@@ -188,7 +188,7 @@ class GraphToolbar extends Component {
       <React.Fragment>
         <ToolbarItem className="toolbar-item">
           <Checkbox
-            label="Show statistic"
+            label="Show metric"
             isChecked={this.props.getShowStat()}
             isDisabled={
               this.props.view === "site" && !this.props.getShowSankey()
@@ -196,7 +196,7 @@ class GraphToolbar extends Component {
                 : false
             }
             onChange={this.handleChange}
-            aria-label="show statistic"
+            aria-label="show metric"
             id="showStat"
             name="showStat"
           />
