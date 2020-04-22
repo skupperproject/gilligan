@@ -171,7 +171,7 @@ export class Site {
       nodes: nodes.nodes,
       links: routerLinks.links,
       width: vsize.width,
-      height: vsize.height,
+      height: vsize.height - 50,
       align: "left",
     });
 
@@ -182,11 +182,11 @@ export class Site {
         nodes: nodes.nodes,
         links: links.links,
         width: vsize.width,
-        height: vsize.height,
+        height: vsize.height - 50,
         nodeWidth: ServiceWidth,
         nodePadding: ClusterPadding,
         left: 50,
-        top: 20,
+        top: 10,
         right: 50,
         bottom: 10,
       });

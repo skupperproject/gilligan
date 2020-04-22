@@ -177,7 +177,7 @@ export class Deployment extends Service {
       nodes: siteNodes.nodes,
       links: interSiteLinks.links,
       width: viewer.width,
-      height: viewer.height,
+      height: viewer.height - 50,
     });
 
     // position services
@@ -239,11 +239,12 @@ export class Deployment extends Service {
       nodes: subNodes,
       links: links.links,
       width: vsize.width,
-      height: vsize.height,
+      height: vsize.height - 50,
       nodeWidth: ServiceWidth,
       nodePadding: ServiceGap,
+      top: 10,
       left: 20,
-      bottom: 60,
+      bottom: 40,
     });
     // save the height and expand the subnodes
     subNodes.forEach((n) => {
@@ -284,7 +285,7 @@ export class Deployment extends Service {
       nodes: sites.nodes,
       links: interSiteLinks.links,
       width: vsize.width,
-      height: vsize.height - 20,
+      height: vsize.height - 50,
     });
 
     sites.nodes.forEach((site) => {

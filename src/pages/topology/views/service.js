@@ -126,30 +126,6 @@ export class Service {
           subNode.uuid = `${site.site_id}-${subNode.address}`;
           serviceNodes.add(subNode);
         });
-        /*
-        const subNode = new Node({
-          name: service.address,
-          nodeType: "service",
-          fixed: true,
-          heightFn: this.serviceHeight,
-          widthFn: this.serviceWidth
-        });
-        subNode.mergeWith(service);
-        subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
-        subNode.color = serviceColor(subNode.name);
-        subNode.cluster = this.data.adapter.data.sites.find(site =>
-          site.services.includes(service)
-        );
-        subNode.shortName = shortName(subNode.name);
-        if (includeDuplicate) {
-          const original = serviceNodes.nodeFor(subNode.name);
-          if (original) {
-            subNode.extra = true;
-            subNode.original = original;
-          }
-        }
-        serviceNodes.add(subNode);
-        */
       }
     });
   }
@@ -183,7 +159,7 @@ export class Service {
       nodes: serviceNodes,
       links: links.links,
       width: vsize.width,
-      height: vsize.height,
+      height: vsize.height - 50,
       nodeWidth: ServiceWidth,
       nodePadding: ClusterPadding,
       left: 50,
@@ -203,7 +179,7 @@ export class Service {
       nodes: serviceNodes,
       links: links.links,
       width: vsize.width,
-      height: vsize.height,
+      height: vsize.height - 50,
       align: "right",
       sort: true,
     });
