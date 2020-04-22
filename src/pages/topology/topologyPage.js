@@ -30,8 +30,9 @@ import {
 import { Split, SplitItem } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
 import NavDropdown from "../../navDropdown";
-import { Icap } from "../../utilities";
+import { Icap, getSaved, setSaved, copy } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
+const TOOLBAR_CHECKS = "tbChecks";
 
 class TopologyPage extends Component {
   constructor(props) {
@@ -39,13 +40,20 @@ class TopologyPage extends Component {
     this.state = {
       isDropDownOpen: false,
       options: {
-        graph: {
-          traffic: false,
-          utilization: false,
-        },
         link: { stat: "bytes_out" },
       },
     };
+    const defaultChecks = {
+      sankey: false,
+      stat: false,
+      width: false,
+      color: true,
+    };
+    this.checks = getSaved(TOOLBAR_CHECKS, {
+      service: copy(defaultChecks),
+      site: copy(defaultChecks),
+      deployment: copy(defaultChecks),
+    });
   }
 
   handleChangeOption = (option) => {
@@ -58,6 +66,41 @@ class TopologyPage extends Component {
 
   handleChangeLastUpdated = () => {
     this.updatedRef.update();
+  };
+
+  saveChecks = () => {
+    setSaved(TOOLBAR_CHECKS, this.checks);
+  };
+  handleChangeShowStat = (showStat) => {
+    this.checks[this.props.view].stat = showStat;
+    this.saveChecks();
+  };
+  handleChangeSankey = (showSankey) => {
+    this.checks[this.props.view].sankey = showSankey;
+    this.showSankey = showSankey;
+    this.saveChecks();
+  };
+  handleChangeWidth = (showWidth) => {
+    this.checks[this.props.view].width = showWidth;
+    this.checks[this.props.view].color = !showWidth;
+    this.saveChecks();
+  };
+  handleChangeColor = (showColor) => {
+    this.checks[this.props.view].color = showColor;
+    this.checks[this.props.view].width = !showColor;
+    this.saveChecks();
+  };
+  getShowStat = () => {
+    return this.checks[this.props.view].stat;
+  };
+  getShowSankey = () => {
+    return this.checks[this.props.view].sankey;
+  };
+  getShowWidth = () => {
+    return this.checks[this.props.view].width;
+  };
+  getShowColor = () => {
+    return this.checks[this.props.view].color;
   };
 
   update = () => {
@@ -99,22 +142,19 @@ class TopologyPage extends Component {
           <StackItem className="overview-table">
             <TopologyViewer
               ref={(el) => (this.graphRef = el)}
-              type={this.props.type}
               service={this.props.service}
               view={this.props.view}
-              location={this.props.location}
               options={this.state.options}
               handleChangeView={this.handleChangeView}
               handleChangeOption={this.handleChangeOption}
-              getShowStat={this.props.getShowStat}
-              getShowSankey={this.props.getShowSankey}
-              getShowWidth={this.props.getShowWidth}
-              getShowColor={this.props.getShowColor}
-              getViewType={this.props.getViewType}
-              handleChangeShowStat={this.props.handleChangeShowStat}
-              handleChangeSankey={this.props.handleChangeSankey}
-              handleChangeColor={this.props.handleChangeColor}
-              handleChangeWidth={this.props.handleChangeWidth}
+              getShowStat={this.getShowStat}
+              getShowSankey={this.getShowSankey}
+              getShowWidth={this.getShowWidth}
+              getShowColor={this.getShowColor}
+              handleChangeSankey={this.handleChangeSankey}
+              handleChangeWidth={this.handleChangeWidth}
+              handleChangeColor={this.handleChangeColor}
+              handleChangeShowStat={this.handleChangeShowStat}
               handleChangeViewType={this.props.handleChangeViewType}
               handleChangeLastUpdated={this.handleChangeLastUpdated}
             />

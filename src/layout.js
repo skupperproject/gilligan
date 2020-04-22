@@ -55,7 +55,6 @@ const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
 
 const UPDATE_INTERVAL = 2000;
-const TOOLBAR_CHECKS = "toolbarChecks";
 const VIEW_TYPES = "viewTypes";
 const LAST_VIEW = "lastView2";
 
@@ -85,17 +84,6 @@ class PageLayout extends React.Component {
       { name: "Deployments", view: "deployment" },
       //{ name: "Processes", view: "process" },
     ];
-    const checks = getSaved(TOOLBAR_CHECKS, {
-      sankey: false,
-      stat: false,
-      width: false,
-      color: true,
-    });
-    //checks.sankey = true;
-    this.showSankey = checks.sankey;
-    this.showStat = checks.stat;
-    this.showWidth = checks.width;
-    this.showColor = checks.color;
   }
 
   componentDidMount = () => {
@@ -166,50 +154,12 @@ class PageLayout extends React.Component {
     });
   };
 
-  saveChecks = () => {
-    setSaved(TOOLBAR_CHECKS, {
-      sankey: this.showSankey,
-      stat: this.showStat,
-      width: this.showWidth,
-      color: this.showColor,
-    });
-  };
   handleChangeViewType = (viewType) => {
     const { viewTypes } = this.state;
     if (viewType === "Graph") viewType = "";
     viewTypes[this.lastView] = viewType;
     this.setState({ viewTypes });
     setSaved(VIEW_TYPES, viewTypes);
-  };
-  handleChangeShowStat = (showStat) => {
-    this.showStat = showStat;
-    this.saveChecks();
-  };
-  handleChangeSankey = (showSankey) => {
-    this.showSankey = showSankey;
-    this.saveChecks();
-  };
-  handleChangeWidth = (showWidth) => {
-    this.showWidth = showWidth;
-    this.showColor = !showWidth;
-    this.saveChecks();
-  };
-  handleChangeColor = (showColor) => {
-    this.showColor = showColor;
-    this.showWidth = !showColor;
-    this.saveChecks();
-  };
-  getShowStat = () => {
-    return this.showStat;
-  };
-  getShowSankey = () => {
-    return this.showSankey;
-  };
-  getShowWidth = () => {
-    return this.showWidth;
-  };
-  getShowColor = () => {
-    return this.showColor;
   };
 
   toL = (s) => s[0].toLowerCase() + s.slice(1);
@@ -303,14 +253,6 @@ class PageLayout extends React.Component {
               service={this.service}
               {...props}
               {...more}
-              getShowStat={() => this.showStat}
-              getShowSankey={() => this.showSankey}
-              getShowWidth={() => this.showWidth}
-              getShowColor={() => this.showColor}
-              handleChangeSankey={this.handleChangeSankey}
-              handleChangeWidth={this.handleChangeWidth}
-              handleChangeColor={this.handleChangeColor}
-              handleChangeShowStat={this.handleChangeShowStat}
               handleChangeViewType={this.handleChangeViewType}
             />
           ) : (

@@ -607,7 +607,6 @@ class TopologyPage extends Component {
           <GraphToolbar
             service={this.props.service}
             handleChangeSankey={this.handleChangeSankey}
-            handleChangeTraffic={this.handleChangeTraffic}
             handleChangeShowStat={this.handleChangeShowStat}
             handleChangeWidth={this.handleChangeWidth}
             handleChangeColor={this.handleChangeColor}
