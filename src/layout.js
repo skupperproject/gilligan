@@ -216,9 +216,6 @@ class PageLayout extends React.Component {
           <NavList>
             {this.views.map((viewInfo) => {
               const { view, name } = viewInfo;
-              console.log(
-                `creating nav item for view ${view} name ${name} activeItem ${activeItem}`
-              );
               return (
                 <NavItem
                   id={`${name}NavItem`}
