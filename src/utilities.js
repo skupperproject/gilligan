@@ -205,8 +205,10 @@ export const adjustPositions = ({
   // special case: all the nodes are in the 1st column
   // and they are not connected to each other.
   // spread the nodes into separate columns
-  if (leftMost.length === nodes.length && links.length === 0) {
-    leftMost.forEach((n, i) => (n.col = i));
+  if (!align === "vertical") {
+    if (leftMost.length === nodes.length && links.length === 0) {
+      leftMost.forEach((n, i) => (n.col = i));
+    }
   }
 
   // put called nodes in column to the right of the caller

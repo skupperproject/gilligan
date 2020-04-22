@@ -193,6 +193,7 @@ export class Deployment extends Service {
         width: cluster.r * 2,
         height: cluster.r * 2,
         xyKey: "siteOffset",
+        align: "vertical",
       });
     });
     const orphans = serviceNodes.nodes.filter((n) => !n.siteOffset);
