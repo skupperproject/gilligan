@@ -50,7 +50,6 @@ import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
 import ListPage from "./pages/list/listPage";
 import { QDRService } from "./qdrService";
-import ConnectForm from "./pages/connect/connect-form";
 import { getSaved, setSaved } from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
@@ -69,7 +68,6 @@ class PageLayout extends React.Component {
       connectPath: "",
       activeGroup: this.lastGroup,
       activeItem: this.lastView,
-      isConnectFormOpen: false,
       username: "",
     };
     this.hooks = { setLocation: this.setLocation };
@@ -151,7 +149,6 @@ class PageLayout extends React.Component {
         activeItem,
         connectPath,
         connected: true,
-        isConnectFormOpen: false,
       });
     }
   };
@@ -168,13 +165,6 @@ class PageLayout extends React.Component {
     });
   };
 
-  toggleConnectForm = (event) => {
-    this.setState({ isConnectFormOpen: !this.state.isConnectFormOpen });
-  };
-
-  handleConnectCancel = () => {
-    this.setState({ isConnectFormOpen: false });
-  };
   saveChecks = () => {
     setSaved(TOOLBAR_CHECKS, {
       sankey: this.showSankey,
@@ -357,19 +347,6 @@ class PageLayout extends React.Component {
       return <React.Fragment />;
     };
 
-    const connectForm = () => {
-      if (this.state.isConnectFormOpen) {
-        return (
-          <ConnectForm
-            handleConnect={this.handleConnect}
-            handleConnectCancel={this.handleConnectCancel}
-            service={this.service}
-            isConnected={this.state.connected}
-          />
-        );
-      }
-      return <React.Fragment />;
-    };
     return (
       <Router>
         {redirectAfterConnect()}
@@ -379,7 +356,6 @@ class PageLayout extends React.Component {
           isManagedSidebar
           skipToContent={PageSkipToContent}
         >
-          {connectForm()}
           <Switch>
             <PrivateRoute
               path="/"
