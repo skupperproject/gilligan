@@ -163,7 +163,9 @@ class TopologyPage extends Component {
     //this.legend.update();
   };
   clearPopups = () => {
-    this.setState({ showLinkInfo: false, showCard: false });
+    if (!this.unmounting) {
+      this.setState({ showLinkInfo: false, showCard: false });
+    }
   };
 
   // initialize the nodes and links array
@@ -356,9 +358,11 @@ class TopologyPage extends Component {
   };
 
   showChord = (chordData, initial) => {
-    this.setState({ showChord: true, chordData, initial }, () => {
-      this.chordRef.doUpdate();
-    });
+    if (!this.unmounting) {
+      this.setState({ showChord: true, chordData, initial }, () => {
+        this.chordRef.doUpdate();
+      });
+    }
   };
 
   positionPopupContent = () => {
@@ -368,15 +372,22 @@ class TopologyPage extends Component {
     });
   };
   showCard = (cardService) => {
-    this.setState({ showLinkInfo: false, showCard: true, cardService }, () => {
-      // after the content has rendered, position it
-      this.positionPopupContent();
-    });
+    if (!this.unmounting) {
+      this.setState(
+        { showLinkInfo: false, showCard: true, cardService },
+        () => {
+          // after the content has rendered, position it
+          this.positionPopupContent();
+        }
+      );
+    }
   };
   showLinkInfo = (linkInfo) => {
-    this.setState({ showCard: false, showLinkInfo: true, linkInfo }, () => {
-      this.positionPopupContent();
-    });
+    if (!this.unmounting) {
+      this.setState({ showCard: false, showLinkInfo: true, linkInfo }, () => {
+        this.positionPopupContent();
+      });
+    }
   };
 
   _tick = () => {};
@@ -396,12 +407,16 @@ class TopologyPage extends Component {
 
   // clicked on the Legend button in the control bar
   handleLegendClick = (id) => {
-    this.setState({ showLegend: !this.state.showLegend });
+    if (!this.unmounting) {
+      this.setState({ showLegend: !this.state.showLegend });
+    }
   };
 
   // clicked on the x button on the legend
   handleCloseLegend = () => {
-    this.setState({ showLegend: false });
+    if (!this.unmounting) {
+      this.setState({ showLegend: false });
+    }
   };
 
   zoomInCallback = () => {
@@ -517,7 +532,9 @@ class TopologyPage extends Component {
   };
 
   handleCloseSidebar = () => {
-    this.setState({ showChord: false });
+    if (!this.unmounting) {
+      this.setState({ showChord: false });
+    }
   };
 
   handleShowAll = () => {

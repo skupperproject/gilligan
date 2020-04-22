@@ -95,6 +95,7 @@ class ChordViewer extends Component {
   }
 
   componentWillUnmount() {
+    this.unmounting = true;
     // stop updated the data
     // clean up memory associated with the svg
     //d3.select("#chord").remove();
@@ -218,9 +219,11 @@ class ChordViewer extends Component {
   windowResized = () => {};
 
   handleTabClick = (event, tabIndex) => {
-    this.setState({
-      activeTabKey: tabIndex,
-    });
+    if (!this.unmounting) {
+      this.setState({
+        activeTabKey: tabIndex,
+      });
+    }
   };
   // size the diagram based on the browser window size
   getRadius = () => {
@@ -302,8 +305,7 @@ class ChordViewer extends Component {
       .append("path")
       .attr("class", "empty")
       .attr("d", arc);
-
-    this.setState({ noValues: false });
+    if (!this.unmounting) this.setState({ noValues: false });
   };
 
   chordKey = (d, matrix) => {
@@ -420,9 +422,11 @@ class ChordViewer extends Component {
 
   // create and/or update the chord diagram
   renderChord = (matrix) => {
-    this.setState({ addresses: this.chordData.getAddresses() }, () => {
-      return this.doRenderChord(matrix);
-    });
+    if (!this.unmounting) {
+      this.setState({ addresses: this.chordData.getAddresses() }, () => {
+        return this.doRenderChord(matrix);
+      });
+    }
   };
   doRenderChord = (matrix) => {
     // populate the arcColors object with a color for each router
@@ -445,13 +449,17 @@ class ChordViewer extends Component {
         if (addressLen !== 0) {
           msg += " for the selected addresses";
         }
-        this.setState({ showEmpty: true, emptyText: msg });
+        if (!this.unmounting) {
+          this.setState({ showEmpty: true, emptyText: msg });
+        }
       }
       this.emptyCircle();
       matrixMessages = [];
     } else {
       matrixMessages = matrix.matrixMessages();
-      this.setState({ showEmpty: false });
+      if (!this.unmounting) {
+        this.setState({ showEmpty: false });
+      }
       this.theyveBeenWarned = false;
       this.fadeDoughnut();
     }
@@ -500,7 +508,9 @@ class ChordViewer extends Component {
       })
       .on("mouseout", (d) => {
         this.popoverArc = null;
-        this.setState({ showPopup: false });
+        if (!this.unmounting) {
+          this.setState({ showPopup: false });
+        }
         this.props.handleArcOver(d, false);
       });
 
@@ -606,7 +616,9 @@ class ChordViewer extends Component {
       })
       .on("mouseout", (d) => {
         this.popoverChord = null;
-        this.setState({ showPopup: false });
+        if (!this.unmounting) {
+          this.setState({ showPopup: false });
+        }
         this.props.handleChordOver(d, false);
       });
 
@@ -638,14 +650,16 @@ class ChordViewer extends Component {
 
   showToolTip = (content) => {
     // setting the popupContent state will cause the popup to render
-    this.setState({ showPopup: true, popupContent: content }, () => {
-      // after the content has rendered, position it
-      positionPopup({
-        containerSelector: "#chordContainer",
-        popupSelector: "#popover-div",
-        constrainY: false,
+    if (!this.unmounting) {
+      this.setState({ showPopup: true, popupContent: content }, () => {
+        // after the content has rendered, position it
+        positionPopup({
+          containerSelector: "#chordContainer",
+          popupSelector: "#popover-div",
+          constrainY: false,
+        });
       });
-    });
+    }
   };
 
   // animate the disappearance of an arc by shrinking it to its center point
