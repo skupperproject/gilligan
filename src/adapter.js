@@ -219,6 +219,16 @@ class Adapter {
     }
     return service;
   };
+
+  addTargetToService = (service, name, site_id) => {
+    if (!service.targets) {
+      service.targets = [];
+    }
+    if (!service.targets.some((t) => t.name === name)) {
+      service.targets.push({ name, site_id });
+    }
+  };
+
   // add a service for each client that sends requests but
   // isn't in the service list.
   // The data structure only contains services that recieve requests.
@@ -236,20 +246,19 @@ class Adapter {
             );
             if (!found) {
               // this is a new service. add it
-              this.data.services.unshift(
-                this.newService({
-                  address: clientName,
-                  client: clientKey,
-                  site_id: request.site_id,
-                })
+              const newService = this.newService({
+                address: clientName,
+                client: clientKey,
+                site_id: request.site_id,
+              });
+              this.data.services.unshift(newService);
+              this.addTargetToService(
+                newService,
+                this.shortName(clientName),
+                request.site_id
               );
             } else if (found.derived) {
-              if (!found.targets.some((t) => t.name === clientKey)) {
-                found.targets.push({
-                  name: clientKey,
-                  site_id: request.site_id,
-                });
-              }
+              this.addTargetToService(found, clientKey, request.site_id);
             }
           }
         });

@@ -50,7 +50,7 @@ class TableViewer extends React.Component {
       redirectState: {},
     };
     this.view = this.props.view;
-    this.dataSource = new VIEWS[this.view](this.props.service.adapter);
+    this.dataSource = new VIEWS[this.view](this.props.service);
   }
 
   componentDidMount = () => {
