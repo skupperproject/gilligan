@@ -53,7 +53,7 @@ export class Service {
     this.nodes = () => this.serviceNodes;
     this.links = () => this.serviceLinks;
     this.fields = [
-      { title: "Address", field: "address" },
+      { title: "Name", field: "address" },
       { title: "Protocol", field: "protocol" },
       { title: "Deployed at", field: "deployedAt" },
     ];
@@ -769,7 +769,7 @@ export class Service {
 
   doFetch = (page, perPage) => {
     const data = this.serviceNodes.nodes.map((n) => ({
-      address: n.address,
+      address: n.shortName,
       protocol: n.protocol,
       deployedAt: n.cluster ? n.cluster.site_name : "",
     }));
