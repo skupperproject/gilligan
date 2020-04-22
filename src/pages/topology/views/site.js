@@ -59,7 +59,7 @@ export class Site {
     this.links = () => this.routerLinks;
     this.fields = [
       { title: "Name", field: "site_name" },
-      { title: "Site ID", field: "site_id" },
+      { title: "Namespace", field: "namespace" },
       { title: "Servers", field: "servers" },
     ];
   }
@@ -979,7 +979,7 @@ export class Site {
   doFetch = (page, perPage) => {
     const data = this.siteNodes.nodes.map((n) => ({
       site_name: n.site_name,
-      site_id: n.site_id,
+      namespace: n.namespace,
       servers: [
         ...new Set(
           n.servers.map((s) => this.data.adapter.serviceNameFromClientId(s))
