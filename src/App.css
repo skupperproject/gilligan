@@ -461,9 +461,10 @@ main.pf-c-login__main {
   padding-right: 0 !important;
 }
 .overview-header {
-  padding: 1em;
+  padding: 1em 1em 0.25em 1em;
   text-align: left;
   border-bottom: 1px solid #cccccc;
+  background-color: #eaeaea;
 }
 .overview-header.details {
   padding: 1em 2em;
@@ -1091,13 +1092,14 @@ div.qdrChord .legend-text {
   display: flex;
 }
 
+.status-text,
 .overview-loading {
   margin-left: auto;
   color: #999;
   border: 0;
   font-size: 14px;
   padding: 0;
-  background-color: white;
+  background-color: transparent;
 }
 
 .pf-c-button.pf-m-primary.link-button,
@@ -1114,6 +1116,9 @@ div.qdrChord .legend-text {
   text-decoration: underline;
 }
 
+#navDropdown {
+  margin-left: 0.5em;
+}
 .noWrap {
   white-space: nowrap;
 }

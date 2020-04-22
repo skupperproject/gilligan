@@ -21,7 +21,7 @@ class LastUpdated extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -31,7 +31,7 @@ class LastUpdated extends React.Component {
 
   render() {
     return (
-      <Text className="overview-loading" component={TextVariants.pre}>
+      <Text className="status-text" component={TextVariants.pre}>
         {`Updated ${strDate(this.state.lastUpdated)}`}
       </Text>
     );

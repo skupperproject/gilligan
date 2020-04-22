@@ -32,7 +32,7 @@ import {
   PageSidebar,
 } from "@patternfly/react-core";
 
-import { Nav, NavExpandable, NavItem, NavList } from "@patternfly/react-core";
+import { Nav, NavItem, NavList } from "@patternfly/react-core";
 
 import {
   HashRouter as Router,
@@ -53,20 +53,21 @@ import { QDRService } from "./qdrService";
 import { getSaved, setSaved } from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
+
 const UPDATE_INTERVAL = 2000;
 const TOOLBAR_CHECKS = "toolbarChecks";
-const LAST_VIEW = "lastView";
+const VIEW_TYPE = "viewType";
+const LAST_VIEW = "lastView2";
 const LAST_GROUP = "lastGroup";
 
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
-    this.lastView = getSaved(LAST_VIEW, "service");
-    this.lastGroup = getSaved(LAST_GROUP, "service");
+    const viewType = getSaved(VIEW_TYPE, "");
+    this.lastView = `${getSaved(LAST_VIEW, "service")}${viewType}`;
     this.state = {
       connected: false,
       connectPath: "",
-      activeGroup: this.lastGroup,
       activeItem: this.lastView,
       username: "",
     };
@@ -84,14 +85,12 @@ class PageLayout extends React.Component {
       stat: false,
       width: false,
       color: true,
-      viewType: "graph",
     });
     //checks.sankey = true;
     this.showSankey = checks.sankey;
     this.showStat = checks.stat;
     this.showWidth = checks.width;
     this.showColor = checks.color;
-    this.viewType = checks.viewType || "graph";
   }
 
   componentDidMount = () => {
@@ -160,7 +159,6 @@ class PageLayout extends React.Component {
     setSaved(LAST_GROUP, this.lastGroup);
     this.setState({
       activeItem: result.itemId,
-      activeGroup: result.groupId,
       connectPath: "",
     });
   };
@@ -171,12 +169,10 @@ class PageLayout extends React.Component {
       stat: this.showStat,
       width: this.showWidth,
       color: this.showColor,
-      viewType: this.viewType,
     });
   };
   handleChangeViewType = (viewType) => {
-    this.viewType = viewType;
-    this.saveChecks();
+    setSaved(VIEW_TYPE, viewType);
   };
   handleChangeShowStat = (showStat) => {
     this.showStat = showStat;
@@ -212,7 +208,7 @@ class PageLayout extends React.Component {
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
   render() {
-    const { activeItem, activeGroup } = this.state;
+    const { activeItem } = this.state;
 
     const PageNav = () => {
       return (
@@ -220,29 +216,20 @@ class PageLayout extends React.Component {
           <NavList>
             {this.views.map((viewInfo) => {
               const { view, name } = viewInfo;
+              console.log(
+                `creating nav item for view ${view} name ${name} activeItem ${activeItem}`
+              );
               return (
-                <NavExpandable
-                  title={name}
-                  groupId={`grp-${view}`}
-                  isActive={activeGroup === `grp-${view}`}
-                  isExpanded
+                <NavItem
+                  id={`${name}NavItem`}
+                  itemId={view}
+                  isActive={
+                    activeItem === view || activeItem === `${view}Table`
+                  }
                   key={view}
                 >
-                  <NavItem
-                    id={`${name}NavItem`}
-                    itemId={view}
-                    isActive={activeItem === view}
-                  >
-                    <Link to={`/${view}`}>Graph</Link>
-                  </NavItem>
-                  <NavItem
-                    id={`${name}NavItemTable`}
-                    itemId={`${view}Table`}
-                    isActive={activeItem === `${view}Table`}
-                  >
-                    <Link to={`/${view}Table`}>Table</Link>
-                  </NavItem>
-                </NavExpandable>
+                  <Link to={`/${view}`}>{name}</Link>
+                </NavItem>
               );
             })}
           </NavList>
@@ -314,7 +301,6 @@ class PageLayout extends React.Component {
               getShowSankey={() => this.showSankey}
               getShowWidth={() => this.showWidth}
               getShowColor={() => this.showColor}
-              getViewType={() => this.viewType}
               handleChangeSankey={this.handleChangeSankey}
               handleChangeWidth={this.handleChangeWidth}
               handleChangeColor={this.handleChangeColor}

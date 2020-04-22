@@ -29,6 +29,7 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import TopologyViewer from "./topologyViewer";
+import NavDropdown from "../../navDropdown";
 import { Icap } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
 
@@ -46,11 +47,6 @@ class TopologyPage extends Component {
       },
     };
   }
-
-  handleChangeView = (viewType) => {
-    this.props.handleChangeViewType(viewType);
-    //this.setState({ viewType });
-  };
 
   handleChangeOption = (option) => {
     const { options } = this.state;
@@ -86,6 +82,14 @@ class TopologyPage extends Component {
                 </TextContent>
               </SplitItem>
               <SplitItem isFilled>
+                View
+                <NavDropdown
+                  view={this.props.view}
+                  viewType="graph"
+                  handleChangeViewType={this.props.handleChangeViewType}
+                />
+              </SplitItem>
+              <SplitItem>
                 <TextContent>
                   <LastUpdated ref={(el) => (this.updatedRef = el)} />
                 </TextContent>
@@ -99,7 +103,6 @@ class TopologyPage extends Component {
               service={this.props.service}
               view={this.props.view}
               location={this.props.location}
-              viewType={this.props.getViewType()}
               options={this.state.options}
               handleChangeView={this.handleChangeView}
               handleChangeOption={this.handleChangeOption}

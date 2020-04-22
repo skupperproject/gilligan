@@ -28,6 +28,7 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
+import NavDropdown from "../../navDropdown";
 import { Icap } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
 import TableViewer from "./tableViewer";
@@ -65,6 +66,14 @@ class TablePage extends Component {
                 </TextContent>
               </SplitItem>
               <SplitItem isFilled>
+                View{" "}
+                <NavDropdown
+                  view={this.props.view}
+                  viewType="table"
+                  handleChangeViewType={this.props.handleChangeViewType}
+                />
+              </SplitItem>
+              <SplitItem>
                 <TextContent>
                   <LastUpdated ref={(el) => (this.updatedRef = el)} />
                 </TextContent>
