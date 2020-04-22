@@ -36,9 +36,9 @@ import { Nav, NavItem, NavList } from "@patternfly/react-core";
 
 import {
   HashRouter as Router,
+  Link,
   Switch,
   Route,
-  Link,
   Redirect,
 } from "react-router-dom";
 
@@ -56,20 +56,25 @@ const avatarImg = require("./assets/img_avatar.svg");
 
 const UPDATE_INTERVAL = 2000;
 const TOOLBAR_CHECKS = "toolbarChecks";
-const VIEW_TYPE = "viewType";
+const VIEW_TYPES = "viewTypes";
 const LAST_VIEW = "lastView2";
-const LAST_GROUP = "lastGroup";
 
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
-    const viewType = getSaved(VIEW_TYPE, "");
-    this.lastView = `${getSaved(LAST_VIEW, "service")}${viewType}`;
+    const viewTypes = getSaved(VIEW_TYPES, {
+      service: "",
+      site: "",
+      deployment: "",
+    });
+    const lv = getSaved(LAST_VIEW, "service");
+    this.lastView = `${lv}${viewTypes[lv]}`;
     this.state = {
       connected: false,
       connectPath: "",
       activeItem: this.lastView,
       username: "",
+      viewTypes,
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
@@ -154,11 +159,9 @@ class PageLayout extends React.Component {
 
   onNavSelect = (result) => {
     this.lastView = result.itemId;
-    this.lastGroup = result.groupId;
     setSaved(LAST_VIEW, this.lastView);
-    setSaved(LAST_GROUP, this.lastGroup);
     this.setState({
-      activeItem: result.itemId,
+      activeItem: this.lastView,
       connectPath: "",
     });
   };
@@ -172,7 +175,11 @@ class PageLayout extends React.Component {
     });
   };
   handleChangeViewType = (viewType) => {
-    setSaved(VIEW_TYPE, viewType);
+    const { viewTypes } = this.state;
+    if (viewType === "Graph") viewType = "";
+    viewTypes[this.lastView] = viewType;
+    this.setState({ viewTypes });
+    setSaved(VIEW_TYPES, viewTypes);
   };
   handleChangeShowStat = (showStat) => {
     this.showStat = showStat;
@@ -208,9 +215,11 @@ class PageLayout extends React.Component {
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
   render() {
-    const { activeItem } = this.state;
+    const { activeItem, viewTypes } = this.state;
 
     const PageNav = () => {
+      //                   <Link to={`/${view}`}>{name}</Link>
+      //            <div className="nav-item-link">{name}</div>;
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
           <NavList>
@@ -225,7 +234,7 @@ class PageLayout extends React.Component {
                   }
                   key={view}
                 >
-                  <Link to={`/${view}`}>{name}</Link>
+                  <Link to={`/${view}${viewTypes[view]}`}>{name}</Link>
                 </NavItem>
               );
             })}
