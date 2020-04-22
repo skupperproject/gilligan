@@ -49,6 +49,7 @@ class TopologyPage extends Component {
       showLinkInfo: false,
       chordData: null,
       linkInfo: null,
+      initial: true,
     };
     this.popupCancelled = true;
 
@@ -188,7 +189,7 @@ class TopologyPage extends Component {
         .attr("width", this.width)
         .attr("height", this.height)
         .on("click", () => {
-          this.showChord(null);
+          this.showChord(null, false);
           this.clearPopups();
         })
         .call(this.zoom)
@@ -354,8 +355,8 @@ class TopologyPage extends Component {
     this.setDragBehavior();
   };
 
-  showChord = (chordData) => {
-    this.setState({ showChord: true, chordData }, () => {
+  showChord = (chordData, initial) => {
+    this.setState({ showChord: true, chordData, initial }, () => {
       this.chordRef.doUpdate();
     });
   };
@@ -432,6 +433,7 @@ class TopologyPage extends Component {
   };
 
   toservice = (initial) => {
+    this.showChord(null, initial);
     this.view = "service";
     this.transitioning = true;
 
@@ -447,7 +449,7 @@ class TopologyPage extends Component {
   };
 
   todeployment = (initial) => {
-    this.showChord(null);
+    this.showChord(null, initial);
     this.view = "deployment";
     this.viewObj.collapseNodes();
     // transition rects and paths
@@ -460,7 +462,7 @@ class TopologyPage extends Component {
   };
   todeploymentsankey = (initial) => {
     this.view = "deployment";
-    this.showChord(null);
+    this.showChord(null, initial);
     this.viewObj.expandNodes();
     // transition rects and paths
     this.viewObj.transitioning = true;
@@ -473,6 +475,7 @@ class TopologyPage extends Component {
 
   tosite = (initial) => {
     this.view = "site";
+    this.showChord(null, initial);
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
     this.viewObj.collapseNodes();
     this.viewObj.transitioning = true;
@@ -489,6 +492,7 @@ class TopologyPage extends Component {
       this.sankey = false;
       return this.tosite(initial);
     }
+    this.showChord(null, initial);
     this.view = "site";
     this.viewObj.expandNodes();
     this.viewObj.transitioning = true;
@@ -502,6 +506,7 @@ class TopologyPage extends Component {
 
   toservicesankey = (initial) => {
     this.view = "service";
+    this.showChord(null, initial);
 
     // expand the service rects to sankeyHeight
     this.viewObj.expandNodes();
@@ -516,7 +521,7 @@ class TopologyPage extends Component {
   };
 
   handleShowAll = () => {
-    this.showChord(null);
+    this.showChord(null, true);
   };
 
   handleChangeShowStat = (checked) => {
@@ -601,9 +606,14 @@ class TopologyPage extends Component {
         }
         controlBar={<TopologyControlBar controlButtons={controlButtons} />}
         sideBar={
-          <TopologySideBar id="sk-sidebar" show={this.state.showChord}>
+          <TopologySideBar
+            id="sk-sidebar"
+            className={"no-fade"}
+            show={this.state.showChord}
+          >
             <ChordViewer
               ref={(el) => (this.chordRef = el)}
+              initial={this.state.initial}
               service={this.props.service}
               data={this.state.chordData}
               deploymentLinks={this.viewObj.links().links}

@@ -430,7 +430,7 @@ class ChordViewer extends Component {
     }
     this.noValues = false;
     let matrixMessages,
-      duration = TRANSITION_DURATION;
+      duration = this.props.initial ? 0 : TRANSITION_DURATION;
 
     // if there is no data, show an empty circle and a message
     if (!matrix.hasValues()) {
@@ -867,12 +867,6 @@ class ChordViewer extends Component {
   // called periodically to refresh the data
   doUpdate = () => {
     this.getMatrix();
-  };
-
-  updateNow = () => {
-    clearInterval(this.interval);
-    this.getMatrix();
-    this.interval = setInterval(this.doUpdate, TRANSITION_DURATION);
   };
 
   handleHoverRouter = (router, over) => {

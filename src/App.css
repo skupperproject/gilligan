@@ -1703,3 +1703,10 @@ path.hittarget {
 .pf-c-page__header-brand-link {
   cursor: default;
 }
+
+.no-fade,
+div.qdrTopology .pf-topology-side-bar {
+  -webkit-transition: all 0s linear;
+  -o-transition: all 0s linear;
+  transition: all 0s linear;
+}
