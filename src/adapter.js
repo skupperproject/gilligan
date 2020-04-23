@@ -553,31 +553,34 @@ class Adapter {
     if (!stat) stat = "bytes_out";
     const matrix = [];
     this.data.services.forEach((service) => {
-      service.requests_received.forEach((request) => {
-        Object.keys(request.by_client).forEach((client) => {
-          const clientAddress = this.serviceNameFromClientId(client);
-          const req = request.by_client[client];
-          if (
-            clientAddress === involvingService.address ||
-            service.address === involvingService.address
-          ) {
-            const row = {
-              ingress: clientAddress,
-              egress: service.address,
-              address: request.site_id,
-              messages: req[stat],
-            };
-            const found = matrix.find(
-              (r) => r.ingress === clientAddress && r.egress === service.address
-            );
-            if (found) {
-              this.aggregateAttributes(row, found);
-            } else {
-              matrix.push(row);
+      if (service.requests_received) {
+        service.requests_received.forEach((request) => {
+          Object.keys(request.by_client).forEach((client) => {
+            const clientAddress = this.serviceNameFromClientId(client);
+            const req = request.by_client[client];
+            if (
+              clientAddress === involvingService.address ||
+              service.address === involvingService.address
+            ) {
+              const row = {
+                ingress: clientAddress,
+                egress: service.address,
+                address: request.site_id,
+                messages: req[stat],
+              };
+              const found = matrix.find(
+                (r) =>
+                  r.ingress === clientAddress && r.egress === service.address
+              );
+              if (found) {
+                this.aggregateAttributes(row, found);
+              } else {
+                matrix.push(row);
+              }
             }
-          }
+          });
         });
-      });
+      }
     });
     return matrix;
   };
@@ -609,26 +612,28 @@ class Adapter {
           for (const client_id in request.by_client) {
             const from_client_request = request.by_client[client_id];
             for (const to_site_id in from_client_request.by_handling_site) {
-              matrix.push({
-                ingress: this.siteNameFromId(from_site_id),
-                egress: this.siteNameFromId(to_site_id),
-                address: service.address,
-                info: {
-                  source: {
-                    site_name: this.siteNameFromId(from_site_id),
-                    site_id: from_site_id,
-                    address: service.address,
+              if (from_site_id !== to_site_id) {
+                matrix.push({
+                  ingress: this.siteNameFromId(from_site_id),
+                  egress: this.siteNameFromId(to_site_id),
+                  address: service.address,
+                  info: {
+                    source: {
+                      site_name: this.siteNameFromId(from_site_id),
+                      site_id: from_site_id,
+                      address: service.address,
+                    },
+                    target: {
+                      site_name: this.siteNameFromId(to_site_id),
+                      site_id: to_site_id,
+                      address: service.address,
+                    },
                   },
-                  target: {
-                    site_name: this.siteNameFromId(to_site_id),
-                    site_id: to_site_id,
-                    address: service.address,
-                  },
-                },
-                messages:
-                  from_client_request.by_handling_site[to_site_id][stat],
-                request: from_client_request.by_handling_site[to_site_id],
-              });
+                  messages:
+                    from_client_request.by_handling_site[to_site_id][stat],
+                  request: from_client_request.by_handling_site[to_site_id],
+                });
+              }
             }
           }
         });

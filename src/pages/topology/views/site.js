@@ -298,6 +298,7 @@ export class Site {
   };
 
   setupSitesSelection = (viewer) => {
+    const self = this;
     const selection = this.sitesSelection.data(this.siteNodes.nodes, (d) =>
       d.uid()
     );
@@ -349,18 +350,20 @@ export class Site {
 
     enterCircle
       .on("mouseover", function(d) {
-        // mouseover a namespace box
-        viewer.current_node = d;
-        // highlight the namespace box
+        viewer.blurAll(true, d);
+        d.selected = true;
+        //viewer.current_node = d;
         viewer.restart();
       })
       .on("mouseout", function(d) {
         // mouse out for a circle
-        viewer.current_node = null;
-        viewer.highlightNamespace(false, d3.select(this), d, viewer);
+        self.unSelectAll();
+        viewer.blurAll(false, d);
+        //viewer.current_node = null;
+        //viewer.highlightNamespace(false, d3.select(this), d, viewer);
         // unenlarge target node
         viewer.clearAllHighlights();
-        viewer.mouseover_node = null;
+        //viewer.mouseover_node = null;
         viewer.restart();
       })
       .on("mousedown", (d) => {
@@ -420,7 +423,9 @@ export class Site {
         d3.event.stopPropagation();
       });
 
-    selection.classed("highlighted", (d) => d.highlighted);
+    selection
+      .classed("selected", (d) => d.selected)
+      .classed("highlighted", (d) => d.highlighted);
     selection
       .selectAll("circle.network")
       .classed("dim", viewer.view === "deployment");
@@ -466,10 +471,16 @@ export class Site {
         viewer.showLinkInfo(d);
       })
       .on("mouseover", (d) => {
+        viewer.blurAll(true, d);
+        d.selected = true;
         viewer.showLinkInfo(d);
+        viewer.restart();
       })
       .on("mouseout", (d) => {
+        d.selected = false;
+        viewer.blurAll(false, d);
         viewer.clearPopups();
+        viewer.restart();
       });
 
     enter
@@ -483,9 +494,7 @@ export class Site {
       .attr("text-length", "100%")
       .attr("href", (d) => `#${statId(d)}`);
 
-    selection
-      .selectAll(".siteTrafficLink")
-      .classed("selected", (d) => d.selected);
+    d3.selectAll(".siteTrafficLink").classed("selected", (d) => d.selected);
     d3.selectAll("path.mask").classed("selected", (d) => d.link.selected);
 
     return selection;
@@ -512,10 +521,12 @@ export class Site {
       })
       .on("mouseover", (d) => {
         d.highlighted = true;
+        d.selected = true;
         viewer.restart();
       })
       .on("mouseout", (d) => {
         d.highlighted = false;
+        d.selected = false;
         viewer.restart();
       });
 
@@ -598,7 +609,7 @@ export class Site {
     });
 
     this.routerLinksSelection
-      .selectAll("path") // this includes the .site and .site-hittarget
+      .selectAll("path") // this includes the .site and .hittarget
       .attr("d", (d) => pathBetween(d.source, d.target));
 
     this.trafficLinksSelection
@@ -663,18 +674,50 @@ export class Site {
       .attr("opacity", 1);
   }
 
+  // returns true if any path or service is currently selected.
+  // selected means that the mouse is hoving over it
+  anySelected = () =>
+    this.siteNodes.nodes.some((n) => n.selected) ||
+    this.trafficLinks.links.some((l) => l.selected) ||
+    this.routerLinks.links.some((l) => l.selected);
+
+  unSelectAll = () => {
+    this.siteNodes.nodes.forEach((n) => (n.selected = false));
+    this.trafficLinks.links.forEach((l) => (l.selected = false));
+    this.routerLinks.links.forEach((l) => (l.selected = false));
+  };
   blurAll(blur, d, sankey, color) {
-    const opacity = blur ? 0.25 : 1;
-    this.sitesSelection.attr("opacity", opacity);
-    this.trafficLinksSelection
-      .selectAll("path.siteTrafficLink")
-      .attr("opacity", blur ? (color ? 0 : 0.25) : sankey ? 0.5 : 0);
-    this.trafficLinksSelection
-      .selectAll("path.siteTrafficDir")
-      .attr("opacity", blur ? 0.25 : 1);
-    this.routerLinksSelection
-      .selectAll("path.site")
-      .attr("opacity", blur ? 0.25 : 1);
+    if (blur || !this.anySelected()) {
+      //this.sitesSelection.attr("opacity", opacity);
+      // instead of changing the site opacity, change the colors
+      this.sitesSelection
+        .selectAll(".network")
+        .attr("fill", (s) =>
+          blur && s !== d ? lighten(0.95, s.color) : lighten(0.9, s.color)
+        )
+        .attr("stroke", (s) =>
+          blur && s !== d ? lighten(0.8, s.color) : s.color
+        );
+      this.sitesSelection
+        .selectAll("text")
+        .attr("opacity", (s) => (blur && s !== d ? 0.5 : 1));
+      this.trafficLinksSelection
+        .selectAll("path.siteTrafficLink")
+        .attr("opacity", blur ? (color ? 0 : 0.25) : sankey ? 0.5 : 0);
+      this.trafficLinksSelection
+        .selectAll("path.siteTrafficDir")
+        .attr("opacity", blur ? 0.25 : 1);
+      this.trafficLinksSelection
+        .selectAll("text")
+        .attr("opacity", (l) => (blur && l !== d ? 0.25 : 1));
+      this.masksSelection.attr("opacity", (l) =>
+        blur && l.link !== d ? 0.25 : 1
+      );
+
+      this.routerLinksSelection
+        .selectAll("path.site")
+        .attr("opacity", blur ? 0.25 : 1);
+    }
   }
 
   transition = (sankey, initial, color, viewer) => {
@@ -703,7 +746,10 @@ export class Site {
         .style("display", null)
         .transition()
         .duration(duration)
-        .attr("opacity", 1);
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        });
 
       // hide the wide traffic paths
       d3.selectAll("path.siteTrafficLink")
@@ -723,9 +769,15 @@ export class Site {
         .each("end", function() {
           d3.select(this)
             .style("display", "block")
-            .attr("opacity", 1)
+            .attr("opacity", function(d) {
+              const current = d3.select(this).attr("opacity");
+              return self.anySelected() ? current : 1;
+            })
             .select(".cluster-rects")
-            .attr("opacity", 1)
+            .attr("opacity", function(d) {
+              const current = d3.select(this).attr("opacity");
+              return self.anySelected() ? current : 1;
+            })
             .style("display", "block");
         });
 
@@ -764,7 +816,10 @@ export class Site {
       d3.selectAll("path.siteTrafficDir")
         .transition()
         .duration(duration)
-        .attr("opacity", 1)
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        })
         .attr("stroke-width", 2)
         .attr("stroke", (d) => d.getColor())
         .attrTween("d", function(d, i) {
@@ -778,7 +833,10 @@ export class Site {
         .selectAll("text.stats")
         .transition()
         .duration(duration)
-        .attr("opacity", 1);
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        });
 
       // hide the wide masks
 
@@ -786,7 +844,10 @@ export class Site {
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", 1)
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        })
         .attr("fill", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -805,6 +866,7 @@ export class Site {
   // no traffic view
   toSite = (duration) => {
     return new Promise((resolve) => {
+      const self = this;
       // hide all traffic paths
       d3.select("g.siteTrafficLinks")
         .transition()
@@ -818,14 +880,20 @@ export class Site {
       d3.select("g.siteRouterLinks")
         .transition()
         .duration(duration)
-        .attr("opacity", 1);
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        });
 
       // show all inter router links
       this.routerLinksSelection
-        .selectAll("path") // this includes the .site and .site-hittarget
+        .selectAll("path") // this includes the .site and .hittarget
         .transition()
         .duration(duration)
-        .attr("opacity", 1)
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        })
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
           const current = pathBetween(d.source, d.target);
@@ -843,9 +911,15 @@ export class Site {
         .each("end", function() {
           d3.select(this)
             .style("display", "block")
-            .attr("opacity", 1)
+            .attr("opacity", function(d) {
+              const current = d3.select(this).attr("opacity");
+              return self.anySelected() ? current : 1;
+            })
             .select(".cluster-rects")
-            .attr("opacity", 1)
+            .attr("opacity", function(d) {
+              const current = d3.select(this).attr("opacity");
+              return self.anySelected() ? current : 1;
+            })
             .style("display", "block");
         });
 
@@ -886,7 +960,10 @@ export class Site {
         .style("display", null)
         .transition()
         .duration(duration)
-        .attr("opacity", 1);
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        });
 
       d3.select("g.siteRouterLinks")
         .transition()
@@ -909,7 +986,10 @@ export class Site {
       d3.selectAll("path.siteTrafficDir")
         .transition()
         .duration(duration)
-        .attr("opacity", 1)
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        })
         .attr("stroke", "black")
         .attr("stroke-width", 1)
         .attrTween("d", function(d, i) {
@@ -922,13 +1002,19 @@ export class Site {
         .selectAll("text.stats")
         .transition()
         .duration(duration)
-        .attr("opacity", 1);
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        });
 
       d3.selectAll("path.siteTrafficLink")
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", 0.5)
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 0.5;
+        })
         .attr("fill", (d) => d.target.color)
         .attrTween("d", function(d, i) {
           let previous = d3.select(this).attr("d");
@@ -945,7 +1031,10 @@ export class Site {
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", 1)
+        .attr("opacity", function(d) {
+          const current = d3.select(this).attr("opacity");
+          return self.anySelected() ? current : 1;
+        })
         .attr("fill", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -990,9 +1079,43 @@ export class Site {
       resolve({ data, page, perPage });
     });
   };
-  chordOver(chord, over, viewer) {}
-  arcOver(arc, over, viewer) {}
+  // handle mouse over a chord. highlight the path
+  chordOver(chord, over, viewer) {
+    if (!chord.info) return;
+    //console.log(`------- chordOver site path`);
+    d3.selectAll("path.siteTrafficLink").each(function(p) {
+      /*
+      console.log(`${p.source.site_name}-${p.target.site_name} chordInfo is`);
+      console.log(chord.info);
+      console.log(p);
+      */
+      if (
+        chord.info.source.site_id === p.source.site_id &&
+        chord.info.target.site_id === p.target.site_id
+      ) {
+        p.selected = over;
+        viewer.blurAll(over, p);
+        viewer.restart();
+      }
+    });
+  }
 
+  // handle mouse over an arc. highlight the service
+  arcOver(arc, over, viewer) {
+    //console.log(`------- arcOver`);
+    d3.selectAll("g.cluster").each(function(d) {
+      /*
+      console.log(`-- arc.key ${arc.key}`);
+      console.log(d);
+      console.log(arc);
+      */
+      if (arc.info.target.site_id === `${d.site_id}`) {
+        d.selected = over;
+        viewer.blurAll(over, d);
+        viewer.restart();
+      }
+    });
+  }
   getSavedZoom = (defaultScale) => {
     const savedScale = getSaved(ZOOM_SCALE, defaultScale);
     const savedTranslate = getSaved(ZOOM_TRANSLATE, [0, 0]);

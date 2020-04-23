@@ -21,7 +21,8 @@ import React, { Component } from "react";
 //import { Tabs, Tab } from "@patternfly/react-core";
 import {
   getSizes,
-  pretty,
+  //pretty,
+  formatBytes,
   positionPopup,
   siteColors,
   serviceColors,
@@ -75,7 +76,7 @@ class ChordViewer extends Component {
     this.textRadius = null;
 
     // format with commas
-    this.formatNumber = pretty;
+    this.formatNumber = formatBytes;
 
     // keep track of previous chords so we can animate to the new values
     this.last_chord = null;

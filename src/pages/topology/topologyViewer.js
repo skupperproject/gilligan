@@ -112,11 +112,6 @@ class TopologyPage extends Component {
     if (!this.viewObj.dragging && !this.viewObj.transitioning) {
       if (!this.unmounting) {
         this.doUpdate();
-        this.chordRef.doUpdate();
-        this.setState({
-          linkInfo: this.state.linkInfo,
-          cardService: this.state.cardService,
-        });
       }
     }
   };
@@ -275,6 +270,7 @@ class TopologyPage extends Component {
       .links(this.viewObj.links().links);
     this.viewObj.transition(this.sankey, false, this.getShowColor(), this);
     this.props.handleChangeLastUpdated();
+    this.setState({ initial: false }, this.chordRef.doUpdate);
   };
 
   resetMouseVars = () => {

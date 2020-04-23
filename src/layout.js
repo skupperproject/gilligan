@@ -99,13 +99,29 @@ class PageLayout extends React.Component {
   };
 
   update = () => {
-    this.service.update().then((data) => {
-      if (!this.unmounted) {
-        if (this.pageRef && this.pageRef.update) {
-          this.pageRef.update();
+    if (this.updating) {
+      console.log(
+        `updating took longer than ${UPDATE_INTERVAL /
+          1000} seconds. Skipping this update`
+      );
+      return;
+    }
+    this.updating = true;
+    this.service.update().then(
+      (data) => {
+        if (!this.unmounted) {
+          if (this.pageRef && this.pageRef.update) {
+            this.pageRef.update();
+          }
         }
+        this.updating = false;
+      },
+      (e) => {
+        this.updating = false;
+        console.log("error during update");
+        console.log(e);
       }
-    });
+    );
   };
 
   doConnect = () => {

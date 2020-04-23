@@ -484,7 +484,7 @@ export const genPath = ({
 }) => {
   if (!width) width = link.width;
   if (!offsetY) offsetY = 0;
-  if (mask) return genMask(link, key, mask, width, selection);
+  if (mask) return genMask(link, selection, site);
   if (link.circular)
     return circular(link, key, sankey, width, reverse, offsetY, site);
   return bezierPath(link, key, sankey, width, reverse, offsetY);
@@ -494,7 +494,7 @@ const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
 // construct an arrow on the surface of the target circle
 // oriented along the path connecting the source and target circles
-const genMask = (link, key, mask, width, selection, site) => {
+const genMask = (link, selection, site) => {
   let away = 5; // 1/2 the arrows base width
   let r = link.target.getWidth() / 2; // target circle radius
   let tc = {
@@ -508,24 +508,33 @@ const genMask = (link, key, mask, width, selection, site) => {
   let intersect = len - r; // 1st guess at where the point of the arrow should be on the path
   let p1 = selection.getPointAtLength(intersect); // x,y position at that distance
   let dist = distance(p1, tc); // distance between p1 and the target's center
-  // when we first start, the locations may be extreme
-  // after the circles are in their final position, this while loop is skipped
-  let iterations = 0;
-  while (Math.abs(dist - r) > 1 && iterations < 100) {
-    intersect += dist > r ? 1 : -1;
+  let iterations = 0; // abundance of caution to avoid infinite loop
+  // lazy way to get the intersection.
+  // in practice, this only loops once or twice
+  while (Math.abs(dist - r) > 1 && iterations < r + 1) {
+    intersect += dist > r ? dist - r : -(dist - r);
     p1 = selection.getPointAtLength(intersect);
     dist = distance(p1, tc);
     ++iterations;
   }
-  // p1 is now on the circle, p1 is the point of the arrow
+  // p1 is now on the circle. p1 is the point of the arrow
+  // we want to orient the arrow along the line from p1 to p2
   const p2 = selection.getPointAtLength(intersect - 10); // the base of the arrow
   if (p2.x === p1.x) {
     ++p2.x;
   }
-  const slope = (p2.y - p1.y) / (p2.x - p1.x);
+  let slope = (p2.y - p1.y) / (p2.x - p1.x);
+  // avoid divide by zero
+  if (slope === 0) {
+    slope = 0.001;
+  }
+  // find the corners of the arrow. they are perpendicular to the
+  // line from p1 to p2
   const pt1 = ptAway(p2, -away, slope); // the corners
   const pt2 = ptAway(p2, away, slope);
 
+  // draw the triangular arrow.
+  // this replaces the path that was set on the selection above
   return `M ${p1.x} ${p1.y} L ${pt2.x} ${pt2.y} L ${pt1.x} ${pt1.y} z`;
 };
 
@@ -967,7 +976,7 @@ export function reconcileLinks(existingLinks, newLinks) {
 
 // https://stackoverflow.com/questions/15900485
 export function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0) return "0 Bytes";
+  if (bytes === 0) return "0 bytes";
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;

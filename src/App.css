@@ -536,31 +536,27 @@ svg {
   user-select: none;
 }
 
-svg:not(.active):not(.ctrl) {
+svg#SVG_ID:not(.active):not(.ctrl) {
   cursor: move;
 }
 
-path.hittarget,
+/* path.hittarget,*/
+
 svg g.cluster,
 svg g.service-type {
   cursor: pointer;
 }
 svg.address-svg {
   cursor: pointer;
-}
-svg.address-svg {
   margin-left: 1.5em;
 }
 .qdrChord svg.address-svg {
   margin-left: 0;
 }
 
-path.service.selected:not(.traffic),
-path.siteTrafficLink.selected:not(.traffic),
-path.mask.selected:not(.traffic),
-path.deployment.selected:not(.traffic),
+path.selected:not(.hittpath),
 path.deployment.highlighted:not(.traffic) {
-  stroke: #33f;
+  /*stroke: #33f;*/
   opacity: 1;
 }
 path.hittarget.selected {
@@ -575,7 +571,7 @@ path.forceBlack {
   stroke: #000;
 }
 
-svg:not(.active):not(.ctrl) path.service {
+svg#SVG_ID:not(.active):not(.ctrl) path.service {
   cursor: pointer;
 }
 
@@ -1168,9 +1164,23 @@ rect.service {
   fill: white;
 }
 
+g.site.selected * {
+  opacity: 1 !important;
+}
+
+g.site.selected circle.network,
 g.service-type.selected rect.service-type {
   stroke: blue;
   stroke-width: 4px;
+  opacity: 1;
+}
+g.site.selected text.cluster-name {
+  font-weight: bold;
+}
+
+g.service-type.selected,
+g.service-type.selected * {
+  opacity: 1;
 }
 
 rect.service-type {
