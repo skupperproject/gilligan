@@ -131,6 +131,18 @@ export class Deployment extends Service {
     });
   };
 
+  mouseoverCircle = (d, viewer) => {
+    // highlight the circle
+    this.Site.mouseoverCircle(d, viewer);
+    // highlight the services
+    this.serviceNodes.nodes.forEach((n) => {
+      n.selected = n.parentNode.site_id === d.site_id;
+    });
+  };
+  mouseoutCircle = (d, viewer) => {
+    this.Site.mouseoutCircle(d, viewer);
+    this.unSelectAll();
+  };
   // move the sites and move the services inside their respective site
   adjustSites = (siteNodes, serviceNodes, viewer) => {
     // size the sites based on the services deployed in them

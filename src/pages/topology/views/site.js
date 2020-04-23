@@ -298,7 +298,6 @@ export class Site {
   };
 
   setupSitesSelection = (viewer) => {
-    const self = this;
     const selection = this.sitesSelection.data(this.siteNodes.nodes, (d) =>
       d.uid()
     );
@@ -349,21 +348,12 @@ export class Site {
       .text((d) => d.name);
 
     enterCircle
-      .on("mouseover", function(d) {
-        viewer.blurAll(true, d);
-        d.selected = true;
-        //viewer.current_node = d;
+      .on("mouseover", (d) => {
+        viewer.viewObj.mouseoverCircle(d, viewer);
         viewer.restart();
       })
-      .on("mouseout", function(d) {
-        // mouse out for a circle
-        self.unSelectAll();
-        viewer.blurAll(false, d);
-        //viewer.current_node = null;
-        //viewer.highlightNamespace(false, d3.select(this), d, viewer);
-        // unenlarge target node
-        viewer.clearAllHighlights();
-        //viewer.mouseover_node = null;
+      .on("mouseout", (d) => {
+        viewer.viewObj.mouseoutCircle(d, viewer);
         viewer.restart();
       })
       .on("mousedown", (d) => {
@@ -433,6 +423,17 @@ export class Site {
     selection.classed("hidden", (d) => d.site_name === "unknown");
 
     return selection;
+  };
+
+  mouseoverCircle = (d, viewer) => {
+    viewer.blurAll(true, d);
+    d.selected = true;
+  };
+  mouseoutCircle = (d, viewer) => {
+    // mouse out for a circle
+    this.unSelectAll();
+    viewer.blurAll(false, d);
+    viewer.clearAllHighlights();
   };
 
   setupTrafficLinks = (viewer) => {
