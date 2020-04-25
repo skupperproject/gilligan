@@ -1497,19 +1497,17 @@ circle.end-point {
   margin-left: 1.5em;
 }
 */
-.graph-toolbar svg {
+.graph-toolbar div.color-gradient svg {
   padding-top: 0.5em;
   padding-left: 0.5em;
+  position: absolute;
+  right: 0;
+  top: -0.5em;
 }
 .graph-toolbar div.color-gradient {
   display: flex;
   position: relative;
   width: 16em;
-}
-.graph-toolbar svg {
-  position: absolute;
-  right: 0;
-  top: -0.5em;
 }
 .graph-toolbar .tall-item {
   border-right: 1px solid black;
@@ -1534,7 +1532,16 @@ circle.end-point {
 .toolbar-item:not(:first-child) {
   padding-left: 1em;
 }
-
+.stat-dropdown {
+  padding-left: 1.3em;
+}
+button:disabled span,
+span.disabled {
+  color: #888888;
+}
+button:disabled svg {
+  fill: #888;
+}
 a.selected.pf-c-dropdown__menu-item {
   background-color: #0066cc;
   color: white;
@@ -1724,4 +1731,8 @@ div.qdrTopology .pf-topology-side-bar {
   -webkit-transition: all 0s linear;
   -o-transition: all 0s linear;
   transition: all 0s linear;
+}
+
+div.skupper-console .pf-c-page__sidebar {
+  width: 10em;
 }

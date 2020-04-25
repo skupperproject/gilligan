@@ -31,13 +31,15 @@ import {
   ServiceHeight,
   reconcileArrays,
   reconcileLinks,
-  genPath,
 } from "../../../utilities";
+import { genPath } from "../../../paths";
+
 import { Site } from "./site";
 import { Service } from "./service";
 import { Nodes } from "../nodes";
 import { Links } from "../links";
 const DEPLOYMENT_POSITION = "dp";
+const DEPLOYMENT_STATS = "dpstats";
 const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
 
@@ -59,7 +61,8 @@ export class Deployment extends Service {
       this.Site.siteNodes,
       this.serviceNodes,
       this.serviceLinks,
-      vsize
+      vsize,
+      viewer.state.stats
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
@@ -81,7 +84,8 @@ export class Deployment extends Service {
       newSiteNodes,
       newServiceNodes,
       newServiceLinks,
-      vsize
+      vsize,
+      viewer.state.stats
     );
     reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
     reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
@@ -138,10 +142,13 @@ export class Deployment extends Service {
     this.serviceNodes.nodes.forEach((n) => {
       n.selected = n.parentNode.site_id === d.site_id;
     });
+    viewer.restart();
   };
   mouseoutCircle = (d, viewer) => {
     this.Site.mouseoutCircle(d, viewer);
     this.unSelectAll();
+    viewer.blurAll(false, d);
+    viewer.restart();
   };
   // move the sites and move the services inside their respective site
   adjustSites = (siteNodes, serviceNodes, viewer) => {
@@ -159,7 +166,8 @@ export class Deployment extends Service {
             fromService.address,
             site.site_id,
             toService.address,
-            site.site_id
+            site.site_id,
+            viewer.state.stats[toService.protocol]
           );
           if (stat !== undefined) {
             links.push({
@@ -218,7 +226,7 @@ export class Deployment extends Service {
     });
   };
 
-  initServiceLinks = (siteNodes, serviceNodes, links, vsize) => {
+  initServiceLinks = (siteNodes, serviceNodes, links, vsize, stats) => {
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
     // create links between all services
@@ -228,7 +236,8 @@ export class Deployment extends Service {
           fromNode.name,
           fromNode.parentNode ? fromNode.parentNode.site_id : null,
           toNode.name,
-          toNode.parentNode ? toNode.parentNode.site_id : null
+          toNode.parentNode ? toNode.parentNode.site_id : null,
+          stats[toNode.protocol]
         );
         if (stat !== undefined) {
           const linkIndex = links.addLink({
@@ -620,5 +629,14 @@ export class Deployment extends Service {
   saveZoom = (zoom) => {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
+  };
+  getStats = () => {
+    return getSaved(DEPLOYMENT_STATS, {
+      http: "bytes_out",
+      tcp: "bytes_out",
+    });
+  };
+  saveStats = (stats) => {
+    setSaved(DEPLOYMENT_STATS, stats);
   };
 }

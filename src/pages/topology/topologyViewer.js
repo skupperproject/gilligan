@@ -39,9 +39,12 @@ const SPLITTER_POSITION = "split";
 const SPLITTER_LEFT = "div.pf-topology-content";
 const SPLITTER_RIGHT = "div.pf-topology-side-bar";
 
-class TopologyPage extends Component {
+class TopologyViewer extends Component {
   constructor(props) {
     super(props);
+
+    this.view = this.props.view;
+    this.viewObj = new VIEWS[this.view](this.props.service);
     this.state = {
       cardService: null,
       showLegend: false,
@@ -50,6 +53,7 @@ class TopologyPage extends Component {
       chordData: null,
       linkInfo: null,
       initial: true,
+      stats: this.viewObj.getStats(),
     };
     this.popupCancelled = true;
 
@@ -77,9 +81,7 @@ class TopologyPage extends Component {
         enabled: (data) => !this.isSelected(data),
       },
     ];
-    this.view = this.props.view;
     this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
-    this.viewObj = new VIEWS[this.view](this.props.service);
     this.resetScale = 1;
   }
 
@@ -341,16 +343,12 @@ class TopologyPage extends Component {
     this.viewObj.blurAll(blur, d, this.sankey, this.getShowColor());
   };
 
-  setDragBehavior = () => {
-    this.viewObj.setupDrag(this.drag);
-  };
-
   // Takes the forceData.nodes and forceData.links array and creates svg elements
   // Also updates any existing svg elements based on the updated values in forceData.nodes
   // and forceData.*Links
   restart = () => {
     this.viewObj.setupSelections(this);
-    this.setDragBehavior();
+    this.viewObj.setupDrag(this.drag);
   };
 
   showChord = (chordData, initial) => {
@@ -537,10 +535,18 @@ class TopologyPage extends Component {
     this.showChord(null, true);
   };
 
-  handleChangeShowStat = (checked) => {
-    this.props.handleChangeShowStat(checked);
-    this.setLinkStat();
+  handleChangeShowStat = (type, stat) => {
+    const { stats } = this.state;
+    if (type === "both") {
+      stats.http = stat;
+      stats.tcp = stat;
+    } else {
+      stats[type] = stat;
+    }
+    this.viewObj.saveStats(stats);
+    this.setState({ stats }, this.doUpdate);
   };
+
   handleChangeSankey = (checked) => {
     this.props.handleChangeSankey(checked);
     this.callTransitions();
@@ -556,7 +562,7 @@ class TopologyPage extends Component {
   // only show links in color if showing traffic and by color
   getShowColor = () => this.props.getShowSankey() && this.props.getShowColor();
   setLinkStat = () => {
-    this.viewObj.setLinkStat(this.sankey, this.props);
+    this.viewObj.setLinkStat(this.state.stats);
   };
 
   handleChordOver = (chord, over) => {
@@ -586,6 +592,18 @@ class TopologyPage extends Component {
     this.resize();
   };
 
+  statProtocol = () => {
+    const links = this.viewObj.links().links;
+    let tcp = links.some((l) => l.target.protocol === "tcp");
+    let http = links.some((l) => l.target.protocol === "http");
+    return tcp && http ? "both" : tcp ? "tcp" : "http";
+  };
+
+  statForProtocol = () =>
+    ["both", "http"].includes(this.statProtocol())
+      ? this.state.stats.http
+      : this.state.stats.tcp;
+
   render() {
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,
@@ -606,10 +624,10 @@ class TopologyPage extends Component {
             handleChangeShowStat={this.handleChangeShowStat}
             handleChangeWidth={this.handleChangeWidth}
             handleChangeColor={this.handleChangeColor}
-            options={this.props.options}
             viewType={this.props.viewType}
             view={this.view}
-            getShowStat={this.props.getShowStat}
+            statProtocol={this.statProtocol()} // http || tcp || both
+            stat={this.statForProtocol()} // requests || bytes_out etc.
             getShowSankey={this.props.getShowSankey}
             getShowTraffic={this.props.getShowTraffic}
             getShowWidth={this.props.getShowWidth}
@@ -678,4 +696,4 @@ class TopologyPage extends Component {
   }
 }
 
-export default TopologyPage;
+export default TopologyViewer;

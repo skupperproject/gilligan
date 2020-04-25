@@ -26,7 +26,7 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 
-import LinkOptions from "./linkOptions";
+import MetricsDrowdown from "./metricsDropdown";
 
 class GraphToolbar extends Component {
   constructor(props) {
@@ -34,6 +34,26 @@ class GraphToolbar extends Component {
     this.state = {
       checkChanged: false,
     };
+    this.dropdownItems = [
+      {
+        key: "none",
+        name: "None",
+      },
+      {
+        key: "requests",
+        name: "Requests",
+        type: "http",
+      },
+      {
+        key: "bytes_in",
+        name: "Bytes in",
+      },
+      {
+        key: "bytes_out",
+        name: "Bytes out",
+      },
+      { key: "latency", name: "Latency (max)", type: "http" },
+    ];
   }
 
   // checkbox was checked
@@ -41,8 +61,6 @@ class GraphToolbar extends Component {
     const { name } = event.target;
     if (name === "showSankey") {
       this.props.handleChangeSankey(checked);
-    } else if (name === "showStat") {
-      this.props.handleChangeShowStat(checked);
     } else if (name === "showWidth") {
       this.props.handleChangeWidth(checked);
     } else if (name === "showColor") {
@@ -53,7 +71,12 @@ class GraphToolbar extends Component {
     this.setState({ checkChanged: !this.state.checkChanged });
   };
 
+  statsEnabled = () => {
+    if (this.props.view === "site" && !this.props.getShowSankey()) return false;
+    return true;
+  };
   render() {
+    const { statProtocol } = this.props;
     const routerLinksRadio = () => {
       if (this.props.view === "site") {
         return (
@@ -184,36 +207,24 @@ class GraphToolbar extends Component {
       </ToolbarItem>
     );
 
-    const statCheck = () => (
-      <React.Fragment>
-        <ToolbarItem className="toolbar-item">
-          <Checkbox
-            label="Show metric"
-            isChecked={this.props.getShowStat()}
-            isDisabled={
-              this.props.view === "site" && !this.props.getShowSankey()
-                ? true
-                : false
-            }
-            onChange={this.handleChange}
-            aria-label="show metric"
-            id="showStat"
-            name="showStat"
-          />
-        </ToolbarItem>
-        {false && (
-          <ToolbarItem className="toolbar-item">
-            <LinkOptions {...this.props} showStat={this.props.getShowStat()} />
-          </ToolbarItem>
-        )}
-      </React.Fragment>
-    );
-
     return (
       <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
         <ToolbarGroup>
           {sankeyCheck()}
-          {statCheck()}
+          <ToolbarItem className="stat-dropdown">
+            {
+              <span className={this.statsEnabled() ? "" : "disabled"}>
+                Show metric
+              </span>
+            }
+            <MetricsDrowdown
+              dropdownItems={this.dropdownItems}
+              stat={this.props.stat}
+              handleChangeOption={this.props.handleChangeShowStat}
+              isDisabled={!this.statsEnabled()}
+              type={statProtocol}
+            />
+          </ToolbarItem>
         </ToolbarGroup>
       </Toolbar>
     );

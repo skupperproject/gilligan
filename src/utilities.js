@@ -18,7 +18,6 @@ under the License.
 */
 
 import * as d3 from "d3";
-import * as d3path from "d3-path";
 //import { sankey } from "d3-sankey";
 import { sankeyCircular as sankey } from "@plotly/d3-sankey-circular";
 const SankeyAttributes = [
@@ -173,11 +172,18 @@ export const adjustPositions = ({
   const loopCheck = (originalSource, currentTarget, linkChain) => {
     for (let t = 0; t < currentTarget.targetNodes.length; t++) {
       const between = linkBetween(currentTarget, currentTarget.targetNodes[t]);
-      const newChain = [...linkChain, between];
-      if (currentTarget.targetNodes[t] === originalSource) {
-        loops.push(newChain);
-      } else {
-        loopCheck(originalSource, currentTarget.targetNodes[t], newChain);
+      // avoid sub loops that don't involve the originalSource
+      if (!linkChain.includes(between)) {
+        // add the link to the chain
+        const newChain = [...linkChain, between];
+        // if we are back at the originalSource node
+        if (currentTarget.targetNodes[t] === originalSource) {
+          // we have a loop
+          loops.push(newChain);
+        } else {
+          // see if the current link loops back to the originalSource node
+          loopCheck(originalSource, currentTarget.targetNodes[t], newChain);
+        }
       }
     }
   };
@@ -456,255 +462,29 @@ export const RGB_Linear_Shade = (p, c) => {
   );
 };
 
-// calculate a point "away" distance from given pt, that is perpendicular
-// to the line going from pt with given slope
-const ptAway = (pt, away, slope) => {
-  const m = -1 / slope;
-  const y = (away * m) / Math.sqrt(1 + m * m) + pt.y;
-  const x = away / Math.sqrt(1 + m * m) + pt.x;
-  return { x, y };
-};
-
-const distance = (pt1, pt2) => {
-  let xdiff = pt2.x - pt1.x;
-  let ydiff = pt2.y - pt1.y;
-  return Math.sqrt(xdiff * xdiff + ydiff * ydiff);
-};
-
-export const genPath = ({
-  link,
-  key,
-  mask,
-  sankey,
-  width,
-  reverse,
-  offsetY,
-  selection,
-  site,
-}) => {
-  if (!width) width = link.width;
-  if (!offsetY) offsetY = 0;
-  if (mask) return genMask(link, selection, site);
-  if (link.circular)
-    return circular(link, key, sankey, width, reverse, offsetY, site);
-  return bezierPath(link, key, sankey, width, reverse, offsetY);
-};
-
-const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
-
-// construct an arrow on the surface of the target circle
-// oriented along the path connecting the source and target circles
-const genMask = (link, selection, site) => {
-  let away = 5; // 1/2 the arrows base width
-  let r = link.target.getWidth() / 2; // target circle radius
-  let tc = {
-    // center of target circle
-    x: link.target.x + r,
-    y: link.target.y + r,
-  };
-  // create the path on which we will be placing the arrow
-  d3.select(selection).attr("d", (d) => genPath({ link, site }));
-  const len = selection.getTotalLength(); // length of the path
-  let intersect = len - r; // 1st guess at where the point of the arrow should be on the path
-  let p1 = selection.getPointAtLength(intersect); // x,y position at that distance
-  let dist = distance(p1, tc); // distance between p1 and the target's center
-  let iterations = 0; // abundance of caution to avoid infinite loop
-  // lazy way to get the intersection.
-  // in practice, this only loops once or twice
-  while (Math.abs(dist - r) > 1 && iterations < r + 1) {
-    intersect += dist > r ? dist - r : -(dist - r);
-    p1 = selection.getPointAtLength(intersect);
-    dist = distance(p1, tc);
-    ++iterations;
-  }
-  // p1 is now on the circle. p1 is the point of the arrow
-  // we want to orient the arrow along the line from p1 to p2
-  const p2 = selection.getPointAtLength(intersect - 10); // the base of the arrow
-  if (p2.x === p1.x) {
-    ++p2.x;
-  }
-  let slope = (p2.y - p1.y) / (p2.x - p1.x);
-  // avoid divide by zero
-  if (slope === 0) {
-    slope = 0.001;
-  }
-  // find the corners of the arrow. they are perpendicular to the
-  // line from p1 to p2
-  const pt1 = ptAway(p2, -away, slope); // the corners
-  const pt2 = ptAway(p2, away, slope);
-
-  // draw the triangular arrow.
-  // this replaces the path that was set on the selection above
-  return `M ${p1.x} ${p1.y} L ${pt2.x} ${pt2.y} L ${pt1.x} ${pt1.y} z`;
-};
-
-// create a bezier path between link.source and link.target
-const bezierPath = (link, key, sankey, width, reverse, offsetY) => {
-  let x0 = get(link.source, "x1", key); // right side of source
-  if (link.source.expanded && link.source.nodeType === "cluster") {
-    x0 -= link.source.getWidth() / 2;
-  }
-  const y0 = link.source.expanded
-    ? link.y0 - offsetY
-    : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
-  let x1 = get(link.target, "x0", key); // left side of target
-  if (link.source.expanded && link.target.nodeType === "cluster") {
-    x1 += link.target.getWidth() / 2;
-  }
-  const y1 = link.target.expanded
-    ? link.y1 - offsetY
-    : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
-  const mid = (x0 + x1) / 2;
-  const path = d3path.path();
-  if (sankey) {
-    const halfWidth = width / 2;
-    path.moveTo(x0, y0 - halfWidth);
-    path.bezierCurveTo(
-      mid,
-      y0 - halfWidth,
-      mid,
-      y1 - halfWidth,
-      x1,
-      y1 - halfWidth
-    );
-    path.lineTo(x1, y1 + halfWidth);
-    path.bezierCurveTo(
-      mid,
-      y1 + halfWidth,
-      mid,
-      y0 + halfWidth,
-      x0,
-      y0 + halfWidth
-    );
-    path.closePath();
-  } else {
-    if (reverse) {
-      path.moveTo(x1, y1);
-      path.bezierCurveTo(mid, y1, mid, y0, x0, y0);
-    } else {
-      path.moveTo(x0, y0);
-      path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
-    }
-  }
-  return path.toString();
-};
-
-// create a complex path exiting source on the right
-// and curving around to enter the target on the left
-const circular = (link, key, sankey, width, reverse, offsetY, site) => {
-  const minR = 10;
-  const maxR = 80;
-  const gapSource = site ? link.source.r : 8;
-  const gapTarget = site ? link.target.r : 8;
-  const gapBottom = Math.max(
-    link.source.getHeight() / 2,
-    link.target.getHeight() / 2
-  );
-  const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
-  let sourceX = get(link.source, "x1", key); // right side of source
-  if (link.source.expanded && link.source.nodeType === "cluster") {
-    sourceX -= link.source.getWidth() / 2;
-  }
-  let targetX = get(link.target, "x0", key); // left side of target
-  if (link.target.expanded && link.target.nodeType === "cluster") {
-    targetX += link.target.getWidth() / 2;
-  }
-  const sourceY = link.source.expanded
-    ? link.y0
-    : get(link.source, "y0", key) + link.source.getHeight() / 2;
-  const targetY = link.target.expanded
-    ? link.y1
-    : get(link.target, "y0", key) + link.target.getHeight() / 2;
-  const bottomY = Math.max(
-    sourceY + r + gapBottom + r,
-    targetY + r + gapBottom + r
-  );
-  const offset = sankey ? width / 2 : 0;
-  let sy = sourceY - offset - offsetY;
-  let ty = targetY - offset - offsetY;
-  let by = bottomY + offset - offsetY;
-  let sr = r + offset;
-
-  let path = d3path.path();
-
-  if (!reverse) {
-    path.moveTo(sourceX, sy);
-    path.lineTo(sourceX + gapSource, sy);
-    path.arcTo(
-      sourceX + gapSource + sr,
-      sy,
-      sourceX + gapSource + sr,
-      sy + sr,
-      sr
-    );
-    path.lineTo(sourceX + gapSource + sr, by - sr);
-    path.arcTo(sourceX + gapSource + sr, by, sourceX + gapSource, by, sr);
-    path.lineTo(targetX - gapTarget, by);
-    path.arcTo(
-      targetX - gapTarget - sr,
-      by,
-      targetX - gapTarget - sr,
-      by - sr,
-      sr
-    );
-    path.lineTo(targetX - gapTarget - sr, ty + sr);
-    path.arcTo(targetX - gapTarget - sr, ty, targetX - gapTarget, ty, sr);
-    path.lineTo(targetX, ty);
-  }
-  if (sankey || reverse) {
-    if (!reverse) {
-      sy = sourceY + offset;
-      ty = targetY + offset;
-      by = bottomY - offset;
-      sr = Math.max(r - offset, minR);
-      path.lineTo(targetX, ty);
-    } else {
-      path.moveTo(targetX, ty);
-    }
-    path.lineTo(targetX - gapTarget, ty);
-    path.arcTo(
-      targetX - gapTarget - sr,
-      ty,
-      targetX - gapTarget - sr,
-      ty + sr,
-      sr
-    );
-    path.lineTo(targetX - gapTarget - sr, by - sr);
-    path.arcTo(targetX - gapTarget - sr, by, targetX - gapTarget, by, sr);
-    path.lineTo(sourceX + gapSource, by);
-    path.arcTo(
-      sourceX + gapSource + sr,
-      by,
-      sourceX + gapSource + sr,
-      by - sr,
-      sr
-    );
-    path.lineTo(sourceX + gapSource + sr, sy + sr);
-    path.arcTo(sourceX + gapSource + sr, sy, sourceX + gapSource, sy, sr);
-    path.lineTo(sourceX, sy);
-    if (!reverse) path.closePath();
-  }
-  return path.toString();
-};
-
 // set or clear the stats text for each path.view in the selection
-export const setLinkStat = (selection, view, stat, shown) => {
-  const linkOptions = {
-    requests: { one: "req", more: "reqs" },
-    bytes_in: "in",
-    bytes_out: "out",
-    latency_max: "ms latency (max)",
+export const setLinkStat = (selection, statOptions) => {
+  const statFormats = {
+    requests: { one: " req", moreK: " reqs", lessK: " reqs", dir: "" },
+    bytes_in: { one: " byte", moreK: "B", lessK: " bytes", dir: "in" },
+    bytes_out: { one: " byte", moreK: "B", lessK: " bytes", dir: "out" },
   };
-
   // set or clear the stat text
   selection.selectAll("textPath.stats").text((d) => {
-    if (stat && shown) {
+    const protocol = d.target.protocol;
+    const stat = statOptions[protocol];
+    if (
+      stat &&
+      stat !== "none" &&
+      d.request &&
+      d.request[stat] !== undefined &&
+      statFormats[stat]
+    ) {
       const val = d.request[stat];
-      let text = linkOptions[stat];
-      if (typeof text === "object") {
-        text = val === 1 ? text.one : text.more;
-      }
-      return `${formatBytes(val)} ${text}`;
+      const format = statFormats[stat];
+      const formatted = formatBytes(val);
+      const suffix = val < 1024 ? format.lessK : format.moreK;
+      return `${formatted}${val === 1 ? format.one : suffix} ${format.dir}`;
     } else {
       return "";
     }
@@ -776,32 +556,6 @@ const fillColor = (v) => {
   return "#0000FF";
 };
 
-// return the path between 2 circles
-// the path is the shortest line segment joining the circles
-export const pathBetween = (source, target) => {
-  const x1 = source.x + source.r; // center of source circle
-  const y1 = source.y + source.r;
-  const x2 = target.x + target.r; // center of target circle
-  const y2 = target.y + target.r;
-  const pt1 = circleIntercept(x1, y1, source.r, x2, y2);
-  const pt2 = circleIntercept(x2, y2, target.r, x1, y1);
-  let path = d3path.path();
-  path.moveTo(pt1.x, pt1.y);
-  path.lineTo(pt2.x, pt2.y);
-  return path.toString();
-};
-
-// intersection of circle at x1,y1 with radius r and line
-// between x1,y1 and y2,y2
-// This is used to draw the router connection lines between sites
-const circleIntercept = (x1, y1, r, x2, y2) => {
-  const pt = {};
-  const dist = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-  pt.x = (r * (x2 - x1)) / dist + x1;
-  pt.y = (r * (y2 - y1)) / dist + y1;
-  return pt;
-};
-
 export const initSankey = ({
   nodes,
   links,
@@ -818,7 +572,7 @@ export const initSankey = ({
     const linkNodes = nodes.filter((n) =>
       links.some((l) => l.source === n || l.target === n)
     );
-    //const nonCircular = links.filter((l) => l.source.name !== l.target.name);
+    zeroIfyLinks(links);
     try {
       sankey()
         .nodeWidth(nodeWidth)
@@ -832,6 +586,7 @@ export const initSankey = ({
       console.log("error in initSankey");
       console.log(e);
     }
+    unZeroIfyLinks(links);
   }
 };
 
@@ -867,6 +622,28 @@ export const circularize = (links) => {
   });
 };
 
+const zeroIfyLinks = (links) => {
+  links.forEach((l) => {
+    if (l.value === 0) {
+      l.value = 0.1;
+      l.wasZero = true;
+    }
+  });
+};
+const unZeroIfyLinks = (links) => {
+  links.forEach((l) => {
+    if (l.wasZero) {
+      delete l.wasZero;
+      l.value = 0;
+      // set the height to 1
+      l.source.y1 = l.source.y0 + 1;
+      l.target.y1 = l.target.y0 + 1;
+      l.y0 = l.source.y0 + l.source.getHeight() / 2;
+      l.y1 = l.target.y0 + l.target.getHeight() / 2;
+      l.width = 1;
+    }
+  });
+};
 export const updateSankey = ({ nodes, links }) => {
   nodes.forEach((n) => {
     n.x0 = n.x;
@@ -879,12 +656,14 @@ export const updateSankey = ({ nodes, links }) => {
   const linkNodes = nodes.filter((n) =>
     links.some((l) => l.source === n || l.target === n)
   );
+  zeroIfyLinks(links);
   try {
     sankey().update({ nodes: linkNodes, links });
   } catch (e) {
     console.log(`error in sankey.update`);
     console.log(e);
   }
+  unZeroIfyLinks(links);
 };
 
 // call callback when transition ends for all items in selection
@@ -974,13 +753,13 @@ export function reconcileLinks(existingLinks, newLinks) {
   reconcileArrays(existingLinks, newLinks);
 }
 
-// https://stackoverflow.com/questions/15900485
+// based on https://stackoverflow.com/questions/15900485
 export function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0) return "0 bytes";
+  if (bytes === 0) return "0";
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  const sizes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"];
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 

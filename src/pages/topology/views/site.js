@@ -21,13 +21,11 @@ import * as d3 from "d3";
 import {
   adjustPositions,
   copy,
-  genPath,
   linkColor,
   getSaved,
   setSaved,
   initSankey,
   lighten,
-  pathBetween,
   updateSankey,
   siteColor,
   removeSiteColor,
@@ -41,6 +39,7 @@ import {
   reconcileArrays,
   reconcileLinks,
 } from "../../../utilities";
+import { genPath, pathBetween } from "../../../paths";
 import { interpolatePath } from "d3-interpolate-path";
 
 import { Nodes } from "../nodes.js";
@@ -48,6 +47,7 @@ import { Links } from "../links.js";
 const SITE_POSITION = "site";
 const ZOOM_SCALE = "sitescale";
 const ZOOM_TRANSLATE = "sitetrans";
+const SITE_STATS = "sitestats";
 
 export class Site {
   constructor(data) {
@@ -56,7 +56,7 @@ export class Site {
     this.routerLinks = new Links();
     this.trafficLinks = new Links();
     this.nodes = () => this.siteNodes;
-    this.links = () => this.routerLinks;
+    this.links = () => this.trafficLinks;
     this.fields = [
       { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
@@ -86,9 +86,9 @@ export class Site {
     vsize = this.initRouterLinks(this.siteNodes, this.routerLinks, vsize);
     vsize = this.initTrafficLinks(
       this.siteNodes,
-      this.routerLinks,
       this.trafficLinks,
-      vsize
+      vsize,
+      viewer.state.stats
     );
     return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
@@ -100,7 +100,7 @@ export class Site {
     this.initNodes(newNodes);
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initRouterLinks(newNodes, newRouterLinks, vsize);
-    this.initTrafficLinks(newNodes, newRouterLinks, newTrafficLinks, vsize);
+    this.initTrafficLinks(newNodes, newTrafficLinks, vsize, viewer.state.stats);
 
     reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
     reconcileLinks(
@@ -136,40 +136,55 @@ export class Site {
     });
   };
 
-  initTrafficLinks = (nodes, routerLinks, links, vsize) => {
+  initTrafficLinks = (nodes, links, vsize, stats) => {
     const siteMatrix = this.data.adapter.siteMatrix();
     siteMatrix.forEach((record) => {
-      const found = links.links.find(
-        (l) =>
-          l.source.site_id === record.info.source.site_id &&
-          l.target.site_id === record.info.target.site_id
-      );
-      if (found) {
-        found.value += record.messages;
-        this.data.adapter.aggregateAttributes(record.request, found.request);
-      } else {
-        const linkIndex = links.addLink({
-          source: nodes.nodes.find(
-            (n) => n.site_id === record.info.source.site_id
-          ),
-          target: nodes.nodes.find(
-            (n) => n.site_id === record.info.target.site_id
-          ),
-          dir: "in",
-          cls: "siteTraffic",
-          uid: `SiteLink-${record.info.source.site_id}-${record.info.target.site_id}`,
-        });
-        const link = links.links[linkIndex];
-        link.value = record.messages;
-        link.request = copy(record.request);
-        link.getColor = () => linkColor(link, links.links);
+      // ignore intra-site traffic
+      if (record.ingress !== record.egress) {
+        const targetService = this.data.adapter.findService(
+          record.info.target.address
+        );
+        const found = links.links.find(
+          (l) =>
+            l.source.site_id === record.info.source.site_id &&
+            l.target.site_id === record.info.target.site_id
+        );
+        if (found) {
+          if (targetService) {
+            found.value += record.request[stats[targetService.protocol]];
+          }
+          this.data.adapter.aggregateAttributes(record.request, found.request);
+        } else {
+          const linkIndex = links.addLink({
+            source: nodes.nodes.find(
+              (n) => n.site_id === record.info.source.site_id
+            ),
+            target: nodes.nodes.find(
+              (n) => n.site_id === record.info.target.site_id
+            ),
+            dir: "in",
+            cls: "siteTraffic",
+            uid: `SiteLink-${record.info.source.site_id}-${record.info.target.site_id}`,
+          });
+          const link = links.links[linkIndex];
+          if (targetService) {
+            link.value = record.request[stats[targetService.protocol]];
+          } else {
+            link.value = 0;
+            console.log(
+              `error finding target service ${record.info.target.address}`
+            );
+          }
+          link.request = copy(record.request);
+          link.getColor = () => linkColor(link, links.links);
+        }
       }
     });
     // site-to-site traffic
     // position sites based on router links
     adjustPositions({
       nodes: nodes.nodes,
-      links: routerLinks.links,
+      links: links.links,
       width: vsize.width,
       height: vsize.height - 50,
       align: "left",
@@ -635,13 +650,8 @@ export class Site {
       .attr("d", (d) => this.genStatPath(d, sankey));
   };
 
-  setLinkStat = (sankey, props) => {
-    setLinkStat(
-      this.trafficLinksSelection,
-      "siteTrafficDir",
-      props.options.link.stat,
-      props.getShowStat()
-    );
+  setLinkStat = (statOptions) => {
+    setLinkStat(this.trafficLinksSelection, statOptions);
   };
 
   setupDrag = (drag) => {
@@ -1125,5 +1135,14 @@ export class Site {
   saveZoom = (zoom) => {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
+  };
+  getStats = () => {
+    return getSaved(SITE_STATS, {
+      http: "bytes_out",
+      tcp: "bytes_out",
+    });
+  };
+  saveStats = (stats) => {
+    setSaved(SITE_STATS, stats);
   };
 }

@@ -305,6 +305,7 @@ class PageLayout extends React.Component {
           sidebar={sidebar(PageNav)}
           isManagedSidebar
           skipToContent={PageSkipToContent}
+          className={"skupper-console"}
         >
           <Switch>
             <PrivateRoute

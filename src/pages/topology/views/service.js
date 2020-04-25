@@ -20,7 +20,6 @@ under the License.
 import * as d3 from "d3";
 import {
   adjustPositions,
-  genPath,
   getSaved,
   linkColor,
   initSankey,
@@ -39,12 +38,15 @@ import {
   reconcileArrays,
   reconcileLinks,
 } from "../../../utilities";
+import { genPath } from "../../../paths";
+
 import { interpolatePath } from "d3-interpolate-path";
 import { Node, Nodes } from "../nodes.js";
 import { Links } from "../links.js";
 const SERVICE_POSITION = "svc";
 const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
+const SERVICE_STATS = "srvstats";
 
 export class Service {
   constructor(data) {
@@ -77,7 +79,8 @@ export class Service {
     const size = this.initLinks(
       this.serviceNodes.nodes,
       this.serviceLinks,
-      vsize
+      vsize,
+      viewer.state.stats
     );
     return { nodeCount: this.serviceNodes.nodes.length, size };
   };
@@ -87,7 +90,7 @@ export class Service {
     const newLinks = new Links();
     this.initNodes(newNodes, false);
     const vsize = { width: viewer.width, height: viewer.height };
-    this.initLinks(newNodes.nodes, newLinks, vsize);
+    this.initLinks(newNodes.nodes, newLinks, vsize, viewer.state.stats);
     reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
     reconcileLinks(this.serviceLinks.links, newLinks.links);
     // remove old nodes/links and add new nodes/links to svg
@@ -131,7 +134,7 @@ export class Service {
   }
 
   // initialize the service to service links for the service view
-  initLinks = (serviceNodes, links, vsize) => {
+  initLinks = (serviceNodes, links, vsize, stats) => {
     serviceNodes.forEach((subNode, source) => {
       subNode.targetServices.forEach((targetService) => {
         const target = serviceNodes.findIndex(
@@ -149,7 +152,8 @@ export class Service {
           subNode.address,
           serviceNodes[target]
         );
-        link.value = link.request.bytes_out;
+        const stat = stats[link.target.protocol];
+        link.value = stat === "none" ? 0 : link.request[stat];
         link.getColor = () => linkColor(link, links.links);
       });
     });
@@ -527,7 +531,7 @@ export class Service {
 
     this.linksSelection
       .selectAll("path.servicesankeyDir")
-      .attr("d", (d) => genPath({ link: d }));
+      .attr("d", (d) => genPath({ link: d, width: sankey ? d.width : 1 }));
 
     this.linksSelection
       .selectAll("path.hittarget")
@@ -556,13 +560,8 @@ export class Service {
     });
   }
 
-  setLinkStat = (sankey, props) => {
-    setLinkStat(
-      this.linksSelection,
-      "servicesankeyDir",
-      props.options.link.stat,
-      props.getShowStat()
-    );
+  setLinkStat = (statOptions) => {
+    setLinkStat(this.linksSelection, statOptions);
   };
 
   setupDrag(drag) {
@@ -759,7 +758,7 @@ export class Service {
 
       // expand the hittarget paths
       d3.selectAll("path.hittarget")
-        .attr("d", (d) => genPath({ link: d }))
+        .attr("d", (d) => genPath({ link: d, width: d.width }))
         .attr("stroke-width", (d) => Math.max(6, d.width))
         .attr("stroke", "transparent")
         .attr("opacity", null);
@@ -804,7 +803,7 @@ export class Service {
         .attr("stroke", "black")
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
-          const current = genPath({ link: d });
+          const current = genPath({ link: d, width: d.width });
           return interpolatePath(previous, current);
         });
     });
@@ -862,5 +861,14 @@ export class Service {
   saveZoom = (zoom) => {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
+  };
+  getStats = () => {
+    return getSaved(SERVICE_STATS, {
+      http: "bytes_out",
+      tcp: "bytes_out",
+    });
+  };
+  saveStats = (stats) => {
+    setSaved(SERVICE_STATS, stats);
   };
 }

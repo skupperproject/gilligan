@@ -506,6 +506,8 @@ class Adapter {
       service.targets.some((t) => t.name === server && t.site_id === site_id)
     );
 
+  findService = (address) =>
+    this.data.services.find((s) => s.address === address);
   findSite = (site_id) => this.data.sites.find((s) => s.site_id === site_id);
   findInTargets = (service) =>
     service.targets.find((t) => t.name === service.address);
@@ -605,8 +607,7 @@ class Adapter {
     const matrix = [];
     if (!stat) stat = "bytes_out";
     this.data.services.forEach((service) => {
-      if (service.connections_egress) {
-      } else {
+      if (service.requests_received) {
         service.requests_received.forEach((request) => {
           const from_site_id = request.site_id;
           for (const client_id in request.by_client) {
@@ -635,6 +636,37 @@ class Adapter {
                 });
               }
             }
+          }
+        });
+      } else {
+        service.connections_egress.forEach((egress) => {
+          for (let connectionID in egress.connections) {
+            service.connections_ingress.forEach((ingress) => {
+              if (Object.keys(ingress.connections).includes(connectionID)) {
+                const from_site_id = egress.site_id;
+                const to_site_id = ingress.site_id;
+                const request = egress.connections[connectionID];
+                matrix.push({
+                  ingress: this.siteNameFromId(from_site_id),
+                  egress: this.siteNameFromId(to_site_id),
+                  address: service.address,
+                  info: {
+                    source: {
+                      site_name: this.siteNameFromId(from_site_id),
+                      site_id: from_site_id,
+                      address: service.address,
+                    },
+                    target: {
+                      site_name: this.siteNameFromId(to_site_id),
+                      site_id: to_site_id,
+                      address: service.address,
+                    },
+                  },
+                  messages: request[stat],
+                  request,
+                });
+              }
+            });
           }
         });
       }
@@ -717,16 +749,42 @@ class Adapter {
               const client_request = request.by_client[clientKey];
               const from_request = client_request.by_handling_site[to_site_id];
               if (from_request) {
-                return { stat: from_request[stat], request: from_request };
+                return {
+                  stat: stat !== "none" ? from_request[stat] : 0,
+                  request: from_request,
+                };
               }
             }
           }
         }
       } else {
         // tcp service
-        const req = this.linkRequest(from_name, toService, to_site_id);
-        if (req && req.id) {
-          return { stat: req[stat], request: req };
+        for (let e = 0; e < toService.connections_egress.length; e++) {
+          const egress = toService.connections_egress[e];
+          if (egress.site_id === to_site_id) {
+            for (let connectionID in egress.connections) {
+              for (let i = 0; i < toService.connections_ingress.length; i++) {
+                const ingress = toService.connections_ingress[i];
+                if (ingress.site_id === from_site_id) {
+                  if (Object.keys(ingress.connections).includes(connectionID)) {
+                    const request = egress.connections[connectionID];
+                    const clientID = ingress.connections[connectionID].client;
+                    // find the service that has clientID as a server
+                    const fromService = this.serviceFromServer(
+                      clientID,
+                      from_site_id
+                    );
+                    if (fromService && fromService.address === from_name) {
+                      return {
+                        stat: stat !== "none" ? request[stat] : 0,
+                        request,
+                      };
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
