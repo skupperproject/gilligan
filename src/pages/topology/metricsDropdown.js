@@ -8,7 +8,6 @@ class MetricsDrowdown extends React.Component {
     stat: PropTypes.string.isRequired,
     handleChangeOption: PropTypes.func.isRequired,
     isDisabled: PropTypes.bool,
-    type: PropTypes.string,
   };
   constructor(props) {
     super(props);
@@ -23,7 +22,7 @@ class MetricsDrowdown extends React.Component {
     });
   };
   onSelect = (event) => {
-    this.props.handleChangeOption(this.props.type, event.target.name);
+    this.props.handleChangeOption(event.target.name);
     this.setState({ isOptionsOpen: !this.state.isOptionsOpen });
     this.onFocus();
   };
@@ -35,24 +34,22 @@ class MetricsDrowdown extends React.Component {
 
   render() {
     const { isOptionsOpen } = this.state;
-    const { stat, type, dropdownItems } = this.props;
-    const items = dropdownItems
-      .filter((o) => !o.type || o.type === type)
-      .map((option, i) => (
-        <DropdownItem
-          key={option.key}
-          name={option.key}
-          className={stat === option.key ? "selected" : ""}
-        >
-          {option.name}
-        </DropdownItem>
-      ));
+    const { stat, dropdownItems } = this.props;
+    const items = dropdownItems.map((option, i) => (
+      <DropdownItem
+        key={option.key}
+        name={option.key}
+        className={stat === option.key ? "selected" : ""}
+      >
+        {option.name}
+      </DropdownItem>
+    ));
     const selectedOption = dropdownItems.find(
       (option) => option.key === stat
     ) || { name: "-" };
     return (
       <Dropdown
-        id="navDropdown"
+        id="metricsDropdown"
         onSelect={this.onSelect}
         toggle={
           <DropdownToggle

@@ -46,7 +46,7 @@ import { Links } from "../links.js";
 const SERVICE_POSITION = "svc";
 const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
-const SERVICE_STATS = "srvstats";
+const SERVICE_OPTIONS = "srvopts";
 
 export class Service {
   constructor(data) {
@@ -80,7 +80,7 @@ export class Service {
       this.serviceNodes.nodes,
       this.serviceLinks,
       vsize,
-      viewer.state.stats
+      viewer.state.options.stat
     );
     return { nodeCount: this.serviceNodes.nodes.length, size };
   };
@@ -90,7 +90,7 @@ export class Service {
     const newLinks = new Links();
     this.initNodes(newNodes, false);
     const vsize = { width: viewer.width, height: viewer.height };
-    this.initLinks(newNodes.nodes, newLinks, vsize, viewer.state.stats);
+    this.initLinks(newNodes.nodes, newLinks, vsize, viewer.state.options.stat);
     reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
     reconcileLinks(this.serviceLinks.links, newLinks.links);
     // remove old nodes/links and add new nodes/links to svg
@@ -560,8 +560,8 @@ export class Service {
     });
   }
 
-  setLinkStat = (statOptions) => {
-    setLinkStat(this.linksSelection, statOptions);
+  setLinkStat = (show, stat) => {
+    setLinkStat(this.linksSelection, show, stat);
   };
 
   setupDrag(drag) {
@@ -862,13 +862,18 @@ export class Service {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
-  getStats = () => {
-    return getSaved(SERVICE_STATS, {
-      http: "bytes_out",
-      tcp: "bytes_out",
+
+  getGraphOptions = () => {
+    return getSaved(SERVICE_OPTIONS, {
+      radio: false,
+      traffic: true,
+      color: true,
+      showMetric: false,
+      stat: { http: "bytes_out", tcp: "bytes_out" },
     });
   };
-  saveStats = (stats) => {
-    setSaved(SERVICE_STATS, stats);
+
+  saveGraphOptions = (options) => {
+    setSaved(SERVICE_OPTIONS, options);
   };
 }

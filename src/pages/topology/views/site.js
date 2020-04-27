@@ -47,7 +47,7 @@ import { Links } from "../links.js";
 const SITE_POSITION = "site";
 const ZOOM_SCALE = "sitescale";
 const ZOOM_TRANSLATE = "sitetrans";
-const SITE_STATS = "sitestats";
+const SITE_OPTIONS = "siteopts";
 
 export class Site {
   constructor(data) {
@@ -88,7 +88,7 @@ export class Site {
       this.siteNodes,
       this.trafficLinks,
       vsize,
-      viewer.state.stats
+      viewer.state.options.stat
     );
     return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
@@ -100,7 +100,12 @@ export class Site {
     this.initNodes(newNodes);
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initRouterLinks(newNodes, newRouterLinks, vsize);
-    this.initTrafficLinks(newNodes, newTrafficLinks, vsize, viewer.state.stats);
+    this.initTrafficLinks(
+      newNodes,
+      newTrafficLinks,
+      vsize,
+      viewer.state.options.stat
+    );
 
     reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
     reconcileLinks(
@@ -650,8 +655,8 @@ export class Site {
       .attr("d", (d) => this.genStatPath(d, sankey));
   };
 
-  setLinkStat = (statOptions) => {
-    setLinkStat(this.trafficLinksSelection, statOptions);
+  setLinkStat = (show, stat) => {
+    setLinkStat(this.trafficLinksSelection, show, stat);
   };
 
   setupDrag = (drag) => {
@@ -1136,13 +1141,17 @@ export class Site {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
-  getStats = () => {
-    return getSaved(SITE_STATS, {
-      http: "bytes_out",
-      tcp: "bytes_out",
+  getGraphOptions = () => {
+    return getSaved(SITE_OPTIONS, {
+      radio: true,
+      traffic: false,
+      color: true,
+      showMetric: false,
+      stat: { http: "bytes_out", tcp: "bytes_out" },
     });
   };
-  saveStats = (stats) => {
-    setSaved(SITE_STATS, stats);
+
+  saveGraphOptions = (options) => {
+    setSaved(SITE_OPTIONS, options);
   };
 }

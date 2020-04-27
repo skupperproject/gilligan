@@ -53,35 +53,12 @@ class TopologyViewer extends Component {
       chordData: null,
       linkInfo: null,
       initial: true,
-      stats: this.viewObj.getStats(),
+      options: this.viewObj.getGraphOptions(),
     };
     this.popupCancelled = true;
 
     this.force = null;
-    this.contextMenuItems = [
-      {
-        title: "Freeze in place",
-        action: this.setFixed,
-        enabled: (data) => !this.isFixed(data),
-      },
-      {
-        title: "Unfreeze",
-        action: this.setFixed,
-        enabled: this.isFixed,
-        endGroup: true,
-      },
-      {
-        title: "Unselect",
-        action: this.setSelected,
-        enabled: this.isSelected,
-      },
-      {
-        title: "Select",
-        action: this.setSelected,
-        enabled: (data) => !this.isSelected(data),
-      },
-    ];
-    this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
+    this.sankey = this.state.options.traffic && !this.state.options.color;
     this.resetScale = 1;
   }
 
@@ -105,7 +82,7 @@ class TopologyViewer extends Component {
   };
 
   callTransitions = (initial) => {
-    this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
+    this.sankey = this.state.options.traffic && !this.state.options.color;
     const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
     this[to](initial);
   };
@@ -485,7 +462,7 @@ class TopologyViewer extends Component {
   tosite = (initial) => {
     this.view = "site";
     this.showChord(null, initial);
-    this.sankey = this.props.getShowSankey() && !this.props.getShowColor();
+    this.sankey = this.state.options.traffic && !this.state.options.color;
     this.viewObj.collapseNodes();
     this.viewObj.transitioning = true;
     this.viewObj
@@ -497,7 +474,7 @@ class TopologyViewer extends Component {
   };
 
   tositesankey = (initial) => {
-    if (this.props.getShowColor()) {
+    if (this.state.options.color) {
       this.sankey = false;
       return this.tosite(initial);
     }
@@ -535,7 +512,16 @@ class TopologyViewer extends Component {
     this.showChord(null, true);
   };
 
-  handleChangeShowStat = (type, stat) => {
+  handleChangeShowStat = (checked) => {
+    const { options } = this.state;
+    options.showMetric = checked;
+    this.setState({ options }, () => {
+      this.viewObj.saveGraphOptions(options);
+      this.callTransitions();
+    });
+  };
+
+  handleChangeStat = (type, stat) => {
     const { stats } = this.state;
     if (type === "both") {
       stats.http = stat;
@@ -548,21 +534,52 @@ class TopologyViewer extends Component {
   };
 
   handleChangeSankey = (checked) => {
-    this.props.handleChangeSankey(checked);
-    this.callTransitions();
+    const { options } = this.state;
+    options.traffic = checked;
+    this.setState({ options }, () => {
+      this.sankey = options.traffic && !options.color;
+      this.viewObj.saveGraphOptions(options);
+      this.callTransitions();
+    });
   };
   handleChangeWidth = (checked) => {
-    this.props.handleChangeWidth(checked);
-    this.callTransitions();
+    const { options } = this.state;
+    options.color = !checked;
+    this.setState({ options }, () => {
+      this.sankey = options.traffic && !options.color;
+      this.viewObj.saveGraphOptions(options);
+      this.callTransitions();
+    });
   };
   handleChangeColor = (checked) => {
-    this.props.handleChangeColor(checked);
-    this.callTransitions();
+    const { options } = this.state;
+    options.color = checked;
+    this.setState({ options }, () => {
+      this.sankey = options.traffic && !options.color;
+      this.viewObj.saveGraphOptions(options);
+      this.callTransitions();
+    });
   };
+  handleChangeMetric = (metric) => {
+    const { options } = this.state;
+    const protocolsPresent = this.statProtocol();
+    const stat = protocolsPresent === "both" ? "tcp" : protocolsPresent;
+    options.stat[stat] = metric;
+    this.setState({ options }, () => {
+      this.sankey = options.traffic && !options.color;
+      this.viewObj.saveGraphOptions(options);
+      this.doUpdate();
+    });
+  };
+
   // only show links in color if showing traffic and by color
-  getShowColor = () => this.props.getShowSankey() && this.props.getShowColor();
+  getShowColor = () => this.state.options.traffic && this.state.options.color;
+
   setLinkStat = () => {
-    this.viewObj.setLinkStat(this.state.stats);
+    this.viewObj.setLinkStat(
+      this.state.options.traffic && this.state.options.showMetric, // show or hide the stat
+      this.statForProtocol() // which stat to show
+    );
   };
 
   handleChordOver = (chord, over) => {
@@ -599,10 +616,12 @@ class TopologyViewer extends Component {
     return tcp && http ? "both" : tcp ? "tcp" : "http";
   };
 
+  // which stat to use is determined by the service protocols.
+  // if we have both http and tcp protocols, use the tcp protocol (since its a subset)
   statForProtocol = () =>
-    ["both", "http"].includes(this.statProtocol())
-      ? this.state.stats.http
-      : this.state.stats.tcp;
+    ["both", "tcp"].includes(this.statProtocol())
+      ? this.state.options.stat.tcp
+      : this.state.options.stat.http;
 
   render() {
     const controlButtons = createTopologyControlButtons({
@@ -619,19 +638,14 @@ class TopologyViewer extends Component {
         aria-label="topology-viewer"
         viewToolbar={
           <GraphToolbar
-            service={this.props.service}
             handleChangeSankey={this.handleChangeSankey}
             handleChangeShowStat={this.handleChangeShowStat}
             handleChangeWidth={this.handleChangeWidth}
             handleChangeColor={this.handleChangeColor}
-            viewType={this.props.viewType}
-            view={this.view}
+            handleChangeMetric={this.handleChangeMetric}
             statProtocol={this.statProtocol()} // http || tcp || both
             stat={this.statForProtocol()} // requests || bytes_out etc.
-            getShowSankey={this.props.getShowSankey}
-            getShowTraffic={this.props.getShowTraffic}
-            getShowWidth={this.props.getShowWidth}
-            getShowColor={this.props.getShowColor}
+            options={this.state.options}
           />
         }
         controlBar={<TopologyControlBar controlButtons={controlButtons} />}

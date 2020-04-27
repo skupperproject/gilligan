@@ -167,9 +167,6 @@ const circular = (link, key, sankey, width, reverse, offsetY, site) => {
   const gapTarget = site ? link.target.r : 8;
   // radius of the turns
   const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
-  if (link.source.name === "infinispan-site2") {
-    console.log(`r ${r} width ${width} sankey ${sankey} reverse ${reverse}`);
-  }
   // right side of source
   let sourceX = get(link.source, "x1", key);
   if (link.source.expanded && link.source.nodeType === "cluster") {
@@ -187,13 +184,6 @@ const circular = (link, key, sankey, width, reverse, offsetY, site) => {
     ? link.y1
     : get(link.target, "y0", key) + link.target.getHeight() / 2;
 
-  console.log(
-    `-- calculating bottomY for ${link.source.name}-${link.target.name}`
-  );
-  console.log(`   sbottom ${link.source.y0 + link.source.getHeight()}`);
-  console.log(`   tbottom ${link.target.y0 + link.target.getHeight()}`);
-  console.log(`   r ${r}`);
-  console.log(`   width ${width}`);
   const bottom = Math.max(
     link.source.y0 + link.source.getHeight(),
     link.target.y0 + link.target.getHeight()
@@ -203,7 +193,6 @@ const circular = (link, key, sankey, width, reverse, offsetY, site) => {
     bottom + r + width / 2,
     bottom + r * 2
   );
-  console.log(`   bottomY ${bottomY}`);
   const offset = sankey ? width / 2 : 0;
   let sy = sourceY - offset - offsetY;
   let ty = targetY - offset - offsetY;

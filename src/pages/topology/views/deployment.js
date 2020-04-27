@@ -39,7 +39,7 @@ import { Service } from "./service";
 import { Nodes } from "../nodes";
 import { Links } from "../links";
 const DEPLOYMENT_POSITION = "dp";
-const DEPLOYMENT_STATS = "dpstats";
+const DEPLOYMENT_OPTIONS = "dpopts";
 const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
 
@@ -62,7 +62,7 @@ export class Deployment extends Service {
       this.serviceNodes,
       this.serviceLinks,
       vsize,
-      viewer.state.stats
+      viewer.state.options.stat
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
@@ -85,7 +85,7 @@ export class Deployment extends Service {
       newServiceNodes,
       newServiceLinks,
       vsize,
-      viewer.state.stats
+      viewer.state.options.stat
     );
     reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
     reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
@@ -167,7 +167,7 @@ export class Deployment extends Service {
             site.site_id,
             toService.address,
             site.site_id,
-            viewer.state.stats[toService.protocol]
+            viewer.state.options.stat[toService.protocol]
           );
           if (stat !== undefined) {
             links.push({
@@ -630,13 +630,17 @@ export class Deployment extends Service {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
-  getStats = () => {
-    return getSaved(DEPLOYMENT_STATS, {
-      http: "bytes_out",
-      tcp: "bytes_out",
+  getGraphOptions = () => {
+    return getSaved(DEPLOYMENT_OPTIONS, {
+      radio: false,
+      traffic: true,
+      color: true,
+      showMetric: false,
+      stat: { http: "bytes_out", tcp: "bytes_out" },
     });
   };
-  saveStats = (stats) => {
-    setSaved(DEPLOYMENT_STATS, stats);
+
+  saveGraphOptions = (options) => {
+    setSaved(DEPLOYMENT_OPTIONS, options);
   };
 }

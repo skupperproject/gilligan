@@ -1112,8 +1112,13 @@ div.qdrChord .legend-text {
   text-decoration: underline;
 }
 
-#navDropdown {
+#navDropdown,
+#metricsDropdown {
   margin-left: 0.5em;
+}
+#metricsDropdown {
+  position: relative;
+  top: -0.5em;
 }
 .noWrap {
   white-space: nowrap;
@@ -1507,7 +1512,6 @@ circle.end-point {
 .graph-toolbar div.color-gradient {
   display: flex;
   position: relative;
-  width: 16em;
 }
 .graph-toolbar .tall-item {
   border-right: 1px solid black;

@@ -463,19 +463,18 @@ export const RGB_Linear_Shade = (p, c) => {
 };
 
 // set or clear the stats text for each path.view in the selection
-export const setLinkStat = (selection, statOptions) => {
+export const setLinkStat = (selection, show, stat) => {
   const statFormats = {
     requests: { one: " req", moreK: " reqs", lessK: " reqs", dir: "" },
     bytes_in: { one: " byte", moreK: "B", lessK: " bytes", dir: "in" },
     bytes_out: { one: " byte", moreK: "B", lessK: " bytes", dir: "out" },
+    latency_max: { one: " ms", moreK: " ms", lessK: " ms", dir: "" },
   };
   // set or clear the stat text
   selection.selectAll("textPath.stats").text((d) => {
-    const protocol = d.target.protocol;
-    const stat = statOptions[protocol];
     if (
+      show &&
       stat &&
-      stat !== "none" &&
       d.request &&
       d.request[stat] !== undefined &&
       statFormats[stat]
