@@ -1729,6 +1729,9 @@ path.hittarget {
 .pf-c-page__header-brand-link {
   cursor: default;
 }
+div.skupper-console .pf-c-page__header {
+  min-height: 4.2rem;
+}
 
 .no-fade,
 div.qdrTopology .pf-topology-side-bar {
@@ -1737,6 +1740,11 @@ div.qdrTopology .pf-topology-side-bar {
   transition: all 0s linear;
 }
 
+div.skupper-console .pf-topology-container__with-sidebar {
+  overflow-y: hidden;
+}
+
 div.skupper-console .pf-c-page__sidebar {
   width: 10em;
 }
+/******************/
