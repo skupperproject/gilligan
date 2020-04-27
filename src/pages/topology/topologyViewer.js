@@ -576,8 +576,9 @@ class TopologyViewer extends Component {
   getShowColor = () => this.state.options.traffic && this.state.options.color;
 
   setLinkStat = () => {
+    const { options } = this.state;
     this.viewObj.setLinkStat(
-      this.state.options.traffic && this.state.options.showMetric, // show or hide the stat
+      !(options.radio && !options.traffic) && this.state.options.showMetric, // show or hide the stat
       this.statForProtocol() // which stat to show
     );
   };
