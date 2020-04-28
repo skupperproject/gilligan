@@ -8,13 +8,11 @@ class Adapter {
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
-    //this.normalizeServices();
     this.removeEmptyServices();
     this.addSendersServices();
     this.sortSites();
     this.sortServices();
     this.addServicesToClusters();
-    //this.adoptOrphanServices();
     this.addServersToSites();
     this.addSourcesTargets();
     this.createDeployments();
@@ -116,70 +114,6 @@ class Adapter {
       }
     });
   };
-
-  /*  
-  normalizeServices = () => {
-    this.data.services.forEach((service) => {
-      if (service.protocol === "tcp") {
-        this.normalize(service);
-      }
-    });
-  };
-
-  normalize = (tcpService) => {
-    tcpService.requests_received = [];
-    tcpService.requests_handled = [];
-    tcpService.connections_ingress.forEach((connection) => {
-      const request = {};
-      request.by_client = {};
-      request.site_id = connection.site_id;
-      const handling_site = {};
-      for (let connection_id in connection.connections) {
-        const connection_request = connection.connections[connection_id];
-        if (!request.by_client[connection_request.client]) {
-          request.by_client[connection_request.client] = {
-            bytes_in: connection_request.bytes_in,
-            bytes_out: connection_request.bytes_out,
-            start_time: connection_request.start_time,
-            last_in: connection_request.last_in,
-            last_out: connection_request.last_out,
-          };
-        } else {
-          request.by_client[connection_request.client].bytes_in +=
-            connection_request.bytes_in;
-          request.by_client[connection_request.client].bytes_out +=
-            connection_request.bytes_out;
-        }
-        tcpService.connections_egress.forEach((connection_egress) => {
-          if (connection_egress.connections[connection_id]) {
-            if (!handling_site[connection_egress.site_id]) {
-              handling_site[connection_egress.site_id] = {};
-              handling_site[connection_egress.site_id].bytes_in =
-                connection_egress.connections[connection_id].bytes_in;
-              handling_site[connection_egress.site_id].bytes_out =
-                connection_egress.connections[connection_id].bytes_out;
-              handling_site[connection_egress.site_id].start_time =
-                connection_egress.connections[connection_id].start_time;
-              handling_site[connection_egress.site_id].last_in =
-                connection_egress.connections[connection_id].last_in;
-              handling_site[connection_egress.site_id].last_out =
-                connection_egress.connections[connection_id].last_out;
-            } else {
-              handling_site[connection_egress.site_id].bytes_in +=
-                connection_egress.connections[connection_id].bytes_in;
-              handling_site[connection_egress.site_id].bytes_out +=
-                connection_egress.connections[connection_id].bytes_out;
-            }
-          }
-        });
-        request.by_client[
-          connection_request.client
-        ].by_handling_site = handling_site;
-      }
-      tcpService.requests_received.push(request);
-    });
-  };
-*/
 
   removeEmptyServices = () => {
     this.data.emptyHttpServices = [];
@@ -324,6 +258,7 @@ class Adapter {
     });
   };
 
+  // create links between [site:serivce]
   createDeployments = () => {
     this.data.deployments = [];
     this.data.deploymentLinks = [];
@@ -338,13 +273,13 @@ class Adapter {
     });
     this.data.deployments.forEach((fromDeployment) => {
       this.data.deployments.forEach((toDeployment) => {
-        const { request } = this.fromTo(
+        const request = this.linkRequest(
           fromDeployment.service.address,
-          fromDeployment.site.site_id,
-          toDeployment.service.address,
-          toDeployment.site.site_id
+          toDeployment.service,
+          toDeployment.site.site_id,
+          fromDeployment.site.site_id
         );
-        if (request !== undefined) {
+        if (Object.keys(request).length > 0) {
           this.data.deploymentLinks.push({
             source: fromDeployment,
             target: toDeployment,
@@ -402,31 +337,6 @@ class Adapter {
         }
       });
     });
-  };
-
-  adoptOrphanServices = () => {
-    this.data.services.forEach((service) => {
-      const hasParent = this.data.sites.some((site) =>
-        site.services.includes(service)
-      );
-      if (!hasParent) {
-        service.targets = [
-          { name: service.address, site_id: `${service.address}ID` },
-        ];
-        this.data.sites.push({
-          site_name: service.address,
-          site_id: `${service.address}ID`,
-          connected: [],
-          namespace: "none",
-          url: "none",
-          edge: false,
-          services: [service],
-          servers: [service.address],
-          derived: true,
-        });
-      }
-    });
-    this.addServicesToClusters();
   };
 
   // return a list of service names in a requests list
@@ -586,59 +496,27 @@ class Adapter {
   matrix = (involvingService, stat) => {
     if (!stat) stat = "bytes_out";
     const matrix = [];
-    this.data.services.forEach((service) => {
-      if (service.requests_received) {
-        service.requests_received.forEach((request) => {
-          Object.keys(request.by_client).forEach((client) => {
-            const clientAddress = this.serviceNameFromClientId(client);
-            const req = request.by_client[client];
-            if (
-              clientAddress === involvingService.address ||
-              service.address === involvingService.address
-            ) {
-              const row = {
-                ingress: clientAddress,
-                egress: service.address,
-                address: request.site_id,
-                messages: req[stat],
-              };
-              const found = matrix.find(
-                (r) =>
-                  r.ingress === clientAddress && r.egress === service.address
-              );
-              if (found) {
-                this.aggregateAttributes(row, found);
-              } else {
-                matrix.push(row);
-              }
-            }
-          });
-        });
-      } else {
-        this.data.deploymentLinks.forEach((link) => {
-          if (
-            link.source.service.address === involvingService.address ||
-            link.target.service.address === involvingService.address
-          ) {
-            const row = {
-              ingress: link.source.service.address,
-              egress: link.target.service.address,
-              address: involvingService.address,
-              messages:
-                link.request[stat] !== undefined ? link.request[stat] : 0,
-            };
-            const found = matrix.find(
-              (r) =>
-                r.ingress === link.source.service.address &&
-                r.egress === link.target.service.address
-            );
-            if (found) {
-              this.aggregateAttributes(row, found);
-            } else {
-              matrix.push(row);
-            }
-          }
-        });
+    this.data.deploymentLinks.forEach((link) => {
+      if (
+        link.source.service.address === involvingService.address ||
+        link.target.service.address === involvingService.address
+      ) {
+        const row = {
+          ingress: link.source.service.address,
+          egress: link.target.service.address,
+          address: involvingService.address,
+          messages: link.request[stat] !== undefined ? link.request[stat] : 0,
+        };
+        const found = matrix.find(
+          (r) =>
+            r.ingress === link.source.service.address &&
+            r.egress === link.target.service.address
+        );
+        if (found) {
+          this.aggregateAttributes(row, found);
+        } else {
+          matrix.push(row);
+        }
       }
     });
     return matrix;
@@ -663,68 +541,26 @@ class Adapter {
   siteMatrix = (stat) => {
     const matrix = [];
     if (!stat) stat = "bytes_out";
-    this.data.services.forEach((service) => {
-      if (service.requests_received) {
-        service.requests_received.forEach((request) => {
-          const from_site_id = request.site_id;
-          for (const client_id in request.by_client) {
-            const from_client_request = request.by_client[client_id];
-            for (const to_site_id in from_client_request.by_handling_site) {
-              if (from_site_id !== to_site_id) {
-                matrix.push({
-                  ingress: this.siteNameFromId(from_site_id),
-                  egress: this.siteNameFromId(to_site_id),
-                  address: service.address,
-                  info: {
-                    source: {
-                      site_name: this.siteNameFromId(from_site_id),
-                      site_id: from_site_id,
-                      address: service.address,
-                    },
-                    target: {
-                      site_name: this.siteNameFromId(to_site_id),
-                      site_id: to_site_id,
-                      address: service.address,
-                    },
-                  },
-                  messages:
-                    from_client_request.by_handling_site[to_site_id][stat],
-                  request: from_client_request.by_handling_site[to_site_id],
-                });
-              }
-            }
-          }
-        });
-      } else {
-        service.connections_egress.forEach((egress) => {
-          for (let connectionID in egress.connections) {
-            service.connections_ingress.forEach((ingress) => {
-              if (Object.keys(ingress.connections).includes(connectionID)) {
-                const from_site_id = egress.site_id;
-                const to_site_id = ingress.site_id;
-                const request = egress.connections[connectionID];
-                matrix.push({
-                  ingress: this.siteNameFromId(from_site_id),
-                  egress: this.siteNameFromId(to_site_id),
-                  address: service.address,
-                  info: {
-                    source: {
-                      site_name: this.siteNameFromId(from_site_id),
-                      site_id: from_site_id,
-                      address: service.address,
-                    },
-                    target: {
-                      site_name: this.siteNameFromId(to_site_id),
-                      site_id: to_site_id,
-                      address: service.address,
-                    },
-                  },
-                  messages: request[stat],
-                  request,
-                });
-              }
-            });
-          }
+    this.data.deploymentLinks.forEach((link) => {
+      if (link.source.site.site_id !== link.target.site.site_id) {
+        matrix.push({
+          ingress: link.source.site.site_name,
+          egress: link.target.site.site_name,
+          address: link.source.service.address,
+          messages: link.request[stat],
+          request: link.request,
+          info: {
+            source: {
+              site_name: link.source.site.site_name,
+              site_id: link.source.site.site_id,
+              address: link.source.service.address,
+            },
+            target: {
+              site_name: link.target.site.site_name,
+              site_id: link.target.site.site_id,
+              address: link.target.service.address,
+            },
+          },
         });
       }
     });
@@ -734,6 +570,25 @@ class Adapter {
   allServiceMatrix = (stat) => {
     const matrix = [];
     if (!stat) stat = "bytes_out";
+    this.data.deploymentLinks.forEach((link) => {
+      matrix.push({
+        ingress: link.source.service.address,
+        egress: link.target.service.address,
+        address: link.target.service.address,
+        messages: link.request[stat],
+        info: {
+          source: {
+            site_name: link.source.site.site_name,
+            site_id: link.source.site.site_id,
+          },
+          target: {
+            site_name: link.target.site.site_name,
+            site_id: link.target.site.site_id,
+          },
+        },
+      });
+    });
+    /*
     this.data.services.forEach((service) => {
       if (service.requests_received) {
         service.requests_received.forEach((request) => {
@@ -762,6 +617,7 @@ class Adapter {
         });
       }
     });
+    */
     return matrix;
   };
 
