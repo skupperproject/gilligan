@@ -614,6 +614,9 @@ class TopologyViewer extends Component {
     const links = this.viewObj.links().links;
     let tcp = links.some((l) => l.target.protocol === "tcp");
     let http = links.some((l) => l.target.protocol === "http");
+    if (!tcp && !http) {
+      return "both";
+    }
     return tcp && http ? "both" : tcp ? "tcp" : "http";
   };
 
@@ -664,6 +667,7 @@ class TopologyViewer extends Component {
               deploymentLinks={this.viewObj.links().links}
               deployment={this.view === "deployment"}
               site={this.view === "site" || this.view === "deployment"}
+              stat={this.statForProtocol()}
               handleShowAll={this.handleShowAll}
               handleChordOver={this.handleChordOver}
               handleArcOver={this.handleArcOver}

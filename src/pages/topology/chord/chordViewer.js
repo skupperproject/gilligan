@@ -175,7 +175,7 @@ class ChordViewer extends Component {
         } else {
           // all sites
           this.chordData
-            .getSiteMatrix(aggregateAddresses)
+            .getSiteMatrix(aggregateAddresses, this.props.stat)
             .then(this.renderChord);
         }
       } else {
@@ -191,10 +191,12 @@ class ChordViewer extends Component {
         } else {
           // for specific site
           this.chordData
-            .getSiteMatrixForSite(this.props.data, aggregateAddresses)
-            .then((matrix) => {
-              this.renderChord(matrix);
-            });
+            .getSiteMatrixForSite(
+              this.props.data,
+              aggregateAddresses,
+              this.props.stat
+            )
+            .then(this.renderChord);
         }
       }
     } else {
@@ -204,7 +206,7 @@ class ChordViewer extends Component {
       } else {
         // for specific service
         this.chordData
-          .getMatrix(this.props.data)
+          .getMatrix(this.props.data, this.props.stat)
           .then(this.renderChord, (e) => {
             console.log(ERROR_RENDERING + e);
           });

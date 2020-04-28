@@ -76,13 +76,13 @@ class ChordData {
     });
   }
   // construct a square matrix of the number of messages each router has egressed from each router
-  getMatrix(d) {
+  getMatrix(d, stat) {
     let self = this;
     return new Promise(function(resolve, reject) {
       // get the router.node and router.link info
       // the raw data received from the routers
       // for each router in the network
-      const values = self.QDRService.adapter.matrix(d);
+      const values = self.QDRService.adapter.matrix(d, stat);
       // values is an array of objects like [{ingress: 'xxx', egress: 'xxx', address: 'xxx', messages: ###}, ....]
       // convert the raw values array into a matrix object
       let matrix = convert(self, values);
@@ -90,10 +90,10 @@ class ChordData {
       resolve(matrix);
     });
   }
-  getSiteMatrixForSite(d, converter) {
+  getSiteMatrixForSite(d, converter, stat) {
     let self = this;
     return new Promise((resolve) => {
-      const values = self.QDRService.adapter.siteMatrixForSite(d);
+      const values = self.QDRService.adapter.siteMatrixForSite(d, stat);
       const matrix = convert(self, values, converter);
       resolve(matrix);
     });
@@ -108,10 +108,10 @@ class ChordData {
     });
   }
 
-  getSiteMatrix(converter) {
+  getSiteMatrix(converter, stat) {
     let self = this;
     return new Promise((resolve) => {
-      const values = self.QDRService.adapter.siteMatrix();
+      const values = self.QDRService.adapter.siteMatrix(stat);
       const matrix = convert(self, values, converter);
       resolve(matrix);
     });

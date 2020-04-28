@@ -17,8 +17,9 @@ class Adapter {
     //this.adoptOrphanServices();
     this.addServersToSites();
     this.addSourcesTargets();
+    this.createDeployments();
     //console.log("finished parsing data");
-    //console.log(this.data);
+    console.log(this.data);
   }
 
   // if multiple sites have the same name,
@@ -323,6 +324,37 @@ class Adapter {
     });
   };
 
+  createDeployments = () => {
+    this.data.deployments = [];
+    this.data.deploymentLinks = [];
+    this.data.services.forEach((service) => {
+      const sites = this.getServiceSites(service);
+      sites.forEach((site) => {
+        this.data.deployments.push({
+          service,
+          site,
+        });
+      });
+    });
+    this.data.deployments.forEach((fromDeployment) => {
+      this.data.deployments.forEach((toDeployment) => {
+        const { request } = this.fromTo(
+          fromDeployment.service.address,
+          fromDeployment.site.site_id,
+          toDeployment.service.address,
+          toDeployment.site.site_id
+        );
+        if (request !== undefined) {
+          this.data.deploymentLinks.push({
+            source: fromDeployment,
+            target: toDeployment,
+            request: request,
+          });
+        }
+      });
+    });
+  };
+
   findCallingServices = (service) => {
     let serviceAddresses = [];
     if (service.requests_received) {
@@ -583,7 +615,30 @@ class Adapter {
           });
         });
       } else {
-        service.connections_egress.forEach((egress) => {});
+        this.data.deploymentLinks.forEach((link) => {
+          if (
+            link.source.service.address === involvingService.address ||
+            link.target.service.address === involvingService.address
+          ) {
+            const row = {
+              ingress: link.source.service.address,
+              egress: link.target.service.address,
+              address: involvingService.address,
+              messages:
+                link.request[stat] !== undefined ? link.request[stat] : 0,
+            };
+            const found = matrix.find(
+              (r) =>
+                r.ingress === link.source.service.address &&
+                r.egress === link.target.service.address
+            );
+            if (found) {
+              this.aggregateAttributes(row, found);
+            } else {
+              matrix.push(row);
+            }
+          }
+        });
       }
     });
     return matrix;

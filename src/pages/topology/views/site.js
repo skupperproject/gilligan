@@ -142,6 +142,38 @@ export class Site {
   };
 
   initTrafficLinks = (nodes, links, vsize, stats) => {
+    const deploymentLinks = this.data.adapter.data.deploymentLinks;
+    deploymentLinks.forEach((link) => {
+      if (link.source.site.site_id !== link.target.site.site_id) {
+        const found = links.links.find(
+          (l) =>
+            l.source.site_id === link.source.site.site_id &&
+            l.target.site_id === link.target.site.site_id
+        );
+        if (found) {
+          found.value += link.request[stats[link.target.service.protocol]];
+          this.data.adapter.aggregateAttributes(link.request, found.request);
+        } else {
+          const linkIndex = links.addLink({
+            source: nodes.nodes.find(
+              (n) => n.site_id === link.source.site.site_id
+            ),
+            target: nodes.nodes.find(
+              (n) => n.site_id === link.target.site.site_id
+            ),
+            dir: "in",
+            cls: "siteTraffic",
+            uid: `SiteLink-${link.source.site.site_id}-${link.target.site.site_id}`,
+          });
+          const alink = links.links[linkIndex];
+          alink.value = link.request[stats[link.target.service.protocol]];
+          alink.request = copy(link.request);
+          alink.getColor = () => linkColor(alink, links.links);
+        }
+      }
+    });
+
+    /*
     const siteMatrix = this.data.adapter.siteMatrix();
     siteMatrix.forEach((record) => {
       // ignore intra-site traffic
@@ -185,6 +217,7 @@ export class Site {
         }
       }
     });
+    */
     // site-to-site traffic
     // position sites based on router links
     adjustPositions({
