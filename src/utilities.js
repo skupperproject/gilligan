@@ -223,7 +223,7 @@ export const adjustPositions = ({
     let foundNodes = [];
     colNodes.forEach((p) => {
       nodes.forEach((n) => {
-        if (p.targetNodes.includes(n)) {
+        if (p.targetNodes.includes(n) && n !== p) {
           if (align === "left" || n.col === undefined) {
             n.col = p.col + 1;
             foundNodes.push(n);
