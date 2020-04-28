@@ -582,6 +582,8 @@ class Adapter {
             }
           });
         });
+      } else {
+        service.connections_egress.forEach((egress) => {});
       }
     });
     return matrix;

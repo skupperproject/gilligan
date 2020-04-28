@@ -34,6 +34,8 @@ import { viewsMap as VIEWS } from "../topology/views/views";
 class TableViewer extends React.Component {
   constructor(props) {
     super(props);
+    this.view = this.props.view;
+    this.dataSource = new VIEWS[this.view](this.props.service);
     this.state = {
       sortBy: {
         index: 0,
@@ -48,9 +50,8 @@ class TableViewer extends React.Component {
       rows: [],
       redirect: false,
       redirectState: {},
+      options: this.dataSource.getGraphOptions(),
     };
-    this.view = this.props.view;
-    this.dataSource = new VIEWS[this.view](this.props.service);
   }
 
   componentDidMount = () => {
