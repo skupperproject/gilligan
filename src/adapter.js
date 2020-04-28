@@ -759,13 +759,6 @@ class Adapter {
         }
       } else {
         // tcp service
-        if (
-          from_name === "infinispan-site2" &&
-          to_name === "infinispan-site2" &&
-          from_site_id === "j0mricZDFo" &&
-          to_site_id === "j0mricZDFo"
-        )
-          debugger;
         for (let e = 0; e < toService.connections_egress.length; e++) {
           const egress = toService.connections_egress[e];
           if (egress.site_id === to_site_id) {

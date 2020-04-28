@@ -766,14 +766,11 @@ circle.flow {
 }
 /* for message flow chord diagram */
 #chordContainer {
-  /* width: 100%; */
   height: 300px;
-  /*
-  position: absolute;
-  right: 20px;*/
   background-color: white;
   padding-top: 1em;
   padding-left: 1em;
+  padding-right: 1em;
 }
 
 #chordContainer .chord-close {
@@ -787,7 +784,6 @@ circle.flow {
   padding-bottom: 0.5em;
   border-bottom: 1px solid #eaeaea;
   margin-bottom: 0.5em;
-  width: 17em;
 }
 
 @media (min-width: 768px) {

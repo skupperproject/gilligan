@@ -4,7 +4,7 @@ import {
   DropdownItem,
   DropdownSeparator,
   DropdownPosition,
-  KebabToggle
+  KebabToggle,
 } from "@patternfly/react-core";
 import { ExpandIcon, BackwardIcon, CheckIcon } from "@patternfly/react-icons";
 
@@ -12,16 +12,16 @@ class KebabDropdown extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOpen: false
+      isOpen: false,
     };
-    this.onToggle = isOpen => {
+    this.onToggle = (isOpen) => {
       this.setState({
-        isOpen
+        isOpen,
       });
     };
-    this.onSelect = event => {
+    this.onSelect = (event) => {
       this.setState({
-        isOpen: !this.state.isOpen
+        isOpen: !this.state.isOpen,
       });
       this.onFocus();
       if (event.target.id.toLowerCase() === "all") this.props.handleShowAll();
@@ -95,7 +95,7 @@ class KebabDropdown extends React.Component {
           <CheckIcon />
         </div>
         Bytes out
-      </DropdownItem>
+      </DropdownItem>,
     ];
     return (
       <Dropdown

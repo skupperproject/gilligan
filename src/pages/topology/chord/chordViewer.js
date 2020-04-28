@@ -941,9 +941,9 @@ class ChordViewer extends Component {
       if (this.props.site) {
         if (this.props.data === null) {
           if (this.props.deployment) {
-            return <div className="chord-title">Requests received</div>;
+            return <div className="chord-title">All deployments</div>;
           } else {
-            return <div className="chord-title">Requests received</div>;
+            return <div className="chord-title">All sites</div>;
           }
         }
         if (this.props.data.address) {
@@ -952,10 +952,10 @@ class ChordViewer extends Component {
             <div className="chord-title">
               {
                 <React.Fragment>
-                  <span>Requests involving </span>{" "}
+                  <span>Involving </span>{" "}
                   <span>
                     {this.props.data.parentNode.site_name}:
-                    {this.props.data.address}
+                    {this.props.data.shortName}
                   </span>
                 </React.Fragment>
               }
@@ -964,25 +964,27 @@ class ChordViewer extends Component {
         }
         return (
           <div className="chord-title">
-            {`Requests involving ${this.props.data.site_name}`}
+            {`Involving site ${this.props.data.site_name}`}
           </div>
         );
       } else if (this.props.data === null) {
-        return <div className="chord-title">Requests received</div>;
+        return <div className="chord-title">All serivces</div>;
       }
       return (
-        <div className="chord-title">{`Requests involving ${this.props.data.address}`}</div>
+        <div className="chord-title">{`Involving ${this.props.data.shortName}`}</div>
       );
     };
     return (
       <div id="chordContainer" className="qdrChord">
-        <div className="chord-kebob">
-          <KebabDropdown
-            disableAll={!this.props.data ? true : false}
-            allText={this.props.site ? "sites" : "services"}
-            handleShowAll={this.props.handleShowAll}
-          />
-        </div>
+        {false && (
+          <div className="chord-kebob">
+            <KebabDropdown
+              disableAll={!this.props.data ? true : false}
+              allText={this.props.site ? "sites" : "services"}
+              handleShowAll={this.props.handleShowAll}
+            />
+          </div>
+        )}
         {getTitle()}
         <div aria-label="chord-diagram" id="chord"></div>
         <div
