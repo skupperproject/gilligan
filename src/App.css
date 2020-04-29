@@ -4,6 +4,11 @@
 
 :root {
   --sk-global--FontFamily--body: Lato, sans-serif;
+  --pf-c-page__sidebar--BackgroundColor: #ffffff;
+  --pf-c-page__sidebar--Transition: all 0ms;
+  --pf-c-page__sidebar--Transform: translate3d(0, 0, 0);
+  --pf-c-page__sidebar--m-expanded--Transform: translate3d(0, 0, 0);
+  --pf-c-page__sidebar--md--Transform: translate3d(0, 0, 0);
 }
 
 .App {
@@ -794,6 +799,10 @@ circle.flow {
     .pf-topology-content {
     width: 180px;
     min-width: calc(100% - 360px);
+  }
+  /* avoid gray flash behind chord chart when showing sidebar */
+  .qdrTopology .pf-topology-container__with-sidebar {
+    background-color: #ffffff !important;
   }
 }
 
@@ -1695,7 +1704,7 @@ path.hittarget {
 .splitter-bar {
   height: 100%;
   position: absolute;
-  right: 0;
+  left: 0;
   background: #000;
   opacity: 0.2;
   z-index: 1;
