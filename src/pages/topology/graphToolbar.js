@@ -189,11 +189,11 @@ class GraphToolbar extends Component {
           {sankeyCheck()}
           <ToolbarItem className="toolbar-item">
             <Checkbox
-              label="Show metric"
+              label="Show metrics"
               isChecked={showMetric}
               isDisabled={this.disableAll()}
               onChange={this.handleChange}
-              aria-label="show statistic"
+              aria-label="show metrics"
               id="showStat"
               name="showStat"
             />
