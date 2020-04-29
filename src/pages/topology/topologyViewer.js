@@ -48,7 +48,6 @@ class TopologyViewer extends Component {
     this.state = {
       cardService: null,
       showLegend: false,
-      showChord: true,
       showLinkInfo: false,
       chordData: null,
       linkInfo: null,
@@ -65,9 +64,12 @@ class TopologyViewer extends Component {
   // called only once when the component is initialized
   componentDidMount = () => {
     window.addEventListener("resize", this.resize);
-    const width = getSaved(`${SPLITTER_POSITION}`, 360);
-    this.handleSplitterChange(width - 360);
-    this.chordRef.init();
+    this.setChordWidth(
+      this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
+    );
+    if (!this.state.options.hideChart) {
+      this.chordRef.init();
+    }
 
     // create the svg
     this.init();
@@ -145,7 +147,9 @@ class TopologyViewer extends Component {
   // initialize the nodes and links array
   init = () => {
     let sizes = getSizes(this.topologyRef);
-    this.width = sizes[0]; // - width of sidebar
+    this.width =
+      sizes[0] -
+      (this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360));
     this.height = sizes[1];
 
     this.mouseover_node = null;
@@ -243,13 +247,19 @@ class TopologyViewer extends Component {
   };
 
   doUpdate = () => {
-    this.viewObj.updateNodesAndLinks(this);
-    this.force
-      .nodes(this.viewObj.nodes().nodes)
-      .links(this.viewObj.links().links);
-    this.viewObj.transition(this.sankey, false, this.getShowColor(), this);
-    this.props.handleChangeLastUpdated();
-    this.setState({ initial: false }, this.chordRef.doUpdate);
+    if (!this.unmounting) {
+      this.viewObj.updateNodesAndLinks(this);
+      this.force
+        .nodes(this.viewObj.nodes().nodes)
+        .links(this.viewObj.links().links);
+      this.viewObj.transition(this.sankey, false, this.getShowColor(), this);
+      this.props.handleChangeLastUpdated();
+      this.setState({ initial: false }, () => {
+        if (!this.state.options.hideChart) {
+          this.chordRef.doUpdate();
+        }
+      });
+    }
   };
 
   resetMouseVars = () => {
@@ -330,8 +340,10 @@ class TopologyViewer extends Component {
 
   showChord = (chordData, initial) => {
     if (!this.unmounting) {
-      this.setState({ showChord: true, chordData, initial }, () => {
-        this.chordRef.doUpdate();
+      this.setState({ chordData, initial }, () => {
+        if (!this.state.options.hideChart) {
+          this.chordRef.doUpdate();
+        }
       });
     }
   };
@@ -502,74 +514,96 @@ class TopologyViewer extends Component {
     this.restart();
   };
 
-  handleCloseSidebar = () => {
-    if (!this.unmounting) {
-      this.setState({ showChord: false });
-    }
-  };
-
   handleShowAll = () => {
     this.showChord(null, true);
   };
 
+  handleChangeHideChart = (checked) => {
+    if (!this.unmounting) {
+      const { options } = this.state;
+      options.hideChart = checked;
+      if (!checked) {
+        this.setChordWidth(getSaved(SPLITTER_POSITION, 360));
+      } else {
+        this.setChordWidth(0);
+      }
+      this.setState({ options }, () => {
+        this.resize();
+        this.viewObj.saveGraphOptions(options);
+        this.showChord(this.state.chordData, false);
+      });
+    }
+  };
   handleChangeShowStat = (checked) => {
-    const { options } = this.state;
-    options.showMetric = checked;
-    this.setState({ options }, () => {
-      this.viewObj.saveGraphOptions(options);
-      this.callTransitions();
-    });
+    if (!this.unmounting) {
+      const { options } = this.state;
+      options.showMetric = checked;
+      this.setState({ options }, () => {
+        this.viewObj.saveGraphOptions(options);
+        this.callTransitions();
+      });
+    }
   };
 
   handleChangeStat = (type, stat) => {
-    const { stats } = this.state;
-    if (type === "both") {
-      stats.http = stat;
-      stats.tcp = stat;
-    } else {
-      stats[type] = stat;
+    if (!this.unmounting) {
+      const { stats } = this.state;
+      if (type === "both") {
+        stats.http = stat;
+        stats.tcp = stat;
+      } else {
+        stats[type] = stat;
+      }
+      this.viewObj.saveStats(stats);
+      this.setState({ stats }, this.doUpdate);
     }
-    this.viewObj.saveStats(stats);
-    this.setState({ stats }, this.doUpdate);
   };
 
   handleChangeSankey = (checked) => {
-    const { options } = this.state;
-    options.traffic = checked;
-    this.setState({ options }, () => {
-      this.sankey = options.traffic && !options.color;
-      this.viewObj.saveGraphOptions(options);
-      this.callTransitions();
-    });
+    if (!this.unmounting) {
+      const { options } = this.state;
+      options.traffic = checked;
+      this.setState({ options }, () => {
+        this.sankey = options.traffic && !options.color;
+        this.viewObj.saveGraphOptions(options);
+        this.callTransitions();
+      });
+    }
   };
   handleChangeWidth = (checked) => {
-    const { options } = this.state;
-    options.color = !checked;
-    this.setState({ options }, () => {
-      this.sankey = options.traffic && !options.color;
-      this.viewObj.saveGraphOptions(options);
-      this.callTransitions();
-    });
+    if (!this.unmounting) {
+      const { options } = this.state;
+      options.color = !checked;
+      this.setState({ options }, () => {
+        this.sankey = options.traffic && !options.color;
+        this.viewObj.saveGraphOptions(options);
+        this.callTransitions();
+      });
+    }
   };
   handleChangeColor = (checked) => {
-    const { options } = this.state;
-    options.color = checked;
-    this.setState({ options }, () => {
-      this.sankey = options.traffic && !options.color;
-      this.viewObj.saveGraphOptions(options);
-      this.callTransitions();
-    });
+    if (!this.unmounting) {
+      const { options } = this.state;
+      options.color = checked;
+      this.setState({ options }, () => {
+        this.sankey = options.traffic && !options.color;
+        this.viewObj.saveGraphOptions(options);
+        this.callTransitions();
+      });
+    }
   };
   handleChangeMetric = (metric) => {
-    const { options } = this.state;
-    const protocolsPresent = this.statProtocol();
-    const stat = protocolsPresent === "both" ? "tcp" : protocolsPresent;
-    options.stat[stat] = metric;
-    this.setState({ options }, () => {
-      this.sankey = options.traffic && !options.color;
-      this.viewObj.saveGraphOptions(options);
-      this.doUpdate();
-    });
+    if (!this.unmounting) {
+      const { options } = this.state;
+      const protocolsPresent = this.statProtocol();
+      const stat = protocolsPresent === "both" ? "tcp" : protocolsPresent;
+      options.stat[stat] = metric;
+      this.setState({ options }, () => {
+        this.sankey = options.traffic && !options.color;
+        this.viewObj.saveGraphOptions(options);
+        this.doUpdate();
+      });
+    }
   };
 
   // only show links in color if showing traffic and by color
@@ -594,19 +628,26 @@ class TopologyViewer extends Component {
   handleSplitterChange = (moved) => {
     const minRight = 240;
     const maxRight = 400;
-    const leftPane = d3.select(SPLITTER_LEFT);
     const rightPane = d3.select(SPLITTER_RIGHT);
-    const rightWidth = Math.min(
+    let rightWidth = Math.min(
       Math.max(parseInt(rightPane.style("max-width"), 10) + moved, minRight),
       maxRight
     );
-    leftPane.style("min-width", `calc(100% - ${rightWidth}px)`);
-    rightPane.style("max-width", `${rightWidth}px`);
+    this.setChordWidth(rightWidth);
     setSaved(SPLITTER_POSITION, rightWidth);
   };
 
+  setChordWidth = (rightWidth) => {
+    const leftPane = d3.select(SPLITTER_LEFT);
+    const rightPane = d3.select(SPLITTER_RIGHT);
+    leftPane.style("min-width", `calc(100% - ${rightWidth}px)`);
+    rightPane.style("max-width", `${rightWidth}px`);
+  };
+
   handleSplitterEnd = () => {
-    this.chordRef.init();
+    if (!this.state.options.hideChart) {
+      this.chordRef.init();
+    }
     this.resize();
   };
 
@@ -644,6 +685,7 @@ class TopologyViewer extends Component {
           <GraphToolbar
             handleChangeSankey={this.handleChangeSankey}
             handleChangeShowStat={this.handleChangeShowStat}
+            handleChangeHideChart={this.handleChangeHideChart}
             handleChangeWidth={this.handleChangeWidth}
             handleChangeColor={this.handleChangeColor}
             handleChangeMetric={this.handleChangeMetric}
@@ -657,8 +699,12 @@ class TopologyViewer extends Component {
           <TopologySideBar
             id="sk-sidebar"
             className={"no-fade"}
-            show={this.state.showChord}
+            show={!this.state.options.hideChart}
           >
+            <SplitterBar
+              onDrag={this.handleSplitterChange}
+              onDragEnd={this.handleSplitterEnd}
+            />
             <ChordViewer
               ref={(el) => (this.chordRef = el)}
               initial={this.state.initial}
@@ -674,13 +720,9 @@ class TopologyViewer extends Component {
             />
           </TopologySideBar>
         }
-        sideBarOpen={this.state.showChord}
+        sideBarOpen={this.state.options.hideChart}
         className="qdrTopology"
       >
-        <SplitterBar
-          onDrag={this.handleSplitterChange}
-          onDragEnd={this.handleSplitterEnd}
-        />
         <div className="diagram">
           <div ref={(el) => (this.topologyRef = el)} id="topology" />
           <div

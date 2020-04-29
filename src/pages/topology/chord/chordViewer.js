@@ -887,6 +887,9 @@ class ChordViewer extends Component {
 
   // called periodically to refresh the data
   doUpdate = () => {
+    if (!this.chordReference) {
+      this.init();
+    }
     this.getMatrix();
   };
 

@@ -319,12 +319,6 @@ export class Service {
       .attr("transform", "translate(0,13) rotate(45)");
 
     serviceTypesEnter
-      .on("mousedown", (d) => {
-        if (this.view === "servicesankey") {
-          d3.event.stopPropagation();
-          d3.event.preventDefault();
-        }
-      })
       .on("mouseover", function(d) {
         // highlight this service-type and it's connected service-types
         viewer.blurAll(true, d);
@@ -880,6 +874,7 @@ export class Service {
       traffic: true,
       color: true,
       showMetric: false,
+      hideChart: false,
       stat: { http: "bytes_out", tcp: "bytes_out" },
     });
   };

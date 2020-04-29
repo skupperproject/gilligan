@@ -1180,6 +1180,7 @@ export class Site {
       traffic: false,
       color: true,
       showMetric: false,
+      hideChart: false,
       stat: { http: "bytes_out", tcp: "bytes_out" },
     });
   };

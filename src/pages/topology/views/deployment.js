@@ -252,9 +252,6 @@ export class Deployment extends Service {
       link.value = link.request[stats[target.protocol]];
       link.getColor = () => linkColor(link, links.links);
     });
-    console.log("links and deployments");
-    console.log(links.links);
-    console.log(this.data.adapter.data.deploymentLinks);
     /*
     // create links between all services
     subNodes.forEach((fromNode) => {
@@ -664,6 +661,7 @@ export class Deployment extends Service {
       traffic: true,
       color: true,
       showMetric: false,
+      hideChart: false,
       stat: { http: "bytes_out", tcp: "bytes_out" },
     });
   };

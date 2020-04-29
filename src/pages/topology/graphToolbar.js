@@ -35,6 +35,7 @@ class GraphToolbar extends Component {
   static propTypes = {
     handleChangeSankey: PropTypes.func.isRequired,
     handleChangeShowStat: PropTypes.func.isRequired,
+    handleChangeHideChart: PropTypes.func.isRequired,
     handleChangeWidth: PropTypes.func.isRequired,
     handleChangeColor: PropTypes.func.isRequired,
     handleChangeMetric: PropTypes.func.isRequired,
@@ -45,9 +46,7 @@ class GraphToolbar extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {
-      checkChanged: false,
-    };
+    this.state = {};
     this.dropdownItems = [
       {
         key: "requests",
@@ -79,8 +78,9 @@ class GraphToolbar extends Component {
       this.props.handleChangeColor(checked);
     } else if (name === "showRouterLinks") {
       this.props.handleChangeSankey(!checked);
+    } else if (name === "hideChart") {
+      this.props.handleChangeHideChart(!checked);
     }
-    //this.setState({ checkChanged: !this.state.checkChanged });
   };
 
   disableAll = () => {
@@ -97,7 +97,7 @@ class GraphToolbar extends Component {
 
   render() {
     const { statProtocol } = this.props;
-    const { radio, color, traffic, showMetric } = this.props.options;
+    const { radio, color, traffic, showMetric, hideChart } = this.props.options;
     const routerLinksRadio = () => {
       if (radio) {
         return (
@@ -183,21 +183,38 @@ class GraphToolbar extends Component {
       </ToolbarItem>
     );
 
+    const metricCheck = () => (
+      <ToolbarItem className="toolbar-item">
+        <Checkbox
+          label="Show metrics"
+          isChecked={showMetric}
+          isDisabled={this.disableAll()}
+          onChange={this.handleChange}
+          aria-label="show metrics"
+          id="showStat"
+          name="showStat"
+        />
+      </ToolbarItem>
+    );
+
+    const sidebarCheck = () => (
+      <ToolbarItem className="toolbar-item">
+        <Checkbox
+          label="Show charts"
+          isChecked={!hideChart}
+          onChange={this.handleChange}
+          aria-label="show charts"
+          id="hideChart"
+          name="hideChart"
+        />
+      </ToolbarItem>
+    );
     return (
       <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
         <ToolbarGroup>
           {sankeyCheck()}
-          <ToolbarItem className="toolbar-item">
-            <Checkbox
-              label="Show metrics"
-              isChecked={showMetric}
-              isDisabled={this.disableAll()}
-              onChange={this.handleChange}
-              aria-label="show metrics"
-              id="showStat"
-              name="showStat"
-            />
-          </ToolbarItem>
+          {metricCheck()}
+          {sidebarCheck()}
         </ToolbarGroup>
       </Toolbar>
     );

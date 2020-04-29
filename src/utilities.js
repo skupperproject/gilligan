@@ -33,7 +33,7 @@ const SankeyAttributes = [
 ];
 export const VIEW_DURATION = 500;
 export const EXPAND_DURATION = 500;
-export const ServiceWidth = 130;
+export const ServiceWidth = 180;
 export const ServiceHeight = 40;
 export const ServiceGap = 5;
 export const ServiceStart = 50;
