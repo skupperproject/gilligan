@@ -649,7 +649,8 @@ export class Site {
   };
 
   genTraffic = (d, sankey) => genPath({ link: d, sankey: true, site: sankey });
-  genTrafficDir = (d, sankey) => genPath({ link: d, site: sankey });
+  genTrafficDir = (d, sankey) =>
+    genPath({ link: d, width: d.width, site: sankey });
   genMask = (d, selection, sankey) =>
     genPath({ link: d.link, mask: d.mask, selection, site: sankey });
   genStatPath = (d, sankey) =>

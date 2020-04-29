@@ -499,7 +499,7 @@ export class Deployment extends Service {
       .attr("d", (d) => genPath({ link: d, sankey: true }));
 
     this.linksSelection.selectAll("path.servicesankeyDir").attr("d", (d) => {
-      return genPath({ link: d });
+      return genPath({ link: d, width: d.width });
     });
 
     this.linksSelection
