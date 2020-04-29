@@ -970,7 +970,7 @@ class ChordViewer extends Component {
           </div>
         );
       } else if (this.props.data === null) {
-        return <div className="chord-title">All serivces</div>;
+        return <div className="chord-title">All services</div>;
       }
       return (
         <div className="chord-title">{`Involving ${this.props.data.shortName}`}</div>
