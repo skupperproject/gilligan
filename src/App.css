@@ -3,8 +3,6 @@
 }
 
 :root {
-  --sk-global--FontFamily: "Alegreya Sans", sans-serif;
-  --pf-global--FontFamily--sans-serif: "Alegreya Sans", sans-serif;
   --sk-global--FontFamily--body: Lato, sans-serif;
 }
 
@@ -256,12 +254,12 @@ table.edge-table td[data-label="State"] svg {
 }
 
 .logo-text {
+  font-family: "Alegreya Sans", sans-serif;
   padding-left: 1em;
   text-decoration: none;
   color: white;
   font-weight: bold;
-  letter-spacing: 0.1em;
-  font-size: 18px;
+  font-size: 20px;
   width: 30em;
   text-align: left;
 }
