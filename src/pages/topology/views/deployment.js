@@ -229,6 +229,33 @@ export class Deployment extends Service {
   initServiceLinks = (siteNodes, serviceNodes, links, vsize, stats) => {
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
+    this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
+      const source = subNodes.find(
+        (n) =>
+          n.address === deploymentLink.source.service.address &&
+          n.cluster.site_id === deploymentLink.source.site.site_id
+      );
+      const target = subNodes.find(
+        (n) =>
+          n.address === deploymentLink.target.service.address &&
+          n.cluster.site_id === deploymentLink.target.site.site_id
+      );
+      const linkIndex = links.addLink({
+        source,
+        target,
+        dir: "out",
+        cls: "node2node",
+        uid: `Link-${source.uuid}-${target.uuid}`,
+      });
+      const link = links.links[linkIndex];
+      link.request = deploymentLink.request;
+      link.value = link.request[stats[target.protocol]];
+      link.getColor = () => linkColor(link, links.links);
+    });
+    console.log("links and deployments");
+    console.log(links.links);
+    console.log(this.data.adapter.data.deploymentLinks);
+    /*
     // create links between all services
     subNodes.forEach((fromNode) => {
       subNodes.forEach((toNode) => {
@@ -256,6 +283,7 @@ export class Deployment extends Service {
         }
       });
     });
+    */
     // get the sankey height of each node based on link.value
     initSankey({
       nodes: subNodes,

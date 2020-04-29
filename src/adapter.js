@@ -17,7 +17,7 @@ class Adapter {
     this.addSourcesTargets();
     this.createDeployments();
     //console.log("finished parsing data");
-    console.log(this.data);
+    //console.log(this.data);
   }
 
   // if multiple sites have the same name,
@@ -45,73 +45,57 @@ class Adapter {
       a.address < b.address ? -1 : a.address > b.address ? 1 : 0
     );
 
+  addTarget = (targets, name, site_id) => {
+    if (!targets.some((t) => t.name === name && t.site_id === site_id)) {
+      targets.push({ name, site_id });
+    }
+  };
   fixTargets = () => {
     this.data.services.forEach((service) => {
       if (!service.targets) {
         service.targets = [];
       }
-      if (service.targets.length === 0) {
-        if (service.requests_handled) {
-          service.requests_handled.forEach((request) => {
-            for (const server in request.by_server) {
-              service.targets.push({
-                name: server,
-                site_id: request.site_id,
-              });
-              service.targets.push({
-                name: service.address,
-                site_id: request.site_id,
-              });
+      if (service.requests_handled) {
+        service.requests_handled.forEach((request) => {
+          for (const server in request.by_server) {
+            this.addTarget(service.targets, server, request.site_id);
+            this.addTarget(service.targets, service.address, request.site_id);
+          }
+        });
+      } else {
+        // tcp service without targets
+        if (service.connections_egress.length > 0) {
+          service.connections_egress.forEach((egress) => {
+            for (let connection_id in egress.connections) {
+              const connection = egress.connections[connection_id];
+              this.addTarget(
+                service.targets,
+                connection.server,
+                egress.site_id
+              );
             }
+            this.addTarget(service.targets, service.address, egress.site_id);
           });
         } else {
-          // tcp service without targets
-          if (service.connections_egress.length > 0) {
-            service.connections_egress.forEach((egress) => {
-              for (let connection_id in egress.connections) {
-                const connection = egress.connections[connection_id];
-                if (
-                  !service.targets.some(
-                    (target) => target.name === connection.server
-                  )
-                ) {
-                  service.targets.push({
-                    name: connection.server,
-                    site_id: egress.site_id,
-                  });
-                }
-              }
-              service.targets.push({
-                name: service.address,
-                site_id: egress.site_id,
-              });
-            });
-          } else {
-            // put this tcp service in an "unknown" site
-            if (!this.data.sites.some((site) => site.site_name === "unknown")) {
-              this.data.sites.push({
-                site_name: "unknown",
-                site_id: "unknownID",
-                connected: [],
-                namespace: "",
-                url: "",
-                edge: false,
-              });
-            }
-            service.targets.push({
-              name: service.address,
+          // put this tcp service in an "unknown" site
+          if (!this.data.sites.some((site) => site.site_name === "unknown")) {
+            this.data.sites.push({
+              site_name: "unknown",
               site_id: "unknownID",
+              connected: [],
+              namespace: "",
+              url: "",
+              edge: false,
             });
           }
-        }
-      } else {
-        if (!service.targets.some((t) => t.name === service.address)) {
-          service.targets.push({
-            name: service.address,
-            site_id: service.targets[0].site_id,
-          });
+          this.addTarget(service.targets, service.address, "unknownID");
         }
       }
+      this.addTarget(
+        service.targets,
+        service.address,
+        service.targets[0].site_id
+      );
     });
   };
 
@@ -273,11 +257,11 @@ class Adapter {
     });
     this.data.deployments.forEach((fromDeployment) => {
       this.data.deployments.forEach((toDeployment) => {
-        const request = this.linkRequest(
-          fromDeployment.service.address,
+        const request = this.fromTo2(
+          fromDeployment.service,
+          fromDeployment.site.site_id,
           toDeployment.service,
-          toDeployment.site.site_id,
-          fromDeployment.site.site_id
+          toDeployment.site.site_id
         );
         if (Object.keys(request).length > 0) {
           this.data.deploymentLinks.push({
@@ -288,6 +272,58 @@ class Adapter {
         }
       });
     });
+  };
+
+  fromTo2 = (from, fromSite, to, toSite) => {
+    const req = {};
+    if (to.targets.some((t) => t.site_id === toSite)) {
+      if (to.requests_received) {
+        for (let r = 0; r < to.requests_received.length; r++) {
+          const request = to.requests_received[r];
+          if (request.site_id === fromSite) {
+            for (const client in request.by_client) {
+              const clientService = this.data.services.find((s) =>
+                s.targets.some(
+                  (t) => t.name === client && t.site_id === fromSite
+                )
+              );
+              if (from === clientService) {
+                this.aggregateAttributes(
+                  request.by_client[client].by_handling_site[fromSite],
+                  req
+                );
+              }
+            }
+          }
+        }
+      } else {
+        for (let e = 0; e < to.connections_egress.length; e++) {
+          const egress = to.connections_egress[e];
+          if (egress.site_id === toSite) {
+            for (const connectionID in egress.connections) {
+              for (let i = 0; i < to.connections_ingress.length; i++) {
+                const ingress = to.connections_ingress[i];
+                if (ingress.site_id === fromSite) {
+                  const connection = ingress.connections[connectionID];
+                  if (connection) {
+                    const client = connection.client;
+                    const clientService = this.data.services.find((s) =>
+                      s.targets.some(
+                        (t) => t.name === client && t.site_id === fromSite
+                      )
+                    );
+                    if (from === clientService) {
+                      this.aggregateAttributes(connection, req);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return req;
   };
 
   findCallingServices = (service) => {
@@ -727,3 +763,9 @@ class Adapter {
   };
 }
 export default Adapter;
+
+/*
+https://gist.github.com/ssorj/1282800acfa7ddf22a78155cece19b3a
+https://gist.github.com/ssorj/dfff3b401f0156332083893902f726f5
+https://gist.github.com/ssorj/3f1f70b6df745c04e1effff416794476
+*/

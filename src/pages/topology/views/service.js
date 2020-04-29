@@ -102,32 +102,32 @@ export class Service {
       // if we haven't already added this service || or we want duplicates
       if (
         includeDuplicate ||
-        !serviceNodes.nodes.some((n) => n.name === service.address)
+        !serviceNodes.nodes.some((n) => n.address === service.address)
       ) {
         // get the sites in which this service is deployed
         let serviceSites = this.data.adapter.getServiceSites(service);
-        serviceSites.forEach((site) => {
-          const subNode = new Node({
-            name: service.address,
-            nodeType: "service",
-            fixed: true,
-            heightFn: this.serviceHeight,
-            widthFn: this.serviceWidth,
-          });
-          subNode.mergeWith(service);
-          subNode.lightColor = d3.rgb(serviceColor(subNode.name)).brighter(0.6);
-          subNode.color = serviceColor(subNode.name);
-          subNode.cluster = site;
-          subNode.shortName = shortName(subNode.name);
-          if (includeDuplicate) {
-            const original = serviceNodes.nodeFor(subNode.name);
-            if (original) {
+        serviceSites.forEach((site, i) => {
+          if (i === 0 || includeDuplicate) {
+            const subNode = new Node({
+              name: service.address,
+              nodeType: "service",
+              fixed: true,
+              heightFn: this.serviceHeight,
+              widthFn: this.serviceWidth,
+            });
+            subNode.mergeWith(service);
+            subNode.lightColor = d3
+              .rgb(serviceColor(subNode.name))
+              .brighter(0.6);
+            subNode.color = serviceColor(subNode.name);
+            subNode.cluster = site;
+            subNode.shortName = shortName(subNode.name);
+            if (i > 0) {
               subNode.extra = true;
-              subNode.original = original;
             }
+            subNode.uuid = `${site.site_id}-${subNode.address}`;
+            serviceNodes.add(subNode);
           }
-          subNode.uuid = `${site.site_id}-${subNode.address}`;
-          serviceNodes.add(subNode);
         });
       }
     });
@@ -135,27 +135,38 @@ export class Service {
 
   // initialize the service to service links for the service view
   initLinks = (serviceNodes, links, vsize, stats) => {
-    serviceNodes.forEach((subNode, source) => {
-      subNode.targetServices.forEach((targetService) => {
-        const target = serviceNodes.findIndex(
-          (sn) => sn.address === targetService.address
-        );
+    this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
+      const source = serviceNodes.find(
+        (n) => n.address === deploymentLink.source.service.address
+      );
+      const target = serviceNodes.find(
+        (n) => n.address === deploymentLink.target.service.address
+      );
+      const found = links.links.find(
+        (l) =>
+          l.source.address === source.address &&
+          l.target.address === target.address
+      );
+      if (!found) {
         const linkIndex = links.getLink(
-          subNode,
-          serviceNodes[target],
+          source,
+          target,
           "out",
           "link",
-          `Link-${source}-${target}`
+          `Link-${deploymentLink.source.site.site_id}-${source.address}-${deploymentLink.target.site.site_id}-${target.address}`
         );
         const link = links.links[Math.abs(linkIndex)];
-        link.request = this.data.adapter.linkRequest(
-          subNode.address,
-          serviceNodes[target]
-        );
-        const stat = stats[link.target.protocol];
-        link.value = stat === "none" ? 0 : link.request[stat];
+        link.request = deploymentLink.request;
+        const stat = stats[target.protocol];
+        link.value = link.request[stat];
         link.getColor = () => linkColor(link, links.links);
-      });
+      } else {
+        this.data.adapter.aggregateAttributes(
+          deploymentLink.request,
+          found.request
+        );
+        found.value = found.request[stats[target.protocol]];
+      }
     });
 
     // get the service heights for use with the servicesankey view
