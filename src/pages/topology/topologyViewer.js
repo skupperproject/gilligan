@@ -100,7 +100,7 @@ class TopologyViewer extends Component {
   resize = () => {
     if (!this.svg) return;
     let sizes = getSizes(this.topologyRef);
-    console.log(`resize got sizes at ${sizes[0]}, ${sizes[1]}`);
+    //console.log(`resize got sizes at ${sizes[0]}, ${sizes[1]}`);
     this.width = sizes[0];
     this.height = sizes[1];
     if (this.width > 0) {

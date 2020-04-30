@@ -1523,7 +1523,6 @@ circle.end-point {
 .graph-toolbar .tall-item:not(:first-child) {
   border-left: 1px solid black;
 }
-
 .graph-toolbar .show-traffic {
   padding-right: 1em;
 }

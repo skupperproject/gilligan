@@ -14,27 +14,42 @@
  * limitations under the License.
  */
 import React from "react";
-import { Text, TextVariants } from "@patternfly/react-core";
-import { strDate } from "./utilities";
+import { Text } from "@patternfly/react-core";
+import { getDuration, timeAgo } from "./utilities";
 
 class LastUpdated extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      lastUpdated: new Date(),
+      elapsed: "",
     };
+    this.lastUpdated = new Date();
   }
 
+  componentDidMount = () => {
+    this.timer = setInterval(this.showElapsed, 1000);
+  };
+  componentWillUnmount = () => {
+    clearInterval(this.timer);
+  };
+
+  // called when data is updated
   update = () => {
-    this.setState({ lastUpdated: new Date() });
+    this.lastUpdated = new Date();
+  };
+
+  // called internally every second
+  showElapsed = () => {
+    const secondsAgo = Math.floor((new Date() - this.lastUpdated) / 1000);
+    const { epoch } = getDuration(secondsAgo);
+    // don't show anything if updated within the last minute
+    const elapsed =
+      epoch === "second" ? "" : `Updated ${timeAgo(this.lastUpdated)}`;
+    this.setState({ elapsed });
   };
 
   render() {
-    return (
-      <Text className="status-text" component={TextVariants.pre}>
-        {`Updated ${strDate(this.state.lastUpdated)}`}
-      </Text>
-    );
+    return <Text className="status-text">{this.state.elapsed}</Text>;
   }
 }
 
