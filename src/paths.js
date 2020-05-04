@@ -106,11 +106,13 @@ const genMask = (link, selection, site) => {
 };
 
 // create a bezier path between link.source and link.target
-const bezierPath = (link, key, sankey, width, reverse, offsetY) => {
+const bezierPath = (link, key, sankey, width, reverse, offset) => {
   let x0 = get(link.source, "x1", key); // right side of source
   if (link.source.expanded && link.source.nodeType === "cluster") {
     x0 -= link.source.getWidth() / 2;
   }
+
+  const { offsetX, offsetY } = calcOffsets(link, offset);
   const y0 = link.source.expanded
     ? link.y0 - offsetY
     : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
@@ -118,6 +120,8 @@ const bezierPath = (link, key, sankey, width, reverse, offsetY) => {
   if (link.source.expanded && link.target.nodeType === "cluster") {
     x1 += link.target.getWidth() / 2;
   }
+  x0 += offsetX;
+  x1 += offsetX;
   const y1 = link.target.expanded
     ? link.y1 - offsetY
     : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
@@ -158,9 +162,10 @@ const bezierPath = (link, key, sankey, width, reverse, offsetY) => {
 
 // create a complex path exiting source on the right
 // and curving around to enter the target on the left
-const circular = (link, key, sankey, width, reverse, offsetY, site) => {
+const circular = (link, key, sankey, width, reverse, off, site) => {
   const minR = 10;
   const maxR = 80;
+  const { offsetX, offsetY } = calcOffsets(link, off);
   // straight line exiting source
   const gapSource = site ? link.source.r : 8;
   // straight line entering target
@@ -183,6 +188,9 @@ const circular = (link, key, sankey, width, reverse, offsetY, site) => {
   const targetY = link.target.expanded
     ? link.y1
     : get(link.target, "y0", key) + link.target.getHeight() / 2;
+
+  sourceX += offsetX;
+  targetX += offsetX;
 
   const bottom = Math.max(
     link.source.y0 + link.source.getHeight(),
@@ -285,4 +293,15 @@ const circleIntercept = (x1, y1, r, x2, y2) => {
   pt.x = (r * (x2 - x1)) / dist + x1;
   pt.y = (r * (y2 - y1)) / dist + y1;
   return pt;
+};
+
+const calcOffsets = (link, offset) => {
+  if (Math.abs(link.source.x1 - link.source.x0) < 0.001) {
+    return { offsetX: offset, offsetY: 0 };
+  }
+  const slope = (link.y1 - link.y0) / (link.source.x1 - link.source.x0);
+  const pt = ptAway({ x: link.source.x1, y: link.y0 }, offset, slope);
+  const offsetX = slope > 0 ? pt.x - link.source.x1 : link.source.x1 - pt.x;
+  const offsetY = slope < 0 ? pt.y - link.y0 : link.y0 - pt.y;
+  return { offsetX, offsetY };
 };
