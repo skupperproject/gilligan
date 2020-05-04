@@ -818,7 +818,10 @@ export class Service {
     const data = this.serviceNodes.nodes.map((n) => ({
       address: n.shortName,
       protocol: n.protocol,
-      deployedAt: n.cluster ? n.cluster.site_name : "",
+      deployedAt: this.data.adapter
+        .getServiceSites(n)
+        .map((site) => site.site_name)
+        .join(", "),
     }));
     return new Promise((resolve) => {
       resolve({ data, page, perPage });

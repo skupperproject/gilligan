@@ -32,12 +32,14 @@ import NavDropdown from "../../navDropdown";
 import { Icap } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
 import TableViewer from "./tableViewer";
+import SubTable from "./subTable";
 
 class TablePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isDropDownOpen: false,
+      showSubPage: false,
     };
   }
 
@@ -56,38 +58,46 @@ class TablePage extends Component {
         className="topology-page"
       >
         <Stack>
-          <StackItem className="overview-header">
-            <Split gutter="md">
-              <SplitItem>
-                <TextContent>
-                  <Text className="overview-title" component={TextVariants.h1}>
-                    {Icap(this.props.view)}s
-                  </Text>
-                </TextContent>
-              </SplitItem>
-              <SplitItem isFilled>
-                View{" "}
-                <NavDropdown
+          {this.state.showSubPage && <SubTable />}
+          {!this.state.showSubPage && (
+            <React.Fragment>
+              <StackItem className="overview-header">
+                <Split gutter="md">
+                  <SplitItem>
+                    <TextContent>
+                      <Text
+                        className="overview-title"
+                        component={TextVariants.h1}
+                      >
+                        {Icap(this.props.view)}s
+                      </Text>
+                    </TextContent>
+                  </SplitItem>
+                  <SplitItem isFilled>
+                    View
+                    <NavDropdown
+                      view={this.props.view}
+                      viewType="table"
+                      handleChangeViewType={this.props.handleChangeViewType}
+                    />
+                  </SplitItem>
+                  <SplitItem>
+                    <TextContent>
+                      <LastUpdated ref={(el) => (this.updatedRef = el)} />
+                    </TextContent>
+                  </SplitItem>
+                </Split>
+              </StackItem>
+              <StackItem className="overview-table">
+                <TableViewer
+                  ref={(el) => (this.tableRef = el)}
+                  service={this.props.service}
                   view={this.props.view}
-                  viewType="table"
-                  handleChangeViewType={this.props.handleChangeViewType}
+                  handleAddNotification={() => {}}
                 />
-              </SplitItem>
-              <SplitItem>
-                <TextContent>
-                  <LastUpdated ref={(el) => (this.updatedRef = el)} />
-                </TextContent>
-              </SplitItem>
-            </Split>
-          </StackItem>
-          <StackItem className="overview-table">
-            <TableViewer
-              ref={(el) => (this.tableRef = el)}
-              service={this.props.service}
-              view={this.props.view}
-              handleAddNotification={() => {}}
-            />
-          </StackItem>
+              </StackItem>
+            </React.Fragment>
+          )}
         </Stack>
       </PageSection>
     );
