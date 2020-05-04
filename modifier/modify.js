@@ -10,6 +10,7 @@ class Modifier {
       this.originalData = JSON.parse(JSON.stringify(data));
       return;
     }
+
     data.services.forEach((service) => {
       if (!service.derived && service.protocol === "http") {
         service.requests_handled.forEach((request) => {
@@ -86,6 +87,16 @@ class Modifier {
             }
           }
         });
+      } else {
+        /*
+        const newBytes = Math.random() * 100;
+        service.connections_egress.forEach(egress => {
+          for (let connectionID in egress.connections) {
+            const connection = egress.connections[connectionID]
+            connection.bytes_out += Math.random() * 100
+          }
+        })
+        */
       }
     });
   };
@@ -170,8 +181,7 @@ const exitHandler = (options, exitCode) => {
   clearInterval(timer);
   fs.copyFile(`${fileName}.bak`, fileName, (err) => {
     if (err) throw err;
-    console.log(`${fileName} was backed restored`);
-    if (options.cleanup) console.log("clean");
+    console.log(`${fileName} was restored`);
     if (exitCode || exitCode === 0) console.log(exitCode);
     if (options.exit) process.exit();
   });
