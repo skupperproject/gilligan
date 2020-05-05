@@ -23,6 +23,9 @@ import * as d3path from "d3-path";
 // calculate a point "away" distance from given pt, that is perpendicular
 // to the line going from pt with given slope
 const ptAway = (pt, away, slope) => {
+  if (slope === 0) {
+    return { x: pt.x, y: pt.y + away };
+  }
   const m = -1 / slope;
   const y = (away * m) / Math.sqrt(1 + m * m) + pt.y;
   const x = away / Math.sqrt(1 + m * m) + pt.x;
@@ -303,5 +306,6 @@ const calcOffsets = (link, offset) => {
   const pt = ptAway({ x: link.source.x1, y: link.y0 }, offset, slope);
   const offsetX = slope > 0 ? pt.x - link.source.x1 : link.source.x1 - pt.x;
   const offsetY = slope < 0 ? pt.y - link.y0 : link.y0 - pt.y;
+  if (isNaN(offsetX) || isNaN(offsetY)) debugger;
   return { offsetX, offsetY };
 };
