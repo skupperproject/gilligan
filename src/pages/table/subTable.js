@@ -18,15 +18,15 @@ under the License.
 */
 
 import React, { Component } from "react";
-import {
-  StackItem,
-  Text,
-  TextContent,
-  TextVariants,
-} from "@patternfly/react-core";
+import { StackItem, TextContent } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
-import { Icap } from "../../utilities";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbHeading,
+} from "@patternfly/react-core";
 import LastUpdated from "../../lastUpdated";
+import { Icap } from "../../utilities";
 
 class SubTable extends Component {
   constructor(props) {
@@ -39,21 +39,24 @@ class SubTable extends Component {
   };
 
   update = () => {
-    this.tableRef.update();
+    //this.tableRef.update();
     this.handleChangeLastUpdated();
   };
 
   render() {
+    const params = new URLSearchParams(this.props.history.location.search);
+    const item = params.get("item");
     return (
       <React.Fragment>
-        <StackItem className="overview-header">
+        <StackItem className="sk-table-header">
           <Split gutter="md">
             <SplitItem>
-              <TextContent>
-                <Text className="overview-title" component={TextVariants.h1}>
+              <Breadcrumb>
+                <BreadcrumbItem to={`#${this.props.view}Table`}>
                   {Icap(this.props.view)}s
-                </Text>
-              </TextContent>
+                </BreadcrumbItem>
+                <BreadcrumbHeading>{item}</BreadcrumbHeading>
+              </Breadcrumb>
             </SplitItem>
             <SplitItem isFilled></SplitItem>
             <SplitItem>

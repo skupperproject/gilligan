@@ -1075,6 +1075,9 @@ div.qdrChord .legend-text {
   padding-right: 2em;
 }
 
+.sk-table-header {
+  padding: 1em;
+}
 .toolbar-pagination {
   margin-left: auto;
 }

@@ -18,8 +18,7 @@ under the License.
 */
 
 import * as d3 from "d3";
-//import { sankey } from "d3-sankey";
-import { sankeyCircular as sankey } from "d3-sankey-circular";
+import { sankeyCircular as sankey } from "@plotly/d3-sankey-circular";
 const SankeyAttributes = [
   "value",
   "depth",
@@ -42,7 +41,7 @@ export const SiteRadius = 100;
 
 export class QDRLogger {
   constructor(log, source) {
-    this.log = function (msg) {
+    this.log = function(msg) {
       log.log(
         " % c % s % s % s",
         "color: yellow; background - color: black;",
@@ -674,10 +673,10 @@ export const endall = (transition, callback) => {
   }
   var n = 0;
   transition
-    .each(function () {
+    .each(function() {
       ++n;
     })
-    .each("end", function () {
+    .each("end", function() {
       if (!--n) callback.apply(this, arguments);
     });
 };

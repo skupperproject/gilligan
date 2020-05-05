@@ -76,11 +76,9 @@ class TableViewer extends React.Component {
       }
     });
     // if the dataSource did not provide its own cell formatter for details
-    /*
     if (!this.dataSource.detailFormatter) {
       this.dataSource.fields[0].cellFormatters.push(this.detailLink);
     }
-    */
 
     this.setState({ columns: this.dataSource.fields }, () => {
       this.update();
@@ -128,6 +126,8 @@ class TableViewer extends React.Component {
   };
 
   detailClick = (value, extraInfo) => {
+    this.props.handleShowSubTable(true, { value, extraInfo });
+    /*
     this.setState({
       redirect: true,
       redirectState: {
@@ -141,6 +141,7 @@ class TableViewer extends React.Component {
         property: extraInfo.property,
       },
     });
+    */
   };
 
   // cell formatter

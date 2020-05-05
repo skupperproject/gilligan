@@ -270,6 +270,7 @@ class PageLayout extends React.Component {
               {...props}
               {...more}
               handleChangeViewType={this.handleChangeViewType}
+              history={this.props.history}
             />
           ) : (
             <Redirect
@@ -324,8 +325,20 @@ class PageLayout extends React.Component {
               component={TablePage}
               view="service"
             />
+            <PrivateRoute
+              path="/serviceDetails"
+              component={TablePage}
+              view="service"
+              mode="details"
+            />
             <PrivateRoute path="/site" component={TopologyPage} view="site" />
             <PrivateRoute path="/siteTable" component={TablePage} view="site" />
+            <PrivateRoute
+              path="/siteDetails"
+              component={TablePage}
+              view="site"
+              mode="details"
+            />
             <PrivateRoute
               path="/deployment"
               component={TopologyPage}
@@ -335,6 +348,12 @@ class PageLayout extends React.Component {
               path="/deploymentTable"
               component={TablePage}
               view="deployment"
+            />
+            <PrivateRoute
+              path="/deploymentDetails"
+              component={TablePage}
+              view="deployment"
+              mode="details"
             />
             <PrivateRoute path="/process" component={ListPage} />
             <Route

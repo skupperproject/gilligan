@@ -48,9 +48,9 @@ export class Deployment extends Service {
     super(data);
     this.Site = new Site(data);
     this.fields = [
-      { title: "Address", field: "address" },
+      { title: "Deployment", field: "deployment" },
       { title: "Protocol", field: "protocol" },
-      { title: "Deployed at", field: "site_name" },
+      { title: "Site", field: "site_name" },
     ];
   }
 
@@ -610,9 +610,9 @@ export class Deployment extends Service {
   doFetch = (page, perPage) => {
     return new Promise((resolve) => {
       const data = this.serviceNodes.nodes.map((n) => ({
-        address: n.address,
+        deployment: `${n.address} (${n.cluster.site_name})`,
         protocol: n.protocol,
-        site_name: n.parentNode.site_name,
+        site_name: n.cluster.site_name,
       }));
       resolve({ data, page, perPage });
     });

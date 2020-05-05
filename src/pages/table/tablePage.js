@@ -39,7 +39,8 @@ class TablePage extends Component {
     super(props);
     this.state = {
       isDropDownOpen: false,
-      showSubPage: false,
+      showSubPage: this.props.mode === "details",
+      subPageInfo: {},
     };
   }
 
@@ -48,8 +49,19 @@ class TablePage extends Component {
   };
 
   update = () => {
-    this.tableRef.update();
-    this.handleChangeLastUpdated();
+    if (this.props.mode === "details") {
+      this.subTableRef.update();
+    } else {
+      this.tableRef.update();
+      this.handleChangeLastUpdated();
+    }
+  };
+
+  handleShowSubTable = (show, subPageInfo) => {
+    this.props.history.replace(
+      `/${this.props.view}Details?item=${subPageInfo.value}`
+    );
+    //this.setState({ showSubPage: show, subPageInfo });
   };
   render() {
     return (
@@ -58,8 +70,16 @@ class TablePage extends Component {
         className="topology-page"
       >
         <Stack>
-          {this.state.showSubPage && <SubTable />}
-          {!this.state.showSubPage && (
+          {this.props.mode === "details" && (
+            <SubTable
+              ref={(el) => (this.subTableRef = el)}
+              service={this.props.service}
+              view={this.props.view}
+              info={this.state.subPageInfo}
+              history={this.props.history}
+            />
+          )}
+          {this.props.mode !== "details" && (
             <React.Fragment>
               <StackItem className="overview-header">
                 <Split gutter="md">
@@ -94,6 +114,8 @@ class TablePage extends Component {
                   service={this.props.service}
                   view={this.props.view}
                   handleAddNotification={() => {}}
+                  handleShowSubTable={this.handleShowSubTable}
+                  history={this.props.history}
                 />
               </StackItem>
             </React.Fragment>
