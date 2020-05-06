@@ -798,3 +798,8 @@ export const timeAgo = (date) => {
 
   return `${interval} ${epoch}${suffix} ago`;
 };
+
+export const humanize = (str) => {
+  str = str.replace("_", " ");
+  return Icap(str);
+};
