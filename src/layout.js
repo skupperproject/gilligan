@@ -234,7 +234,11 @@ class PageLayout extends React.Component {
         className="topology-header"
         logo={
           <React.Fragment>
-            <Brand src={gilliganImg} alt="Gilligan Logo" />
+            <Brand
+              src={gilliganImg}
+              alt="Gilligan Logo"
+              className="sk-gilligan-logo"
+            />
             <span className="logo-text">Skupper</span>
           </React.Fragment>
         }
