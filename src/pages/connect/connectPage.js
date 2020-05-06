@@ -50,7 +50,7 @@ class ConnectPage extends React.Component {
         brandImgAlt="Gilligan logo"
         backgroundImgSrc={images}
         backgroundImgAlt="Images"
-        textContent="A skupper network management/visualization tool."
+        textContent="A Skupper network management and visualization tool."
       >
         {loginForm}
       </LoginPage>
