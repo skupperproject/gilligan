@@ -58,7 +58,6 @@ export class Service {
     this.fields = [
       { title: "Name", field: "address" },
       { title: "Protocol", field: "protocol" },
-      { title: "Deployed at", field: "deployedAt" },
     ];
   }
   createSelections(svg) {
@@ -274,22 +273,52 @@ export class Service {
     serviceTypesEnter.append("svg:title").text((d) => d.shortName);
 
     serviceTypesEnter
+      .append("svg:text")
+      .attr("class", "service-type")
+      .text(function(d) {
+        if (!d.contentWidth) {
+          this.innerHTML = d.shortName;
+          let width = this.getBBox().width + 20; // 10px margin
+          d.contentWidth = Math.max(Math.min(ServiceWidth, width), 80);
+        }
+        return null;
+      })
+      .attr("x", (d) => d.getWidth() / 2)
+      .attr("y", (d) => d.getHeight() / 2)
+      .attr("dominant-baseline", "middle")
+      .attr("text-anchor", "middle");
+
+    serviceTypesEnter
       .append("svg:rect")
       .attr("class", "service-type")
       .attr("rx", 5)
       .attr("ry", 5)
-      .attr("width", (d) => Math.max(ServiceWidth, d.getWidth()))
+      .attr("width", (d) => d.getWidth())
       .attr("height", (d) => d.getHeight())
       .attr("fill", "#FFFFFF");
 
     serviceTypesEnter
       .append("svg:text")
       .attr("class", "service-type")
-      .attr("x", (d) => Math.max(ServiceWidth, d.getWidth()) / 2)
+      .attr("x", (d) => d.getWidth() / 2)
       .attr("y", (d) => d.getHeight() / 2)
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
-      .text((d) => d.shortName);
+      .text(function(d) {
+        let ellipseName = d.shortName;
+        this.innerHTML = ellipseName;
+        let { width } = this.getBBox();
+        let first = ellipseName.length - 4;
+        while (width + 20 > d.contentWidth) {
+          --first;
+          ellipseName = `${d.shortName.substr(0, first)}...${d.shortName.slice(
+            -4
+          )}`;
+          this.innerHTML = ellipseName;
+          width = this.getBBox().width;
+        }
+        return ellipseName;
+      });
 
     const links = this.serviceLinks.links;
     // draw circle on right if this serviceType
@@ -301,7 +330,7 @@ export class Service {
       .append("svg:circle")
       .attr("class", "end-point source")
       .attr("r", 6)
-      .attr("cx", (d) => Math.max(ServiceWidth, d.getWidth()))
+      .attr("cx", (d) => d.getWidth())
       .attr("cy", 20);
 
     // draw diamond on left if this serviceType
@@ -341,25 +370,6 @@ export class Service {
       });
 
     selection.classed("selected", (d) => d.selected);
-
-    // adjust service name text based on its size
-    selection.select("text.service-type").text(function(d) {
-      if (!d.ellipseName) {
-        d.ellipseName = d.shortName;
-        let { width } = this.getBBox();
-        let first = d.shortName.length - 4;
-        while (width > d.getWidth() - 20) {
-          --first;
-          d.ellipseName = `${d.shortName.substr(
-            0,
-            first
-          )}...${d.shortName.slice(-4)}`;
-          this.innerHTML = d.ellipseName;
-          width = this.getBBox().width;
-        }
-      }
-      return d.ellipseName;
-    });
 
     selection.classed("hidden", (d) => d.cluster.site_name === "unknown");
     return selection;
@@ -459,7 +469,7 @@ export class Service {
   };
 
   serviceWidth = (node, expanded) => {
-    return ServiceWidth;
+    return node.contentWidth ? node.contentWidth : ServiceWidth;
   };
 
   // returns true if any path or service is currently selected.

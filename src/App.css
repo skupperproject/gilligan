@@ -1078,6 +1078,12 @@ div.qdrChord .legend-text {
 .sk-table-header {
   padding: 1em;
 }
+
+.sk-gilligan-logo {
+  height: 2.6em;
+  width: 2.6em;
+}
+
 .toolbar-pagination {
   margin-left: auto;
 }

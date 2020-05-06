@@ -60,7 +60,6 @@ export class Site {
     this.fields = [
       { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
-      { title: "Servers", field: "servers" },
     ];
   }
 

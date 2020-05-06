@@ -609,8 +609,13 @@ export class Deployment extends Service {
   // get records for the table view
   doFetch = (page, perPage) => {
     return new Promise((resolve) => {
-      const data = this.serviceNodes.nodes.map((n) => ({
-        deployment: `${n.address} (${n.cluster.site_name})`,
+      const formats = [
+        (n) => `${n.address} (${n.cluster.site_name})`,
+        (n) => `${n.cluster.site_name}/${n.address}`,
+        (n) => `${n.address}@${n.cluster.site_name}`,
+      ];
+      const data = this.serviceNodes.nodes.map((n, i) => ({
+        deployment: formats[i % 3](n),
         protocol: n.protocol,
         site_name: n.cluster.site_name,
       }));
