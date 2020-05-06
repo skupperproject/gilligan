@@ -653,7 +653,13 @@ export class Site {
   genMask = (d, selection, sankey) =>
     genPath({ link: d.link, mask: d.mask, selection, site: sankey });
   genStatPath = (d, sankey) =>
-    genPath({ link: d, reverse: d.circular, offsetY: 4, site: sankey });
+    genPath({
+      link: d,
+      reverse: d.circular,
+      offsetY: 4,
+      width: d.width,
+      site: sankey,
+    });
 
   drawViewPaths = (sankey) => {
     const self = this;
