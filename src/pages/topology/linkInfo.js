@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import { pretty } from "../../utilities";
+import { humanize, pretty } from "../../utilities";
 
 class LinkInfo extends React.Component {
   constructor(props) {
@@ -85,7 +85,7 @@ class LinkInfo extends React.Component {
                 let val = obj2Str(k, this.props.linkInfo.request[k]);
                 return (
                   <tr key={k}>
-                    <td>{k}</td>
+                    <td>{humanize(k)}</td>
                     <td>{val}</td>
                   </tr>
                 );
