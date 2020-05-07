@@ -91,11 +91,13 @@ class Adapter {
           this.addTarget(service.targets, service.address, "unknownID");
         }
       }
-      this.addTarget(
-        service.targets,
-        service.address,
-        service.targets[0].site_id
-      );
+      if (service.targets[0]) {
+        this.addTarget(
+          service.targets,
+          service.address,
+          service.targets[0].site_id
+        );
+      }
     });
   };
 
