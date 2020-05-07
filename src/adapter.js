@@ -1,5 +1,5 @@
 import { shortName } from "./utilities";
-let INSTANCE = 0;
+var INSTANCE = 0;
 class Adapter {
   constructor(data) {
     this.data = data;
@@ -16,8 +16,10 @@ class Adapter {
     this.addServersToSites();
     this.addSourcesTargets();
     this.createDeployments();
-    //console.log("finished parsing data");
-    //console.log(this.data);
+    if (this.instance === 1) {
+      console.log("finished parsing data");
+      console.log(this.data);
+    }
   }
 
   // if multiple sites have the same name,
@@ -277,7 +279,7 @@ class Adapter {
   };
 
   fromTo2 = (from, fromSite, to, toSite) => {
-    const req = {};
+    let req = {};
     if (to.targets.some((t) => t.site_id === toSite)) {
       if (to.requests_received) {
         for (let r = 0; r < to.requests_received.length; r++) {
@@ -291,7 +293,7 @@ class Adapter {
               );
               if (from === clientService) {
                 this.aggregateAttributes(
-                  request.by_client[client].by_handling_site[fromSite],
+                  request.by_client[client].by_handling_site[toSite],
                   req
                 );
               }
