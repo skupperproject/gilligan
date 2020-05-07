@@ -273,22 +273,6 @@ export class Service {
     serviceTypesEnter.append("svg:title").text((d) => d.shortName);
 
     serviceTypesEnter
-      .append("svg:text")
-      .attr("class", "service-type")
-      .text(function(d) {
-        if (!d.contentWidth) {
-          this.innerHTML = d.shortName;
-          let width = this.getBBox().width + 20; // 10px margin
-          d.contentWidth = Math.max(Math.min(ServiceWidth, width), 80);
-        }
-        return null;
-      })
-      .attr("x", (d) => d.getWidth() / 2)
-      .attr("y", (d) => d.getHeight() / 2)
-      .attr("dominant-baseline", "middle")
-      .attr("text-anchor", "middle");
-
-    serviceTypesEnter
       .append("svg:rect")
       .attr("class", "service-type")
       .attr("rx", 5)
@@ -300,25 +284,31 @@ export class Service {
     serviceTypesEnter
       .append("svg:text")
       .attr("class", "service-type")
-      .attr("x", (d) => d.getWidth() / 2)
-      .attr("y", (d) => d.getHeight() / 2)
-      .attr("dominant-baseline", "middle")
-      .attr("text-anchor", "middle")
       .text(function(d) {
+        this.innerHTML = d.shortName;
+        let width = this.getBBox().width + 20;
+        let contentWidth = Math.max(Math.min(ServiceWidth, width), 80);
         let ellipseName = d.shortName;
-        this.innerHTML = ellipseName;
-        let { width } = this.getBBox();
         let first = ellipseName.length - 4;
-        while (width + 20 > d.contentWidth) {
+        while (width > contentWidth) {
           --first;
           ellipseName = `${d.shortName.substr(0, first)}...${d.shortName.slice(
             -4
           )}`;
           this.innerHTML = ellipseName;
-          width = this.getBBox().width;
+          width = this.getBBox().width + 20;
         }
+        d.contentWidth = contentWidth;
         return ellipseName;
-      });
+      })
+      .attr("x", (d) => d.getWidth() / 2)
+      .attr("y", (d) => d.getHeight() / 2)
+      .attr("dominant-baseline", "middle")
+      .attr("text-anchor", "middle");
+
+    serviceTypesEnter
+      .selectAll("rect.service-type")
+      .attr("width", (d) => d.getWidth());
 
     const links = this.serviceLinks.links;
     // draw circle on right if this serviceType
