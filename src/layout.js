@@ -50,7 +50,7 @@ import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
 import ListPage from "./pages/list/listPage";
 import { QDRService } from "./qdrService";
-import { getSaved, setSaved } from "./utilities";
+import { getSaved, setSaved, idle } from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
 
@@ -88,14 +88,24 @@ class PageLayout extends React.Component {
 
   componentDidMount = () => {
     this.doConnect();
+    // avoid unresponsive page by reloading after 1 hour of inactivity
+    this.clearIdle = idle(1000 * 60 * 60, this.handleIdleTimeout);
   };
 
   componentWillUnmount = () => {
     clearInterval(this.timer);
+    this.clearIdle();
     this.unmounted = true;
   };
   setLocation = (where) => {
     //this.setState({ connectPath: where })
+  };
+
+  handleIdleTimeout = () => {
+    console.log(`idle timeout... reloading`);
+    this.props.history.replace(
+      `${this.props.location.pathname}${this.props.location.search}`
+    );
   };
 
   update = () => {

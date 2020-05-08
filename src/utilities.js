@@ -803,3 +803,22 @@ export const humanize = (str) => {
   str = str.replace("_", " ");
   return Icap(str);
 };
+
+export const idle = (elapsed, callback) => {
+  let timer;
+  const inactive = () => {
+    callback();
+    active();
+  };
+  const active = () => {
+    clearTimeout(timer);
+    timer = setTimeout(inactive, elapsed);
+  };
+  const unload = () => {
+    clearTimeout(timer);
+    document.removeEventListener("mousemove", active);
+  };
+  document.addEventListener("mousemove", active, true);
+  active();
+  return unload;
+};
