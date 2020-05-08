@@ -662,7 +662,8 @@ export class Service {
           return interpolatePath(previous, current);
         });
 
-      d3.selectAll(".end-point")
+      d3.select("#SVG_ID")
+        .selectAll(".end-point")
         .transition()
         .duration(duration)
         .attr("opacity", function(d) {
@@ -726,7 +727,8 @@ export class Service {
   toServiceSankey = (duration) => {
     return new Promise((resolve) => {
       const self = this;
-      d3.selectAll(".end-point")
+      d3.select("#SVG_ID")
+        .selectAll(".end-point")
         .transition()
         .duration(duration)
         .attr("opacity", 0);
@@ -769,7 +771,8 @@ export class Service {
         .attr("opacity", null);
 
       // draw the sankey path
-      d3.selectAll("path.service")
+      d3.select("#SVG_ID")
+        .selectAll("path.service")
         .style("display", null)
         .transition()
         .duration(duration)
@@ -801,7 +804,8 @@ export class Service {
         });
 
       // show the serviceTraffic arrows in the links
-      d3.selectAll("path.servicesankeyDir")
+      d3.select("#SVG_ID")
+        .selectAll("path.servicesankeyDir")
         .transition()
         .duration(duration)
         .attr("stroke-width", 1)

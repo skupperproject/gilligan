@@ -46,7 +46,7 @@ export function appendCloud(g) {
     .attr("y", 80)
     .attr("dominant-baseline", "middle")
     .attr("text-anchor", "middle")
-    .text(d => d.name);
+    .text((d) => d.name);
 
   return g;
 }
@@ -132,7 +132,7 @@ export function addDefs(svg) {
         defs.push({
           sten: sten[isten],
           state: states[istate],
-          r: radii[iradii]
+          r: radii[iradii],
         });
       }
     }
@@ -148,7 +148,7 @@ export function addDefs(svg) {
       return [d.sten, d.state, d.r].join("-");
     })
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", d => Nodes.refX(d.sten, d.r))
+    .attr("refX", (d) => Nodes.refX(d.sten, d.r))
     .attr("markerWidth", 14)
     .attr("markerHeight", 14)
     .attr("markerUnits", "userSpaceOnUse")
@@ -160,10 +160,36 @@ export function addDefs(svg) {
         : "M 10 -5 L 0 0 L 10 5 z";
     });
 
+  addMarkers(svg);
+  addStyles(
+    sten,
+    {
+      selected: "#33F",
+      highlighted: "#6F6",
+      unknown: "#888",
+    },
+    radii
+  );
+}
+
+export const addMarkers = (svg) => {
   svg
     .select("defs.marker-defs")
     .append("marker")
     .attr("id", "site-end")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8)
+    .attr("markerWidth", 14)
+    .attr("markerHeight", 14)
+    .attr("markerUnits", "userSpaceOnUse")
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", `M 0 -5 L 10 0 L 0 5 z`);
+
+  svg
+    .select("defs.marker-defs")
+    .append("marker")
+    .attr("id", "http-end")
     .attr("viewBox", "0 -5 10 10")
     .attr("refX", 8)
     .attr("markerWidth", 14)
@@ -185,17 +211,7 @@ export function addDefs(svg) {
     .attr("orient", "auto")
     .append("svg:path")
     .attr("d", "M 0 -5 L 10 0 L 0 5 L 5 0 z");
-
-  addStyles(
-    sten,
-    {
-      selected: "#33F",
-      highlighted: "#6F6",
-      unknown: "#888"
-    },
-    radii
-  );
-}
+};
 
 // draw line between centers of source and target rectangles
 // find the point on the source rect (sx,sy) that the line intersects
@@ -205,7 +221,7 @@ export const midPoints = (source, target) => {
     sx: source.x0 + source.getWidth() / 2,
     sy: source.y0 + 20,
     tx: target.x0 + target.getWidth() / 2,
-    ty: target.y0 + 20
+    ty: target.y0 + 20,
   };
   /*
   // get center of source and target rects
@@ -260,25 +276,25 @@ export function scaledMouse(node, event) {
   const rect = node.getBoundingClientRect();
   return [
     event.clientX - rect.left - node.clientLeft,
-    event.clientY - rect.top - node.clientTop
+    event.clientY - rect.top - node.clientTop,
   ];
 }
 
-export const addGradient = enterpath => {
+export const addGradient = (enterpath) => {
   const gradient = enterpath
     .append("linearGradient")
-    .attr("id", d => d.uid)
+    .attr("id", (d) => d.uid)
     .attr("gradientUnits", "userSpaceOnUse")
-    .attr("x1", d => d.source.x1)
-    .attr("x2", d => d.target.x0);
+    .attr("x1", (d) => d.source.x1)
+    .attr("x2", (d) => d.target.x0);
 
   gradient
     .append("stop")
     .attr("offset", "0%")
-    .attr("stop-color", d => d.source.color);
+    .attr("stop-color", (d) => d.source.color);
 
   gradient
     .append("stop")
     .attr("offset", "100%")
-    .attr("stop-color", d => d.target.color);
+    .attr("stop-color", (d) => d.target.color);
 };

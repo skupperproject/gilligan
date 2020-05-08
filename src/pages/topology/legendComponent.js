@@ -18,42 +18,170 @@ under the License.
 */
 
 import React, { Component } from "react";
-//import { Legend } from "./legend.js";
+import Draggable from "react-draggable";
+import * as d3 from "d3";
+import { getSizes } from "../../utilities";
+import { addMarkers } from "../topology/svgUtils";
 
 class LegendComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {};
-    //this.legend = new Legend(this.props.nodes);
+    this.legendSections = [{ title: "Connections", data: [] }];
   }
+
+  componentDidMount = () => {
+    this.svg = d3
+      .select("#sk-legend")
+      .append("svg")
+      .attr("id", "LEGEND_ID");
+
+    this.svg.append("svg:defs").attr("class", "marker-defs");
+
+    addMarkers(this.svg);
+
+    const data = [
+      {
+        cls: "site",
+        marker: "site-end",
+        text: "Router connection",
+        stroke: null,
+      },
+      {
+        cls: "service",
+        marker: "http-end",
+        text: "HTTP traffic",
+        stroke: "black",
+      },
+      {
+        cls: "servicesankeyDir tcp",
+        marker: "tcp-end",
+        text: "TCP traffic",
+        stroke: "black",
+      },
+    ];
+    let connections = this.svg.append("g").attr("class", "connections");
+    connections = connections.selectAll("g").data(data);
+    const connEnter = connections.enter();
+    let connSection = connEnter
+      .append("g")
+      .attr("transform", (d, i) => `translate(0, ${i * 25})`);
+    connSection
+      .append("path")
+      .attr("class", (d) => d.cls)
+      .attr("marker-end", (d) => `url(#${d.marker})`)
+      .attr("stroke", (d) => d.stroke)
+      .attr("d", "M 10 10 L 100 10");
+    connSection
+      .append("text")
+      .attr("x", 110)
+      .attr("y", 15)
+      .text((d) => d.text);
+
+    const endpoint_data = [
+      {
+        shape: "circle",
+        text: "Egress",
+        attrs: { r: 6, cx: 0, cy: 10 },
+      },
+      {
+        shape: "rect",
+        text: "Ingress",
+        attrs: { x: 2, y: 2, width: 10, height: 10, transform: "rotate(45)" },
+      },
+    ];
+
+    let endpoints = this.svg.append("g").attr("class", "endpoints");
+    endpoints.attr("transform", "translate(360, 0)");
+    endpoints = endpoints.selectAll("g").data(endpoint_data);
+    let endpSection = endpoints
+      .enter()
+      .append("g")
+      .attr("transform", (d, i) => `translate(0, ${i * 25})`);
+    endpSection.each(function(d) {
+      const shape = d3
+        .select(this)
+        .append(d.shape)
+        .attr("class", "end-point source");
+      for (let attr in d.attrs) {
+        shape.attr(attr, d.attrs[attr]);
+      }
+
+      d3.select(this)
+        .append("text")
+        .attr("x", 20)
+        .attr("y", 15)
+        .text(d.text);
+    });
+
+    let objs = this.svg.append("g").attr("class", "objects");
+    objs.attr("transform", "translate(600, 0)");
+    const site = objs.append("g");
+    site
+      .append("circle")
+      .attr("class", "network")
+      .attr("r", 10)
+      .attr("cx", 10)
+      .attr("cy", 12)
+      .attr("fill", "#eaeaea")
+      .attr("stroke", "black");
+    site
+      .append("text")
+      .attr("x", 50)
+      .attr("y", 15)
+      .text("Site");
+    const service = objs.append("g").attr("transform", "translate(0, 30)");
+    service
+      .append("rect")
+      .attr("rx", 5)
+      .attr("ry", 5)
+      .attr("width", 40)
+      .attr("height", 20)
+      .attr("fill", "#eaeaea")
+      .attr("stroke", "black");
+    service
+      .append("text")
+      .attr("x", 50)
+      .attr("y", 15)
+      .text("Service");
+  };
 
   render() {
     return (
-      <div
-        id="topologyLegend"
-        className="pf-c-modal-box pf-u-box-shadow-md pf-m-sm"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-lg-title"
-        aria-describedby="modal-lg-description"
+      <Draggable
+        axis="both"
+        handle=".handle"
+        defaultPosition={{ x: 0, y: 0 }}
+        position={null}
+        scale={1}
+        onStart={this.handleStart}
+        onDrag={this.handleDrag}
+        onStop={this.handleStop}
       >
-        <header>
-          <h1 className="pf-c-title pf-m-xl" id="modal-lg-title">
-            Topology Legend
-          </h1>
-          <button
-            className="pf-c-button pf-m-plain"
-            type="button"
-            aria-label="Close"
-            onClick={this.props.handleCloseLegend}
-          >
-            <i className="fas fa-times" aria-hidden="true"></i>
-          </button>
-        </header>
-        <div className="pf-c-modal-box__body" id="modal-lg-description">
-          <div id="topo_svg_legend"></div>{" "}
+        <div
+          className="pf-c-modal-box sk-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          aria-describedby="modal-description"
+          id="sk-legend"
+        >
+          <div className="pf-c-title pf-m-2xl handle" id="modal-title">
+            Legend
+            <button
+              className="pf-c-button pf-m-plain sk-close"
+              type="button"
+              aria-label="Close"
+              onClick={this.props.handleCloseLegend}
+            >
+              <i className="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div className="pf-c-modal-box__body" id="modal-description">
+            <div id="sk-legend" ref={(el) => (this.legendRef = el)}></div>
+          </div>
         </div>
-      </div>
+      </Draggable>
     );
   }
 }
