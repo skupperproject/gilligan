@@ -626,18 +626,20 @@ export class Deployment extends Service {
   // handle mouse over a chord. highlight the path
   chordOver(chord, over, viewer) {
     if (!chord.info) return;
-    d3.selectAll("path.service").each(function(p) {
-      if (
-        chord.info.source.site_name === p.source.parentNode.site_name &&
-        chord.info.target.site_name === p.target.parentNode.site_name &&
-        chord.info.source.address === p.source.address &&
-        chord.info.target.address === p.target.address
-      ) {
-        p.selected = over;
-        viewer.blurAll(over, p);
-        viewer.restart();
-      }
-    });
+    d3.select("#SVG_ID")
+      .selectAll("path.service")
+      .each(function(p) {
+        if (
+          chord.info.source.site_name === p.source.parentNode.site_name &&
+          chord.info.target.site_name === p.target.parentNode.site_name &&
+          chord.info.source.address === p.source.address &&
+          chord.info.target.address === p.target.address
+        ) {
+          p.selected = over;
+          viewer.blurAll(over, p);
+          viewer.restart();
+        }
+      });
   }
 
   // handle mouse over an arc. highlight the service

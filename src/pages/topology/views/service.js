@@ -651,7 +651,8 @@ export class Service {
           return interpolatePath(previous, current);
         });
 
-      d3.selectAll("path.servicesankeyDir")
+      d3.select("#SVG_ID")
+        .selectAll("path.servicesankeyDir")
         .transition()
         .duration(duration)
         .attr("stroke", (d) => (color ? d.getColor() : "black"))
@@ -707,7 +708,8 @@ export class Service {
         });
 
       // change the path's width and location
-      d3.selectAll("path.service")
+      d3.select("#SVG_ID")
+        .selectAll("path.service")
         .transition()
         .duration(duration)
         .attr("stroke", (d) => (color ? d.getColor() : null))
@@ -833,21 +835,23 @@ export class Service {
   };
 
   chordOver(chord, over, viewer) {
-    d3.selectAll("path.service").each(function(p) {
-      if (
-        `-${p.source.name}-${p.target.name}` === chord.key ||
-        `-${p.target.name}-${p.source.name}` === chord.key
-      ) {
-        if (!over) {
-          p.selected = false;
+    d3.select("#SVG_ID")
+      .selectAll("path.service")
+      .each(function(p) {
+        if (
+          `-${p.source.name}-${p.target.name}` === chord.key ||
+          `-${p.target.name}-${p.source.name}` === chord.key
+        ) {
+          if (!over) {
+            p.selected = false;
+          }
+          viewer.blurAll(over, p);
+          if (over) {
+            p.selected = true;
+          }
+          viewer.restart();
         }
-        viewer.blurAll(over, p);
-        if (over) {
-          p.selected = true;
-        }
-        viewer.restart();
-      }
-    });
+      });
   }
 
   arcOver(arc, over, viewer) {

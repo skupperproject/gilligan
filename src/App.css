@@ -956,8 +956,12 @@ div.qdrChord .legend-text {
 }
 #sk-legend.sk-modal {
   width: 50%;
-  min-width: 40em;
-  max-width: 70em;
+  height: 12em;
+  min-width: 45em;
+  max-width: 50em;
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 #sk-legend #modal-title {
   cursor: move;

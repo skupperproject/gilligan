@@ -20,17 +20,32 @@ under the License.
 import React, { Component } from "react";
 import Draggable from "react-draggable";
 import * as d3 from "d3";
-import { getSizes } from "../../utilities";
+import { getSaved, setSaved } from "../../utilities";
 import { addMarkers } from "../topology/svgUtils";
 
+const LEGEND_POSITION = "legend";
 class LegendComponent extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = { legendPosition: { x: 0, y: 0 } };
     this.legendSections = [{ title: "Connections", data: [] }];
   }
 
   componentDidMount = () => {
+    const legendRect = d3
+      .select("#sk-legend")
+      .node()
+      .getBoundingClientRect();
+    const containerRect = d3
+      .select("#topology")
+      .node()
+      .getBoundingClientRect();
+    let initialOffset = getSaved(LEGEND_POSITION, { x: 0, y: 0 });
+    const legendPosition = {
+      x: containerRect.width - legendRect.width - 10 + initialOffset.x,
+      y: containerRect.height - legendRect.height - 10 + initialOffset.y,
+    };
+    this.setState({ legendPosition });
     this.svg = d3
       .select("#sk-legend")
       .append("svg")
@@ -146,20 +161,38 @@ class LegendComponent extends Component {
       .text("Service");
   };
 
+  handleStop = (e, o) => {
+    const legendRect = d3
+      .select("#sk-legend")
+      .node()
+      .getBoundingClientRect();
+    const containerRect = d3
+      .select("#topology")
+      .node()
+      .getBoundingClientRect();
+
+    const lowerRight = {
+      x: containerRect.width - legendRect.width - 10,
+      y: containerRect.height - legendRect.height - 10,
+    };
+    const offset = {
+      x: legendRect.left - lowerRight.x - containerRect.x,
+      y: legendRect.top - lowerRight.y - containerRect.y,
+    };
+    setSaved(LEGEND_POSITION, offset);
+  };
+
   render() {
     return (
       <Draggable
         axis="both"
         handle=".handle"
-        defaultPosition={{ x: 0, y: 0 }}
-        position={null}
+        positionOffset={this.state.legendPosition}
         scale={1}
-        onStart={this.handleStart}
-        onDrag={this.handleDrag}
         onStop={this.handleStop}
       >
         <div
-          className="pf-c-modal-box sk-modal"
+          className="pf-c-modal-box sk-modal sk-legendbox"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
@@ -177,8 +210,12 @@ class LegendComponent extends Component {
               <i className="fas fa-times" aria-hidden="true"></i>
             </button>
           </div>
-          <div className="pf-c-modal-box__body" id="modal-description">
-            <div id="sk-legend" ref={(el) => (this.legendRef = el)}></div>
+          <div
+            className="pf-c-modal-box__body"
+            id="modal-description"
+            ref={(el) => (this.legendRef = el)}
+          >
+            <div id="sk-legend"></div>
           </div>
         </div>
       </Draggable>
