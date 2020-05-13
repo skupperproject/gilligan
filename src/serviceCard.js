@@ -21,7 +21,7 @@ import React from "react";
 
 import { Card, CardBody, CardHead } from "@patternfly/react-core";
 import CardHealth from "./cardHealth";
-import { safePlural, Icap } from "./utilities";
+import { safePlural, Icap, shortName } from "./utilities";
 
 class ServiceCard extends React.Component {
   constructor(props) {
@@ -38,7 +38,7 @@ class ServiceCard extends React.Component {
       },
       service: {
         compact: [
-          "protocol",
+          { title: "Protocol", getFn: this.getProtocol },
           { title: this.getDeployedTitle, getFn: this.getSites },
         ],
         expanded: [{ title: this.getRequestTitle, getFn: this.getRequests }],
@@ -66,6 +66,7 @@ class ServiceCard extends React.Component {
     });
     return deployed;
   };
+  getProtocol = (service) => service.protocol.toUpperCase();
   getSites = (service) => this.siteList(service).join(", ");
   siteList = (service) =>
     Array.from(
@@ -219,7 +220,7 @@ class ServiceCard extends React.Component {
             ></i>
             <span>
               {cardService.address
-                ? cardService.address
+                ? shortName(cardService.address)
                 : cardService.site_name}
             </span>
           </div>

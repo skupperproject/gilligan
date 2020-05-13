@@ -50,7 +50,7 @@ class TableViewer extends React.Component {
       rows: [],
       redirect: false,
       redirectState: {},
-      options: this.dataSource.getGraphOptions(),
+      options: this.dataSource.getGraphOptions(this.props.history),
     };
   }
 

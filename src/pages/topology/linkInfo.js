@@ -56,14 +56,16 @@ class LinkInfo extends React.Component {
     };
     const getProtocol = (title) => {
       if (this.props.linkInfo.target.protocol) {
-        return title ? "Protocol" : this.props.linkInfo.target.protocol;
+        return title
+          ? "Protocol"
+          : this.props.linkInfo.target.protocol.toUpperCase();
       }
       let protocols = [];
       if (this.props.linkInfo.request.requests) {
-        protocols.push("http");
+        protocols.push("HTTP");
       }
       if (this.props.linkInfo.request.start_time) {
-        protocols.push("tcp");
+        protocols.push("TCP");
       }
       return title
         ? `Protocol${protocols.length > 1 ? "s" : ""}`
