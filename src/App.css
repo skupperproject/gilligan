@@ -586,7 +586,7 @@ path.service.highlighted:not(.traffic) {
   stroke: #6f6 !important;
 }
 path.servicesankeyDir.tcp {
-  stroke-dasharray: 5 5;
+  stroke-dasharray: 2 5;
 }
 
 marker {
@@ -955,10 +955,8 @@ div.qdrChord .legend-text {
   right: 1em;
 }
 #sk-legend.sk-modal {
-  width: 50%;
   height: 12em;
-  min-width: 45em;
-  max-width: 50em;
+  width: 42em;
   position: absolute;
   left: 0;
   top: 0;
@@ -1146,10 +1144,12 @@ div.qdrChord .legend-text {
 #metricsDropdown {
   margin-left: 0.5em;
 }
+/*
 #metricsDropdown {
   position: relative;
   top: -0.5em;
 }
+  */
 .noWrap {
   white-space: nowrap;
 }
@@ -1526,12 +1526,44 @@ circle.end-point {
 
 .graph-toolbar {
   border-bottom: 1px solid #cccccc;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 1em;
+}
+
+.graph-toolbar .tall-item {
+  /*border-right: 1px solid black;*/
+  margin-right: 1em;
+}
+
+.graph-toolbar .pf-c-radio,
+.graph-toolbar .pf-c-check {
+  margin-right: 1.5em;
+}
+
+.show-stat {
+  padding-left: 1em;
+  border-left: 1px solid black;
+}
+.toolbar-item {
+  height: 2em;
+  border-right: 1px solid black;
+  padding-top: 0.4em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.toolbar-item.last-item {
+  border-right: 0;
+}
+
+.pf-l-toolbar__item.toolbar-item.drowdown-group {
+  height: 2em;
+  position: relative;
+  top: -8px;
+  margin-left: 1em;
+  border-right: 0;
 }
 /*
-.graph-toolbar .pf-c-radio {
-  margin-left: 1.5em;
-}
-*/
 .graph-toolbar div.color-gradient svg {
   padding-top: 0.5em;
   padding-left: 0.5em;
@@ -1542,10 +1574,6 @@ circle.end-point {
 .graph-toolbar div.color-gradient {
   display: flex;
   position: relative;
-}
-.graph-toolbar .tall-item {
-  border-right: 1px solid black;
-  padding-right: 1em;
 }
 .graph-toolbar .tall-item:not(:first-child) {
   border-left: 1px solid black;
@@ -1568,6 +1596,7 @@ circle.end-point {
 .stat-dropdown {
   padding-left: 1.3em;
 }
+*/
 button:disabled span,
 span.disabled {
   color: #888888;

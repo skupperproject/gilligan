@@ -3,7 +3,7 @@ import {
   Checkbox,
   Dropdown,
   DropdownToggle,
-  DropdownItem
+  DropdownItem,
 } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
 
@@ -11,13 +11,13 @@ class GraphOptions extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOptionsOpen: false
+      isOptionsOpen: false,
     };
   }
 
-  onToggle = isOptionsOpen => {
+  onToggle = (isOptionsOpen) => {
     this.setState({
-      isOptionsOpen
+      isOptionsOpen,
     });
   };
 
@@ -43,7 +43,7 @@ class GraphOptions extends React.Component {
           id="check-traffic-address"
           name="traffic"
         />
-      </DropdownItem>
+      </DropdownItem>,
     ];
 
     return (
@@ -65,16 +65,3 @@ class GraphOptions extends React.Component {
 }
 
 export default GraphOptions;
-
-/*
-      <DropdownItem key="utilization">
-        <Checkbox
-          label="Show link utilization"
-          isChecked={utilization}
-          onChange={this.onChangeTraffic}
-          aria-label="show link utilization"
-          id="check-utilization"
-          name="utilization"
-        />
-      </DropdownItem>
-*/

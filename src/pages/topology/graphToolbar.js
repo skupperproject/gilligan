@@ -29,7 +29,6 @@ import PropTypes from "prop-types";
 import { Split, SplitItem } from "@patternfly/react-core";
 
 import MetricsDrowdown from "./metricsDropdown";
-import { ColorRange } from "./colorRange";
 
 class GraphToolbar extends Component {
   static propTypes = {
@@ -97,94 +96,81 @@ class GraphToolbar extends Component {
 
   render() {
     const { statProtocol } = this.props;
-    const { radio, color, traffic, showMetric, hideChart } = this.props.options;
+    const { radio, traffic, showMetric, hideChart } = this.props.options;
     const routerLinksRadio = () => {
       if (radio) {
         return (
-          <Radio
-            label="Show connections"
-            isChecked={!traffic}
-            onChange={this.handleChange}
-            aria-label="router links"
-            id="showRouterLinks"
-            name="showRouterLinks"
-            className="router-links"
-          />
+          <SplitItem>
+            <Radio
+              label="Show connections"
+              isChecked={!traffic}
+              onChange={this.handleChange}
+              aria-label="router links"
+              id="showRouterLinks"
+              name="showRouterLinks"
+              className="router-links"
+            />
+          </SplitItem>
         );
       }
     };
+    const metricDropdown = () => (
+      <SplitItem>
+        Traffic metric
+        <MetricsDrowdown
+          dropdownItems={this.dropdownItems.filter(
+            (i) => !i.type || i.type === statProtocol
+          )}
+          stat={this.props.stat}
+          handleChangeOption={this.props.handleChangeMetric}
+          isDisabled={this.disableAll()}
+        />
+      </SplitItem>
+    );
+
     const trafficCheckOrRadio = () => {
       return (
-        <Split>
-          <SplitItem>
-            {radio && (
-              <Radio
-                label="Show traffic by metric"
-                isChecked={traffic}
-                onChange={this.handleChange}
-                aria-label="show relative traffic"
-                id="showSankey"
-                name="showSankey"
-              />
-            )}
-            {!radio && (
-              <Checkbox
-                label="Show traffic by metric"
-                isChecked={traffic}
-                onChange={this.handleChange}
-                aria-label="show relative traffic"
-                id="showSankey"
-                name="showSankey"
-              />
-            )}
-            <div className="indent-group">
-              <Radio
-                label="using width"
-                isChecked={!color}
-                isDisabled={this.disableUsing()}
-                onChange={this.handleChange}
-                aria-label="wide traffic"
-                id="showWidth"
-                name="showWidth"
-              />
-              <div className="color-gradient">
-                <Radio
-                  label="using color"
-                  isChecked={color}
-                  isDisabled={this.disableUsing()}
-                  onChange={this.handleChange}
-                  aria-label="colored traffic"
-                  id="showColor"
-                  name="showColor"
-                />
-                {false && <ColorRange />}
-              </div>
-            </div>
-          </SplitItem>
-          <SplitItem>
-            <MetricsDrowdown
-              dropdownItems={this.dropdownItems.filter(
-                (i) => !i.type || i.type === statProtocol
-              )}
-              stat={this.props.stat}
-              handleChangeOption={this.props.handleChangeMetric}
-              isDisabled={this.disableAll()}
+        <SplitItem>
+          {radio && (
+            <Radio
+              label="Show relative traffic"
+              isChecked={traffic}
+              onChange={this.handleChange}
+              aria-label="show relative traffic"
+              id="showSankey"
+              name="showSankey"
             />
-          </SplitItem>
-        </Split>
+          )}
+          {!radio && (
+            <Checkbox
+              label="Show relative traffic"
+              isChecked={traffic}
+              onChange={this.handleChange}
+              aria-label="show relative traffic"
+              id="showSankey"
+              name="showSankey"
+            />
+          )}
+        </SplitItem>
       );
     };
 
     const sankeyCheck = () => (
-      <ToolbarItem className="toolbar-item tall-item">
-        {routerLinksRadio()}
-
-        <div className="traffic-group">{trafficCheckOrRadio()}</div>
-      </ToolbarItem>
+      <React.Fragment>
+        <ToolbarItem className="toolbar-item">
+          <Split>
+            {routerLinksRadio()}
+            {trafficCheckOrRadio()}
+          </Split>
+        </ToolbarItem>
+        <ToolbarItem className="toolbar-item drowdown-group">
+          {metricDropdown()}
+        </ToolbarItem>
+      </React.Fragment>
     );
 
     const metricCheck = () => (
-      <ToolbarItem className="toolbar-item">
+      <ToolbarItem className="toolbar-item tall-item show-stat">
         <Checkbox
           label="Show metrics"
           isChecked={showMetric}
@@ -198,7 +184,7 @@ class GraphToolbar extends Component {
     );
 
     const sidebarCheck = () => (
-      <ToolbarItem className="toolbar-item">
+      <ToolbarItem className="toolbar-item last-item">
         <Checkbox
           label="Show charts"
           isChecked={!hideChart}
