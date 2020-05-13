@@ -70,7 +70,7 @@ class LegendComponent extends Component {
       },
       {
         cls: "servicesankeyDir tcp",
-        marker: "tcp-end",
+        marker: "http-end",
         text: "TCP traffic",
         stroke: "black",
       },
@@ -107,7 +107,7 @@ class LegendComponent extends Component {
     ];
 
     let endpoints = this.svg.append("g").attr("class", "endpoints");
-    endpoints.attr("transform", "translate(360, 0)");
+    endpoints.attr("transform", "translate(320, 0)");
     endpoints = endpoints.selectAll("g").data(endpoint_data);
     let endpSection = endpoints
       .enter()
@@ -130,7 +130,7 @@ class LegendComponent extends Component {
     });
 
     let objs = this.svg.append("g").attr("class", "objects");
-    objs.attr("transform", "translate(600, 0)");
+    objs.attr("transform", "translate(480, 0)");
     const site = objs.append("g");
     site
       .append("circle")
