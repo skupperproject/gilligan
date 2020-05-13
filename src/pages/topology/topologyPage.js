@@ -88,6 +88,8 @@ class TopologyPage extends Component {
               view={this.props.view}
               handleChangeView={this.handleChangeView}
               handleChangeLastUpdated={this.handleChangeLastUpdated}
+              history={this.props.history}
+              location={this.props.location}
             />
           </StackItem>
         </Stack>

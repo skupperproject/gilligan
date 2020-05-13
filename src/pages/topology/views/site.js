@@ -38,6 +38,8 @@ import {
   SiteRadius,
   reconcileArrays,
   reconcileLinks,
+  getOptions,
+  setOptions,
 } from "../../../utilities";
 import { genPath, pathBetween } from "../../../paths";
 import { interpolatePath } from "d3-interpolate-path";
@@ -48,6 +50,14 @@ const SITE_POSITION = "site";
 const ZOOM_SCALE = "sitescale";
 const ZOOM_TRANSLATE = "sitetrans";
 const SITE_OPTIONS = "siteopts";
+const DEFAULT_OPTIONS = {
+  radio: true,
+  traffic: false,
+  color: true,
+  showMetric: false,
+  hideChart: false,
+  stat: { http: "bytes_out", tcp: "bytes_out" },
+};
 
 export class Site {
   constructor(data) {
@@ -1180,18 +1190,11 @@ export class Site {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
-  getGraphOptions = () => {
-    return getSaved(SITE_OPTIONS, {
-      radio: true,
-      traffic: false,
-      color: true,
-      showMetric: false,
-      hideChart: false,
-      stat: { http: "bytes_out", tcp: "bytes_out" },
-    });
-  };
 
-  saveGraphOptions = (options) => {
-    setSaved(SITE_OPTIONS, options);
+  getGraphOptions = (history) =>
+    getOptions(SITE_OPTIONS, DEFAULT_OPTIONS, history);
+
+  saveGraphOptions = (options, history) => {
+    setOptions(SITE_OPTIONS, DEFAULT_OPTIONS, options, history);
   };
 }

@@ -37,6 +37,8 @@ import {
   shortName,
   reconcileArrays,
   reconcileLinks,
+  getOptions,
+  setOptions,
 } from "../../../utilities";
 import { genPath } from "../../../paths";
 
@@ -47,6 +49,14 @@ const SERVICE_POSITION = "svc";
 const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
 const SERVICE_OPTIONS = "srvopts";
+const DEFAULT_OPTIONS = {
+  radio: false,
+  traffic: true,
+  color: true,
+  showMetric: false,
+  hideChart: false,
+  stat: { http: "bytes_out", tcp: "bytes_out" },
+};
 
 export class Service {
   constructor(data) {
@@ -390,7 +400,7 @@ export class Service {
       // reset the markers based on current highlighted/selected
       .attr(
         "marker-end",
-        (d) => `url(#${d.target.protocol === "tcp" ? "tcp-end" : "end--15"})`
+        (d) => `url(#${d.target.protocol === "tcp" ? "http-end" : "end--15"})`
       );
 
     enterpath
@@ -401,8 +411,6 @@ export class Service {
         // mouse over a path
         viewer.blurAll(true, d);
         self.selectLink(d);
-        //viewer.highlightConnection(true, d3.select(this), d, viewer);
-        //d.selected = true;
         viewer.popupCancelled = false;
         viewer.showLinkInfo(d);
         viewer.restart();
@@ -635,6 +643,9 @@ export class Service {
         .attr("opacity", function(d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
+        })
+        .call(endall, () => {
+          resolve();
         });
 
       d3.select("defs.statPaths")
@@ -665,15 +676,7 @@ export class Service {
 
       d3.select("#SVG_ID")
         .selectAll(".end-point")
-        .transition()
-        .duration(duration)
-        .attr("opacity", function(d) {
-          const current = d3.select(this).attr("opacity");
-          return self.anySelected() ? current : 1;
-        })
-        .call(endall, () => {
-          resolve();
-        });
+        .style("display", null);
 
       // shrink the hittarget paths
       d3.selectAll("path.hittarget")
@@ -731,9 +734,7 @@ export class Service {
       const self = this;
       d3.select("#SVG_ID")
         .selectAll(".end-point")
-        .transition()
-        .duration(duration)
-        .attr("opacity", 0);
+        .style("display", "none");
 
       // move the service rects to their sankey locations
       d3.selectAll("g.service-type")
@@ -823,7 +824,7 @@ export class Service {
   doFetch = (page, perPage) => {
     const data = this.serviceNodes.nodes.map((n) => ({
       address: n.shortName,
-      protocol: n.protocol,
+      protocol: n.protocol.toUpperCase(),
       deployedAt: this.data.adapter
         .getServiceSites(n)
         .map((site) => site.site_name)
@@ -879,18 +880,10 @@ export class Service {
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
-  getGraphOptions = () => {
-    return getSaved(SERVICE_OPTIONS, {
-      radio: false,
-      traffic: true,
-      color: true,
-      showMetric: false,
-      hideChart: false,
-      stat: { http: "bytes_out", tcp: "bytes_out" },
-    });
-  };
+  getGraphOptions = (history) =>
+    getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS, history);
 
-  saveGraphOptions = (options) => {
-    setSaved(SERVICE_OPTIONS, options);
+  saveGraphOptions = (options, history) => {
+    setOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS, options, history);
   };
 }

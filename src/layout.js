@@ -50,7 +50,7 @@ import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
 import ListPage from "./pages/list/listPage";
 import { QDRService } from "./qdrService";
-import { getSaved, setSaved, idle } from "./utilities";
+import { getSaved, setSaved, idle, parseLocation } from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
 
@@ -68,6 +68,10 @@ class PageLayout extends React.Component {
     });
     const lv = getSaved(LAST_VIEW, "service");
     this.lastView = `${lv}${viewTypes[lv]}`;
+    const urlParts = parseLocation();
+    if (urlParts.view !== this.lastView) {
+      this.lastView = urlParts.view;
+    }
     this.state = {
       connected: false,
       connectPath: "",
@@ -88,6 +92,7 @@ class PageLayout extends React.Component {
 
   componentDidMount = () => {
     this.doConnect();
+    console.log(`layout componDidMount ${window.location.href}`);
     // avoid unresponsive page by reloading after 1 hour of inactivity
     this.clearIdle = idle(1000 * 60 * 60, this.handleIdleTimeout);
   };
@@ -97,6 +102,7 @@ class PageLayout extends React.Component {
     this.clearIdle();
     this.unmounted = true;
   };
+
   setLocation = (where) => {
     //this.setState({ connectPath: where })
   };
@@ -192,7 +198,6 @@ class PageLayout extends React.Component {
 
   render() {
     const { activeItem, viewTypes } = this.state;
-
     const PageNav = () => {
       //                   <Link to={`/${view}`}>{name}</Link>
       //            <div className="nav-item-link">{name}</div>;
@@ -285,6 +290,7 @@ class PageLayout extends React.Component {
               {...more}
               handleChangeViewType={this.handleChangeViewType}
               history={this.props.history}
+              location={this.props.location}
             />
           ) : (
             <Redirect
@@ -304,7 +310,7 @@ class PageLayout extends React.Component {
     // When we need to display a different component(page),
     // we render a <Redirect> object
     const redirectAfterConnect = () => {
-      let { connectPath } = this.state;
+      let connectPath = this.state.connectPath;
       if (connectPath === "/login") connectPath = "/";
       if (connectPath !== "") {
         return <Redirect to={connectPath} />;

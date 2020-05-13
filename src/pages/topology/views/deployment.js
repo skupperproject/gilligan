@@ -31,6 +31,8 @@ import {
   ServiceHeight,
   reconcileArrays,
   reconcileLinks,
+  getOptions,
+  setOptions,
 } from "../../../utilities";
 import { genPath } from "../../../paths";
 
@@ -42,13 +44,21 @@ const DEPLOYMENT_POSITION = "dp";
 const DEPLOYMENT_OPTIONS = "dpopts";
 const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
+const DEFAULT_OPTIONS = {
+  radio: false,
+  traffic: true,
+  color: true,
+  showMetric: false,
+  hideChart: false,
+  stat: { http: "bytes_out", tcp: "bytes_out" },
+};
 
 export class Deployment extends Service {
   constructor(data) {
     super(data);
     this.Site = new Site(data);
     this.fields = [
-      { title: "Deployment", field: "deployment" },
+      { title: "Name", field: "deployment" },
       { title: "Protocol", field: "protocol" },
       { title: "Site", field: "site_name" },
     ];
@@ -609,14 +619,9 @@ export class Deployment extends Service {
   // get records for the table view
   doFetch = (page, perPage) => {
     return new Promise((resolve) => {
-      const formats = [
-        (n) => `${n.address} (${n.cluster.site_name})`,
-        (n) => `${n.cluster.site_name}/${n.address}`,
-        (n) => `${n.address}@${n.cluster.site_name}`,
-      ];
-      const data = this.serviceNodes.nodes.map((n, i) => ({
-        deployment: formats[i % 3](n),
-        protocol: n.protocol,
+      const data = this.serviceNodes.nodes.map((n) => ({
+        deployment: `${n.address} (${n.cluster.site_name})`,
+        protocol: n.protocol.toUpperCase(),
         site_name: n.cluster.site_name,
       }));
       resolve({ data, page, perPage });
@@ -662,18 +667,10 @@ export class Deployment extends Service {
     setSaved(ZOOM_SCALE, zoom.scale());
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
-  getGraphOptions = () => {
-    return getSaved(DEPLOYMENT_OPTIONS, {
-      radio: false,
-      traffic: true,
-      color: true,
-      showMetric: false,
-      hideChart: false,
-      stat: { http: "bytes_out", tcp: "bytes_out" },
-    });
-  };
 
-  saveGraphOptions = (options) => {
-    setSaved(DEPLOYMENT_OPTIONS, options);
+  getGraphOptions = (history) =>
+    getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS, history);
+  saveGraphOptions = (options, history) => {
+    setOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS, options, history);
   };
 }

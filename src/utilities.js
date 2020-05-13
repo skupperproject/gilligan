@@ -822,3 +822,83 @@ export const idle = (elapsed, callback) => {
   active();
   return unload;
 };
+
+export const parseLocation = () => {
+  const parsedUrl = new URL(window.location.href);
+  const hash = parsedUrl.hash;
+  const q = hash.split("?");
+  let view = q[0].substr(1);
+  if (view[0] === "/") view = view.substr(1);
+  let search = q[1];
+  parsedUrl.view = view;
+  parsedUrl.search = search;
+  if (search) {
+    parsedUrl.connectPath = `${view}?${search}`;
+  } else {
+    parsedUrl.connectPath = view;
+  }
+  return parsedUrl;
+};
+
+const setLocationParams = (options, defaultOptions, history) => {
+  const newSearch = new URLSearchParams("");
+  for (const key in options) {
+    if (key === "stat") {
+      if (options.stat.http !== defaultOptions.stat.http) {
+        newSearch.set("http", options.stat.http);
+      }
+      if (options.stat.tcp !== defaultOptions.stat.tcp) {
+        newSearch.set("tcp", options.stat.tcp);
+      }
+    } else if (options[key] !== defaultOptions[key]) {
+      newSearch.set(key, options[key]);
+    }
+  }
+  const historySearch = new URLSearchParams(history.location.search);
+  //console.log(`historySearch ${historySearch.toString()}`);
+  //console.log(`newSearch ${newSearch.toString()}`);
+  let same = true;
+  //console.log(historySearch.keys().length);
+  //debugger;
+  for (let param of historySearch) {
+    const key = param[0];
+    const value = param[1];
+    if (!newSearch.has(key) || value !== newSearch.get(key)) {
+      same = false;
+    }
+  }
+  if (same) {
+    for (let param of newSearch) {
+      const key = param[0];
+      const value = param[1];
+      if (!historySearch.has(key) || historySearch.get(key) !== value) {
+        same = false;
+      }
+    }
+  }
+  if (!same) {
+    /*
+    console.log(`window.location.href ${window.location.href}`);
+    console.log(window.location);
+    console.log(history);
+    */
+    const newLocation = `${window.location.origin}/#${
+      history.location.pathname
+    }?${newSearch.toString()}`;
+    console.log(`setting new location to ${newLocation}`);
+    //history.replace(newLocation);
+  }
+};
+
+export const getOptions = (key, defaultOptions, history) => {
+  const saved = getSaved(key, defaultOptions);
+  saved.color = false;
+  setLocationParams(saved, defaultOptions, history);
+  return saved;
+};
+
+export const setOptions = (key, defaultOptions, options, history) => {
+  options.color = false;
+  setSaved(key, options);
+  setLocationParams(options, defaultOptions, history);
+};

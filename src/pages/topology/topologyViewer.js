@@ -52,7 +52,7 @@ class TopologyViewer extends Component {
       chordData: null,
       linkInfo: null,
       initial: true,
-      options: this.viewObj.getGraphOptions(),
+      options: this.viewObj.getGraphOptions(this.props.history),
     };
     this.popupCancelled = true;
 
@@ -81,6 +81,26 @@ class TopologyViewer extends Component {
     window.removeEventListener("resize", this.resize);
     this.unmounting = true;
     d3.select(".pf-c-page__main").style("background-color", "white");
+  };
+
+  componentDidUpdate = () => {
+    if (this.view !== this.props.view) {
+      this.view = this.props.view;
+      this.viewObj = new VIEWS[this.view](this.props.service);
+      this.setState(
+        { options: this.viewObj.getGraphOptions(this.props.history) },
+        () => {
+          this.init();
+          this.callTransitions(true);
+          this.setChordWidth(
+            this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
+          );
+          if (!this.state.options.hideChart) {
+            this.chordRef.init();
+          }
+        }
+      );
+    }
   };
 
   callTransitions = (initial) => {
@@ -529,7 +549,7 @@ class TopologyViewer extends Component {
       }
       this.setState({ options }, () => {
         this.resize();
-        this.viewObj.saveGraphOptions(options);
+        this.viewObj.saveGraphOptions(options, this.props.history);
         this.showChord(this.state.chordData, false);
       });
     }
@@ -539,7 +559,7 @@ class TopologyViewer extends Component {
       const { options } = this.state;
       options.showMetric = checked;
       this.setState({ options }, () => {
-        this.viewObj.saveGraphOptions(options);
+        this.viewObj.saveGraphOptions(options, this.props.history);
         this.callTransitions();
       });
     }
@@ -565,7 +585,7 @@ class TopologyViewer extends Component {
       options.traffic = checked;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options);
+        this.viewObj.saveGraphOptions(options, this.props.history);
         this.callTransitions();
       });
     }
@@ -576,7 +596,7 @@ class TopologyViewer extends Component {
       options.color = !checked;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options);
+        this.viewObj.saveGraphOptions(options, this.props.history);
         this.callTransitions();
       });
     }
@@ -587,7 +607,7 @@ class TopologyViewer extends Component {
       options.color = checked;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options);
+        this.viewObj.saveGraphOptions(options, this.props.history);
         this.callTransitions();
       });
     }
@@ -600,7 +620,7 @@ class TopologyViewer extends Component {
       options.stat[stat] = metric;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options);
+        this.viewObj.saveGraphOptions(options, this.props.history);
         this.doUpdate();
       });
     }
