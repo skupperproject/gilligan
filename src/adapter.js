@@ -182,7 +182,11 @@ class Adapter {
                 request.site_id
               );
             } else if (found.derived) {
-              this.addTargetToService(found, clientKey, request.site_id);
+              this.addTargetToService(
+                found,
+                shortName(clientKey),
+                request.site_id
+              );
             }
           }
         });
