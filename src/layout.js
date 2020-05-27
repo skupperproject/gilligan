@@ -269,7 +269,7 @@ class PageLayout extends React.Component {
               alt="Gilligan Logo"
               className="sk-gilligan-logo"
             />
-            <span className="logo-text">Skupper</span>
+            <span id="skupper-logo">Skupper</span>
           </React.Fragment>
         }
         toolbar={PageToolbar}

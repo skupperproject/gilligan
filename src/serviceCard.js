@@ -31,8 +31,8 @@ class ServiceCard extends React.Component {
       cluster: {
         compact: ["namespace"],
         expanded: [
-          "url",
-          "edge",
+          { title: "URL", getFn: (o) => o.url },
+          { title: "Site type", getFn: (o) => (o.edge ? "Edge" : "Normal") },
           { title: this.getDeploymentTitle, getFn: this.getDeployments },
         ],
       },
@@ -126,11 +126,7 @@ class ServiceCard extends React.Component {
       : prop;
     return (
       <div className="body-line">
-        {expanded ? (
-          <span className="body-line-prompt">{Icap(title)}</span>
-        ) : (
-          ""
-        )}
+        {expanded && <span className="body-line-prompt">{Icap(title)}</span>}
         <span className="body-line-value">{property}</span>
       </div>
     );
@@ -196,8 +192,10 @@ class ServiceCard extends React.Component {
       if (expanded) {
         bodies = [
           ...bodies,
-          ...this.cardAttributes.cluster.expanded.map((attr) => (
-            <CardBody key={attr}>
+          ...this.cardAttributes.cluster.expanded.map((attr, i) => (
+            <CardBody
+              key={`${typeof attr === "string" ? attr : attr.title}-${i}`}
+            >
               {this.bodyLine(expanded, attr, cluster)}
             </CardBody>
           )),
@@ -226,7 +224,8 @@ class ServiceCard extends React.Component {
           </div>
         </CardHead>
         <CardBody>
-          Health <CardHealth cluster={cardService} />
+          <span className="body-line-prompt">Health</span>
+          <CardHealth cluster={cardService} />
         </CardBody>
         {this.siteBodies(cardService)}
         {this.serviceBodies(cardService)}

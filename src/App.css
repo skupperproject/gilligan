@@ -247,7 +247,7 @@ table.edge-table td[data-label="State"] svg {
   font-weight: bold;
 }
 
-.logo-text {
+#skupper-logo {
   font-family: "Alegreya Sans", sans-serif;
   padding-left: 1em;
   text-decoration: none;
@@ -256,6 +256,11 @@ table.edge-table td[data-label="State"] svg {
   font-size: 20px;
   width: 30em;
   text-align: left;
+}
+
+.pf-c-page__header-brand-link:hover {
+  text-decoration: none !important;
+  cursor: default;
 }
 
 .state-copy input {
@@ -447,7 +452,13 @@ main.pf-c-login__main {
 .overview-title::first-letter {
   text-transform: uppercase;
 }
+.overview-title {
+  font-size: 1.25em;
+}
 
+.sk-dropdown-prompt {
+  margin-top: 0.125em;
+}
 .overview-table-page {
   padding-left: 0 !important;
   padding-right: 0 !important;
@@ -956,7 +967,7 @@ div.qdrChord .legend-text {
 }
 #sk-legend.sk-modal {
   height: 12em;
-  width: 42em;
+  width: 32em;
   position: absolute;
   left: 0;
   top: 0;
@@ -1103,7 +1114,14 @@ div.qdrChord .legend-text {
 .toolbar-pagination {
   margin-left: auto;
 }
-
+/*
+.overview-table .pf-c-button.pf-m-primary.link-button {
+  padding-left: 0;
+}
+*/
+.overview-table th:first-of-type button.pf-c-button {
+  padding-left: 2.8em;
+}
 .overview-table .pf-m-footer {
   padding-right: 2em;
 }
@@ -1500,6 +1518,9 @@ circle.network.dim {
   opacity: 0.4;
 }
 
+.end-point.source {
+  display: none !important;
+}
 rect.end-point.source {
   stroke-width: 2px;
   fill: white;
@@ -1813,5 +1834,9 @@ div.skupper-console .pf-c-page__sidebar {
 
 .sk-breadcrumbList li:first-child:hover {
   text-decoration: underline;
+  cursor: pointer;
+}
+
+#page-sidebar li {
   cursor: pointer;
 }

@@ -99,13 +99,13 @@ class TopologyPage extends Component {
                     <TextContent>
                       <Text
                         className="overview-title"
-                        component={TextVariants.h1}
+                        component={TextVariants.p}
                       >
                         {Icap(this.props.view)}s
                       </Text>
                     </TextContent>
                   </SplitItem>
-                  <SplitItem isFilled>
+                  <SplitItem isFilled className="sk-dropdown-prompt">
                     View
                     <NavDropdown
                       view={this.props.view}

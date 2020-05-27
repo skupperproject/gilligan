@@ -93,6 +93,7 @@ class LegendComponent extends Component {
       .attr("y", 15)
       .text((d) => d.text);
 
+    /*
     const endpoint_data = [
       {
         shape: "circle",
@@ -128,9 +129,9 @@ class LegendComponent extends Component {
         .attr("y", 15)
         .text(d.text);
     });
-
+*/
     let objs = this.svg.append("g").attr("class", "objects");
-    objs.attr("transform", "translate(480, 0)");
+    objs.attr("transform", "translate(320, 0)");
     const site = objs.append("g");
     site
       .append("circle")
@@ -148,8 +149,8 @@ class LegendComponent extends Component {
     const service = objs.append("g").attr("transform", "translate(0, 30)");
     service
       .append("rect")
-      .attr("rx", 5)
-      .attr("ry", 5)
+      .attr("rx", 2)
+      .attr("ry", 2)
       .attr("width", 40)
       .attr("height", 20)
       .attr("fill", "#eaeaea")
