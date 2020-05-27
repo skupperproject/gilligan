@@ -34,65 +34,57 @@ import {
 
 import { Nav, NavItem, NavList } from "@patternfly/react-core";
 
-import {
-  HashRouter as Router,
-  Link,
-  Switch,
-  Route,
-  Redirect,
-} from "react-router-dom";
-
+import { BrowserRouter as Router, Redirect } from "react-router-dom";
+import { createBrowserHistory } from "history";
 import accessibleStyles from "@patternfly/patternfly/utilities/Accessibility/accessibility.css";
 import { css } from "@patternfly/react-styles";
 import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
-import TablePage from "./pages/table/tablePage";
-import ListPage from "./pages/list/listPage";
 import { QDRService } from "./qdrService";
-import { getSaved, setSaved, idle, parseLocation } from "./utilities";
+import {
+  getSaved,
+  setSaved,
+  idle,
+  viewFromHash,
+  isEmpty,
+  overrideOptions,
+} from "./utilities";
 const gilliganImg = require("./assets/skupper.svg");
 const avatarImg = require("./assets/img_avatar.svg");
-
+const history = createBrowserHistory();
 const UPDATE_INTERVAL = 2000;
-const VIEW_TYPES = "viewTypes";
+const VIEW_MODES = "viewModes";
 const LAST_VIEW = "lastView2";
 
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
-    const viewTypes = getSaved(VIEW_TYPES, {
-      service: "",
-      site: "",
-      deployment: "",
+    const view = getSaved(LAST_VIEW, "service");
+    this.viewModes = getSaved(VIEW_MODES, {
+      service: "graph",
+      site: "graph",
+      deployment: "graph",
     });
-    const lv = getSaved(LAST_VIEW, "service");
-    this.lastView = `${lv}${viewTypes[lv]}`;
-    const urlParts = parseLocation();
-    if (urlParts.view !== this.lastView) {
-      this.lastView = urlParts.view;
-    }
     this.state = {
       connected: false,
       connectPath: "",
-      activeItem: this.lastView,
+      view,
       username: "",
-      viewTypes,
+      mode: this.viewModes[view],
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
 
     this.views = [
-      { name: "Services", view: "service" },
-      { name: "Sites", view: "site" },
-      { name: "Deployments", view: "deployment" },
+      { description: "Services", name: "service" },
+      { description: "Sites", name: "site" },
+      { description: "Deployments", name: "deployment" },
       //{ name: "Processes", view: "process" },
     ];
   }
-
   componentDidMount = () => {
     this.doConnect();
-    console.log(`layout componDidMount ${window.location.href}`);
     // avoid unresponsive page by reloading after 1 hour of inactivity
     this.clearIdle = idle(1000 * 60 * 60, this.handleIdleTimeout);
   };
@@ -103,12 +95,43 @@ class PageLayout extends React.Component {
     this.unmounted = true;
   };
 
+  componentDidUpdate = () => {
+    const { options } = viewFromHash();
+    // a new URL was pasted into the browser's address bar.
+    // go to the new view and use its parameters
+    if (this.navSelect !== "userChanged" && !isEmpty(options)) {
+      const view = options.view || "service";
+      const mode = options.mode || "graph";
+      // save the new options for the new view
+      overrideOptions(view, options);
+      this.viewModes[view] = mode;
+      setSaved(VIEW_MODES, this.viewModes);
+      // tell the current view to update
+      this.setState({ view, mode });
+    }
+    this.navSelect = undefined;
+  };
+
+  setOptions = (options, user) => {
+    if (user) this.navSelect = "userChanged";
+    if (!isEmpty(options)) {
+      options.mode = this.getMode();
+      const newHash = Object.keys(options)
+        .map((key) => {
+          return `${key}=${options[key]}`;
+        })
+        .join("&");
+      history.replace(`#${newHash}`);
+    } else {
+      history.replace("");
+    }
+  };
+
   setLocation = (where) => {
     //this.setState({ connectPath: where })
   };
 
   handleIdleTimeout = () => {
-    console.log(`idle timeout... reloading`);
     this.props.history.replace(
       `${this.props.location.pathname}${this.props.location.search}`
     );
@@ -158,19 +181,11 @@ class PageLayout extends React.Component {
         this.service.disconnect();
       });
     } else {
-      if (
-        connectPath === undefined ||
-        connectPath === "/" ||
-        connectPath === "/login"
-      )
-        connectPath = `/${this.lastView}`;
-      const activeItem = connectPath.split("/").pop();
-      this.props.history.replace(connectPath);
+      connectPath = "/";
       clearInterval(this.timer);
       this.timer = setInterval(this.update, UPDATE_INTERVAL);
       this.setState({
         username: "Bob Denver",
-        activeItem,
         connectPath,
         connected: true,
       });
@@ -178,44 +193,44 @@ class PageLayout extends React.Component {
   };
 
   onNavSelect = (result) => {
-    this.lastView = result.itemId;
-    setSaved(LAST_VIEW, this.lastView);
+    this.navSelect = "userChanged";
+    setSaved(LAST_VIEW, result.itemId);
     this.setState({
-      activeItem: this.lastView,
+      view: result.itemId,
       connectPath: "",
     });
   };
 
-  handleChangeViewType = (viewType) => {
-    const { viewTypes } = this.state;
-    if (viewType === "Graph") viewType = "";
-    viewTypes[this.lastView] = viewType;
-    this.setState({ viewTypes });
-    setSaved(VIEW_TYPES, viewTypes);
+  handleChangeViewType = (mode) => {
+    this.viewModes[this.state.view] = mode;
+    this.navSelect = "userChanged";
+    setSaved(VIEW_MODES, this.viewModes);
+    this.setState({ mode });
   };
 
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
+  getMode = () => {
+    let mode = this.viewModes[this.state.view];
+    return mode;
+  };
+
   render() {
-    const { activeItem, viewTypes } = this.state;
+    const { view } = this.state;
     const PageNav = () => {
-      //                   <Link to={`/${view}`}>{name}</Link>
-      //            <div className="nav-item-link">{name}</div>;
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
           <NavList>
             {this.views.map((viewInfo) => {
-              const { view, name } = viewInfo;
+              const { description, name } = viewInfo;
               return (
                 <NavItem
                   id={`${name}NavItem`}
-                  itemId={view}
-                  isActive={
-                    activeItem === view || activeItem === `${view}Table`
-                  }
-                  key={view}
+                  itemId={name}
+                  isActive={name === view}
+                  key={name}
                 >
-                  <Link to={`/${view}${viewTypes[view]}`}>{name}</Link>
+                  <div className="nav-item-link">{description}</div>
                 </NavItem>
               );
             })}
@@ -276,37 +291,6 @@ class PageLayout extends React.Component {
       return <React.Fragment />;
     };
 
-    // don't allow access to this component unless we are logged in
-    const PrivateRoute = ({ component: Component, path: rpath, ...more }) => (
-      <Route
-        path={rpath}
-        {...(more.exact ? "exact" : "")}
-        render={(props) =>
-          this.state.connected ? (
-            <Component
-              ref={(el) => (this.pageRef = el)}
-              service={this.service}
-              {...props}
-              {...more}
-              handleChangeViewType={this.handleChangeViewType}
-              history={this.props.history}
-              location={this.props.location}
-            />
-          ) : (
-            <Redirect
-              to={{
-                pathname: "/login",
-                state: {
-                  from: props.location,
-                  connected: this.state.connected,
-                },
-              }}
-            />
-          )
-        }
-      />
-    );
-
     // When we need to display a different component(page),
     // we render a <Redirect> object
     const redirectAfterConnect = () => {
@@ -328,66 +312,25 @@ class PageLayout extends React.Component {
           skipToContent={PageSkipToContent}
           className={"skupper-console"}
         >
-          <Switch>
-            <PrivateRoute
-              path="/"
-              exact
-              component={TopologyPage}
-              view="service"
+          {!this.state.connected && (
+            <ConnectPage
+              {...this.props}
+              service={this.service}
+              handleConnect={this.handleConnect}
+              isConnected={false}
             />
-            <PrivateRoute
-              path="/service"
-              component={TopologyPage}
-              view="service"
+          )}
+          {this.state.connected && (
+            <TopologyPage
+              ref={(el) => (this.pageRef = el)}
+              service={this.service}
+              {...this.props}
+              handleChangeViewType={this.handleChangeViewType}
+              setOptions={this.setOptions}
+              view={this.state.view}
+              mode={this.getMode()}
             />
-            <PrivateRoute
-              path="/serviceTable"
-              component={TablePage}
-              view="service"
-            />
-            <PrivateRoute
-              path="/serviceDetails"
-              component={TablePage}
-              view="service"
-              mode="details"
-            />
-            <PrivateRoute path="/site" component={TopologyPage} view="site" />
-            <PrivateRoute path="/siteTable" component={TablePage} view="site" />
-            <PrivateRoute
-              path="/siteDetails"
-              component={TablePage}
-              view="site"
-              mode="details"
-            />
-            <PrivateRoute
-              path="/deployment"
-              component={TopologyPage}
-              view="deployment"
-            />
-            <PrivateRoute
-              path="/deploymentTable"
-              component={TablePage}
-              view="deployment"
-            />
-            <PrivateRoute
-              path="/deploymentDetails"
-              component={TablePage}
-              view="deployment"
-              mode="details"
-            />
-            <PrivateRoute path="/process" component={ListPage} />
-            <Route
-              path="/login"
-              render={(props) => (
-                <ConnectPage
-                  {...props}
-                  service={this.service}
-                  handleConnect={this.handleConnect}
-                  isConnected={this.state.connected}
-                />
-              )}
-            />
-          </Switch>
+          )}
         </Page>
       </Router>
     );

@@ -50,13 +50,20 @@ const SITE_POSITION = "site";
 const ZOOM_SCALE = "sitescale";
 const ZOOM_TRANSLATE = "sitetrans";
 const SITE_OPTIONS = "siteopts";
+const SITE_TABLE_OPTIONS = "sitetblopts";
 const DEFAULT_OPTIONS = {
   radio: true,
   traffic: false,
-  color: true,
   showMetric: false,
   hideChart: false,
-  stat: { http: "bytes_out", tcp: "bytes_out" },
+  http: "bytes_out",
+  tcp: "bytes_out",
+};
+const DEFAULT_TABLE_OPTIONS = {
+  page: 1,
+  sortBy: "",
+  filterBy: "",
+  perPage: 10,
 };
 
 export class Site {
@@ -97,7 +104,7 @@ export class Site {
       this.siteNodes,
       this.trafficLinks,
       vsize,
-      viewer.state.options.stat
+      viewer.state.options
     );
     return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
@@ -113,7 +120,7 @@ export class Site {
       newNodes,
       newTrafficLinks,
       vsize,
-      viewer.state.options.stat
+      viewer.state.options
     );
 
     reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
@@ -150,7 +157,7 @@ export class Site {
     });
   };
 
-  initTrafficLinks = (nodes, links, vsize, stats) => {
+  initTrafficLinks = (nodes, links, vsize, options) => {
     const deploymentLinks = this.data.adapter.data.deploymentLinks;
     deploymentLinks.forEach((link) => {
       if (link.source.site.site_id !== link.target.site.site_id) {
@@ -160,7 +167,7 @@ export class Site {
             l.target.site_id === link.target.site.site_id
         );
         if (found) {
-          found.value += link.request[stats[link.target.service.protocol]];
+          found.value += link.request[options[link.target.service.protocol]];
           this.data.adapter.aggregateAttributes(link.request, found.request);
         } else {
           const linkIndex = links.addLink({
@@ -175,58 +182,13 @@ export class Site {
             uid: `SiteLink-${link.source.site.site_id}-${link.target.site.site_id}`,
           });
           const alink = links.links[linkIndex];
-          alink.value = link.request[stats[link.target.service.protocol]];
+          alink.value = link.request[options[link.target.service.protocol]];
           alink.request = copy(link.request);
           alink.getColor = () => linkColor(alink, links.links);
         }
       }
     });
 
-    /*
-    const siteMatrix = this.data.adapter.siteMatrix();
-    siteMatrix.forEach((record) => {
-      // ignore intra-site traffic
-      if (record.ingress !== record.egress) {
-        const targetService = this.data.adapter.findService(
-          record.info.target.address
-        );
-        const found = links.links.find(
-          (l) =>
-            l.source.site_id === record.info.source.site_id &&
-            l.target.site_id === record.info.target.site_id
-        );
-        if (found) {
-          if (targetService) {
-            found.value += record.request[stats[targetService.protocol]];
-          }
-          this.data.adapter.aggregateAttributes(record.request, found.request);
-        } else {
-          const linkIndex = links.addLink({
-            source: nodes.nodes.find(
-              (n) => n.site_id === record.info.source.site_id
-            ),
-            target: nodes.nodes.find(
-              (n) => n.site_id === record.info.target.site_id
-            ),
-            dir: "in",
-            cls: "siteTraffic",
-            uid: `SiteLink-${record.info.source.site_id}-${record.info.target.site_id}`,
-          });
-          const link = links.links[linkIndex];
-          if (targetService) {
-            link.value = record.request[stats[targetService.protocol]];
-          } else {
-            link.value = 0;
-            console.log(
-              `error finding target service ${record.info.target.address}`
-            );
-          }
-          link.request = copy(record.request);
-          link.getColor = () => linkColor(link, links.links);
-        }
-      }
-    });
-    */
     // site-to-site traffic
     // position sites based on router links
     adjustPositions({
@@ -1191,10 +1153,10 @@ export class Site {
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
-  getGraphOptions = (history) =>
-    getOptions(SITE_OPTIONS, DEFAULT_OPTIONS, history);
-
-  saveGraphOptions = (options, history) => {
-    setOptions(SITE_OPTIONS, DEFAULT_OPTIONS, options, history);
-  };
+  static saveOverrideOptions = (options) =>
+    options.mode === "graph"
+      ? setOptions(SITE_OPTIONS, options, DEFAULT_OPTIONS)
+      : setOptions(SITE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
+  getGraphOptions = () => getOptions(SITE_OPTIONS, DEFAULT_OPTIONS);
+  saveGraphOptions = (options) => setOptions(SITE_OPTIONS, options);
 }

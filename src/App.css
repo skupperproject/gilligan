@@ -1806,3 +1806,12 @@ div.skupper-console .pf-c-page__sidebar {
   width: 10em;
 }
 /******************/
+
+.sk-breadcrumbList li:first-child {
+  color: #06c;
+}
+
+.sk-breadcrumbList li:first-child:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}

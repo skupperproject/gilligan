@@ -26,7 +26,7 @@ import {
   BreadcrumbHeading,
 } from "@patternfly/react-core";
 import LastUpdated from "../../lastUpdated";
-import { Icap } from "../../utilities";
+import { Icap, viewFromHash } from "../../utilities";
 
 class SubTable extends Component {
   constructor(props) {
@@ -43,19 +43,22 @@ class SubTable extends Component {
     this.handleChangeLastUpdated();
   };
 
+  returnToTable = () => {
+    this.props.handleChangeViewType("table");
+  };
+
   render() {
-    const params = new URLSearchParams(this.props.history.location.search);
-    const item = params.get("item");
+    const { options } = viewFromHash();
     return (
       <React.Fragment>
         <StackItem className="sk-table-header">
           <Split gutter="md">
             <SplitItem>
-              <Breadcrumb>
-                <BreadcrumbItem to={`#${this.props.view}Table`}>
+              <Breadcrumb className="sk-breadcrumbList">
+                <BreadcrumbItem onClick={this.returnToTable}>
                   {Icap(this.props.view)}s
                 </BreadcrumbItem>
-                <BreadcrumbHeading>{item}</BreadcrumbHeading>
+                <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
               </Breadcrumb>
             </SplitItem>
             <SplitItem isFilled></SplitItem>

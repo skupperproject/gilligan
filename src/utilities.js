@@ -19,6 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import { sankeyCircular as sankey } from "@plotly/d3-sankey-circular";
+import { viewsMap as VIEWS } from "./pages/topology/views/views";
 const SankeyAttributes = [
   "value",
   "depth",
@@ -591,7 +592,6 @@ export const initSankey = ({
 export const circularize = (links) => {
   let circularLinkID = 0;
   links.forEach((l) => {
-    //if (l.source.name === "one" && l.target.name === "one") debugger;
     const sx =
       l.source.nodeType === "cluster"
         ? l.source.x1 - l.source.getWidth() / 2
@@ -684,7 +684,11 @@ export const endall = (transition, callback) => {
 export const getSaved = (key, defaultValue) => {
   let savedStr = localStorage.getItem(key);
   if (savedStr === "undefined") savedStr = undefined;
-  return savedStr ? JSON.parse(savedStr) : defaultValue;
+  return savedStr
+    ? JSON.parse(savedStr)
+    : defaultValue !== undefined
+    ? JSON.parse(JSON.stringify(defaultValue))
+    : defaultValue;
 };
 
 export const setSaved = (key, value) => {
@@ -840,65 +844,80 @@ export const parseLocation = () => {
   return parsedUrl;
 };
 
-const setLocationParams = (options, defaultOptions, history) => {
-  const newSearch = new URLSearchParams("");
-  for (const key in options) {
-    if (key === "stat") {
-      if (options.stat.http !== defaultOptions.stat.http) {
-        newSearch.set("http", options.stat.http);
-      }
-      if (options.stat.tcp !== defaultOptions.stat.tcp) {
-        newSearch.set("tcp", options.stat.tcp);
-      }
-    } else if (options[key] !== defaultOptions[key]) {
-      newSearch.set(key, options[key]);
-    }
-  }
-  const historySearch = new URLSearchParams(history.location.search);
-  //console.log(`historySearch ${historySearch.toString()}`);
-  //console.log(`newSearch ${newSearch.toString()}`);
-  let same = true;
-  //console.log(historySearch.keys().length);
-  //debugger;
-  for (let param of historySearch) {
+export const hashToOptions = (hash) => {
+  const hashParams = new URLSearchParams(hash);
+  const options = {};
+  for (let param of hashParams) {
     const key = param[0];
-    const value = param[1];
-    if (!newSearch.has(key) || value !== newSearch.get(key)) {
-      same = false;
-    }
+    const value =
+      param[1] === "true" || param[1] === "false"
+        ? param[1] === "true"
+        : param[1];
+    options[key] = value;
   }
-  if (same) {
-    for (let param of newSearch) {
-      const key = param[0];
-      const value = param[1];
-      if (!historySearch.has(key) || historySearch.get(key) !== value) {
-        same = false;
-      }
-    }
-  }
-  if (!same) {
-    /*
-    console.log(`window.location.href ${window.location.href}`);
-    console.log(window.location);
-    console.log(history);
-    */
-    const newLocation = `${window.location.origin}/#${
-      history.location.pathname
-    }?${newSearch.toString()}`;
-    console.log(`setting new location to ${newLocation}`);
-    //history.replace(newLocation);
-  }
+  return options;
 };
 
-export const getOptions = (key, defaultOptions, history) => {
+export const overrideOptions = (view, options) => {
+  const viewClass = VIEWS[view];
+  if (viewClass) viewClass.saveOverrideOptions(options);
+};
+
+export const getOptions = (key, defaultOptions) => {
   const saved = getSaved(key, defaultOptions);
-  saved.color = false;
-  setLocationParams(saved, defaultOptions, history);
+  if (saved.stat && !saved.http) {
+    saved.http = saved.stat.http;
+    saved.tcp = saved.stat.tcp;
+    delete saved.stat;
+  }
+  if (saved.color !== undefined) delete saved.color;
   return saved;
 };
 
-export const setOptions = (key, defaultOptions, options, history) => {
-  options.color = false;
-  setSaved(key, options);
-  setLocationParams(options, defaultOptions, history);
+export const removeDefaults = (options, defaultOptions) => {
+  const newOptions = {};
+  for (const key in options) {
+    if (options[key] !== defaultOptions[key]) {
+      newOptions[key] = options[key];
+    }
+  }
+  return newOptions;
 };
+
+export const setOptions = (key, options, defaultOptions) => {
+  setSaved(key, options);
+  return defaultOptions ? removeDefaults(options, defaultOptions) : options;
+};
+
+export const viewFromHash = (hash) => {
+  let view = "";
+  let options = {};
+  if (!hash) {
+    hash = window.location.hash;
+  }
+  options = hashToOptions(hash.substr(1));
+  view = options.view;
+  return { view, options };
+};
+
+export const optionsFromHistory = (hash) => {
+  let options = {};
+  const parts = hash.split("?");
+  if (parts.length > 1) {
+    options = hashToOptions(parts[1]);
+  }
+  return options;
+};
+
+export const sameOptions = (options1, options2) => {
+  const aKeys = Object.keys(options1);
+  const bKeys = Object.keys(options2);
+
+  if (aKeys.length !== bKeys.length) return false;
+  let different = aKeys.some((key) => {
+    return options1[key] !== options2[key];
+  });
+  return !different;
+};
+
+export const isEmpty = (o) => !o || Object.keys(o).length === 0;

@@ -52,17 +52,21 @@ class TopologyViewer extends Component {
       chordData: null,
       linkInfo: null,
       initial: true,
-      options: this.viewObj.getGraphOptions(this.props.history),
+      options: this.getOptions(true),
+      overridden: false,
     };
     this.popupCancelled = true;
 
     this.force = null;
-    this.sankey = this.state.options.traffic && !this.state.options.color;
+    this.sankey = this.state.options.traffic;
     this.resetScale = 1;
+    this.initialTransition = true;
+    //debugger;
   }
 
   // called only once when the component is initialized
   componentDidMount = () => {
+    //debugger;
     window.addEventListener("resize", this.resize);
     this.setChordWidth(
       this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
@@ -74,7 +78,11 @@ class TopologyViewer extends Component {
     // create the svg
     this.init();
     // call the to### transition
-    this.callTransitions(true);
+    this.callTransitions(this.initialTransition);
+    this.initialTransition = false;
+    const saved = this.viewObj.getGraphOptions(this.props.history, this.view);
+    this.setHash(saved);
+    //this.props.setOptions(saved, true);
   };
 
   componentWillUnmount = () => {
@@ -84,23 +92,60 @@ class TopologyViewer extends Component {
   };
 
   componentDidUpdate = () => {
+    /*console.log(
+      `TOPOLOGYVIEWER::COMPONTENTDIDUPDATE called this.view ${this.view} this.props.view ${this.props.view}`
+    );*/
     if (this.view !== this.props.view) {
+      //console.log(`view changed so re-initializing graph`);
       this.view = this.props.view;
       this.viewObj = new VIEWS[this.view](this.props.service);
-      this.setState(
-        { options: this.viewObj.getGraphOptions(this.props.history) },
-        () => {
-          this.init();
-          this.callTransitions(true);
-          this.setChordWidth(
-            this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
-          );
-          if (!this.state.options.hideChart) {
-            this.chordRef.init();
-          }
-        }
-      );
+      //debugger;
+      const options = this.getOptions();
+      this.setHash(options);
+      this.setState({ options }, this.updateComponent);
+    } else {
+      //console.log("view didn't change so not getting new options");
     }
+  };
+
+  updateComponent = () => {
+    this.init();
+    this.callTransitions(true);
+    this.setChordWidth(
+      this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
+    );
+    if (!this.state.options.hideChart) {
+      this.chordRef.init();
+    }
+  };
+
+  getOptions = (skip) => {
+    // get options for this view from localStorage
+    const saved = this.viewObj.getGraphOptions(this.props.history, this.view);
+    // update the address search parameters with the saved options
+    //this.setHash(saved);
+    //if (!skip) {
+    //  this.props.setOptions(saved, true);
+    //}
+    return saved;
+  };
+
+  setHash = (options) => {
+    options.view = this.view;
+    this.props.setOptions(options, true);
+    /*
+    const newHash = Object.keys(options)
+      .map((key) => {
+        return `${key}=${options[key]}`;
+      })
+      .join("&");
+    this.props.history.replace(`#${newHash}`);
+    */
+  };
+
+  // called when a new URL is pasted/typed into the address bar
+  handleOverrideOptions = () => {
+    this.setState({ options: this.getOptions() }, this.updateComponent);
   };
 
   callTransitions = (initial) => {
@@ -115,6 +160,7 @@ class TopologyViewer extends Component {
         this.doUpdate();
       }
     }
+    this.setState({ overridden: false });
   };
 
   resize = () => {
@@ -549,8 +595,10 @@ class TopologyViewer extends Component {
       }
       this.setState({ options }, () => {
         this.resize();
-        this.viewObj.saveGraphOptions(options, this.props.history);
+        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.showChord(this.state.chordData, false);
+        this.setHash(options);
+        //this.props.setOptions(options, true);
       });
     }
   };
@@ -559,8 +607,10 @@ class TopologyViewer extends Component {
       const { options } = this.state;
       options.showMetric = checked;
       this.setState({ options }, () => {
-        this.viewObj.saveGraphOptions(options, this.props.history);
+        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.callTransitions();
+        this.setHash(options);
+        //this.props.setOptions(options, true);
       });
     }
   };
@@ -585,8 +635,10 @@ class TopologyViewer extends Component {
       options.traffic = checked;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options, this.props.history);
+        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.callTransitions();
+        this.setHash(options);
+        //this.props.setOptions(options, true);
       });
     }
   };
@@ -596,8 +648,10 @@ class TopologyViewer extends Component {
       options.color = !checked;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options, this.props.history);
+        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.callTransitions();
+        this.setHash(options);
+        //this.props.setOptions(options, true);
       });
     }
   };
@@ -607,8 +661,10 @@ class TopologyViewer extends Component {
       options.color = checked;
       this.setState({ options }, () => {
         this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options, this.props.history);
+        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.callTransitions();
+        this.setHash(options);
+        //this.props.setOptions(options, true);
       });
     }
   };
@@ -617,11 +673,13 @@ class TopologyViewer extends Component {
       const { options } = this.state;
       const protocolsPresent = this.statProtocol();
       const stat = protocolsPresent === "both" ? "tcp" : protocolsPresent;
-      options.stat[stat] = metric;
+      options[stat] = metric;
       this.setState({ options }, () => {
-        this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options, this.props.history);
+        this.sankey = options.traffic;
+        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.doUpdate();
+        this.setHash(options);
+        //this.props.setOptions(options, true);
       });
     }
   };
@@ -685,8 +743,8 @@ class TopologyViewer extends Component {
   // if we have both http and tcp protocols, use the tcp protocol (since its a subset)
   statForProtocol = () =>
     ["both", "tcp"].includes(this.statProtocol())
-      ? this.state.options.stat.tcp
-      : this.state.options.stat.http;
+      ? this.state.options.tcp
+      : this.state.options.http;
 
   render() {
     const controlButtons = createTopologyControlButtons({

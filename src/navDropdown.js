@@ -24,7 +24,6 @@ import {
   DropdownToggle,
   DropdownItem,
 } from "@patternfly/react-core";
-import { Link } from "react-router-dom";
 
 class NavDropdown extends Component {
   constructor(props) {
@@ -36,7 +35,10 @@ class NavDropdown extends Component {
       {
         key: "graph",
         description: "Graph",
-        selected: this.props.viewType === "graph",
+        selected:
+          !this.props.mode ||
+          this.props.mode === "graph" ||
+          this.props.mode === "",
         path: "",
         enabled: true,
       },
@@ -48,11 +50,16 @@ class NavDropdown extends Component {
       {
         key: "table",
         description: "Table",
-        selected: this.props.viewType === "table",
+        selected: this.props.mode === "table",
         path: "Table",
         enabled: true,
       },
     ];
+    /* console.log(
+      `NAVDROPDOWN mode ${this.props.mode} items ${JSON.stringify(
+        this.dropdownItems
+      )}`
+    );*/
   }
   onDropDownToggle = (isOpen) => {
     this.setState({
@@ -68,11 +75,18 @@ class NavDropdown extends Component {
     this.dropdownItems.forEach((item) => {
       item.selected = item.description === desc;
       if (item.selected) {
-        this.props.handleChangeViewType(item.path);
+        this.props.handleChangeViewType(item.key);
       }
     });
   };
 
+  /*
+              component={
+              <Link to={`/${this.props.view}${item.path}`}>
+                {item.description}
+              </Link>
+            }
+*/
   render() {
     const { isDropDownOpen } = this.state;
     return (
@@ -90,14 +104,7 @@ class NavDropdown extends Component {
         }
         isOpen={isDropDownOpen}
         dropdownItems={this.dropdownItems.map((item) => (
-          <DropdownItem
-            key={item.key}
-            component={
-              <Link to={`/${this.props.view}${item.path}`}>
-                {item.description}
-              </Link>
-            }
-          />
+          <DropdownItem key={item.key}>{item.description}</DropdownItem>
         ))}
       />
     );

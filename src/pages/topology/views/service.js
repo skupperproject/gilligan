@@ -49,13 +49,20 @@ const SERVICE_POSITION = "svc";
 const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
 const SERVICE_OPTIONS = "srvopts";
+const SERVICE_TABLE_OPTIONS = "srvtblopts";
 const DEFAULT_OPTIONS = {
   radio: false,
   traffic: true,
-  color: true,
   showMetric: false,
   hideChart: false,
-  stat: { http: "bytes_out", tcp: "bytes_out" },
+  http: "bytes_out",
+  tcp: "bytes_out",
+};
+const DEFAULT_TABLE_OPTIONS = {
+  page: 1,
+  sortBy: "",
+  filterBy: "",
+  perPage: 10,
 };
 
 export class Service {
@@ -89,7 +96,7 @@ export class Service {
       this.serviceNodes.nodes,
       this.serviceLinks,
       vsize,
-      viewer.state.options.stat
+      viewer.state.options
     );
     return { nodeCount: this.serviceNodes.nodes.length, size };
   };
@@ -99,7 +106,7 @@ export class Service {
     const newLinks = new Links();
     this.initNodes(newNodes, false);
     const vsize = { width: viewer.width, height: viewer.height };
-    this.initLinks(newNodes.nodes, newLinks, vsize, viewer.state.options.stat);
+    this.initLinks(newNodes.nodes, newLinks, vsize, viewer.state.options);
     reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
     reconcileLinks(this.serviceLinks.links, newLinks.links);
     // remove old nodes/links and add new nodes/links to svg
@@ -143,7 +150,7 @@ export class Service {
   }
 
   // initialize the service to service links for the service view
-  initLinks = (serviceNodes, links, vsize, stats) => {
+  initLinks = (serviceNodes, links, vsize, options) => {
     this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
       const source = serviceNodes.find(
         (n) => n.address === deploymentLink.source.service.address
@@ -166,15 +173,14 @@ export class Service {
         );
         const link = links.links[Math.abs(linkIndex)];
         link.request = deploymentLink.request;
-        const stat = stats[target.protocol];
-        link.value = link.request[stat];
+        link.value = link.request[options[target.protocol]];
         link.getColor = () => linkColor(link, links.links);
       } else {
         this.data.adapter.aggregateAttributes(
           deploymentLink.request,
           found.request
         );
-        found.value = found.request[stats[target.protocol]];
+        found.value = found.request[options[target.protocol]];
       }
     });
 
@@ -880,10 +886,10 @@ export class Service {
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
-  getGraphOptions = (history) =>
-    getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS, history);
-
-  saveGraphOptions = (options, history) => {
-    setOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS, options, history);
-  };
+  static saveOverrideOptions = (options) =>
+    options.mode === "graph"
+      ? setOptions(SERVICE_OPTIONS, options, DEFAULT_OPTIONS)
+      : setOptions(SERVICE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
+  getGraphOptions = () => getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS);
+  saveGraphOptions = (options) => setOptions(SERVICE_OPTIONS, options);
 }

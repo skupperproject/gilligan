@@ -50,7 +50,10 @@ class TableViewer extends React.Component {
       rows: [],
       redirect: false,
       redirectState: {},
-      options: this.dataSource.getGraphOptions(this.props.history),
+      options: this.dataSource.getGraphOptions(
+        this.props.history,
+        `${this.view}Table`
+      ),
     };
   }
 
@@ -83,6 +86,7 @@ class TableViewer extends React.Component {
     this.setState({ columns: this.dataSource.fields }, () => {
       this.update();
     });
+    this.props.setOptions({ view: this.props.view, mode: "table" }, true);
   };
 
   componentWillUnmount = () => {

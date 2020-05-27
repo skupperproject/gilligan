@@ -42,15 +42,22 @@ import { Nodes } from "../nodes";
 import { Links } from "../links";
 const DEPLOYMENT_POSITION = "dp";
 const DEPLOYMENT_OPTIONS = "dpopts";
+const DEPLOYMENT_TABLE_OPTIONS = "dpopts";
 const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
 const DEFAULT_OPTIONS = {
   radio: false,
   traffic: true,
-  color: true,
   showMetric: false,
   hideChart: false,
-  stat: { http: "bytes_out", tcp: "bytes_out" },
+  http: "bytes_out",
+  tcp: "bytes_out",
+};
+const DEFAULT_TABLE_OPTIONS = {
+  page: 1,
+  sortBy: "",
+  filterBy: "",
+  perPage: 10,
 };
 
 export class Deployment extends Service {
@@ -72,7 +79,7 @@ export class Deployment extends Service {
       this.serviceNodes,
       this.serviceLinks,
       vsize,
-      viewer.state.options.stat
+      viewer.state.options
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
@@ -95,7 +102,7 @@ export class Deployment extends Service {
       newServiceNodes,
       newServiceLinks,
       vsize,
-      viewer.state.options.stat
+      viewer.state.options
     );
     reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
     reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
@@ -177,7 +184,7 @@ export class Deployment extends Service {
             site.site_id,
             toService.address,
             site.site_id,
-            viewer.state.options.stat[toService.protocol]
+            viewer.state.options[toService.protocol]
           );
           if (stat !== undefined) {
             links.push({
@@ -236,7 +243,7 @@ export class Deployment extends Service {
     });
   };
 
-  initServiceLinks = (siteNodes, serviceNodes, links, vsize, stats) => {
+  initServiceLinks = (siteNodes, serviceNodes, links, vsize, options) => {
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
     this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
@@ -259,38 +266,9 @@ export class Deployment extends Service {
       });
       const link = links.links[linkIndex];
       link.request = deploymentLink.request;
-      link.value = link.request[stats[target.protocol]];
+      link.value = link.request[options[target.protocol]];
       link.getColor = () => linkColor(link, links.links);
     });
-    /*
-    // create links between all services
-    subNodes.forEach((fromNode) => {
-      subNodes.forEach((toNode) => {
-        const { stat, request } = this.data.adapter.fromTo(
-          fromNode.name,
-          fromNode.parentNode ? fromNode.parentNode.site_id : null,
-          toNode.name,
-          toNode.parentNode ? toNode.parentNode.site_id : null,
-          stats[toNode.protocol]
-        );
-        if (stat !== undefined) {
-          const linkIndex = links.addLink({
-            source: fromNode,
-            target: toNode,
-            dir: "out",
-            cls: "node2node",
-            uid: `Link-${fromNode.parentNode.site_id}-${fromNode.uid()}-${
-              toNode.parentNode.site_id
-            }-${toNode.uid()}`,
-          });
-          const link = links.links[linkIndex];
-          link.request = request;
-          link.value = stat;
-          link.getColor = () => linkColor(link, links.links);
-        }
-      });
-    });
-    */
     // get the sankey height of each node based on link.value
     initSankey({
       nodes: subNodes,
@@ -668,9 +646,10 @@ export class Deployment extends Service {
     setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
-  getGraphOptions = (history) =>
-    getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS, history);
-  saveGraphOptions = (options, history) => {
-    setOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS, options, history);
-  };
+  static saveOverrideOptions = (options) =>
+    options.mode === "graph"
+      ? setOptions(DEPLOYMENT_OPTIONS, options, DEFAULT_OPTIONS)
+      : setOptions(DEPLOYMENT_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
+  getGraphOptions = () => getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS);
+  saveGraphOptions = (options) => setOptions(DEPLOYMENT_OPTIONS, options);
 }
