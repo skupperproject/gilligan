@@ -43,7 +43,8 @@ import {
 } from "../../../utilities";
 import { genPath, pathBetween } from "../../../paths";
 import { interpolatePath } from "d3-interpolate-path";
-
+import SiteCard from "../cards/siteCard";
+import LinkCard from "../cards/linkCard";
 import { Nodes } from "../nodes.js";
 import { Links } from "../links.js";
 const SITE_POSITION = "site";
@@ -78,6 +79,8 @@ export class Site {
       { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
     ];
+    this.siteCard = new SiteCard();
+    this.linkCard = new LinkCard();
   }
 
   createSelections = (svg) => {
@@ -433,7 +436,7 @@ export class Site {
         if (d3.event.defaultPrevented) return; // click suppressed
         viewer.clearPopups();
         viewer.showChord(d);
-        viewer.showCard(d);
+        viewer.showPopup(d, this.siteCard);
         d3.event.stopPropagation();
       });
 
@@ -493,12 +496,11 @@ export class Site {
       .on("click", (d) => {
         d3.event.stopPropagation();
         viewer.clearPopups();
-        viewer.showLinkInfo(d);
       })
       .on("mouseover", (d) => {
         viewer.blurAll(true, d);
         d.selected = true;
-        viewer.showLinkInfo(d);
+        viewer.showPopup(d, this.linkCard);
         viewer.restart();
       })
       .on("mouseout", (d) => {
@@ -542,7 +544,7 @@ export class Site {
       .on("click", (d) => {
         d3.event.stopPropagation();
         viewer.clearPopups();
-        viewer.showLinkInfo(d);
+        viewer.showPopup(d, this.linkCard);
       })
       .on("mouseover", (d) => {
         d.highlighted = true;

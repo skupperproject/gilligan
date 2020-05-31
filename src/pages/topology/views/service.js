@@ -45,6 +45,8 @@ import { genPath } from "../../../paths";
 import { interpolatePath } from "d3-interpolate-path";
 import { Node, Nodes } from "../nodes.js";
 import { Links } from "../links.js";
+import ServiceCard from "../cards/serviceCard";
+import LinkCard from "../cards/linkCard";
 const SERVICE_POSITION = "svc";
 const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
@@ -67,7 +69,7 @@ const DEFAULT_TABLE_OPTIONS = {
 
 export class Service {
   constructor(data) {
-    this.data = data; // qdrService
+    this.data = data;
     this.serviceNodes = new Nodes();
     this.serviceLinks = new Links();
     this.nodes = () => this.serviceNodes;
@@ -76,7 +78,10 @@ export class Service {
       { title: "Name", field: "address" },
       { title: "Protocol", field: "protocol" },
     ];
+    this.serviceCard = new ServiceCard(data);
+    this.linkCard = new LinkCard();
   }
+
   createSelections(svg) {
     this.createStatsGroup(svg);
     this.servicesSelection = this.createServicesSelection(svg);
@@ -367,10 +372,10 @@ export class Service {
         viewer.restart();
         d3.event.stopPropagation();
       })
-      .on("click", function(d) {
+      .on("click", (d) => {
         if (d3.event.defaultPrevented) return; // click suppressed
         viewer.showChord(d);
-        viewer.showCard(d);
+        viewer.showPopup(d, this.serviceCard);
         d3.event.stopPropagation();
         d3.event.preventDefault();
       });
@@ -413,12 +418,12 @@ export class Service {
       .append("path")
       .attr("class", "hittarget")
       .attr("id", (d) => `hitpath-${d.source.uid()}-${d.target.uid()}`)
-      .on("mouseover", function(d) {
+      .on("mouseover", (d) => {
         // mouse over a path
         viewer.blurAll(true, d);
-        self.selectLink(d);
+        this.selectLink(d);
         viewer.popupCancelled = false;
-        viewer.showLinkInfo(d);
+        viewer.showPopup(d, this.linkCard);
         viewer.restart();
       })
       .on("mouseout", function(d) {
@@ -433,7 +438,6 @@ export class Service {
       .on("click", (d) => {
         d3.event.stopPropagation();
         viewer.clearPopups();
-        viewer.showLinkInfo(d);
       });
 
     enterpath

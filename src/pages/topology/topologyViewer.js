@@ -32,8 +32,7 @@ import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
 import ChordViewer from "./chord/chordViewer.js";
 import SplitterBar from "./spliterBar";
-import ServiceCard from "../../serviceCard";
-import LinkInfo from "./linkInfo";
+import PopupCard from "../../popupCard";
 import { viewsMap as VIEWS } from "./views/views";
 const SPLITTER_POSITION = "split";
 const SPLITTER_LEFT = "div.pf-topology-content";
@@ -47,10 +46,9 @@ class TopologyViewer extends Component {
     this.viewObj = new VIEWS[this.view](this.props.service);
     this.state = {
       cardService: null,
+      formatInfo: null,
       showLegend: false,
-      showLinkInfo: false,
       chordData: null,
-      linkInfo: null,
       initial: true,
       options: this.getOptions(true),
       overridden: false,
@@ -206,7 +204,7 @@ class TopologyViewer extends Component {
   };
   clearPopups = () => {
     if (!this.unmounting) {
-      this.setState({ showLinkInfo: false, showCard: false });
+      this.setState({ showCard: false });
     }
   };
 
@@ -420,22 +418,19 @@ class TopologyViewer extends Component {
       popupSelector: "#topo_popover-div",
     });
   };
-  showCard = (cardService) => {
+  showPopup = (values, formatInfo) => {
     if (!this.unmounting) {
       this.setState(
-        { showLinkInfo: false, showCard: true, cardService },
+        {
+          showCard: true,
+          cardService: values,
+          formatInfo,
+        },
         () => {
           // after the content has rendered, position it
           this.positionPopupContent();
         }
       );
-    }
-  };
-  showLinkInfo = (linkInfo) => {
-    if (!this.unmounting) {
-      this.setState({ showCard: false, showLinkInfo: true, linkInfo }, () => {
-        this.positionPopupContent();
-      });
     }
   };
 
@@ -805,20 +800,13 @@ class TopologyViewer extends Component {
           <div ref={(el) => (this.topologyRef = el)} id="topology" />
           <div
             id="topo_popover-div"
-            className={
-              this.state.showCard || this.state.showLinkInfo ? "" : "hidden"
-            }
+            className={this.state.showCard ? "" : "hidden"}
           >
             {this.state.showCard && (
-              <ServiceCard
+              <PopupCard
                 cardSize="expanded"
                 cardService={this.state.cardService}
-                service={this.props.service}
-              />
-            )}
-            {this.state.showLinkInfo && (
-              <LinkInfo
-                linkInfo={this.state.linkInfo}
+                card={this.state.formatInfo}
                 service={this.props.service}
               />
             )}
