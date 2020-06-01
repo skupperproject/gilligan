@@ -46,7 +46,7 @@ class TopologyViewer extends Component {
     this.viewObj = new VIEWS[this.view](this.props.service);
     this.state = {
       cardService: null,
-      formatInfo: null,
+      cardInfo: null,
       showLegend: false,
       chordData: null,
       initial: true,
@@ -100,7 +100,7 @@ class TopologyViewer extends Component {
       //debugger;
       const options = this.getOptions();
       this.setHash(options);
-      this.setState({ options }, this.updateComponent);
+      this.setState({ options, showCard: false }, this.updateComponent);
     } else {
       //console.log("view didn't change so not getting new options");
     }
@@ -418,13 +418,13 @@ class TopologyViewer extends Component {
       popupSelector: "#topo_popover-div",
     });
   };
-  showPopup = (values, formatInfo) => {
+  showPopup = (values, cardInfo) => {
     if (!this.unmounting) {
       this.setState(
         {
           showCard: true,
           cardService: values,
-          formatInfo,
+          cardInfo,
         },
         () => {
           // after the content has rendered, position it
@@ -806,7 +806,7 @@ class TopologyViewer extends Component {
               <PopupCard
                 cardSize="expanded"
                 cardService={this.state.cardService}
-                card={this.state.formatInfo}
+                card={this.state.cardInfo}
                 service={this.props.service}
               />
             )}
