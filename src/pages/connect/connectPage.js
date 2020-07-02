@@ -1,6 +1,6 @@
 import React from "react";
 import brandImg from "../../assets/skupper.svg";
-import { LoginPage, BackgroundImageSrc } from "@patternfly/react-core";
+import { LoginPage } from "@patternfly/react-core";
 
 import { withRouter } from "react-router-dom";
 import PleaseWait from "./pleaseWait";
@@ -34,21 +34,12 @@ class ConnectPage extends React.Component {
   render() {
     const loginForm = <PleaseWait />;
 
-    const images = {
-      [BackgroundImageSrc.lg]: "./assets/skupper.svg",
-      [BackgroundImageSrc.sm]: "./assets/skupper.svg",
-      [BackgroundImageSrc.sm2x]: "./assets/skupper.svg",
-      [BackgroundImageSrc.xs]: "./assets/skupper.svg",
-      [BackgroundImageSrc.xs2x]: "./assets/skupper.svg",
-    };
-
     return (
       <LoginPage
         loginTitle="Connect"
         footerListVariants="inline"
         brandImgSrc={brandImg}
         brandImgAlt="Gilligan logo"
-        backgroundImgSrc={images}
         backgroundImgAlt="Images"
         textContent="A Skupper network management and visualization tool."
       >

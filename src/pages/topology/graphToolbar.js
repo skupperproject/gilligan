@@ -27,6 +27,7 @@ import {
 } from "@patternfly/react-core";
 import PropTypes from "prop-types";
 import { Split, SplitItem } from "@patternfly/react-core";
+import "./graphToolbar.css";
 
 import MetricsDrowdown from "./metricsDropdown";
 
@@ -52,15 +53,17 @@ class GraphToolbar extends Component {
         name: "Requests",
         type: "http",
       },
+      /*
       {
         key: "bytes_in",
         name: "Bytes in",
-      },
+      },*/
       {
         key: "bytes_out",
-        name: "Bytes out",
-      },
-      //{ key: "latency_max", name: "Latency (max)", type: "http" },
+        name: "Bytes",
+      } /*
+      { key: "latency_max", name: "Latency (max)", type: "http" },
+      */,
     ];
   }
 
@@ -116,7 +119,7 @@ class GraphToolbar extends Component {
     };
     const metricDropdown = () => (
       <SplitItem>
-        Traffic metric
+        <span>Traffic metric</span>
         <MetricsDrowdown
           dropdownItems={this.dropdownItems.filter(
             (i) => !i.type || i.type === statProtocol
@@ -163,14 +166,12 @@ class GraphToolbar extends Component {
             {trafficCheckOrRadio()}
           </Split>
         </ToolbarItem>
-        <ToolbarItem className="toolbar-item drowdown-group">
-          {metricDropdown()}
-        </ToolbarItem>
+        <ToolbarItem className="drowdown-group">{metricDropdown()}</ToolbarItem>
       </React.Fragment>
     );
 
     const metricCheck = () => (
-      <ToolbarItem className="toolbar-item tall-item show-stat">
+      <ToolbarItem className="toolbar-item show-stat">
         <Checkbox
           label="Show metrics"
           isChecked={showMetric}
@@ -196,7 +197,7 @@ class GraphToolbar extends Component {
       </ToolbarItem>
     );
     return (
-      <Toolbar className="graph-toolbar pf-l-toolbar pf-u-justify-content-space-between pf-u-px-xl pf-u-py-md">
+      <Toolbar className="graph-toolbar">
         <ToolbarGroup>
           {sankeyCheck()}
           {metricCheck()}

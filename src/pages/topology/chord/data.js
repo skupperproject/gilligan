@@ -99,10 +99,10 @@ class ChordData {
     });
   }
 
-  getAllServiceMatrix(converter) {
+  getAllServiceMatrix(converter, stat) {
     let self = this;
     return new Promise((resolve) => {
-      const values = self.QDRService.adapter.allServiceMatrix();
+      const values = self.QDRService.adapter.allServiceMatrix(stat);
       const matrix = convert(self, values, converter);
       resolve(matrix);
     });

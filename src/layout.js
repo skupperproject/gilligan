@@ -41,6 +41,7 @@ import { css } from "@patternfly/react-styles";
 import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
+import TablePage from "./pages/table/tablePage";
 import { QDRService } from "./qdrService";
 import {
   getSaved,
@@ -69,8 +70,8 @@ class PageLayout extends React.Component {
     this.state = {
       connected: false,
       connectPath: "",
-      view,
       username: "",
+      view,
       mode: this.viewModes[view],
     };
     this.hooks = { setLocation: this.setLocation };
@@ -107,9 +108,19 @@ class PageLayout extends React.Component {
       this.viewModes[view] = mode;
       setSaved(VIEW_MODES, this.viewModes);
       // tell the current view to update
-      this.setState({ view, mode });
+      this.setState({ view, mode }, () => {
+        // prevent infinite loop if user hits back button
+        this.navSelect = "userChanged";
+      });
     }
     this.navSelect = undefined;
+  };
+
+  handleChangeViewMode = (mode) => {
+    this.viewModes[this.state.view] = mode;
+    this.navSelect = "userChanged";
+    setSaved(VIEW_MODES, this.viewModes);
+    this.setState({ mode });
   };
 
   setOptions = (options, user) => {
@@ -121,7 +132,7 @@ class PageLayout extends React.Component {
           return `${key}=${options[key]}`;
         })
         .join("&");
-      history.replace(`#${newHash}`);
+      history.push(`#${newHash}`);
     } else {
       history.replace("");
     }
@@ -201,13 +212,6 @@ class PageLayout extends React.Component {
     });
   };
 
-  handleChangeViewType = (mode) => {
-    this.viewModes[this.state.view] = mode;
-    this.navSelect = "userChanged";
-    setSaved(VIEW_MODES, this.viewModes);
-    this.setState({ mode });
-  };
-
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
   getMode = () => {
@@ -217,6 +221,7 @@ class PageLayout extends React.Component {
 
   render() {
     const { view } = this.state;
+    const mode = this.getMode();
     const PageNav = () => {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
@@ -301,7 +306,9 @@ class PageLayout extends React.Component {
       }
       return <React.Fragment />;
     };
-
+    console.log(
+      `*** LAYOUT rendering with view ${this.state.view} mode ${mode}`
+    );
     return (
       <Router>
         {redirectAfterConnect()}
@@ -320,15 +327,26 @@ class PageLayout extends React.Component {
               isConnected={false}
             />
           )}
-          {this.state.connected && (
+          {this.state.connected && mode === "graph" && (
             <TopologyPage
               ref={(el) => (this.pageRef = el)}
               service={this.service}
               {...this.props}
-              handleChangeViewType={this.handleChangeViewType}
+              handleChangeViewMode={this.handleChangeViewMode}
               setOptions={this.setOptions}
               view={this.state.view}
-              mode={this.getMode()}
+              mode="graph"
+            />
+          )}
+          {this.state.connected && (mode === "table" || mode === "details") && (
+            <TablePage
+              ref={(el) => (this.pageRef = el)}
+              service={this.service}
+              {...this.props}
+              handleChangeViewMode={this.handleChangeViewMode}
+              setOptions={this.setOptions}
+              view={this.state.view}
+              mode={mode}
             />
           )}
         </Page>

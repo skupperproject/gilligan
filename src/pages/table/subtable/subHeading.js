@@ -18,29 +18,28 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { BrowserRouter as Router, Route } from "react-router-dom";
-import "@patternfly/patternfly/patternfly.css";
-import "@patternfly/patternfly/patternfly-addons.css";
-/*
-import "patternfly/dist/css/patternfly.css";
-import "patternfly/dist/css/patternfly-additions.css";
-*/
-import "@patternfly/patternfly/components/Nav/nav.css";
-import "./App.css";
-import PageLayout from "./layout";
 
-class App extends Component {
-  state = {};
+class SubHeading extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  cardIcon = () => {
+    if (typeof this.props.info.card.icon === "string") {
+      return <i className={`pf-icon pficon-${this.props.info.card.icon}`}></i>;
+    }
+    return this.props.info.card.getIcon({ scale: 0.5 });
+  };
 
   render() {
     return (
-      <Router>
-        <div className="App">
-          <Route path="/" render={(props) => <PageLayout {...props} />} />
-        </div>
-      </Router>
+      <div className="sk-subheading">
+        {this.cardIcon()}
+        {this.props.viewName}
+      </div>
     );
   }
 }
 
-export default App;
+export default SubHeading;

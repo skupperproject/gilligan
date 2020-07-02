@@ -1,0 +1,63 @@
+.pf-c-toolbar {
+  --pf-c-toolbar--RowGap: 0; /*var(--pf-global--spacer--lg); */
+  --pf-c-toolbar--PaddingTop: 0; /*var(--pf-global--spacer--lg); */
+  --pf-c-toolbar--PaddingBottom: 0; /*var(--pf-global--spacer--lg); */
+}
+
+.sk-dropdown-prompt {
+  font-size: 18px;
+  padding-left: 2em;
+  margin-top: 0.125em;
+}
+
+.graph-toolbar {
+  /* border-bottom: 1px solid #cccccc; */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  /* padding-left: 1em; */
+}
+
+.graph-toolbar .tall-item {
+  /*border-right: 1px solid black;*/
+  margin-right: 1em;
+}
+
+.graph-toolbar .pf-c-radio,
+.graph-toolbar .pf-c-check {
+  margin-right: 1.5em;
+}
+
+/*
+.graph-toolbar div.color-gradient svg {
+  padding-top: 0.5em;
+  padding-left: 0.5em;
+  position: absolute;
+  right: 0;
+  top: -0.5em;
+}
+.graph-toolbar div.color-gradient {
+  display: flex;
+  position: relative;
+}
+.graph-toolbar .tall-item:not(:first-child) {
+  border-left: 1px solid black;
+}
+.graph-toolbar .show-traffic {
+  padding-right: 1em;
+}
+.graph-toolbar .indent-group {
+  padding-left: 1.3em;
+}
+.graph-toolbar .traffic-group:not(:first-child) {
+  margin-left: 12em;
+}
+.graph-toolbar .router-links {
+  position: absolute;
+}
+.toolbar-item:not(:first-child) {
+  padding-left: 1em;
+}
+.stat-dropdown {
+  padding-left: 1.3em;
+}
+*/

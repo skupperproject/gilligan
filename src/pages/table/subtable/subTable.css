@@ -1,0 +1,62 @@
+.sk-subtable {
+  text-align: left;
+}
+
+.sk-subnav,
+.sk-subheading,
+.sk-subdetails {
+  margin-left: 16px;
+  margin-right: 1em;
+}
+
+.sk-subdetails {
+  margin-top: 2em;
+}
+
+.sk-subheading {
+  font-size: 1.25em;
+  margin-top: 0.5em;
+}
+
+.sk-subheading svg {
+  position: relative;
+  top: 8px;
+}
+.sk-subheading .pf-icon {
+  margin-right: 0.5em;
+}
+.sk-breadcrumbs {
+  padding: 0.125em 1em;
+}
+
+.sk-subtable .pf-c-card.pf-m-hoverable:hover {
+  box-shadow: none;
+}
+.sk-subtable .pf-c-card.pf-m-hoverable {
+  box-shadow: none;
+}
+.sk-subtable .list-card.service-card:hover {
+  border-top: 2px solid white;
+}
+.sk-subtable .list-card.service-card {
+  border-top: 2px solid white;
+}
+
+.sk-subtable .pf-c-card__body {
+  font-size: 1em;
+}
+
+.sk-subtable .detail-value {
+  padding-left: 0.25em;
+}
+
+.sk-subtable .detail-prompt {
+  font-weight: 600;
+  font-size: 18px;
+  padding-right: 0.5em;
+  color: #151515;
+}
+
+.sk-subtable .details-section {
+  margin-bottom: 0.5em;
+}

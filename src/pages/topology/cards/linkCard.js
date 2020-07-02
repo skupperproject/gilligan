@@ -111,7 +111,7 @@ export class LinkCard {
       second: "numeric",
     };
     return link.request[attr]
-      ? new Date(link.request[attr]).toLocaleDateString("en-US", options)
+      ? new Date(link.request[attr]).toLocaleDateString(undefined, options)
       : undefined;
   };
 

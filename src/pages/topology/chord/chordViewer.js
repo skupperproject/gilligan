@@ -23,16 +23,16 @@ import {
   getSizes,
   //pretty,
   formatBytes,
-  positionPopup,
   siteColors,
   serviceColors,
   shortName,
+  Icap,
+  statName,
 } from "../../../utilities";
 import { aggregateAddresses, separateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
 import { qdrRibbon } from "./ribbon/ribbon.js";
 import { qdrlayoutChord } from "./layout/layout.js";
-import QDRPopup from "../../../qdrPopup";
 import * as d3 from "d3";
 import RoutersComponent from "./routersComponent";
 //import PieBreakdownComponent from "./pieComponent";
@@ -202,7 +202,9 @@ class ChordViewer extends Component {
     } else {
       if (this.props.data === null) {
         // all services
-        this.chordData.getAllServiceMatrix().then(this.renderChord);
+        this.chordData
+          .getAllServiceMatrix(null, this.props.stat)
+          .then(this.renderChord);
       } else {
         // for specific service
         this.chordData
@@ -230,13 +232,16 @@ class ChordViewer extends Component {
   };
   // size the diagram based on the browser window size
   getRadius = () => {
-    const sizes = getSizes(d3.select("#chordContainer").node());
+    const sizes = getSizes(d3.select("#sk-sidebar").node());
     const width = sizes[0];
+    /*
     const height = sizes[1];
     const radius = Math.max(
       Math.floor((Math.min(width, height) * 0.9) / 2),
       MIN_RADIUS
     );
+    */
+    const radius = Math.max(Math.floor(width * 0.45), MIN_RADIUS);
     return radius;
   };
 
@@ -250,13 +255,18 @@ class ChordViewer extends Component {
     this.textRadius = Math.min(this.innerRadius * 1.1, this.innerRadius + 15);
   };
 
-  // arc colors are taken from every other color starting at 0
-  getArcColor = (info) => {
-    return siteColors[info.target.site_id].color;
-  };
-  // chord colors are taken from every other color starting at 19 and going backwards
-  getChordColor = (n) => {
-    return serviceColors[n];
+  // get the color associated with a site_id
+  getArcColor = (info) => siteColors[info.target.site_id].color;
+  // get the color associated with a chord (link between services)
+  getChordColor = (n) => serviceColors[n];
+  // get the site color when we have the site_name instead of site_id
+  arcColorFromName = (site_name) => {
+    for (let id in siteColors) {
+      if (siteColors[id].name === site_name) {
+        return siteColors[id].color;
+      }
+    }
+    // returns undefined and the color will be black
   };
 
   // fade out the empty circle that is shown when there is no traffic
@@ -339,6 +349,12 @@ class ChordViewer extends Component {
       return row.info;
     }
   };
+  getSiteId = (key, info) => {
+    if (info.source.site_name === key) {
+      return info.source.site_id;
+    }
+    return info.target.site_id;
+  };
 
   getRouterNames = (d, matrix) => {
     let egress,
@@ -417,7 +433,9 @@ class ChordViewer extends Component {
       fg.router = matrix.aggregate ? fg.key : matrix.getEgress(fg.index);
       fg.info = this.arcInfo(fg, matrix);
       fg.color = this.props.site
-        ? this.getArcColor(fg.info)
+        ? this.props.deployment
+          ? this.getArcColor(fg.info)
+          : this.arcColorFromName(fg.router)
         : this.getChordColor(fg.router);
     });
     return fixedGroups;
@@ -504,7 +522,19 @@ class ChordViewer extends Component {
 */
     // attach event listeners to all arcs (new or old)
     arcsGroup
-      .on("mouseover", this.mouseoverArc)
+      .on("mouseover", (d) => {
+        // fade all chords that don't belong to the given arc index
+        d3.selectAll("path.chord").classed(
+          "fade",
+          (p) => d.index !== p.source.index && d.index !== p.target.index
+        );
+        // highlight the corresponding site
+        let key = d.info.target.site_id;
+        if (this.props.site && !this.props.deployment) {
+          key = this.getSiteId(d.key, d.info);
+        }
+        this.props.handleArcOver({ key: key }, true);
+      })
       .on("mousemove", (d) => {
         let popupContent = this.arcTitle(d, matrix);
         this.showToolTip(popupContent);
@@ -514,7 +544,12 @@ class ChordViewer extends Component {
         if (!this.unmounting) {
           this.setState({ showPopup: false });
         }
-        this.props.handleArcOver(d, false);
+        // unhighlight the corresponding site
+        let key = d.info.target.site_id;
+        if (this.props.site && !this.props.deployment) {
+          key = this.getSiteId(d.key, d.info);
+        }
+        this.props.handleArcOver({ key: key }, false);
       });
 
     // animate the arcs path to it's new location
@@ -654,14 +689,7 @@ class ChordViewer extends Component {
   showToolTip = (content) => {
     // setting the popupContent state will cause the popup to render
     if (!this.unmounting) {
-      this.setState({ showPopup: true, popupContent: content }, () => {
-        // after the content has rendered, position it
-        positionPopup({
-          containerSelector: "#chordContainer",
-          popupSelector: "#popover-div",
-          constrainY: false,
-        });
-      });
+      this.props.showTooltip(content);
     }
   };
 
@@ -857,15 +885,6 @@ class ChordViewer extends Component {
     };
   };
 
-  // fade all chords that don't belong to the given arc index
-  mouseoverArc = (d) => {
-    d3.selectAll("path.chord").classed(
-      "fade",
-      (p) => d.index !== p.source.index && d.index !== p.target.index
-    );
-    this.props.handleArcOver(d, true);
-  };
-
   // fade all chords except the given one
   mouseoverChord = (d) => {
     this.svg
@@ -946,37 +965,56 @@ class ChordViewer extends Component {
       if (this.props.site) {
         if (this.props.data === null) {
           if (this.props.deployment) {
-            return <div className="chord-title">All deployments</div>;
+            return (
+              <div className="chord-title">{`Traffic in ${Icap(
+                statName(this.props.stat)
+              )} between deployments`}</div>
+            );
           } else {
-            return <div className="chord-title">All sites</div>;
+            return (
+              <div className="chord-title">{`${Icap(
+                statName(this.props.stat)
+              )} by site`}</div>
+            );
           }
         }
         if (this.props.data.address) {
           // site to site for a service
           return (
-            <div className="chord-title">
-              {
-                <React.Fragment>
-                  <span>Involving </span>{" "}
+            this.props.data.parentNode && (
+              <div className="chord-title">
+                {
                   <span>
-                    {this.props.data.parentNode.site_name}:
-                    {this.props.data.shortName}
+                    {`${Icap(statName(this.props.stat))} involving 
+                      ${this.props.data.shortName} (${
+                      this.props.data.parentNode.site_name
+                    })`}
                   </span>
-                </React.Fragment>
-              }
-            </div>
+                }
+              </div>
+            )
           );
         }
         return (
           <div className="chord-title">
-            {`Involving site ${this.props.data.site_name}`}
+            {`${Icap(statName(this.props.stat))} involving site ${
+              this.props.data.name
+            }`}
           </div>
         );
       } else if (this.props.data === null) {
-        return <div className="chord-title">All services</div>;
+        return (
+          <div className="chord-title">{`${Icap(
+            statName(this.props.stat)
+          )} between services`}</div>
+        );
       }
       return (
-        <div className="chord-title">{`Involving ${this.props.data.shortName}`}</div>
+        <div className="chord-title">
+          {`${Icap(statName(this.props.stat))} involving ${
+            this.props.data.shortName
+          }`}
+        </div>
       );
     };
     return (
@@ -992,13 +1030,6 @@ class ChordViewer extends Component {
         )}
         {getTitle()}
         <div aria-label="chord-diagram" id="chord"></div>
-        <div
-          id="popover-div"
-          className={this.state.showPopup ? "" : "hidden"}
-          ref={(el) => (this.popupRef = el)}
-        >
-          <QDRPopup content={this.state.popupContent}></QDRPopup>
-        </div>
         <RoutersComponent
           arcColors={getArcColors()}
           handleHoverRouter={this.handleHoverRouter}

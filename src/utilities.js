@@ -464,30 +464,32 @@ export const RGB_Linear_Shade = (p, c) => {
 
 // set or clear the stats text for each path.view in the selection
 export const setLinkStat = (selection, show, stat) => {
-  const statFormats = {
-    requests: { one: " req", moreK: " reqs", lessK: " reqs", dir: "" },
-    bytes_in: { one: " byte", moreK: "B", lessK: " bytes", dir: "in" },
-    bytes_out: { one: " byte", moreK: "B", lessK: " bytes", dir: "out" },
-    latency_max: { one: " ms", moreK: " ms", lessK: " ms", dir: "" },
-  };
   // set or clear the stat text
   selection.selectAll("textPath.stats").text((d) => {
-    if (
-      show &&
-      stat &&
-      d.request &&
-      d.request[stat] !== undefined &&
-      statFormats[stat]
-    ) {
+    if (show && stat && d.request && d.request[stat] !== undefined) {
       const val = d.request[stat];
-      const format = statFormats[stat];
-      const formatted = formatBytes(val);
-      const suffix = val < 1024 ? format.lessK : format.moreK;
-      return `${formatted}${val === 1 ? format.one : suffix} ${format.dir}`;
+      return formatStat(stat, val);
     } else {
       return "";
     }
   });
+};
+
+export const formatStat = (stat, val) => {
+  const statFormats = {
+    requests: { one: " req", moreK: " reqs", lessK: " reqs", dir: "" },
+    bytes_in: { one: " byte", moreK: "B", lessK: " bytes", dir: "in" },
+    bytes_out: { one: " byte", moreK: "B", lessK: " bytes", dir: "" },
+    latency_max: { one: " ms", moreK: " ms", lessK: " ms", dir: "" },
+  };
+  if (statFormats[stat]) {
+    const format = statFormats[stat];
+    const formatted = formatBytes(val);
+    const suffix = val < 1024 ? format.lessK : format.moreK;
+    return `${formatted}${val === 1 ? format.one : suffix} ${format.dir}`;
+  } else {
+    return "";
+  }
 };
 
 export const statId = (link) => {
@@ -509,15 +511,24 @@ export const positionPopup = ({
   constrainX = true,
   constrainY = true,
   padding = 0,
+  eventX = 0,
+  eventY = 0,
 }) => {
   // after the content has rendered, position it
-  let selection = d3.select(containerSelector);
-  if (selection.size() > 0) {
-    selection = selection.node();
-    const selWidth = selection.offsetWidth;
-    const selHeight = selection.offsetHeight;
-    // get mouse position relative to chord container
-    const mouse = d3.mouse(selection);
+  let container = d3.select(containerSelector);
+  if (container.size() > 0) {
+    container = container.node();
+    const selWidth = container.offsetWidth;
+    const selHeight = container.offsetHeight;
+    const selTop = container.offsetTop;
+    // get mouse position relative to container
+    let mouse;
+    try {
+      mouse = d3.mouse(container);
+    } catch (error) {
+      const containerRect = container.getBoundingClientRect();
+      mouse = [eventX - containerRect.left, eventY - containerRect.top];
+    }
     // get width of popover now that it has rendered
     const popover = d3.select(popupSelector);
     if (popover.size() > 0) {
@@ -525,13 +536,13 @@ export const positionPopup = ({
       const height = popover.node().offsetHeight;
       // desired left position
       let left = mouse[0] + 10;
-      let top = mouse[1] + 10;
+      let top = selTop + mouse[1] + 10;
       // if popover is too wide to use the desired left
       if (constrainX && left + width + padding > selWidth) {
-        left = selWidth - width;
+        left = selWidth - width - padding;
       }
       if (constrainY && top + height + padding > selHeight) {
-        top = selHeight - height;
+        top = selHeight - height - padding;
       }
       popover.style("left", `${left}px`).style("top", `${top}px`);
     }
@@ -921,3 +932,28 @@ export const sameOptions = (options1, options2) => {
 };
 
 export const isEmpty = (o) => !o || Object.keys(o).length === 0;
+
+const componentToHex = (c) => c.toString(16).padStart(2, "0");
+export const rgbToHex = (rgb) =>
+  `#${componentToHex(rgb.r)}${componentToHex(rgb.g)}${componentToHex(rgb.b)}`;
+
+export const statName = (stat) => {
+  if (stat === "bytes_in") stat = "bytes";
+  if (stat === "bytes_out") stat = "bytes";
+  return stat.replace(/_/gi, " ");
+};
+
+// add the source values to the target values for each attribute in the source.
+export const aggregateAttributes = (source, target) => {
+  for (const attribute in source) {
+    if (target[attribute] === undefined) {
+      target[attribute] = source[attribute];
+    } else {
+      if (typeof source[attribute] === "object") {
+        aggregateAttributes(source[attribute], target[attribute]);
+      } else if (!isNaN(source[attribute])) {
+        target[attribute] += source[attribute];
+      }
+    }
+  }
+};

@@ -50,7 +50,6 @@ class MetricsDrowdown extends React.Component {
     return (
       <Dropdown
         id="metricsDropdown"
-        className="tall-item"
         onSelect={this.onSelect}
         toggle={
           <DropdownToggle

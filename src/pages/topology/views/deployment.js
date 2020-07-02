@@ -65,7 +65,7 @@ export class Deployment extends Service {
     super(data);
     this.Site = new Site(data);
     this.fields = [
-      { title: "Name", field: "deployment" },
+      { title: "Name (site)", field: "deployment" },
       { title: "Protocol", field: "protocol" },
       { title: "Site", field: "site_name" },
     ];
@@ -79,7 +79,7 @@ export class Deployment extends Service {
       this.serviceNodes,
       this.serviceLinks,
       vsize,
-      viewer.state.options
+      viewer
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
@@ -102,7 +102,7 @@ export class Deployment extends Service {
       newServiceNodes,
       newServiceLinks,
       vsize,
-      viewer.state.options
+      viewer
     );
     reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
     reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
@@ -243,7 +243,9 @@ export class Deployment extends Service {
     });
   };
 
-  initServiceLinks = (siteNodes, serviceNodes, links, vsize, options) => {
+  initServiceLinks = (siteNodes, serviceNodes, links, vsize, viewer) => {
+    //const options = viewer.state.options;
+    const stat = viewer.statForProtocol();
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
     this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
@@ -266,7 +268,7 @@ export class Deployment extends Service {
       });
       const link = links.links[linkIndex];
       link.request = deploymentLink.request;
-      link.value = link.request[options[target.protocol]];
+      link.value = link.request[stat] || 0;
       link.getColor = () => linkColor(link, links.links);
     });
     // get the sankey height of each node based on link.value
@@ -598,7 +600,8 @@ export class Deployment extends Service {
   doFetch = (page, perPage) => {
     return new Promise((resolve) => {
       const data = this.serviceNodes.nodes.map((n) => ({
-        deployment: `${n.address} (${n.cluster.site_name})`,
+        cardData: n,
+        deployment: `${n.shortName} (${n.cluster.site_name})`,
         protocol: n.protocol.toUpperCase(),
         site_name: n.cluster.site_name,
       }));
@@ -628,7 +631,11 @@ export class Deployment extends Service {
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
     d3.selectAll("rect.service-type").each(function(d) {
-      if (arc.key === `${d.parentNode.site_name}:${d.address}`) {
+      let match = `${d.parentNode.site_name}:${d.address}`;
+      if (arc.all) {
+        match = d.address;
+      }
+      if (arc.key === match) {
         d.selected = over;
         viewer.blurAll(over, d);
         viewer.opaqueServiceType(d);

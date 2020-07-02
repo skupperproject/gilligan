@@ -19,7 +19,7 @@ under the License.
 
 import React from "react";
 
-import { Card, CardBody, CardHead } from "@patternfly/react-core";
+import { Card, CardBody, CardHeader } from "@patternfly/react-core";
 import CardHealth from "./cardHealth";
 import { Icap, shortName } from "./utilities";
 
@@ -94,20 +94,30 @@ class PopupCard extends React.Component {
     }
   };
   render() {
-    let { cardService, card } = this.props;
+    let { cardService, card, hideBody, hideHeading } = this.props;
     return (
-      <Card isHoverable isCompact className="list-card service-card popup">
-        <CardHead>
-          <div className="card-cluster-header">
-            {this.cardIcon(card)}
-            <span>{this.cardName(cardService, card)}</span>
-          </div>
-        </CardHead>
-        <CardBody>
-          <span className="body-line-prompt">Health</span>
-          <CardHealth cluster={cardService} />
-        </CardBody>
-        {this.cardBodies(cardService)}
+      <Card
+        isHoverable
+        isCompact
+        className={`list-card service-card ${
+          this.props.inline ? "inline" : "popup"
+        }`}
+      >
+        {!hideHeading && (
+          <CardHeader>
+            <div className="card-cluster-header">
+              {this.cardIcon(card)}
+              <span>{this.cardName(cardService, card)}</span>
+            </div>
+          </CardHeader>
+        )}
+        {!hideBody && (
+          <CardBody>
+            <span className="body-line-prompt">Health</span>
+            <CardHealth cluster={cardService} />
+          </CardBody>
+        )}
+        {!hideBody && this.cardBodies(cardService)}
       </Card>
     );
   }

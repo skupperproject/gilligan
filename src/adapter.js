@@ -1,4 +1,4 @@
-import { shortName } from "./utilities";
+import { shortName, aggregateAttributes } from "./utilities";
 var INSTANCE = 0;
 class Adapter {
   constructor(data) {
@@ -212,22 +212,6 @@ class Adapter {
     });
   };
 
-  // add the source values to the target values for each attribute in the source.
-  // This is actually a general purpose function and may be better stored elsewhere.
-  aggregateAttributes = (source, target) => {
-    for (const attribute in source) {
-      if (target[attribute] === undefined) {
-        target[attribute] = source[attribute];
-      } else {
-        if (typeof source[attribute] === "object") {
-          this.aggregateAttributes(source[attribute], target[attribute]);
-        } else if (!isNaN(source[attribute])) {
-          target[attribute] += source[attribute];
-        }
-      }
-    }
-  };
-
   // add a list of resident services to each cluster
   addServicesToClusters = () => {
     this.data.sites.forEach((site) => {
@@ -296,7 +280,7 @@ class Adapter {
                 )
               );
               if (from === clientService) {
-                this.aggregateAttributes(
+                aggregateAttributes(
                   request.by_client[client].by_handling_site[toSite],
                   req
                 );
@@ -321,7 +305,7 @@ class Adapter {
                       )
                     );
                     if (from === clientService) {
-                      this.aggregateAttributes(connection, req);
+                      aggregateAttributes(connection, req);
                     }
                   }
                 }
@@ -404,7 +388,7 @@ class Adapter {
       target.requests_received.forEach((request) => {
         for (const client_id in request.by_client) {
           if (this.serviceNameFromClientId(client_id) === sourceAddress) {
-            this.aggregateAttributes(request.by_client[client_id], req);
+            aggregateAttributes(request.by_client[client_id], req);
           }
         }
       });
@@ -557,7 +541,7 @@ class Adapter {
             r.egress === link.target.service.address
         );
         if (found) {
-          this.aggregateAttributes(row, found);
+          aggregateAttributes(row, found);
         } else {
           matrix.push(row);
         }
@@ -619,7 +603,7 @@ class Adapter {
         ingress: link.source.service.address,
         egress: link.target.service.address,
         address: link.target.service.address,
-        messages: link.request[stat],
+        messages: link.request[stat] || 0,
         info: {
           source: {
             site_name: link.source.site.site_name,
@@ -632,36 +616,6 @@ class Adapter {
         },
       });
     });
-    /*
-    this.data.services.forEach((service) => {
-      if (service.requests_received) {
-        service.requests_received.forEach((request) => {
-          const from_site_id = request.site_id;
-          for (const from_client in request.by_client) {
-            const from_client_req = request.by_client[from_client];
-            for (const to_site_id in from_client_req.by_handling_site) {
-              matrix.push({
-                ingress: this.serviceNameFromClientId(from_client),
-                egress: service.address,
-                address: this.siteNameFromId(to_site_id),
-                info: {
-                  source: {
-                    site_name: this.siteNameFromId(from_site_id),
-                    site_id: from_site_id,
-                  },
-                  target: {
-                    site_name: this.siteNameFromId(to_site_id),
-                    site_id: to_site_id,
-                  },
-                },
-                messages: from_client_req.by_handling_site[to_site_id][stat],
-              });
-            }
-          }
-        });
-      }
-    });
-    */
     return matrix;
   };
 

@@ -1,0 +1,53 @@
+/*
+#sk-sidebar {
+  overflow-y: hidden;
+}
+
+.sk-all-charts-container {
+  overflow: auto;
+}
+*/
+
+.sk-chart-container {
+  display: flex;
+  flex-direction: column;
+}
+.sk-chart-header {
+  align-self: center;
+  font-weight: bold;
+  margin-left: 1em;
+  margin-top: 1em;
+}
+
+.sk-chart-container.sk-chart-separated {
+  border-top: 1px solid #eaeaea;
+}
+
+.pf-l-split__item {
+  padding-right: 0px;
+}
+
+.pf-l-split {
+  border-bottom: 1px solid #eaeaea;
+}
+
+button.selected {
+  border-bottom: 2px solid #06c;
+}
+
+button.selected svg {
+  fill: #06c;
+}
+
+button:focus {
+  outline: none;
+}
+
+.sk-chart-toolbar {
+  background-color: #eaeaea;
+  border-bottom: 1px solid #cccccc;
+}
+
+#popover-div {
+  pointer-events: none;
+}

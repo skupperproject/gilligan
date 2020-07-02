@@ -75,7 +75,7 @@ class NavDropdown extends Component {
     this.dropdownItems.forEach((item) => {
       item.selected = item.description === desc;
       if (item.selected) {
-        this.props.handleChangeViewType(item.key);
+        this.props.handleChangeViewMode(item.key);
       }
     });
   };

@@ -53,11 +53,23 @@ export const genPath = ({
     if (sankey) width = link.width;
     else width = 6;
   }
+  if (isNaN(width)) width = 0;
+  let path = "";
   if (!offsetY) offsetY = 0;
-  if (mask) return genMask(link, selection, site);
-  if (link.circular)
-    return circular(link, key, sankey, width, reverse, offsetY, site);
-  return bezierPath(link, key, sankey, width, reverse, offsetY);
+  if (mask) {
+    path = genMask(link, selection, site);
+  } else if (link.circular) {
+    path = circular(link, key, sankey, width, reverse, offsetY, site);
+  } else {
+    path = bezierPath(link, key, sankey, width, reverse, offsetY);
+  }
+  if (path.includes("NaN")) {
+    console.log(
+      `invalid path ${path} link ${link.source.address}-${link.target.address}`
+    );
+    return "";
+  }
+  return path;
 };
 
 const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
@@ -114,21 +126,23 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
   if (link.source.expanded && link.source.nodeType === "cluster") {
     x0 -= link.source.getWidth() / 2;
   }
-
   const { offsetX, offsetY } = calcOffsets(link, offset);
-  const y0 = link.source.expanded
-    ? link.y0 - offsetY
-    : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
+  const y0 =
+    link.source.expanded && !isNaN(link.y0)
+      ? link.y0 - offsetY
+      : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
   let x1 = get(link.target, "x0", key); // left side of target
   if (link.source.expanded && link.target.nodeType === "cluster") {
     x1 += link.target.getWidth() / 2;
   }
   x0 += offsetX;
   x1 += offsetX;
-  const y1 = link.target.expanded
-    ? link.y1 - offsetY
-    : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
+  const y1 =
+    link.target.expanded && !isNaN(link.y1)
+      ? link.y1 - offsetY
+      : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
   const mid = (x0 + x1) / 2;
+  if (isNaN(mid)) debugger;
   const path = d3path.path();
   if (sankey) {
     const halfWidth = width / 2;
@@ -185,12 +199,14 @@ const circular = (link, key, sankey, width, reverse, off, site) => {
   if (link.target.expanded && link.target.nodeType === "cluster") {
     targetX += link.target.getWidth() / 2;
   }
-  const sourceY = link.source.expanded
-    ? link.y0
-    : get(link.source, "y0", key) + link.source.getHeight() / 2;
-  const targetY = link.target.expanded
-    ? link.y1
-    : get(link.target, "y0", key) + link.target.getHeight() / 2;
+  const sourceY =
+    link.source.expanded && !isNaN(link.y0)
+      ? link.y0
+      : get(link.source, "y0", key) + link.source.getHeight() / 2;
+  const targetY =
+    link.target.expanded && !isNaN(link.y1)
+      ? link.y1
+      : get(link.target, "y0", key) + link.target.getHeight() / 2;
 
   sourceX += offsetX;
   targetX += offsetX;
@@ -302,7 +318,10 @@ const calcOffsets = (link, offset) => {
   if (Math.abs(link.source.x1 - link.source.x0) < 0.001) {
     return { offsetX: offset, offsetY: 0 };
   }
-  const slope = (link.y1 - link.y0) / (link.source.x1 - link.source.x0);
+  let slope = 0;
+  if (!isNaN(link.y1) && !isNaN(link.y0)) {
+    slope = (link.y1 - link.y0) / (link.source.x1 - link.source.x0);
+  }
   if (slope === 0) {
     return { offsetX: 0, offsetY: offset };
   }

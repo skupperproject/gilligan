@@ -30,7 +30,7 @@ import { addDefs } from "./svgUtils.js";
 import { getSizes, positionPopup, getSaved, setSaved } from "../../utilities";
 import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
-import ChordViewer from "./chord/chordViewer.js";
+import ChartViewer from "./charts/chartViewer";
 import SplitterBar from "./spliterBar";
 import PopupCard from "../../popupCard";
 import { viewsMap as VIEWS } from "./views/views";
@@ -143,6 +143,7 @@ class TopologyViewer extends Component {
 
   // called when a new URL is pasted/typed into the address bar
   handleOverrideOptions = () => {
+    debugger;
     this.setState({ options: this.getOptions() }, this.updateComponent);
   };
 
@@ -700,7 +701,7 @@ class TopologyViewer extends Component {
 
   handleSplitterChange = (moved) => {
     const minRight = 240;
-    const maxRight = 400;
+    const maxRight = this.width / 2;
     const rightPane = d3.select(SPLITTER_RIGHT);
     let rightWidth = Math.min(
       Math.max(parseInt(rightPane.style("max-width"), 10) + moved, minRight),
@@ -725,22 +726,26 @@ class TopologyViewer extends Component {
   };
 
   statProtocol = () => {
+    /*
     const links = this.viewObj.links().links;
     let tcp = links.some((l) => l.target.protocol === "tcp");
     let http = links.some((l) => l.target.protocol === "http");
     if (!tcp && !http) {
       return "both";
     }
-    return tcp && http ? "both" : tcp ? "tcp" : "http";
+    */
+    return "http";
+    //return tcp && http ? "both" : tcp ? "tcp" : "http";
   };
 
   // which stat to use is determined by the service protocols.
   // if we have both http and tcp protocols, use the tcp protocol (since its a subset)
-  statForProtocol = () =>
-    ["both", "tcp"].includes(this.statProtocol())
+  statForProtocol = () => this.state.options.http;
+  /*
+  ["both", "tcp"].includes(this.statProtocol())
       ? this.state.options.tcp
       : this.state.options.http;
-
+*/
   render() {
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,
@@ -778,7 +783,7 @@ class TopologyViewer extends Component {
               onDrag={this.handleSplitterChange}
               onDragEnd={this.handleSplitterEnd}
             />
-            <ChordViewer
+            <ChartViewer
               ref={(el) => (this.chordRef = el)}
               initial={this.state.initial}
               service={this.props.service}
@@ -790,6 +795,8 @@ class TopologyViewer extends Component {
               handleShowAll={this.handleShowAll}
               handleChordOver={this.handleChordOver}
               handleArcOver={this.handleArcOver}
+              view={this.props.view}
+              viewObj={this.viewObj}
             />
           </TopologySideBar>
         }

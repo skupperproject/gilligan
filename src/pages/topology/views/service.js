@@ -19,6 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import {
+  aggregateAttributes,
   adjustPositions,
   getSaved,
   linkColor,
@@ -52,6 +53,10 @@ const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
 const SERVICE_OPTIONS = "srvopts";
 const SERVICE_TABLE_OPTIONS = "srvtblopts";
+const SERVICE_DETAIL_OPTIONS = "srvdtlopts";
+const DEFAULT_DETAIL_OPTIONS = {
+  item: undefined,
+};
 const DEFAULT_OPTIONS = {
   radio: false,
   traffic: true,
@@ -78,7 +83,7 @@ export class Service {
       { title: "Name", field: "address" },
       { title: "Protocol", field: "protocol" },
     ];
-    this.serviceCard = new ServiceCard(data);
+    this.card = new ServiceCard(data);
     this.linkCard = new LinkCard();
   }
 
@@ -101,7 +106,7 @@ export class Service {
       this.serviceNodes.nodes,
       this.serviceLinks,
       vsize,
-      viewer.state.options
+      viewer
     );
     return { nodeCount: this.serviceNodes.nodes.length, size };
   };
@@ -111,7 +116,7 @@ export class Service {
     const newLinks = new Links();
     this.initNodes(newNodes, false);
     const vsize = { width: viewer.width, height: viewer.height };
-    this.initLinks(newNodes.nodes, newLinks, vsize, viewer.state.options);
+    this.initLinks(newNodes.nodes, newLinks, vsize, viewer);
     reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
     reconcileLinks(this.serviceLinks.links, newLinks.links);
     // remove old nodes/links and add new nodes/links to svg
@@ -155,7 +160,10 @@ export class Service {
   }
 
   // initialize the service to service links for the service view
-  initLinks = (serviceNodes, links, vsize, options) => {
+  initLinks = (serviceNodes, links, vsize, viewer) => {
+    //const options = viewer.state.options;
+    let stat = viewer.statForProtocol();
+    if (stat === "bytes_in") stat = "bytes_out";
     this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
       const source = serviceNodes.find(
         (n) => n.address === deploymentLink.source.service.address
@@ -178,14 +186,17 @@ export class Service {
         );
         const link = links.links[Math.abs(linkIndex)];
         link.request = deploymentLink.request;
-        link.value = link.request[options[target.protocol]];
+        link.value = link.request[stat] || 0;
         link.getColor = () => linkColor(link, links.links);
       } else {
-        this.data.adapter.aggregateAttributes(
-          deploymentLink.request,
-          found.request
-        );
-        found.value = found.request[options[target.protocol]];
+        let value = deploymentLink.request[stat] || 0;
+        if (stat === "latency_max") {
+          value = Math.max(value, found.value);
+        } else {
+          value += found.value;
+        }
+        aggregateAttributes(deploymentLink.request, found.request);
+        found.value = value;
       }
     });
 
@@ -375,7 +386,7 @@ export class Service {
       .on("click", (d) => {
         if (d3.event.defaultPrevented) return; // click suppressed
         viewer.showChord(d);
-        viewer.showPopup(d, this.serviceCard);
+        viewer.showPopup(d, this.card);
         d3.event.stopPropagation();
         d3.event.preventDefault();
       });
@@ -833,6 +844,7 @@ export class Service {
 
   doFetch = (page, perPage) => {
     const data = this.serviceNodes.nodes.map((n) => ({
+      cardData: n,
       address: n.shortName,
       protocol: n.protocol.toUpperCase(),
       deployedAt: this.data.adapter
@@ -896,4 +908,9 @@ export class Service {
       : setOptions(SERVICE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
   getGraphOptions = () => getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS);
   saveGraphOptions = (options) => setOptions(SERVICE_OPTIONS, options);
+  getTableOptions = () =>
+    getOptions(SERVICE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);
+  getDetailOptions = () =>
+    getOptions(SERVICE_DETAIL_OPTIONS, DEFAULT_DETAIL_OPTIONS);
+  saveDetailOptions = (options) => setOptions(SERVICE_DETAIL_OPTIONS, options);
 }

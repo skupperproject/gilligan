@@ -34,27 +34,8 @@ import { viewsMap as VIEWS } from "../topology/views/views";
 class TableViewer extends React.Component {
   constructor(props) {
     super(props);
-    this.view = this.props.view;
-    this.dataSource = new VIEWS[this.view](this.props.service);
-    this.state = {
-      sortBy: {
-        index: 0,
-        direction: SortByDirection.asc,
-      },
-      filterBy: {},
-      perPage: 10,
-      total: 1,
-      page: 1,
-      columns: [],
-      allRows: [],
-      rows: [],
-      redirect: false,
-      redirectState: {},
-      options: this.dataSource.getGraphOptions(
-        this.props.history,
-        `${this.view}Table`
-      ),
-    };
+    console.log(`  TABLEVIEWER constructed with view ${this.props.view}`);
+    this.state = this.init();
   }
 
   componentDidMount = () => {
@@ -86,12 +67,57 @@ class TableViewer extends React.Component {
     this.setState({ columns: this.dataSource.fields }, () => {
       this.update();
     });
+
     this.props.setOptions({ view: this.props.view, mode: "table" }, true);
   };
 
   componentWillUnmount = () => {
     this.mounted = false;
   };
+
+  componentDidUpdate = () => {
+    if (this.view !== this.props.view) {
+      this.view = this.props.view;
+      this.dataSource = new VIEWS[this.view](this.props.service);
+      const options = this.dataSource.getTableOptions();
+      console.log(
+        ` TABLEVIEWER::componentDidUpdate options ${JSON.stringify(
+          options,
+          null,
+          2
+        )}`
+      );
+      this.setState(this.init(), () => {
+        this.componentDidMount();
+      });
+    }
+  };
+
+  init = () => {
+    this.view = this.props.view;
+    this.dataSource = new VIEWS[this.view](this.props.service);
+    return {
+      sortBy: {
+        index: 0,
+        direction: SortByDirection.asc,
+      },
+      filterBy: {},
+      perPage: 10,
+      total: 1,
+      page: 1,
+      columns: [],
+      allRows: [],
+      rows: [],
+      redirect: false,
+      redirectState: {},
+      options: this.dataSource.getGraphOptions(
+        this.props.history,
+        `${this.view}Table`
+      ),
+    };
+  };
+
+  statForProtocol = () => this.state.options.http;
 
   update = () => {
     this.fetch(this.state.page, this.state.perPage);
@@ -130,7 +156,11 @@ class TableViewer extends React.Component {
   };
 
   detailClick = (value, extraInfo) => {
-    this.props.handleShowSubTable(true, { value, extraInfo });
+    this.props.handleShowSubTable(true, {
+      value,
+      extraInfo,
+      card: this.dataSource.card,
+    });
     /*
     this.setState({
       redirect: true,
@@ -284,6 +314,9 @@ class TableViewer extends React.Component {
         />
       );
     }
+    console.log(
+      `    TABLEVIEWER rendering with view ${this.props.view} mode ${this.props.mode}`
+    );
     return (
       <React.Fragment>
         <TableToolbar

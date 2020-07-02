@@ -1,0 +1,18 @@
+#sk-legend.sk-modal {
+  height: 12em;
+  width: 32em;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+#sk-legend #modal-title {
+  cursor: move;
+}
+
+#sk-legend-svg {
+  margin-top: 4em;
+}
+
+.sk-legendbox div#modal-description {
+  overflow: hidden;
+}

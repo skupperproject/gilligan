@@ -29,85 +29,101 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import NavDropdown from "../../navDropdown";
-import { Icap } from "../../utilities";
+import { Icap, viewFromHash } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
 import TableViewer from "./tableViewer";
-import SubTable from "./subTable";
+import SubTable from "./subtable/subTable";
 
 class TablePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isDropDownOpen: false,
-      showSubPage: this.props.mode === "details",
       subPageInfo: {},
     };
   }
 
+  componentDidMount = () => {
+    const { options } = viewFromHash();
+    console.log(
+      ` TABLEPAGE::compontentdidmount view ${this.props.view} mode ${this.props.mode} item=${options.item}`
+    );
+  };
+  componentDidUpdate = () => {
+    const { options } = viewFromHash();
+    console.log(
+      ` TABLEPAGE::compontentdidUPDATE view ${this.props.view} mode ${this.props.mode} item ${options.item}`
+    );
+  };
   handleChangeLastUpdated = () => {
     this.updatedRef.update();
   };
 
   update = () => {
-    if (this.props.mode === "details") {
-      this.subTableRef.update();
-    } else {
-      this.tableRef.update();
-      this.handleChangeLastUpdated();
-    }
+    this.tableRef.update();
+    this.handleChangeLastUpdated();
   };
 
   handleShowSubTable = (show, subPageInfo) => {
-    this.props.history.replace(
-      `/${this.props.view}Details?item=${subPageInfo.value}`
-    );
-    //this.setState({ showSubPage: show, subPageInfo });
+    this.props.handleChangeViewMode("details");
+    const options = {
+      view: this.props.view,
+      mode: "details",
+      item: subPageInfo.value,
+    };
+    this.props.setOptions(options, true);
+    this.setState({ subPageInfo });
   };
+
   render() {
+    console.log(
+      `  TABLEPAGE rendering with view ${this.props.view} mode ${this.props.mode}`
+    );
     return (
       <PageSection
         variant={PageSectionVariants.light}
         className="topology-page"
       >
         <Stack>
-          {this.props.mode === "details" && (
-            <SubTable
-              ref={(el) => (this.subTableRef = el)}
-              service={this.props.service}
-              view={this.props.view}
-              info={this.state.subPageInfo}
-              history={this.props.history}
-            />
-          )}
-          {this.props.mode !== "details" && (
-            <React.Fragment>
-              <StackItem className="overview-header">
-                <Split gutter="md">
-                  <SplitItem>
-                    <TextContent>
-                      <Text
-                        className="overview-title"
-                        component={TextVariants.h1}
-                      >
-                        {Icap(this.props.view)}s
-                      </Text>
-                    </TextContent>
-                  </SplitItem>
-                  <SplitItem isFilled>
-                    View
-                    <NavDropdown
-                      view={this.props.view}
-                      viewType="table"
-                      handleChangeViewType={this.props.handleChangeViewType}
-                    />
-                  </SplitItem>
-                  <SplitItem>
-                    <TextContent>
-                      <LastUpdated ref={(el) => (this.updatedRef = el)} />
-                    </TextContent>
-                  </SplitItem>
-                </Split>
+          <React.Fragment>
+            <StackItem className="overview-header">
+              <Split gutter="md">
+                <SplitItem>
+                  <TextContent>
+                    <Text className="overview-title" component={TextVariants.p}>
+                      {Icap(this.props.view)}s
+                    </Text>
+                  </TextContent>
+                </SplitItem>
+                <SplitItem isFilled className="sk-dropdown-prompt">
+                  View
+                  <NavDropdown
+                    view={this.props.view}
+                    mode="table"
+                    handleChangeViewMode={this.props.handleChangeViewMode}
+                  />
+                </SplitItem>
+                <SplitItem>
+                  <TextContent>
+                    <LastUpdated ref={(el) => (this.updatedRef = el)} />
+                  </TextContent>
+                </SplitItem>
+              </Split>
+            </StackItem>
+            {this.props.mode === "details" && (
+              <StackItem className="sk-subtable">
+                <SubTable
+                  ref={(el) => (this.tableRef = el)}
+                  service={this.props.service}
+                  view={this.props.view}
+                  info={this.state.subPageInfo}
+                  history={this.props.history}
+                  handleChangeViewMode={this.props.handleChangeViewMode}
+                  setOptions={this.props.setOptions}
+                />
               </StackItem>
+            )}
+            {this.props.mode === "table" && (
               <StackItem className="overview-table">
                 <TableViewer
                   ref={(el) => (this.tableRef = el)}
@@ -116,10 +132,12 @@ class TablePage extends Component {
                   handleAddNotification={() => {}}
                   handleShowSubTable={this.handleShowSubTable}
                   history={this.props.history}
+                  setOptions={this.props.setOptions}
+                  mode={this.props.mode}
                 />
               </StackItem>
-            </React.Fragment>
-          )}
+            )}
+          </React.Fragment>
         </Stack>
       </PageSection>
     );

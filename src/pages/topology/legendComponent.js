@@ -22,6 +22,7 @@ import Draggable from "react-draggable";
 import * as d3 from "d3";
 import { getSaved, setSaved } from "../../utilities";
 import { addMarkers } from "../topology/svgUtils";
+import "./legend.css";
 
 const LEGEND_POSITION = "legend";
 class LegendComponent extends Component {
@@ -46,10 +47,18 @@ class LegendComponent extends Component {
       y: containerRect.height - legendRect.height - 10 + initialOffset.y,
     };
     this.setState({ legendPosition });
+    console.log(
+      `containerRect ${JSON.stringify(
+        containerRect,
+        null,
+        2
+      )} legendRect ${JSON.stringify(legendRect, null, 2)}`
+    );
     this.svg = d3
-      .select("#sk-legend")
+      .select("#sk-legend-svg")
       .append("svg")
-      .attr("id", "LEGEND_ID");
+      .attr("width", legendRect.width);
+    //.attr("id", "LEGEND_ID");
 
     this.svg.append("svg:defs").attr("class", "marker-defs");
 
@@ -216,7 +225,7 @@ class LegendComponent extends Component {
             id="modal-description"
             ref={(el) => (this.legendRef = el)}
           >
-            <div id="sk-legend"></div>
+            <div id="sk-legend-svg"></div>
           </div>
         </div>
       </Draggable>

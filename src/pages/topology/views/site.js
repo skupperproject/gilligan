@@ -17,9 +17,11 @@ specific language governing permissions and limitations
 under the License.
 */
 
+import React from "react";
 import * as d3 from "d3";
 import {
   adjustPositions,
+  aggregateAttributes,
   copy,
   linkColor,
   getSaved,
@@ -52,6 +54,11 @@ const ZOOM_SCALE = "sitescale";
 const ZOOM_TRANSLATE = "sitetrans";
 const SITE_OPTIONS = "siteopts";
 const SITE_TABLE_OPTIONS = "sitetblopts";
+const SITE_DETAIL_OPTIONS = "sitedtlopts";
+const DEFAULT_DETAIL_OPTIONS = {
+  item: undefined,
+};
+
 const DEFAULT_OPTIONS = {
   radio: true,
   traffic: false,
@@ -67,6 +74,10 @@ const DEFAULT_TABLE_OPTIONS = {
   perPage: 10,
 };
 
+const SiteName = ({ value, extraInfo }) => {
+  return <span>{value}</span>;
+};
+
 export class Site {
   constructor(data) {
     this.data = data;
@@ -76,11 +87,12 @@ export class Site {
     this.nodes = () => this.siteNodes;
     this.links = () => this.trafficLinks;
     this.fields = [
-      { title: "Name", field: "site_name" },
+      { title: "Name", field: "site_name", formatter: SiteName },
       { title: "Namespace", field: "namespace" },
     ];
-    this.siteCard = new SiteCard();
+    this.card = new SiteCard();
     this.linkCard = new LinkCard();
+    this.detailFormatter = true;
   }
 
   createSelections = (svg) => {
@@ -163,15 +175,22 @@ export class Site {
   initTrafficLinks = (nodes, links, vsize, options) => {
     const deploymentLinks = this.data.adapter.data.deploymentLinks;
     deploymentLinks.forEach((link) => {
+      const stat = options[link.target.service.protocol];
       if (link.source.site.site_id !== link.target.site.site_id) {
         const found = links.links.find(
           (l) =>
             l.source.site_id === link.source.site.site_id &&
             l.target.site_id === link.target.site.site_id
         );
+        let value = link.request[stat] || 0;
         if (found) {
-          found.value += link.request[options[link.target.service.protocol]];
-          this.data.adapter.aggregateAttributes(link.request, found.request);
+          if (stat === "latency_max") {
+            value = Math.max(found.value, value);
+          } else {
+            value += found.value;
+          }
+          found.value = value;
+          aggregateAttributes(link.request, found.request);
         } else {
           const linkIndex = links.addLink({
             source: nodes.nodes.find(
@@ -185,7 +204,7 @@ export class Site {
             uid: `SiteLink-${link.source.site.site_id}-${link.target.site.site_id}`,
           });
           const alink = links.links[linkIndex];
-          alink.value = link.request[options[link.target.service.protocol]];
+          alink.value = value;
           alink.request = copy(link.request);
           alink.getColor = () => linkColor(alink, links.links);
         }
@@ -436,7 +455,7 @@ export class Site {
         if (d3.event.defaultPrevented) return; // click suppressed
         viewer.clearPopups();
         viewer.showChord(d);
-        viewer.showPopup(d, this.siteCard);
+        viewer.showPopup(d, this.card);
         d3.event.stopPropagation();
       });
 
@@ -1096,6 +1115,7 @@ export class Site {
 
   doFetch = (page, perPage) => {
     const data = this.siteNodes.nodes.map((n) => ({
+      cardData: n,
       site_name: n.site_name,
       namespace: n.namespace,
       servers: [
@@ -1131,14 +1151,8 @@ export class Site {
 
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
-    //console.log(`------- arcOver`);
     d3.selectAll("g.cluster").each(function(d) {
-      /*
-      console.log(`-- arc.key ${arc.key}`);
-      console.log(d);
-      console.log(arc);
-      */
-      if (arc.info.target.site_id === `${d.site_id}`) {
+      if (arc.key === `${d.site_id}`) {
         d.selected = over;
         viewer.blurAll(over, d);
         viewer.restart();
@@ -1161,4 +1175,8 @@ export class Site {
       : setOptions(SITE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
   getGraphOptions = () => getOptions(SITE_OPTIONS, DEFAULT_OPTIONS);
   saveGraphOptions = (options) => setOptions(SITE_OPTIONS, options);
+  getTableOptions = () => getOptions(SITE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);
+  getDetailOptions = () =>
+    getOptions(SITE_DETAIL_OPTIONS, DEFAULT_DETAIL_OPTIONS);
+  saveDetailOptions = (options) => setOptions(SITE_DETAIL_OPTIONS, options);
 }
