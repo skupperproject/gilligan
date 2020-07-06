@@ -206,6 +206,10 @@ class PageLayout extends React.Component {
   onNavSelect = (result) => {
     this.navSelect = "userChanged";
     setSaved(LAST_VIEW, result.itemId);
+    // when clicking on a nav item, go to the table view instead of the details view
+    if (this.viewModes[result.itemId] === "details") {
+      this.viewModes[result.itemId] = "table";
+    }
     this.setState({
       view: result.itemId,
       connectPath: "",
