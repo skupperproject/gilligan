@@ -46,6 +46,8 @@ class PieBar extends Component {
       width: 300,
       tickLabel: Icap(statName(this.props.stat)),
     };
+    // so we can detect when the stat changes
+    this.stat = this.props.stat;
   }
 
   componentWillUnmount = () => {
@@ -57,18 +59,22 @@ class PieBar extends Component {
       const id = `#sk-chart-container-${this.props.direction} svg`;
       const barChart = d3.select(id);
       const height = this.getHeight() + 20;
-      barChart
-        .attr("height", height)
-        .attr("viewBox", `0 0 ${barChart.attr("width")} ${height}`);
-    }
-    const kData = this.state.data.some((datum) =>
-      formatBytes(datum.y).includes("K")
-    );
-    const kLabel = this.state.tickLabel.includes("K");
-    if (kData !== kLabel) {
-      this.setState({
-        tickLabel: `${kData ? "K" : ""} ${Icap(statName(this.props.stat))}`,
-      });
+      if (barChart && barChart.size() > 0) {
+        barChart
+          .attr("height", height)
+          .attr("viewBox", `0 0 ${barChart.attr("width")} ${height}`);
+      }
+      console.log(this.state.data);
+      const kData =
+        Array.isArray(this.state.data) &&
+        this.state.data.some((datum) => formatBytes(datum.y).includes("K"));
+      const kLabel = this.state.tickLabel.includes("K");
+      if (kData !== kLabel || this.props.stat !== this.stat) {
+        this.stat = this.props.stat;
+        this.setState({
+          tickLabel: `${kData ? "K" : ""} ${Icap(statName(this.props.stat))}`,
+        });
+      }
     }
   };
 
@@ -109,7 +115,7 @@ class PieBar extends Component {
             return {
               key: request.service,
               all: true,
-              name: request.service,
+              name: request.shortName,
               value: formatStat(this.props.stat, request.requests),
               x: `${request.shortName}`,
               y: request.requests,
@@ -218,7 +224,7 @@ class PieBar extends Component {
             const fill = rgbToHex(d3.rgb(color).brighter(0.6));
             return {
               key: `${request.site}:${request.colorAddress}`,
-              name: request.fromAddress,
+              name: request.shortName,
               value: formatStat(this.props.stat, request.requests),
               x: request.shortName,
               y: request.requests,
