@@ -878,6 +878,8 @@ export class Service {
   }
 
   arcOver(arc, over, viewer) {
+    console.log(`arcOver requested for ${arc.key} over ${over}`);
+
     d3.selectAll("rect.service-type").each(function(d) {
       if (arc.key === d.address) {
         if (!over) {

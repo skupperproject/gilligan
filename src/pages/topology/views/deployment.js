@@ -631,7 +631,7 @@ export class Deployment extends Service {
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
     d3.selectAll("rect.service-type").each(function(d) {
-      let match = `${d.parentNode.site_name}:${d.address}`;
+      let match = `${d.address} (${d.parentNode.site_name})`;
       if (arc.all) {
         match = d.address;
       }

@@ -124,8 +124,8 @@ class ChordData {
       deploymentLinks.forEach((link) => {
         if (link.source === d || link.target === d) {
           values.push({
-            ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
-            egress: `${link.target.parentNode.site_name}:${link.target.address}`,
+            ingress: `${link.source.address} (${link.source.parentNode.site_name})`,
+            egress: `${link.target.address} (${link.target.parentNode.site_name})`,
             address: d.address,
             info: {
               source: {
@@ -154,8 +154,8 @@ class ChordData {
       const values = [];
       deploymentLinks.forEach((link) => {
         values.push({
-          ingress: `${link.source.parentNode.site_name}:${link.source.address}`,
-          egress: `${link.target.parentNode.site_name}:${link.target.address}`,
+          ingress: `${link.source.address} (${link.source.parentNode.site_name})`,
+          egress: `${link.target.address} (${link.target.parentNode.site_name})`,
           address: link.target.address,
           info: {
             source: {

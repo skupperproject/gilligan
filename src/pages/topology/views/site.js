@@ -1151,6 +1151,7 @@ export class Site {
 
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
+    console.log(`arcOver requested for ${arc.key} over ${over}`);
     d3.selectAll("g.cluster").each(function(d) {
       if (arc.key === `${d.site_id}`) {
         d.selected = over;

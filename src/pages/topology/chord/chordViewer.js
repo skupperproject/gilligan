@@ -412,6 +412,16 @@ class ChordViewer extends Component {
     return egress + ": " + this.formatNumber(value);
   };
 
+  getArcOverKey = (d) => {
+    let key = d.key;
+    if (this.props.site && !this.props.deployment) {
+      if (d.info) {
+        key = this.getSiteId(d.key, d.info);
+      }
+    }
+    return key;
+  };
+
   decorateChordData = (rechord, matrix) => {
     let data = rechord.chords();
     data.forEach((d, i) => {
@@ -431,6 +441,7 @@ class ChordViewer extends Component {
       fg.key = matrix.routerName(fg.index);
       fg.components = [fg.index];
       fg.router = matrix.aggregate ? fg.key : matrix.getEgress(fg.index);
+      //console.log(`decorateArcData key is ${fg.key} router is ${fg.router}`);
       fg.info = this.arcInfo(fg, matrix);
       fg.color = this.props.site
         ? this.props.deployment
@@ -513,13 +524,6 @@ class ChordViewer extends Component {
       .append("svg:path")
       .style("fill", (d) => d.color)
       .style("stroke", (d) => d.color);
-
-    /*
-      newArcs
-      .append("svg:text")
-      .attr("dy", ".35em")
-      .text(d => d.router);
-*/
     // attach event listeners to all arcs (new or old)
     arcsGroup
       .on("mouseover", (d) => {
@@ -529,11 +533,8 @@ class ChordViewer extends Component {
           (p) => d.index !== p.source.index && d.index !== p.target.index
         );
         // highlight the corresponding site
-        let key = d.info.target.site_id;
-        if (this.props.site && !this.props.deployment) {
-          key = this.getSiteId(d.key, d.info);
-        }
-        this.props.handleArcOver({ key: key }, true);
+        const key = this.getArcOverKey(d);
+        this.props.handleArcOver({ key }, true);
       })
       .on("mousemove", (d) => {
         let popupContent = this.arcTitle(d, matrix);
@@ -542,14 +543,11 @@ class ChordViewer extends Component {
       .on("mouseout", (d) => {
         this.popoverArc = null;
         if (!this.unmounting) {
-          this.setState({ showPopup: false });
+          this.showToolTip();
+          // unhighlight the corresponding site
+          const key = this.getArcOverKey(d);
+          this.props.handleArcOver({ key }, false);
         }
-        // unhighlight the corresponding site
-        let key = d.info.target.site_id;
-        if (this.props.site && !this.props.deployment) {
-          key = this.getSiteId(d.key, d.info);
-        }
-        this.props.handleArcOver({ key: key }, false);
       });
 
     // animate the arcs path to it's new location

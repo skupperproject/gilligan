@@ -34,24 +34,42 @@ import {
   lighten,
   aggregateAttributes,
   formatStat,
+  formatBytes,
 } from "../../../utilities";
 
 class PieBar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: [
-        { x: "Cats", y: 35 },
-        { x: "Dogs", y: 55 },
-        { x: "Birds", y: 10 },
-      ],
+      data: [{ x: "", y: 0 }],
       height: 300,
       width: 300,
+      tickLabel: Icap(statName(this.props.stat)),
     };
   }
 
   componentWillUnmount = () => {
     this.unmounting = true;
+  };
+
+  componentDidUpdate = () => {
+    if (this.props.type === "bar") {
+      const id = `#sk-chart-container-${this.props.direction} svg`;
+      const barChart = d3.select(id);
+      const height = this.getHeight() + 20;
+      barChart
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${barChart.attr("width")} ${height}`);
+    }
+    const kData = this.state.data.some((datum) =>
+      formatBytes(datum.y).includes("K")
+    );
+    const kLabel = this.state.tickLabel.includes("K");
+    if (kData !== kLabel) {
+      this.setState({
+        tickLabel: `${kData ? "K" : ""} ${Icap(statName(this.props.stat))}`,
+      });
+    }
   };
 
   init = () => {
@@ -294,7 +312,7 @@ class PieBar extends Component {
           const fill = rgbToHex(d3.rgb(color).brighter(0.6));
           return {
             key: address,
-            name: address,
+            name: request.shortName,
             value: formatStat(this.props.stat, request.requests),
             x: request.shortName,
             y: request.requests,
@@ -344,7 +362,7 @@ class PieBar extends Component {
           const fill = rgbToHex(d3.rgb(color).brighter(0.6));
           return {
             key: request.fromAddress,
-            name: request.fromAddress,
+            name: request.shortName,
             value: formatStat(this.props.stat, request.requests),
             x: request.shortName,
             y: request.requests,
@@ -375,12 +393,20 @@ class PieBar extends Component {
     this.init();
   };
 
+  tickFormat = (tick, index, ticks) => {
+    let tickValues = ticks.map((v) => formatBytes(v, 0));
+    if (tickValues.some((v) => v.includes("K"))) {
+      tickValues = tickValues.map((v) => v.replace("K", ""));
+    }
+    return tickValues[index];
+  };
+  getHeight = () => {
+    if (this.props.type === "pie") return this.state.height;
+    // 30 for each row, 40 for the x axis, at least 80
+    return Math.max(Object.keys(this.state.data).length * 30 + 40, 80);
+  };
+
   render() {
-    const getHeight = () => {
-      if (this.props.type === "pie") return this.state.height;
-      // 30 for each row, 40 for the x axis, at least 80
-      return Math.max(Object.keys(this.state.data).length * 30 + 40, 80);
-    };
     // Padding left for bar chart is needed to allow room for the service names.
     // Service names are stored in the .x attribute of the data
     // Use a sliding scale per character as an estimate
@@ -406,7 +432,7 @@ class PieBar extends Component {
           <div className="sk-chart-header">{this.state.headerText}</div>
           <div
             style={{
-              height: `${getHeight()}px`,
+              height: `${this.getHeight() + 20}px`,
               width: `${this.state.width}px`,
             }}
           >
@@ -486,7 +512,7 @@ class PieBar extends Component {
                 ariaDesc={this.state.headerText}
                 allowTooltip={false}
                 domainPadding={{ x: [0, 0] }}
-                height={getHeight()}
+                height={this.getHeight()}
                 padding={{
                   bottom: 50,
                   left: getPaddingLeft(),
@@ -496,7 +522,13 @@ class PieBar extends Component {
                 width={this.state.width}
               >
                 <ChartAxis />
-                <ChartAxis dependentAxis showGrid />
+                <ChartAxis
+                  dependentAxis
+                  showGrid
+                  fixLabelOverlap={true}
+                  tickFormat={this.tickFormat}
+                  label={this.state.tickLabel}
+                />
                 <ChartBar
                   horizontal
                   data={this.state.data}
