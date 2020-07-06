@@ -64,7 +64,6 @@ class PieBar extends Component {
           .attr("height", height)
           .attr("viewBox", `0 0 ${barChart.attr("width")} ${height}`);
       }
-      console.log(this.state.data);
       const kData =
         Array.isArray(this.state.data) &&
         this.state.data.some((datum) => formatBytes(datum.y).includes("K"));
