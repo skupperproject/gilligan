@@ -40,25 +40,13 @@ class SubTable extends Component {
     this.state = {};
     this.viewObj = new VIEWS[this.props.view](this.props.service);
     this.view = this.props.view;
-    console.log(`SUBTABLE constructed view ${this.props.view}`);
   }
 
   componentDidMount = () => {
-    console.log(`SUBTABLE view ${this.props.view} info...`);
-    console.log(this.props.info);
     const options = { item: this.props.info.value };
     this.viewObj.saveDetailOptions(options);
-    console.log(`... saved options as ${JSON.stringify(options, null, 2)}`);
   };
 
-  componentDidUpdate = () => {
-    if (this.view !== this.props.view) {
-      const options = this.viewObj.getDetailOptions();
-      console.log(
-        `SUBTABLE::componentDidUpdate options.item was ${options.item}`
-      );
-    }
-  };
   handleChangeLastUpdated = () => {
     this.updatedRef.update();
   };

@@ -67,6 +67,10 @@ class PageLayout extends React.Component {
       site: "graph",
       deployment: "graph",
     });
+    // never start with the details view
+    if (this.viewModes[view] === "details") {
+      this.viewModes[view] = "table";
+    }
     this.state = {
       connected: false,
       connectPath: "",
@@ -310,9 +314,6 @@ class PageLayout extends React.Component {
       }
       return <React.Fragment />;
     };
-    console.log(
-      `*** LAYOUT rendering with view ${this.state.view} mode ${mode}`
-    );
     return (
       <Router>
         {redirectAfterConnect()}

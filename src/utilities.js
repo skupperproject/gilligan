@@ -74,7 +74,7 @@ export const safePlural = (count, str) => {
   return str + "s";
 };
 
-export const Icap = (s) => `${s[0].toUpperCase()}${s.slice(1)}`;
+export const Icap = (s) => s && `${s[0].toUpperCase()}${s.slice(1)}`;
 
 export const pretty = (v, format = ",") => {
   var formatComma = d3.format(format);
@@ -940,7 +940,8 @@ export const rgbToHex = (rgb) =>
 export const statName = (stat) => {
   if (stat === "bytes_in") stat = "bytes";
   if (stat === "bytes_out") stat = "bytes";
-  return stat.replace(/_/gi, " ");
+  if (stat) return stat.replace(/_/gi, " ");
+  return "";
 };
 
 // add the source values to the target values for each attribute in the source.

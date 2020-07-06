@@ -29,7 +29,7 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import NavDropdown from "../../navDropdown";
-import { Icap, viewFromHash } from "../../utilities";
+import { Icap } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
 import TableViewer from "./tableViewer";
 import SubTable from "./subtable/subTable";
@@ -43,18 +43,6 @@ class TablePage extends Component {
     };
   }
 
-  componentDidMount = () => {
-    const { options } = viewFromHash();
-    console.log(
-      ` TABLEPAGE::compontentdidmount view ${this.props.view} mode ${this.props.mode} item=${options.item}`
-    );
-  };
-  componentDidUpdate = () => {
-    const { options } = viewFromHash();
-    console.log(
-      ` TABLEPAGE::compontentdidUPDATE view ${this.props.view} mode ${this.props.mode} item ${options.item}`
-    );
-  };
   handleChangeLastUpdated = () => {
     this.updatedRef.update();
   };
@@ -76,9 +64,6 @@ class TablePage extends Component {
   };
 
   render() {
-    console.log(
-      `  TABLEPAGE rendering with view ${this.props.view} mode ${this.props.mode}`
-    );
     return (
       <PageSection
         variant={PageSectionVariants.light}

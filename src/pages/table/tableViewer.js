@@ -34,7 +34,6 @@ import { viewsMap as VIEWS } from "../topology/views/views";
 class TableViewer extends React.Component {
   constructor(props) {
     super(props);
-    console.log(`  TABLEVIEWER constructed with view ${this.props.view}`);
     this.state = this.init();
   }
 
@@ -79,14 +78,6 @@ class TableViewer extends React.Component {
     if (this.view !== this.props.view) {
       this.view = this.props.view;
       this.dataSource = new VIEWS[this.view](this.props.service);
-      const options = this.dataSource.getTableOptions();
-      console.log(
-        ` TABLEVIEWER::componentDidUpdate options ${JSON.stringify(
-          options,
-          null,
-          2
-        )}`
-      );
       this.setState(this.init(), () => {
         this.componentDidMount();
       });
@@ -314,9 +305,6 @@ class TableViewer extends React.Component {
         />
       );
     }
-    console.log(
-      `    TABLEVIEWER rendering with view ${this.props.view} mode ${this.props.mode}`
-    );
     return (
       <React.Fragment>
         <TableToolbar
