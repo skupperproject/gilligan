@@ -1,3 +1,10 @@
+@media (max-width: 768px) {
+  #sk-subTable-bar1,
+  #sk-subTable-bar2 {
+    display: none;
+  }
+}
+
 .sk-subtable {
   text-align: left;
 }
@@ -59,4 +66,9 @@
 
 .sk-subtable .details-section {
   margin-bottom: 0.5em;
+}
+
+#sk-subTable-bar1,
+#sk-subTable-bar2 {
+  width: 30em;
 }

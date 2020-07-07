@@ -31,6 +31,7 @@ import LastUpdated from "../../../lastUpdated";
 import SubNav from "./subNav";
 import SubDetails from "./subDetails";
 import PopupCard from "../../../popupCard";
+import PieBar from "../../topology/charts/pieBar";
 import { viewsMap as VIEWS } from "../../topology/views/views";
 import { Icap, viewFromHash } from "../../../utilities";
 
@@ -54,14 +55,21 @@ class SubTable extends Component {
   update = () => {
     //this.tableRef.update();
     this.handleChangeLastUpdated();
+    if (this.pieRef1) this.pieRef1.doUpdate();
+    if (this.pieRef2) this.pieRef2.doUpdate();
   };
 
   returnToTable = () => {
     this.props.handleChangeViewMode("table");
   };
 
+  showTooltip = () => {};
+  data = () => this.props.info.extraInfo.rowData.data.cardData;
+
   render() {
     const { options } = viewFromHash();
+    console.log(`subTable props`);
+    console.log(this.props);
     return (
       <React.Fragment>
         <StackItem className="sk-breadcrumbs">
@@ -84,14 +92,55 @@ class SubTable extends Component {
         </StackItem>
         <StackItem className="sk-subtable">
           {this.props.info.extraInfo && (
-            <PopupCard
-              cardSize="expanded"
-              cardService={this.props.info.extraInfo.rowData.data.cardData}
-              card={this.props.info.card}
-              service={this.props.service}
-              inline
-              hideBody
-            />
+            <Split>
+              <SplitItem>
+                <PopupCard
+                  cardSize="expanded"
+                  cardService={this.props.info.extraInfo.rowData.data.cardData}
+                  card={this.props.info.card}
+                  service={this.props.service}
+                  inline
+                  hideBody
+                />
+              </SplitItem>
+              <SplitItem isFilled></SplitItem>
+              <SplitItem id="sk-subTable-bar1">
+                <PieBar
+                  ref={(el) => (this.pieRef1 = el)}
+                  service={this.props.service}
+                  site={
+                    this.props.view === "site" ||
+                    this.props.view === "deployment"
+                  }
+                  deployment={this.props.view === "deployment"}
+                  stat="bytes_out"
+                  direction="in"
+                  type="bar"
+                  containerId="sk-subTable-bar1"
+                  data={this.data()}
+                  showTooltip={this.showTooltip}
+                  comment="Pie or bar chart for incoming metric"
+                />
+              </SplitItem>
+              <SplitItem id="sk-subTable-bar2">
+                <PieBar
+                  ref={(el) => (this.pieRef2 = el)}
+                  service={this.props.service}
+                  site={
+                    this.props.view === "site" ||
+                    this.props.view === "deployment"
+                  }
+                  deployment={this.props.view === "deployment"}
+                  stat="bytes_out"
+                  direction="out"
+                  type="bar"
+                  containerId="sk-subTable-bar2"
+                  data={this.data()}
+                  showTooltip={this.showTooltip}
+                  comment="Pie or bar chart for incoming metric"
+                />
+              </SplitItem>
+            </Split>
           )}
           {false && <SubNav view={this.props.view} />}
           <SubDetails {...this.props} />
