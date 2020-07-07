@@ -18,13 +18,16 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { shortName } from "../../../utilities";
+import { shortName, rgbToHex } from "../../../utilities";
+import * as d3 from "d3";
 
 class RoutersComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {};
   }
+
+  color = (c) => rgbToHex(d3.rgb(c).brighter(0.6));
 
   render() {
     return (
@@ -40,7 +43,9 @@ class RoutersComponent extends Component {
               >
                 <span
                   className="legend-color"
-                  style={{ backgroundColor: this.props.arcColors[router] }}
+                  style={{
+                    backgroundColor: this.color(this.props.arcColors[router]),
+                  }}
                 ></span>
                 <span className="legend-router legend-text" title={router}>
                   {shortName(router)}

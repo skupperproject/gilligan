@@ -51,3 +51,8 @@ button:focus {
 #popover-div {
   pointer-events: none;
 }
+
+.sk-chart-legend-container {
+  margin-left: 1em;
+  margin-top: 2em;
+}

@@ -1028,10 +1028,12 @@ class ChordViewer extends Component {
         )}
         {getTitle()}
         <div aria-label="chord-diagram" id="chord"></div>
-        <RoutersComponent
-          arcColors={getArcColors()}
-          handleHoverRouter={this.handleHoverRouter}
-        ></RoutersComponent>
+        {!this.props.noLegend && (
+          <RoutersComponent
+            arcColors={getArcColors()}
+            handleHoverRouter={this.handleHoverRouter}
+          ></RoutersComponent>
+        )}
       </div>
     );
   }

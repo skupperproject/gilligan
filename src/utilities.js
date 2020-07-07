@@ -102,13 +102,13 @@ export const getUrlParts = (fullUrl) => {
 export const getSizes = (component) => {
   const gap = 5;
   let legendWidth = 4;
-  let topoWidth = component.offsetWidth;
-  if (topoWidth < 768) legendWidth = 0;
-  let width = topoWidth - gap - legendWidth;
-  let height = component.offsetHeight;
-  if (width < 10 || height < 10) {
-    console.log(`page width and height are abnormal w: ${width} h: ${height}`);
-    return [0, 0];
+  let width = 300;
+  let height = 300;
+  if (component && component.offsetWidth) {
+    let topoWidth = component.offsetWidth;
+    if (topoWidth < 768) legendWidth = 0;
+    width = topoWidth - gap - legendWidth;
+    height = component.offsetHeight;
   }
   return [width, height];
 };

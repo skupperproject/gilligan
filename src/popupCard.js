@@ -107,6 +107,7 @@ class PopupCard extends React.Component {
           <CardHeader>
             <div className="card-cluster-header">
               {this.cardIcon(card)}
+              <span className="iconSeparator"></span>
               <span>{this.cardName(cardService, card)}</span>
             </div>
           </CardHeader>

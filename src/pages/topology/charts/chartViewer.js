@@ -21,6 +21,7 @@ import React, { Component } from "react";
 import ChordViewer from "../chord/chordViewer";
 import PieBar from "./pieBar";
 import ChartToolbar from "./chartToolbar";
+import SkupperLegend from "./legendComponent";
 import QDRPopup from "../../../qdrPopup";
 import { getSaved, setSaved, positionPopup } from "../../../utilities";
 
@@ -114,7 +115,14 @@ class ChartViewer extends Component {
             ref={(el) => (this.chordRef = el)}
             {...this.props}
             showTooltip={this.showTooltip}
+            noLegend
             comment="Chord chart that show both incoming and outgoing"
+          />
+          <SkupperLegend
+            ref={(el) => (this.legendRef = el)}
+            {...this.props}
+            showTooltip={this.showTooltip}
+            comment="Stand-alone legend"
           />
         </div>
       </React.Fragment>

@@ -54,6 +54,10 @@ class PieBar extends Component {
     this.unmounting = true;
   };
 
+  componentDidMount = () => {
+    this.init();
+  };
+
   componentDidUpdate = () => {
     if (this.props.type === "bar") {
       const id = `#sk-chart-container-${this.props.direction} svg`;
@@ -78,7 +82,10 @@ class PieBar extends Component {
   };
 
   init = () => {
-    const sizes = getSizes(d3.select("#sk-sidebar").node());
+    const containerId = this.props.containerId
+      ? this.props.containerId
+      : "sk-sidebar";
+    const sizes = getSizes(d3.select(`#${containerId}`).node());
     let data = [];
     let headerText = "header text not set";
     if (this.props.site) {
@@ -468,15 +475,19 @@ class PieBar extends Component {
                     target: "data",
                     eventHandlers: {
                       onMouseMove: (event, data) => {
-                        this.props.handleArcOver(
-                          { key: data.datum.key, all: data.datum.all },
-                          true
-                        );
-                        this.props.showTooltip(
-                          `${data.datum.name} ${data.datum.value}`,
-                          event.clientX,
-                          event.clientY
-                        );
+                        if (this.props.handleArcOver) {
+                          this.props.handleArcOver(
+                            { key: data.datum.key, all: data.datum.all },
+                            true
+                          );
+                        }
+                        if (this.props.showTooltip) {
+                          this.props.showTooltip(
+                            `${data.datum.name} ${data.datum.value}`,
+                            event.clientX,
+                            event.clientY
+                          );
+                        }
                         return [
                           {
                             target: "data",
@@ -493,11 +504,15 @@ class PieBar extends Component {
                         ];
                       },
                       onMouseLeave: (e, data) => {
-                        this.props.handleArcOver(
-                          { key: data.datum.key, all: data.datum.all },
-                          false
-                        );
-                        this.props.showTooltip(null);
+                        if (this.props.handleArcOver) {
+                          this.props.handleArcOver(
+                            { key: data.datum.key, all: data.datum.all },
+                            false
+                          );
+                        }
+                        if (this.props.showTooltip) {
+                          this.props.showTooltip(null);
+                        }
                         return [
                           {
                             target: "data",

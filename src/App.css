@@ -776,7 +776,7 @@ circle.flow {
 }
 /* for message flow chord diagram */
 #chordContainer {
-  height: 300px;
+  /* height: 300px; */
   background-color: white;
   padding-top: 1em;
   padding-left: 1em;
@@ -1575,15 +1575,21 @@ a.selected.pf-c-dropdown__menu-item {
 }
 
 /* List page */
-.card-cluster-header span {
-  padding-left: 1em;
-}
-
 .card-cluster-header svg {
   position: relative;
   top: 4px;
 }
 
+.card-cluster-header .iconSeparator {
+  width: 1em;
+  display: inline-block;
+  height: 1px;
+}
+@media (max-width: 768px) {
+  .card-cluster-header .iconSeparator {
+    display: none;
+  }
+}
 .card-health {
   padding-right: 1em;
   padding-left: 0.5em;
@@ -1727,7 +1733,7 @@ path.hittarget {
 }
 
 .splitter-bar {
-  height: 100%;
+  height: 100vh;
   position: absolute;
   left: 0;
   background: #000;
