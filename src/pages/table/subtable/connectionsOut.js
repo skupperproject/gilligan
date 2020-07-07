@@ -72,6 +72,23 @@ class ConnectionsOut extends Component {
     });
   };
 
+  hasRequest = (data) => {
+    let has = false;
+    data.targetServices.forEach((target, i) => {
+      if (target.protocol === "tcp") {
+        target.connections_ingress.forEach((ingress) => {
+          for (let connectionId in ingress.connections) {
+            const connection = ingress.connections[connectionId];
+            if (shortName(connection.client) === shortName(data.address)) {
+              has = true;
+            }
+          }
+        });
+      }
+    });
+    return has;
+  };
+
   client = (connection, name, ikey) => {
     return (
       <ClientConnection
@@ -88,10 +105,12 @@ class ConnectionsOut extends Component {
   render() {
     const { data } = this.props;
     return (
-      <React.Fragment>
-        {this.heading()}
-        {this.requests(data)}
-      </React.Fragment>
+      this.hasRequest(data) && (
+        <React.Fragment>
+          {this.heading()}
+          {this.requests(data)}
+        </React.Fragment>
+      )
     );
   }
 }
