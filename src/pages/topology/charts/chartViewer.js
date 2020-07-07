@@ -39,6 +39,11 @@ class ChartViewer extends Component {
     this.state = { type: this.savedTypes[this.props.view], popupContent: null };
   }
 
+  componentDidMount = () => {
+    if (this.props.handleMounted) {
+      this.props.handleMounted();
+    }
+  };
   doUpdate = () => {
     this.pieRef1.doUpdate();
     this.pieRef2.doUpdate();

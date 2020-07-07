@@ -1732,8 +1732,8 @@ path.hittarget {
   display: none;
 }
 
-.splitter-bar {
-  height: 100vh;
+.sk-splitter-bar {
+  /* height: 100vh; */
   position: absolute;
   left: 0;
   background: #000;
@@ -1752,7 +1752,7 @@ path.hittarget {
   cursor: col-resize;
 }
 
-.splitter-bar:hover {
+.sk-splitter-bar:hover {
   -webkit-transition: all 2s ease;
   transition: all 2s ease;
   border-left: 5px solid rgba(0, 0, 0, 0.5);

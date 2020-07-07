@@ -79,6 +79,7 @@ class Adapter {
             this.addTarget(service.targets, service.address, egress.site_id);
           });
         } else {
+          /*
           // put this tcp service in an "unknown" site
           if (!this.data.sites.some((site) => site.site_name === "unknown")) {
             this.data.sites.push({
@@ -91,6 +92,7 @@ class Adapter {
             });
           }
           this.addTarget(service.targets, service.address, "unknownID");
+          */
         }
       }
       if (service.targets[0]) {

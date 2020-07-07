@@ -746,6 +746,7 @@ class TopologyViewer extends Component {
       ? this.state.options.tcp
       : this.state.options.http;
 */
+
   render() {
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,

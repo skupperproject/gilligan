@@ -18,6 +18,7 @@ under the License.
 */
 
 import React from "react";
+import * as d3 from "d3";
 
 class SplitterBar extends React.Component {
   constructor(props) {
@@ -27,6 +28,13 @@ class SplitterBar extends React.Component {
 
   componentDidMount = () => {
     this.registerHandlers();
+    console.log(`splitterbar`);
+    const rect = this.barRef.offsetParent.getBoundingClientRect();
+    console.log(rect);
+    d3.select(this.barRef).style(
+      "height",
+      `${this.barRef.offsetParent.scrollHeight + rect.width}px`
+    );
   };
 
   componentWillUnmount = () => {
@@ -66,7 +74,13 @@ class SplitterBar extends React.Component {
     }
   };
   render() {
-    return <div className="splitter-bar" onMouseDown={this.mouseDown} />;
+    return (
+      <div
+        className="sk-splitter-bar"
+        ref={(el) => (this.barRef = el)}
+        onMouseDown={this.mouseDown}
+      />
+    );
   }
 }
 
