@@ -481,6 +481,9 @@ export class Service {
     if (expanded === undefined) {
       expanded = n.expanded;
     }
+    if (n["user-hidden"]) {
+      return 4;
+    }
     if (expanded && n.sankeyHeight) {
       return Math.max(n.sankeyHeight, ServiceHeight);
     }
@@ -488,7 +491,11 @@ export class Service {
   };
 
   serviceWidth = (node, expanded) => {
-    return node.contentWidth ? node.contentWidth : ServiceWidth;
+    return node["user-hidden"]
+      ? 4
+      : node.contentWidth
+      ? node.contentWidth
+      : ServiceWidth;
   };
 
   // returns true if any path or service is currently selected.
@@ -877,9 +884,16 @@ export class Service {
       });
   }
 
-  arcOver(arc, over, viewer) {
-    console.log(`arcOver requested for ${arc.key} over ${over}`);
+  setClass(address, cls, viewer) {
+    d3.selectAll("g.service-type").each(function(d) {
+      const match = d.address.includes(address) && address.length > 0;
+      d3.select(this).classed(cls, match);
+      d[cls] = match;
+    });
+    viewer.restart();
+  }
 
+  arcOver(arc, over, viewer) {
     d3.selectAll("rect.service-type").each(function(d) {
       if (arc.key === d.address) {
         if (!over) {

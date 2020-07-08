@@ -628,6 +628,16 @@ export class Deployment extends Service {
       });
   }
 
+  setClass = (address, cls, viewer) => {
+    super.setClass(address, cls, viewer);
+    d3.selectAll("g.cluster-rects").each(function(d) {
+      const match = d.site_name.includes(address) && address.length > 0;
+      d3.select(this).classed(cls, match);
+      d[cls] = match;
+    });
+    viewer.restart();
+  };
+
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
     d3.selectAll("rect.service-type").each(function(d) {

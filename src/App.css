@@ -1795,3 +1795,18 @@ div.skupper-console .pf-c-page__sidebar {
 #page-sidebar li {
   cursor: pointer;
 }
+
+g.service-type.highlighted rect.service-type,
+g.cluster-rects.highlighted circle.network {
+  stroke-width: 4;
+  filter: url("#glow");
+}
+
+g.service-type.user-hidden rect.service-type,
+g.cluster-rects.user-hidden circle.network {
+  stroke-width: 0;
+}
+
+g.service-type.user-hidden text.service-type {
+  opacity: 0;
+}

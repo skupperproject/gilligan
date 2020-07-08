@@ -26,7 +26,7 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import PropTypes from "prop-types";
-import { Split, SplitItem } from "@patternfly/react-core";
+import { Split, SplitItem, TextInput } from "@patternfly/react-core";
 import "./graphToolbar.css";
 
 import MetricsDrowdown from "./metricsDropdown";
@@ -46,7 +46,7 @@ class GraphToolbar extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = { searchValue: "", filterValue: "" };
     this.dropdownItems = [
       {
         key: "requests",
@@ -95,6 +95,18 @@ class GraphToolbar extends Component {
     const { options } = this.props;
     if (this.disableAll() || !options.traffic) return true;
     return false;
+  };
+
+  handleTextInputChange = (value) => {
+    this.setState({ searchValue: value }, () => {
+      this.props.handleHighlightService(value);
+    });
+  };
+
+  handleFilterInputChange = (value) => {
+    this.setState({ filterValue: value }, () => {
+      this.props.handleHideService(value);
+    });
   };
 
   render() {
@@ -185,7 +197,7 @@ class GraphToolbar extends Component {
     );
 
     const sidebarCheck = () => (
-      <ToolbarItem className="toolbar-item last-item">
+      <ToolbarItem className="toolbar-item">
         <Checkbox
           label="Show charts"
           isChecked={!hideChart}
@@ -196,12 +208,53 @@ class GraphToolbar extends Component {
         />
       </ToolbarItem>
     );
+
+    const highlight = () => (
+      <ToolbarItem className="toolbar-item last-item">
+        <Split>
+          <SplitItem>
+            <span>Highlight</span>
+          </SplitItem>
+          <SplitItem className="sk-toolbar-filter">
+            <TextInput
+              value={this.state.searchValue}
+              type="search"
+              onChange={this.handleTextInputChange}
+              aria-label="search text input"
+              placeholder={`Highlight ${this.props.view}s...`}
+            />
+          </SplitItem>
+        </Split>
+      </ToolbarItem>
+    );
+
+    const filter = () => (
+      <ToolbarItem className="toolbar-item last-item">
+        <Split>
+          <SplitItem>
+            <span>Filter</span>
+          </SplitItem>
+          <SplitItem className="sk-toolbar-filter">
+            <TextInput
+              value={this.state.filterValue}
+              type="search"
+              onChange={this.handleFilterInputChange}
+              aria-label="filter text input"
+              placeholder={`Hide ${this.props.view}s...`}
+            />
+          </SplitItem>
+        </Split>
+      </ToolbarItem>
+    );
+
     return (
       <Toolbar className="graph-toolbar">
         <ToolbarGroup>
           {sankeyCheck()}
           {metricCheck()}
           {sidebarCheck()}
+          {highlight()}
+          {false && filter()}
         </ToolbarGroup>
       </Toolbar>
     );

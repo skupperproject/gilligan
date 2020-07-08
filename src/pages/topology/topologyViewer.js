@@ -711,6 +711,13 @@ class TopologyViewer extends Component {
     setSaved(SPLITTER_POSITION, rightWidth);
   };
 
+  handleHighlightService = (highlight) => {
+    this.viewObj.setClass(highlight, "highlighted", this);
+  };
+  handleHideService = (hide) => {
+    this.viewObj.setClass(hide, "user-hidden", this);
+  };
+
   setChordWidth = (rightWidth) => {
     const leftPane = d3.select(SPLITTER_LEFT);
     const rightPane = d3.select(SPLITTER_RIGHT);
@@ -768,9 +775,12 @@ class TopologyViewer extends Component {
             handleChangeWidth={this.handleChangeWidth}
             handleChangeColor={this.handleChangeColor}
             handleChangeMetric={this.handleChangeMetric}
+            handleHighlightService={this.handleHighlightService}
+            handleHideService={this.handleHideService}
             statProtocol={this.statProtocol()} // http || tcp || both
             stat={this.statForProtocol()} // requests || bytes_out etc.
             options={this.state.options}
+            view={this.props.view}
           />
         }
         controlBar={<TopologyControlBar controlButtons={controlButtons} />}

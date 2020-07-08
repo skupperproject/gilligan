@@ -27,7 +27,9 @@ class SkupperLegend extends Component {
     this.state = {};
   }
 
-  handleHoverRouter = () => {};
+  handleHoverLegend = (legend, over) => {
+    this.props.handleArcOver({ key: legend, all: true, legend: true }, over);
+  };
 
   render() {
     const getArcColors = () => {
@@ -50,7 +52,7 @@ class SkupperLegend extends Component {
       <div className="sk-chart-legend-container">
         <RoutersComponent
           arcColors={getArcColors()}
-          handleHoverRouter={this.handleHoverRouter}
+          handleHoverRouter={this.handleHoverLegend}
         ></RoutersComponent>
       </div>
     );

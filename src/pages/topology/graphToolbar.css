@@ -27,6 +27,12 @@
   margin-right: 1.5em;
 }
 
+.graph-toolbar .sk-toolbar-filter {
+  padding-left: 0.5em;
+  position: relative;
+  top: -0.5em;
+  padding-right: 1em;
+}
 /*
 .graph-toolbar div.color-gradient svg {
   padding-top: 0.5em;

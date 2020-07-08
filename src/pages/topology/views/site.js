@@ -1149,11 +1149,21 @@ export class Site {
     });
   }
 
+  setClass(site, cls, viewer) {
+    d3.selectAll("g.cluster-rects").each(function(d) {
+      const match = d.site_name.includes(site) && site.length > 0;
+      d3.select(this).classed(cls, match);
+      d[cls] = match;
+    });
+
+    viewer.restart();
+  }
+
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
-    console.log(`arcOver requested for ${arc.key} over ${over}`);
     d3.selectAll("g.cluster").each(function(d) {
-      if (arc.key === `${d.site_id}`) {
+      const match = arc.legend ? d.site_name : d.site_id;
+      if (arc.key === match) {
         d.selected = over;
         viewer.blurAll(over, d);
         viewer.restart();

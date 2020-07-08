@@ -160,6 +160,7 @@ export function addDefs(svg) {
         : "M 10 -5 L 0 0 L 10 5 z";
     });
 
+  addGlowFilter(svg);
   addMarkers(svg);
   addStyles(
     sten,
@@ -171,6 +172,93 @@ export function addDefs(svg) {
     radii
   );
 }
+
+const addGlowFilter = (svg) => {
+  const filter = svg
+    .append("svg:defs")
+    .append("svg:filter")
+    .attr("id", "glow")
+    .attr("filterUnits", "userSpaceOnUse")
+    .attr("x", "-50%")
+    .attr("y", "-50%")
+    .attr("width", "200%")
+    .attr("height", "200%");
+
+  filter
+    .append("feGaussianBlur")
+    .attr("in", "SourceGraphic")
+    .attr("stdDeviation", "5")
+    .attr("result", "blur5");
+  filter
+    .append("feGaussianBlur")
+    .attr("in", "SourceGraphic")
+    .attr("stdDeviation", "10")
+    .attr("result", "blur10");
+  filter
+    .append("feGaussianBlur")
+    .attr("in", "SourceGraphic")
+    .attr("stdDeviation", "20")
+    .attr("result", "blur20");
+  filter
+    .append("feGaussianBlur")
+    .attr("in", "SourceGraphic")
+    .attr("stdDeviation", "30")
+    .attr("result", "blur30");
+  filter
+    .append("feGaussianBlur")
+    .attr("in", "SourceGraphic")
+    .attr("stdDeviation", "50")
+    .attr("result", "blur50");
+
+  const merge = filter.append("feMerge").attr("result", "blur-merged");
+  merge.append("feMergeNode").attr("in", "blur10");
+  merge.append("feMergeNode").attr("in", "blur20");
+  merge.append("feMergeNode").attr("in", "blur30");
+  merge.append("feMergeNode").attr("in", "blur50");
+
+  filter
+    .append("feColorMatrix")
+    .attr("result", "green-blur")
+    .attr("in", "blur-merged")
+    .attr("type", "matrix")
+    .attr(
+      "value",
+      `${"1 0 0 0 0"} ${"0 0.06 0 0 0"} ${"0 0 0.44 0 0"} ${"0 0 0 1 0"}`
+    );
+  const feMerge = filter.append("feMerge");
+  feMerge.append("feMergeNode").attr("in", "green-blur");
+  feMerge.append("feMergeNode").attr("in", "blur5");
+  feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+  /*
+  <filter id="red-glow" filterUnits="userSpaceOnUse"
+  x="-50%" y="-50%" width="200%" height="200%">
+<!-- blur the text at different levels-->
+<feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur5"/>
+<feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur10"/>
+<feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur20"/>
+<feGaussianBlur in="SourceGraphic" stdDeviation="30" result="blur30"/>
+<feGaussianBlur in="SourceGraphic" stdDeviation="50" result="blur50"/>
+<!-- merge all the blurs except for the first one -->
+<feMerge result="blur-merged">
+<feMergeNode in="blur10"/>
+<feMergeNode in="blur20"/>
+<feMergeNode in="blur30"/>
+<feMergeNode in="blur50"/>
+</feMerge>
+<!-- recolour the merged blurs red-->
+<feColorMatrix result="red-blur" in="blur-merged" type="matrix"
+           values="1 0 0 0 0
+                   0 0.06 0 0 0
+                   0 0 0.44 0 0
+                   0 0 0 1 0" />
+<feMerge>
+<feMergeNode in="red-blur"/>       <!-- largest blurs coloured red -->
+<feMergeNode in="blur5"/>          <!-- smallest blur left white -->
+<feMergeNode in="SourceGraphic"/>  <!-- original white text -->
+</feMerge>
+</filter>
+*/
+};
 
 export const addMarkers = (svg) => {
   svg
