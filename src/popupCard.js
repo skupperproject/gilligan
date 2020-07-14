@@ -77,7 +77,7 @@ class PopupCard extends React.Component {
 
   cardIcon = (card) => {
     if (typeof card.icon === "string") {
-      return <i className={`pf-icon pficon-${card.icon}`}></i>;
+      return <i className={`pf-icon pf-icon-${card.icon}`}></i>;
     }
     if (typeof card.icon === "object") {
       return card.icon;
