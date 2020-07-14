@@ -26,7 +26,7 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import ClientConnection from "./clientConnection";
-import { shortName } from "../../../utilities";
+import { utils } from "../../../utilities";
 class ConnectionsOut extends Component {
   constructor(props) {
     super(props);
@@ -60,7 +60,10 @@ class ConnectionsOut extends Component {
         target.connections_ingress.forEach((ingress) => {
           for (let connectionId in ingress.connections) {
             const connection = ingress.connections[connectionId];
-            if (shortName(connection.client) === shortName(data.address)) {
+            if (
+              utils.shortName(connection.client) ===
+              utils.shortName(data.address)
+            ) {
               ingresses.push(connection);
             }
           }
@@ -68,7 +71,7 @@ class ConnectionsOut extends Component {
       }
     });
     return ingresses.map((ingress, i) => {
-      return this.client(ingress, shortName(data.address), i);
+      return this.client(ingress, utils.shortName(data.address), i);
     });
   };
 
@@ -79,7 +82,10 @@ class ConnectionsOut extends Component {
         target.connections_ingress.forEach((ingress) => {
           for (let connectionId in ingress.connections) {
             const connection = ingress.connections[connectionId];
-            if (shortName(connection.client) === shortName(data.address)) {
+            if (
+              utils.shortName(connection.client) ===
+              utils.shortName(data.address)
+            ) {
               has = true;
             }
           }

@@ -19,7 +19,7 @@ under the License.
 
 import React, { Component } from "react";
 import { Nav, NavItem, NavList } from "@patternfly/react-core";
-import { Icap } from "../../../utilities";
+import { utils } from "../../../utilities";
 
 class SubNav extends Component {
   constructor(props) {
@@ -48,7 +48,7 @@ class SubNav extends Component {
           {this.navItems[this.props.view].map(function(item) {
             return (
               <NavItem key={item} itemId={item} isActive={activeItem === item}>
-                {Icap(item)}
+                {utils.Icap(item)}
               </NavItem>
             );
           })}

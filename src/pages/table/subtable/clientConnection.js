@@ -25,7 +25,7 @@ import {
   DataListContent,
   DataListItemCells,
 } from "@patternfly/react-core";
-import { humanize, formatStat } from "../../../utilities";
+import { utils } from "../../../utilities";
 class ClientConnection extends Component {
   constructor(props) {
     super(props);
@@ -57,9 +57,9 @@ class ClientConnection extends Component {
     return details
       .filter((det) => connection[det])
       .map((det, i) => (
-        <div key={`detail-${ikey}-${i}`}>{`${humanize(det)} ${this.getTime(
-          connection[det]
-        )}`}</div>
+        <div key={`detail-${ikey}-${i}`}>{`${utils.humanize(
+          det
+        )} ${this.getTime(connection[det])}`}</div>
       ));
   };
 
@@ -94,12 +94,12 @@ class ClientConnection extends Component {
               </DataListCell>,
               <DataListCell key="bytes_in">
                 <span className="detail-value">
-                  {formatStat("bytes_in", connection.bytes_in)}
+                  {utils.formatStat("bytes_in", connection.bytes_in)}
                 </span>
               </DataListCell>,
               <DataListCell key="bytes_out">
                 <span className="detail-value">
-                  {formatStat("bytes_out", connection.bytes_out)}
+                  {utils.formatStat("bytes_out", connection.bytes_out)}
                 </span>
               </DataListCell>,
             ]}

@@ -18,7 +18,7 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { shortName, rgbToHex } from "../../../utilities";
+import { utils } from "../../../utilities";
 import * as d3 from "d3";
 
 class RoutersComponent extends Component {
@@ -27,7 +27,7 @@ class RoutersComponent extends Component {
     this.state = {};
   }
 
-  color = (c) => rgbToHex(d3.rgb(c).brighter(0.6));
+  color = (c) => utils.rgbToHex(d3.rgb(c).brighter(0.6));
 
   render() {
     return (
@@ -48,7 +48,7 @@ class RoutersComponent extends Component {
                   }}
                 ></span>
                 <span className="legend-router legend-text" title={router}>
-                  {shortName(router)}
+                  {utils.shortName(router)}
                 </span>
               </li>
             );

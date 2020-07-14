@@ -29,7 +29,7 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import NavDropdown from "../../navDropdown";
-import { Icap } from "../../utilities";
+import { utils } from "../../utilities";
 import LastUpdated from "../../lastUpdated";
 import TableViewer from "./tableViewer";
 import SubTable from "./subtable/subTable";
@@ -76,7 +76,7 @@ class TablePage extends Component {
                 <SplitItem>
                   <TextContent>
                     <Text className="overview-title" component={TextVariants.p}>
-                      {Icap(this.props.view)}s
+                      {utils.Icap(this.props.view)}s
                     </Text>
                   </TextContent>
                 </SplitItem>

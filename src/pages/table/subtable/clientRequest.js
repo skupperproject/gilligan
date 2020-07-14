@@ -25,7 +25,7 @@ import {
   DataListContent,
   DataListItemCells,
 } from "@patternfly/react-core";
-import { shortName, formatStat } from "../../../utilities";
+import { utils } from "../../../utilities";
 class ClientRequest extends Component {
   constructor(props) {
     super(props);
@@ -43,7 +43,7 @@ class ClientRequest extends Component {
 
   render() {
     const { clientRequest, name, ikey, expanded, toggle } = this.props;
-    const short = shortName(name);
+    const short = utils.shortName(name);
     const rkey = `request-${ikey}`;
     return (
       <div>
@@ -65,18 +65,18 @@ class ClientRequest extends Component {
               </DataListCell>,
               <DataListCell key="latency">
                 <span>
-                  {formatStat("latency_max", clientRequest.latency_max)}
+                  {utils.formatStat("latency_max", clientRequest.latency_max)}
                 </span>
                 <span className="detail-value">latency (max)</span>
               </DataListCell>,
               <DataListCell key="bytes_in">
                 <span className="detail-value">
-                  {formatStat("bytes_in", clientRequest.bytes_in)}
+                  {utils.formatStat("bytes_in", clientRequest.bytes_in)}
                 </span>
               </DataListCell>,
               <DataListCell key="bytes_out">
                 <span className="detail-value">
-                  {formatStat("bytes_out", clientRequest.bytes_out)}
+                  {utils.formatStat("bytes_out", clientRequest.bytes_out)}
                 </span>
               </DataListCell>,
             ]}

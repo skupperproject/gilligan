@@ -18,22 +18,7 @@ under the License.
 */
 
 import * as d3 from "d3";
-import {
-  adjustPositions,
-  linkColor,
-  getSaved,
-  setSaved,
-  initSankey,
-  updateSankey,
-  VIEW_DURATION,
-  ServiceWidth,
-  ServiceGap,
-  ServiceHeight,
-  reconcileArrays,
-  reconcileLinks,
-  getOptions,
-  setOptions,
-} from "../../../utilities";
+import { utils } from "../../../utilities";
 import { genPath } from "../../../paths";
 
 import { Site } from "./site";
@@ -104,9 +89,9 @@ export class Deployment extends Service {
       vsize,
       viewer
     );
-    reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
-    reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
-    reconcileLinks(this.serviceLinks.links, newServiceLinks.links);
+    utils.reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
+    utils.reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
+    utils.reconcileLinks(this.serviceLinks.links, newServiceLinks.links);
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
     viewer.restart();
@@ -196,7 +181,7 @@ export class Deployment extends Service {
         });
       });
       // set the site radius to hold all the site's services (non-expanded)
-      const siteSize = adjustPositions({
+      const siteSize = utils.adjustPositions({
         nodes: subServices,
         links,
         width: site.r * 2,
@@ -210,7 +195,7 @@ export class Deployment extends Service {
 
     const interSiteLinks = this.Site.interSiteLinks(siteNodes);
     // set the site x,y
-    adjustPositions({
+    utils.adjustPositions({
       nodes: siteNodes.nodes,
       links: interSiteLinks.links,
       width: viewer.width,
@@ -224,7 +209,7 @@ export class Deployment extends Service {
       );
       // position subServices in sites
       // using the site size as the width and height
-      adjustPositions({
+      utils.adjustPositions({
         nodes: subServices,
         links: cluster.subServiceLinks,
         width: cluster.r * 2,
@@ -234,11 +219,11 @@ export class Deployment extends Service {
       });
     });
     const orphans = serviceNodes.nodes.filter((n) => !n.siteOffset);
-    adjustPositions({
+    utils.adjustPositions({
       nodes: orphans,
       links: [],
-      width: ServiceWidth,
-      height: ServiceHeight,
+      width: utils.ServiceWidth,
+      height: utils.ServiceHeight,
       xyKey: "siteOffset",
     });
   };
@@ -269,16 +254,16 @@ export class Deployment extends Service {
       const link = links.links[linkIndex];
       link.request = deploymentLink.request;
       link.value = link.request[stat] || 0;
-      link.getColor = () => linkColor(link, links.links);
+      link.getColor = () => utils.linkColor(link, links.links);
     });
     // get the sankey height of each node based on link.value
-    initSankey({
+    utils.initSankey({
       nodes: subNodes,
       links: links.links,
       width: vsize.width,
       height: vsize.height - 50,
-      nodeWidth: ServiceWidth,
-      nodePadding: ServiceGap,
+      nodeWidth: utils.ServiceWidth,
+      nodePadding: utils.ServiceGap,
       top: 10,
       left: 20,
       bottom: 40,
@@ -287,7 +272,7 @@ export class Deployment extends Service {
     subNodes.forEach((n) => {
       if (n.y0 === undefined) {
         n.y0 = n.y;
-        n.y1 = n.y + ServiceHeight;
+        n.y1 = n.y + utils.ServiceHeight;
       }
       n.sankeyHeight = n.y1 - n.y0;
       n.expanded = true;
@@ -300,7 +285,7 @@ export class Deployment extends Service {
       const subServices = subNodes.filter(
         (n) => n.parentNode.site_id === site.site_id
       );
-      const siteSize = adjustPositions({
+      const siteSize = utils.adjustPositions({
         nodes: subServices,
         links: site.subServiceLinks,
         width: site.r * 2,
@@ -318,7 +303,7 @@ export class Deployment extends Service {
     // adjust the positions of the sites using the new site.sankey.r
     const interSiteLinks = this.Site.interSiteLinks(siteNodes);
     // sites and services are currently .expanded = true
-    const expandedSize = adjustPositions({
+    const expandedSize = utils.adjustPositions({
       nodes: sites.nodes,
       links: interSiteLinks.links,
       width: vsize.width,
@@ -331,16 +316,16 @@ export class Deployment extends Service {
     });
 
     const orphans = subNodes.filter((n) => !n.sankeySiteOffset);
-    adjustPositions({
+    utils.adjustPositions({
       nodes: orphans,
       links: [],
-      width: ServiceWidth,
-      height: ServiceHeight, //viewer.height,
+      width: utils.ServiceWidth,
+      height: utils.ServiceHeight, //viewer.height,
       xyKey: "sankeySiteOffset",
     });
     // restore the saved positions
     subNodes.forEach((n) => {
-      const pos = getSaved(
+      const pos = utils.getSaved(
         `${DEPLOYMENT_POSITION}-${n.cluster.site_id}-${n.name}`
       );
       if (pos) {
@@ -355,7 +340,7 @@ export class Deployment extends Service {
       }
     });
     sites.nodes.forEach((s) => {
-      const pos = getSaved(`${DEPLOYMENT_POSITION}-${s.site_id}`);
+      const pos = utils.getSaved(`${DEPLOYMENT_POSITION}-${s.site_id}`);
       if (pos && pos.cx) {
         s.cx = pos.cx;
         s.cy = pos.cy;
@@ -421,7 +406,7 @@ export class Deployment extends Service {
       save = { cx: d.x + d.r, cy: d.y + d.r };
       key = `${DEPLOYMENT_POSITION}-${d.site_id}`;
     }
-    setSaved(key, save);
+    utils.setSaved(key, save);
   };
 
   setupDrag(drag) {
@@ -478,7 +463,7 @@ export class Deployment extends Service {
 
   // draw all the paths between nodes
   drawViewPaths = (sankey) => {
-    updateSankey({
+    utils.updateSankey({
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
@@ -522,12 +507,12 @@ export class Deployment extends Service {
     this.setServicePositions(sankey);
     viewer.setLinkStat();
 
-    updateSankey({
+    utils.updateSankey({
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
 
-    const duration = initial ? 0 : VIEW_DURATION;
+    const duration = initial ? 0 : utils.VIEW_DURATION;
     if (sankey) {
       this.toSankey(duration);
       return this.toServiceSankey(duration);
@@ -654,19 +639,23 @@ export class Deployment extends Service {
     });
   }
   getSavedZoom = (defaultScale) => {
-    const savedScale = getSaved(ZOOM_SCALE, defaultScale);
-    const savedTranslate = getSaved(ZOOM_TRANSLATE, [0, 0]);
+    const savedScale = utils.getSaved(ZOOM_SCALE, defaultScale);
+    const savedTranslate = utils.getSaved(ZOOM_TRANSLATE, [0, 0]);
     return { savedScale, savedTranslate };
   };
   saveZoom = (zoom) => {
-    setSaved(ZOOM_SCALE, zoom.scale());
-    setSaved(ZOOM_TRANSLATE, zoom.translate());
+    utils.setSaved(ZOOM_SCALE, zoom.scale());
+    utils.setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
   static saveOverrideOptions = (options) =>
     options.mode === "graph"
-      ? setOptions(DEPLOYMENT_OPTIONS, options, DEFAULT_OPTIONS)
-      : setOptions(DEPLOYMENT_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
-  getGraphOptions = () => getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS);
-  saveGraphOptions = (options) => setOptions(DEPLOYMENT_OPTIONS, options);
+      ? utils.setOptions(DEPLOYMENT_OPTIONS, options, DEFAULT_OPTIONS)
+      : utils.setOptions(
+          DEPLOYMENT_TABLE_OPTIONS,
+          options,
+          DEFAULT_TABLE_OPTIONS
+        );
+  getGraphOptions = () => utils.getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS);
+  saveGraphOptions = (options) => utils.setOptions(DEPLOYMENT_OPTIONS, options);
 }

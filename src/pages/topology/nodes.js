@@ -19,7 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import TooltipTable from "./tooltipTable";
-import { ServiceGap } from "../../utilities";
+import { utils } from "../../utilities";
 
 var React = require("react");
 
@@ -126,7 +126,7 @@ export class Node {
       this.subNodes.forEach((n) => {
         n[key].y1 = n.y1 = curY + (n.y1 - n.y0);
         n[key].y0 = n.y0 = curY;
-        curY += n.getHeight() + ServiceGap;
+        curY += n.getHeight() + utils.ServiceGap;
       });
     }
   };

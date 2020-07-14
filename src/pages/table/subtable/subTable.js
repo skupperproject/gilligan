@@ -33,7 +33,7 @@ import SubDetails from "./subDetails";
 import PopupCard from "../../../popupCard";
 import PieBar from "../../topology/charts/pieBar";
 import { viewsMap as VIEWS } from "../../topology/views/views";
-import { Icap, viewFromHash } from "../../../utilities";
+import { utils } from "../../../utilities";
 
 class SubTable extends Component {
   constructor(props) {
@@ -67,7 +67,7 @@ class SubTable extends Component {
   data = () => this.props.info.extraInfo.rowData.data.cardData;
 
   render() {
-    const { options } = viewFromHash();
+    const { options } = utils.viewFromHash();
     console.log(`subTable props`);
     console.log(this.props);
     return (
@@ -77,7 +77,7 @@ class SubTable extends Component {
             <SplitItem>
               <Breadcrumb className="sk-breadcrumbList">
                 <BreadcrumbItem onClick={this.returnToTable}>
-                  {Icap(this.props.view)}s
+                  {utils.Icap(this.props.view)}s
                 </BreadcrumbItem>
                 <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
               </Breadcrumb>

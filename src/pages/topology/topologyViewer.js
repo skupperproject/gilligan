@@ -27,7 +27,7 @@ import {
 import * as d3 from "d3";
 
 import { addDefs } from "./svgUtils.js";
-import { getSizes, positionPopup, getSaved, setSaved } from "../../utilities";
+import { utils } from "../../utilities";
 import GraphToolbar from "./graphToolbar";
 import LegendComponent from "./legendComponent";
 import ChartViewer from "./charts/chartViewer";
@@ -67,7 +67,7 @@ class TopologyViewer extends Component {
     //debugger;
     window.addEventListener("resize", this.resize);
     this.setChordWidth(
-      this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
+      this.state.options.hideChart ? 0 : utils.getSaved(SPLITTER_POSITION, 360)
     );
     if (!this.state.options.hideChart) {
       this.chordRef.init();
@@ -110,7 +110,7 @@ class TopologyViewer extends Component {
     this.init();
     this.callTransitions(true);
     this.setChordWidth(
-      this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360)
+      this.state.options.hideChart ? 0 : utils.getSaved(SPLITTER_POSITION, 360)
     );
     if (!this.state.options.hideChart) {
       this.chordRef.init();
@@ -164,7 +164,7 @@ class TopologyViewer extends Component {
 
   resize = () => {
     if (!this.svg) return;
-    let sizes = getSizes(this.topologyRef);
+    let sizes = utils.getSizes(this.topologyRef);
     //console.log(`resize got sizes at ${sizes[0]}, ${sizes[1]}`);
     this.width = sizes[0];
     this.height = sizes[1];
@@ -211,10 +211,12 @@ class TopologyViewer extends Component {
 
   // initialize the nodes and links array
   init = () => {
-    let sizes = getSizes(this.topologyRef);
+    let sizes = utils.getSizes(this.topologyRef);
     this.width =
       sizes[0] -
-      (this.state.options.hideChart ? 0 : getSaved(SPLITTER_POSITION, 360));
+      (this.state.options.hideChart
+        ? 0
+        : utils.getSaved(SPLITTER_POSITION, 360));
     this.height = sizes[1];
 
     this.mouseover_node = null;
@@ -414,7 +416,7 @@ class TopologyViewer extends Component {
   };
 
   positionPopupContent = () => {
-    positionPopup({
+    utils.positionPopup({
       containerSelector: ".diagram",
       popupSelector: "#topo_popover-div",
     });
@@ -585,7 +587,7 @@ class TopologyViewer extends Component {
       const { options } = this.state;
       options.hideChart = checked;
       if (!checked) {
-        this.setChordWidth(getSaved(SPLITTER_POSITION, 360));
+        this.setChordWidth(utils.getSaved(SPLITTER_POSITION, 360));
       } else {
         this.setChordWidth(0);
       }
@@ -708,7 +710,7 @@ class TopologyViewer extends Component {
       maxRight
     );
     this.setChordWidth(rightWidth);
-    setSaved(SPLITTER_POSITION, rightWidth);
+    utils.setSaved(SPLITTER_POSITION, rightWidth);
   };
 
   handleHighlightService = (highlight) => {

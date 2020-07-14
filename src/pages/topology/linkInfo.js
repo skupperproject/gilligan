@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import { humanize, pretty } from "../../utilities";
+import { utils } from "../../utilities";
 
 class LinkInfo extends React.Component {
   constructor(props) {
@@ -50,7 +50,7 @@ class LinkInfo extends React.Component {
       } else if (typeof value === "object") {
         val = JSON.stringify(value, null, 2);
       } else {
-        val = pretty(this.props.linkInfo.request[k]);
+        val = utils.pretty(this.props.linkInfo.request[k]);
       }
       return val;
     };
@@ -87,7 +87,7 @@ class LinkInfo extends React.Component {
                 let val = obj2Str(k, this.props.linkInfo.request[k]);
                 return (
                   <tr key={k}>
-                    <td>{humanize(k)}</td>
+                    <td>{utils.humanize(k)}</td>
                     <td>{val}</td>
                   </tr>
                 );

@@ -1,4 +1,4 @@
-import { shortName, aggregateAttributes } from "./utilities";
+import { utils } from "./utilities";
 var INSTANCE = 0;
 class Adapter {
   constructor(data) {
@@ -180,13 +180,13 @@ class Adapter {
               this.data.services.unshift(newService);
               this.addTargetToService(
                 newService,
-                shortName(clientName),
+                utils.shortName(clientName),
                 request.site_id
               );
             } else if (found.derived) {
               this.addTargetToService(
                 found,
-                shortName(clientKey),
+                utils.shortName(clientKey),
                 request.site_id
               );
             }
@@ -282,7 +282,7 @@ class Adapter {
                 )
               );
               if (from === clientService) {
-                aggregateAttributes(
+                utils.aggregateAttributes(
                   request.by_client[client].by_handling_site[toSite],
                   req
                 );
@@ -307,7 +307,7 @@ class Adapter {
                       )
                     );
                     if (from === clientService) {
-                      aggregateAttributes(connection, req);
+                      utils.aggregateAttributes(connection, req);
                     }
                   }
                 }
@@ -390,7 +390,7 @@ class Adapter {
       target.requests_received.forEach((request) => {
         for (const client_id in request.by_client) {
           if (this.serviceNameFromClientId(client_id) === sourceAddress) {
-            aggregateAttributes(request.by_client[client_id], req);
+            utils.aggregateAttributes(request.by_client[client_id], req);
           }
         }
       });
@@ -543,7 +543,7 @@ class Adapter {
             r.egress === link.target.service.address
         );
         if (found) {
-          aggregateAttributes(row, found);
+          utils.aggregateAttributes(row, found);
         } else {
           matrix.push(row);
         }

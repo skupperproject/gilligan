@@ -15,7 +15,7 @@
  */
 import React from "react";
 import { Text } from "@patternfly/react-core";
-import { getDuration, timeAgo } from "./utilities";
+import { utils } from "./utilities";
 
 class LastUpdated extends React.Component {
   constructor(props) {
@@ -41,10 +41,10 @@ class LastUpdated extends React.Component {
   // called internally every second
   showElapsed = () => {
     const secondsAgo = Math.floor((new Date() - this.lastUpdated) / 1000);
-    const { epoch } = getDuration(secondsAgo);
+    const { epoch } = utils.getDuration(secondsAgo);
     // don't show anything if updated within the last minute
     const elapsed =
-      epoch === "second" ? "" : `Updated ${timeAgo(this.lastUpdated)}`;
+      epoch === "second" ? "" : `Updated ${utils.timeAgo(this.lastUpdated)}`;
     this.setState({ elapsed });
   };
 

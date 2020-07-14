@@ -21,7 +21,7 @@ import React from "react";
 
 import { Card, CardBody, CardHeader } from "@patternfly/react-core";
 import CardHealth from "./cardHealth";
-import { Icap, shortName } from "./utilities";
+import { utils } from "./utilities";
 
 class PopupCard extends React.Component {
   constructor(props) {
@@ -36,7 +36,7 @@ class PopupCard extends React.Component {
     const title = this.cardTitle(obj, prop);
     return (
       <div className="body-line">
-        <span className="body-line-prompt">{Icap(title)}</span>
+        <span className="body-line-prompt">{utils.Icap(title)}</span>
         <span className="body-line-value">{property}</span>
       </div>
     );
@@ -85,7 +85,7 @@ class PopupCard extends React.Component {
   };
   cardName = (data, card) => {
     if (data.address) {
-      return shortName(data.address);
+      return utils.shortName(data.address);
     } else if (data.site_name) {
       return data.site_name;
     }

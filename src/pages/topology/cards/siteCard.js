@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import { safePlural } from "../../../utilities";
+import { utils } from "../../../utilities";
 
 export class SiteCard {
   constructor() {
@@ -34,7 +34,7 @@ export class SiteCard {
   }
   subNodes = (cluster) => cluster.services.length;
   getDeploymentTitle = (site) => {
-    return `Deployed ${safePlural(this.subNodes(site), "service")}`;
+    return `Deployed ${utils.safePlural(this.subNodes(site), "service")}`;
   };
   getDeployments = (site) => {
     const deployed = [];

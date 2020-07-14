@@ -20,7 +20,7 @@ under the License.
 import React, { Component } from "react";
 import Draggable from "react-draggable";
 import * as d3 from "d3";
-import { getSaved, setSaved } from "../../utilities";
+import { utils } from "../../utilities";
 import { addMarkers } from "../topology/svgUtils";
 import "./legend.css";
 
@@ -41,7 +41,7 @@ class LegendComponent extends Component {
       .select("#topology")
       .node()
       .getBoundingClientRect();
-    let initialOffset = getSaved(LEGEND_POSITION, { x: 0, y: 0 });
+    let initialOffset = utils.getSaved(LEGEND_POSITION, { x: 0, y: 0 });
     const legendPosition = {
       x: containerRect.width - legendRect.width - 10 + initialOffset.x,
       y: containerRect.height - legendRect.height - 10 + initialOffset.y,
@@ -189,7 +189,7 @@ class LegendComponent extends Component {
       x: legendRect.left - lowerRight.x - containerRect.x,
       y: legendRect.top - lowerRight.y - containerRect.y,
     };
-    setSaved(LEGEND_POSITION, offset);
+    utils.setSaved(LEGEND_POSITION, offset);
   };
 
   render() {

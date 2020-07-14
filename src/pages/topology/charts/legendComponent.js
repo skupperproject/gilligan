@@ -19,7 +19,7 @@ under the License.
 
 import React, { Component } from "react";
 import RoutersComponent from "../chord/routersComponent";
-import { serviceColors, siteColors } from "../../../utilities";
+import { utils } from "../../../utilities";
 
 class SkupperLegend extends Component {
   constructor(props) {
@@ -38,14 +38,14 @@ class SkupperLegend extends Component {
         (!this.props.deployment || this.props.data !== null)
       ) {
         const colors = {};
-        for (let site_id in siteColors) {
-          let name = siteColors[site_id].name;
-          const color = siteColors[site_id].color;
+        for (let site_id in utils.siteColors) {
+          let name = utils.siteColors[site_id].name;
+          const color = utils.siteColors[site_id].color;
           colors[name] = color;
         }
         return colors;
       }
-      return serviceColors;
+      return utils.serviceColors;
     };
 
     return (

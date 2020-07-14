@@ -19,16 +19,7 @@ under the License.
 
 import React, { Component } from "react";
 //import { Tabs, Tab } from "@patternfly/react-core";
-import {
-  getSizes,
-  //pretty,
-  formatBytes,
-  siteColors,
-  serviceColors,
-  shortName,
-  Icap,
-  statName,
-} from "../../../utilities";
+import { utils } from "../../../utilities";
 import { aggregateAddresses, separateAddresses } from "./filters.js";
 import { ChordData } from "./data.js";
 import { qdrRibbon } from "./ribbon/ribbon.js";
@@ -76,7 +67,7 @@ class ChordViewer extends Component {
     this.textRadius = null;
 
     // format with commas
-    this.formatNumber = formatBytes;
+    this.formatNumber = utils.formatBytes;
 
     // keep track of previous chords so we can animate to the new values
     this.last_chord = null;
@@ -232,7 +223,7 @@ class ChordViewer extends Component {
   };
   // size the diagram based on the browser window size
   getRadius = () => {
-    const sizes = getSizes(d3.select("#sk-sidebar").node());
+    const sizes = utils.getSizes(d3.select("#sk-sidebar").node());
     const width = sizes[0];
     /*
     const height = sizes[1];
@@ -256,14 +247,14 @@ class ChordViewer extends Component {
   };
 
   // get the color associated with a site_id
-  getArcColor = (info) => siteColors[info.target.site_id].color;
+  getArcColor = (info) => utils.siteColors[info.target.site_id].color;
   // get the color associated with a chord (link between services)
-  getChordColor = (n) => serviceColors[n];
+  getChordColor = (n) => utils.serviceColors[n];
   // get the site color when we have the site_name instead of site_id
   arcColorFromName = (site_name) => {
-    for (let id in siteColors) {
-      if (siteColors[id].name === site_name) {
-        return siteColors[id].color;
+    for (let id in utils.siteColors) {
+      if (utils.siteColors[id].name === site_name) {
+        return utils.siteColors[id].color;
       }
     }
     // returns undefined and the color will be black
@@ -388,9 +379,9 @@ class ChordViewer extends Component {
       address = "";
       //address += "<br/>";
     }
-    address = shortName(address);
-    to = shortName(to);
-    from = shortName(from);
+    address = utils.shortName(address);
+    to = utils.shortName(to);
+    from = utils.shortName(from);
     let title =
       address + from + " → " + to + ": " + this.formatNumber(d.source.value);
     if (d.target.value > 0 && to !== from) {
@@ -403,7 +394,7 @@ class ChordViewer extends Component {
     let egress,
       value = 0;
     if (matrix.aggregate) {
-      egress = shortName(matrix.rows[d.index].chordName);
+      egress = utils.shortName(matrix.rows[d.index].chordName);
       value = d.value;
     } else {
       egress = matrix.routerName(d.index);
@@ -949,14 +940,14 @@ class ChordViewer extends Component {
     const getArcColors = () => {
       if (this.props.site) {
         const colors = {};
-        for (let site_id in siteColors) {
-          let name = siteColors[site_id].name;
-          const color = siteColors[site_id].color;
+        for (let site_id in utils.siteColors) {
+          let name = utils.siteColors[site_id].name;
+          const color = utils.siteColors[site_id].color;
           colors[name] = color;
         }
         return colors;
       }
-      return serviceColors;
+      return utils.serviceColors;
     };
 
     const getTitle = () => {
@@ -964,14 +955,14 @@ class ChordViewer extends Component {
         if (this.props.data === null) {
           if (this.props.deployment) {
             return (
-              <div className="chord-title">{`Traffic in ${Icap(
-                statName(this.props.stat)
+              <div className="chord-title">{`Traffic in ${utils.Icap(
+                utils.statName(this.props.stat)
               )} between deployments`}</div>
             );
           } else {
             return (
-              <div className="chord-title">{`${Icap(
-                statName(this.props.stat)
+              <div className="chord-title">{`${utils.Icap(
+                utils.statName(this.props.stat)
               )} by site`}</div>
             );
           }
@@ -983,7 +974,7 @@ class ChordViewer extends Component {
               <div className="chord-title">
                 {
                   <span>
-                    {`${Icap(statName(this.props.stat))} involving 
+                    {`${utils.Icap(utils.statName(this.props.stat))} involving 
                       ${this.props.data.shortName} (${
                       this.props.data.parentNode.site_name
                     })`}
@@ -995,21 +986,21 @@ class ChordViewer extends Component {
         }
         return (
           <div className="chord-title">
-            {`${Icap(statName(this.props.stat))} involving site ${
+            {`${utils.Icap(utils.statName(this.props.stat))} involving site ${
               this.props.data.name
             }`}
           </div>
         );
       } else if (this.props.data === null) {
         return (
-          <div className="chord-title">{`${Icap(
-            statName(this.props.stat)
+          <div className="chord-title">{`${utils.Icap(
+            utils.statName(this.props.stat)
           )} between services`}</div>
         );
       }
       return (
         <div className="chord-title">
-          {`${Icap(statName(this.props.stat))} involving ${
+          {`${utils.Icap(utils.statName(this.props.stat))} involving ${
             this.props.data.shortName
           }`}
         </div>

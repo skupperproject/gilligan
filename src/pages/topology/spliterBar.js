@@ -28,9 +28,7 @@ class SplitterBar extends React.Component {
 
   componentDidMount = () => {
     this.registerHandlers();
-    console.log(`splitterbar`);
     const rect = this.barRef.offsetParent.getBoundingClientRect();
-    console.log(rect);
     d3.select(this.barRef).style(
       "height",
       `${this.barRef.offsetParent.scrollHeight + rect.width}px`

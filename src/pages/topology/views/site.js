@@ -19,30 +19,7 @@ under the License.
 
 import React from "react";
 import * as d3 from "d3";
-import {
-  adjustPositions,
-  aggregateAttributes,
-  copy,
-  linkColor,
-  getSaved,
-  setSaved,
-  initSankey,
-  lighten,
-  updateSankey,
-  siteColor,
-  removeSiteColor,
-  setLinkStat,
-  statId,
-  endall,
-  VIEW_DURATION,
-  ServiceWidth,
-  ClusterPadding,
-  SiteRadius,
-  reconcileArrays,
-  reconcileLinks,
-  getOptions,
-  setOptions,
-} from "../../../utilities";
+import { utils } from "../../../utilities";
 import { genPath, pathBetween } from "../../../paths";
 import { interpolatePath } from "d3-interpolate-path";
 import SiteCard from "../cards/siteCard";
@@ -138,13 +115,13 @@ export class Site {
       viewer.state.options
     );
 
-    reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
-    reconcileLinks(
+    utils.reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
+    utils.reconcileLinks(
       this.routerLinks.links,
       newRouterLinks.links,
       this.siteNodes.nodes
     );
-    reconcileLinks(
+    utils.reconcileLinks(
       this.trafficLinks.links,
       newTrafficLinks.links,
       this.siteNodes.nodes
@@ -165,10 +142,10 @@ export class Site {
         widthFn: this.clusterWidth,
       });
       clusterNode.mergeWith(cluster);
-      clusterNode.color = siteColor(name, cluster.site_id);
-      clusterNode.r = SiteRadius;
-      clusterNode.normalR = SiteRadius;
-      clusterNode.sankeyR = SiteRadius;
+      clusterNode.color = utils.siteColor(name, cluster.site_id);
+      clusterNode.r = utils.SiteRadius;
+      clusterNode.normalR = utils.SiteRadius;
+      clusterNode.sankeyR = utils.SiteRadius;
     });
   };
 
@@ -190,7 +167,7 @@ export class Site {
             value += found.value;
           }
           found.value = value;
-          aggregateAttributes(link.request, found.request);
+          utils.aggregateAttributes(link.request, found.request);
         } else {
           const linkIndex = links.addLink({
             source: nodes.nodes.find(
@@ -205,15 +182,15 @@ export class Site {
           });
           const alink = links.links[linkIndex];
           alink.value = value;
-          alink.request = copy(link.request);
-          alink.getColor = () => linkColor(alink, links.links);
+          alink.request = utils.copy(link.request);
+          alink.getColor = () => utils.linkColor(alink, links.links);
         }
       }
     });
 
     // site-to-site traffic
     // position sites based on router links
-    adjustPositions({
+    utils.adjustPositions({
       nodes: nodes.nodes,
       links: links.links,
       width: vsize.width,
@@ -224,13 +201,13 @@ export class Site {
     if (links.links.length > 0) {
       // sets the y0, y1, width of the links
       // sets the x0 y0, x1 y1 of the nodes
-      initSankey({
+      utils.initSankey({
         nodes: nodes.nodes,
         links: links.links,
         width: vsize.width,
         height: vsize.height - 50,
-        nodeWidth: ServiceWidth,
-        nodePadding: ClusterPadding,
+        nodeWidth: utils.ServiceWidth,
+        nodePadding: utils.ClusterPadding,
         left: 50,
         top: 10,
         right: 50,
@@ -247,7 +224,7 @@ export class Site {
 
     // move the sankey starting points to the site location
     nodes.nodes.forEach((n) => {
-      const pos = getSaved(`${SITE_POSITION}-${n.site_id}`);
+      const pos = utils.getSaved(`${SITE_POSITION}-${n.site_id}`);
       if (pos) {
         n.x = pos.x;
         n.y = pos.y;
@@ -263,7 +240,7 @@ export class Site {
     });
     if (links.links.length > 0) {
       // update the links
-      updateSankey({ nodes: nodes.nodes, links: links.links });
+      utils.updateSankey({ nodes: nodes.nodes, links: links.links });
     }
     return vsize;
   };
@@ -325,7 +302,7 @@ export class Site {
     selection
       .enter()
       .append("path")
-      .attr("id", (d) => statId(d));
+      .attr("id", (d) => utils.statId(d));
   };
 
   setupMasks = (viewer) => {
@@ -350,7 +327,7 @@ export class Site {
 
     // remove old nodes
     selection.exit().each((d) => {
-      removeSiteColor(d.site_id);
+      utils.removeSiteColor(d.site_id);
     });
     selection.exit().remove();
 
@@ -380,7 +357,7 @@ export class Site {
       .attr("r", (d) => d.r)
       .attr("cx", (d) => d.r)
       .attr("cy", (d) => d.r)
-      .attr("fill", (d) => lighten(0.9, d.color))
+      .attr("fill", (d) => utils.lighten(0.9, d.color))
       .attr("stroke", (d) => d.color)
       .attr("opacity", 1);
 
@@ -538,7 +515,7 @@ export class Site {
       .attr("text-anchor", "middle")
       .attr("startOffset", "50%")
       .attr("text-length", "100%")
-      .attr("href", (d) => `#${statId(d)}`);
+      .attr("href", (d) => `#${utils.statId(d)}`);
 
     d3.selectAll(".siteTrafficLink").classed("selected", (d) => d.selected);
     d3.selectAll("path.mask").classed("selected", (d) => d.link.selected);
@@ -608,7 +585,7 @@ export class Site {
   };
 
   savePosition = (d) => {
-    setSaved(`${SITE_POSITION}-${d.site_id}`, {
+    utils.setSaved(`${SITE_POSITION}-${d.site_id}`, {
       x: d.x,
       y: d.y,
       x0: d.x0,
@@ -656,7 +633,7 @@ export class Site {
 
   drawViewPaths = (sankey) => {
     const self = this;
-    updateSankey({
+    utils.updateSankey({
       nodes: this.siteNodes.nodes,
       links: this.trafficLinks.links,
     });
@@ -688,7 +665,7 @@ export class Site {
   };
 
   setLinkStat = (show, stat) => {
-    setLinkStat(this.trafficLinksSelection, show, stat);
+    utils.setLinkStat(this.trafficLinksSelection, show, stat);
   };
 
   setupDrag = (drag) => {
@@ -741,10 +718,12 @@ export class Site {
       this.sitesSelection
         .selectAll(".network")
         .attr("fill", (s) =>
-          blur && s !== d ? lighten(0.95, s.color) : lighten(0.9, s.color)
+          blur && s !== d
+            ? utils.lighten(0.95, s.color)
+            : utils.lighten(0.9, s.color)
         )
         .attr("stroke", (s) =>
-          blur && s !== d ? lighten(0.8, s.color) : s.color
+          blur && s !== d ? utils.lighten(0.8, s.color) : s.color
         );
       this.sitesSelection
         .selectAll("text")
@@ -771,12 +750,12 @@ export class Site {
   transition = (sankey, initial, color, viewer) => {
     this.setSitePositions(sankey);
     viewer.setLinkStat();
-    updateSankey({
+    utils.updateSankey({
       nodes: this.siteNodes.nodes,
       links: this.trafficLinks.links,
     });
 
-    const duration = initial ? 0 : VIEW_DURATION;
+    const duration = initial ? 0 : utils.VIEW_DURATION;
     if (sankey) {
       return this.toSiteSankey(duration);
     } else if (color) {
@@ -805,7 +784,7 @@ export class Site {
         .duration(duration)
         .attr("stroke-width", 2)
         .attr("opacity", 0)
-        .call(endall, () => {
+        .call(utils.endall, () => {
           resolve();
         });
 
@@ -947,7 +926,7 @@ export class Site {
           const current = pathBetween(d.source, d.target);
           return interpolatePath(previous, current);
         })
-        .call(endall, () => {
+        .call(utils.endall, () => {
           resolve();
         });
 
@@ -1017,7 +996,7 @@ export class Site {
         .transition()
         .duration(duration)
         .attr("opacity", 0)
-        .call(endall, () => {
+        .call(utils.endall, () => {
           resolve();
         });
 
@@ -1171,23 +1150,25 @@ export class Site {
     });
   }
   getSavedZoom = (defaultScale) => {
-    const savedScale = getSaved(ZOOM_SCALE, defaultScale);
-    const savedTranslate = getSaved(ZOOM_TRANSLATE, [0, 0]);
+    const savedScale = utils.getSaved(ZOOM_SCALE, defaultScale);
+    const savedTranslate = utils.getSaved(ZOOM_TRANSLATE, [0, 0]);
     return { savedScale, savedTranslate };
   };
   saveZoom = (zoom) => {
-    setSaved(ZOOM_SCALE, zoom.scale());
-    setSaved(ZOOM_TRANSLATE, zoom.translate());
+    utils.setSaved(ZOOM_SCALE, zoom.scale());
+    utils.setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
   static saveOverrideOptions = (options) =>
     options.mode === "graph"
-      ? setOptions(SITE_OPTIONS, options, DEFAULT_OPTIONS)
-      : setOptions(SITE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
-  getGraphOptions = () => getOptions(SITE_OPTIONS, DEFAULT_OPTIONS);
-  saveGraphOptions = (options) => setOptions(SITE_OPTIONS, options);
-  getTableOptions = () => getOptions(SITE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);
+      ? utils.setOptions(SITE_OPTIONS, options, DEFAULT_OPTIONS)
+      : utils.setOptions(SITE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
+  getGraphOptions = () => utils.getOptions(SITE_OPTIONS, DEFAULT_OPTIONS);
+  saveGraphOptions = (options) => utils.setOptions(SITE_OPTIONS, options);
+  getTableOptions = () =>
+    utils.getOptions(SITE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);
   getDetailOptions = () =>
-    getOptions(SITE_DETAIL_OPTIONS, DEFAULT_DETAIL_OPTIONS);
-  saveDetailOptions = (options) => setOptions(SITE_DETAIL_OPTIONS, options);
+    utils.getOptions(SITE_DETAIL_OPTIONS, DEFAULT_DETAIL_OPTIONS);
+  saveDetailOptions = (options) =>
+    utils.setOptions(SITE_DETAIL_OPTIONS, options);
 }

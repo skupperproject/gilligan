@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import { pretty } from "../../../utilities";
+import { utils } from "../../../utilities";
 
 export class LinkCard {
   constructor() {
@@ -98,7 +98,7 @@ export class LinkCard {
     link.request[attr] ? title : undefined;
   getAttr = (link, attr) => {
     if (link.request[attr]) {
-      return pretty(link.request[attr]);
+      return utils.pretty(link.request[attr]);
     }
   };
   getTime = (link, attr) => {

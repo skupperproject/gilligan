@@ -26,7 +26,7 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import ClientRequest from "./clientRequest";
-import { shortName } from "../../../utilities";
+import { utils } from "../../../utilities";
 class RequestSent extends Component {
   constructor(props) {
     super(props);
@@ -60,10 +60,10 @@ class RequestSent extends Component {
       if (target.protocol === "http") {
         target.requests_received.forEach((req) => {
           const clients = Object.keys(req.by_client);
-          const shorts = clients.map((c) => shortName(c));
-          const index = shorts.indexOf(shortName(data.address));
+          const shorts = clients.map((c) => utils.shortName(c));
+          const index = shorts.indexOf(utils.shortName(data.address));
           if (index >= 0) {
-            req.by_client[clients[index]].from_address = shortName(
+            req.by_client[clients[index]].from_address = utils.shortName(
               target.address
             );
             sent.push(req.by_client[clients[index]]);

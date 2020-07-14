@@ -26,7 +26,7 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import ClientConnection from "./clientConnection";
-import { shortName } from "../../../utilities";
+import { utils } from "../../../utilities";
 class ConnectionsIn extends Component {
   constructor(props) {
     super(props);
@@ -64,7 +64,7 @@ class ConnectionsIn extends Component {
       <ClientConnection
         key={`connin-${i}`}
         connection={conn}
-        name={shortName(conn.client)}
+        name={utils.shortName(conn.client)}
         ikey={`connin-${i}`}
         expanded={this.props.expanded}
         toggle={this.props.toggle}

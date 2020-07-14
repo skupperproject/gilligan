@@ -18,29 +18,7 @@ under the License.
 */
 
 import * as d3 from "d3";
-import {
-  aggregateAttributes,
-  adjustPositions,
-  getSaved,
-  linkColor,
-  initSankey,
-  serviceColor,
-  removeServiceColor,
-  setLinkStat,
-  statId,
-  updateSankey,
-  endall,
-  VIEW_DURATION,
-  ServiceWidth,
-  ClusterPadding,
-  ServiceHeight,
-  setSaved,
-  shortName,
-  reconcileArrays,
-  reconcileLinks,
-  getOptions,
-  setOptions,
-} from "../../../utilities";
+import { utils } from "../../../utilities";
 import { genPath } from "../../../paths";
 
 import { interpolatePath } from "d3-interpolate-path";
@@ -117,8 +95,8 @@ export class Service {
     this.initNodes(newNodes, false);
     const vsize = { width: viewer.width, height: viewer.height };
     this.initLinks(newNodes.nodes, newLinks, vsize, viewer);
-    reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
-    reconcileLinks(this.serviceLinks.links, newLinks.links);
+    utils.reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
+    utils.reconcileLinks(this.serviceLinks.links, newLinks.links);
     // remove old nodes/links and add new nodes/links to svg
     viewer.restart();
   };
@@ -143,11 +121,11 @@ export class Service {
             });
             subNode.mergeWith(service);
             subNode.lightColor = d3
-              .rgb(serviceColor(subNode.name))
+              .rgb(utils.serviceColor(subNode.name))
               .brighter(0.6);
-            subNode.color = serviceColor(subNode.name);
+            subNode.color = utils.serviceColor(subNode.name);
             subNode.cluster = site;
-            subNode.shortName = shortName(subNode.name);
+            subNode.shortName = utils.shortName(subNode.name);
             if (i > 0) {
               subNode.extra = true;
             }
@@ -187,7 +165,7 @@ export class Service {
         const link = links.links[Math.abs(linkIndex)];
         link.request = deploymentLink.request;
         link.value = link.request[stat] || 0;
-        link.getColor = () => linkColor(link, links.links);
+        link.getColor = () => utils.linkColor(link, links.links);
       } else {
         let value = deploymentLink.request[stat] || 0;
         if (stat === "latency_max") {
@@ -195,19 +173,19 @@ export class Service {
         } else {
           value += found.value;
         }
-        aggregateAttributes(deploymentLink.request, found.request);
+        utils.aggregateAttributes(deploymentLink.request, found.request);
         found.value = value;
       }
     });
 
     // get the service heights for use with the servicesankey view
-    initSankey({
+    utils.initSankey({
       nodes: serviceNodes,
       links: links.links,
       width: vsize.width,
       height: vsize.height - 50,
-      nodeWidth: ServiceWidth,
-      nodePadding: ClusterPadding,
+      nodeWidth: utils.ServiceWidth,
+      nodePadding: utils.ClusterPadding,
       left: 50,
       top: 20,
       right: 50,
@@ -216,12 +194,12 @@ export class Service {
 
     // set the expanded height
     serviceNodes.forEach((n) => {
-      n.sankeyHeight = Math.max(n.y1 - n.y0, ServiceHeight);
+      n.sankeyHeight = Math.max(n.y1 - n.y0, utils.ServiceHeight);
       n.expanded = true;
     });
 
     // set the x,y based on links and expanded node sizes
-    const newSize = adjustPositions({
+    const newSize = utils.adjustPositions({
       nodes: serviceNodes,
       links: links.links,
       width: vsize.width,
@@ -233,7 +211,7 @@ export class Service {
     serviceNodes.forEach((n) => {
       // override the default starting position with saved positions
       const key = `${SERVICE_POSITION}-${this.uid(n)}`;
-      const pos = getSaved(key);
+      const pos = utils.getSaved(key);
       if (pos) {
         n.x = pos.x;
         n.y = pos.y;
@@ -250,7 +228,7 @@ export class Service {
     });
 
     // regen the link.paths
-    updateSankey({ nodes: serviceNodes, links: links.links });
+    utils.updateSankey({ nodes: serviceNodes, links: links.links });
     //Sankey().update({ nodes: serviceNodes, links: links.links });
     return newSize;
   };
@@ -279,7 +257,7 @@ export class Service {
     selection
       .enter()
       .append("path")
-      .attr("id", (d) => statId(d));
+      .attr("id", (d) => utils.statId(d));
   };
 
   setupServicesSelection = (viewer) => {
@@ -290,7 +268,7 @@ export class Service {
     );
 
     selection.exit().each((d) => {
-      removeServiceColor(d.address);
+      utils.removeServiceColor(d.address);
     });
     selection.exit().remove();
     const serviceTypesEnter = selection
@@ -319,7 +297,7 @@ export class Service {
       .text(function(d) {
         this.innerHTML = d.shortName;
         let width = this.getBBox().width + 20;
-        let contentWidth = Math.max(Math.min(ServiceWidth, width), 80);
+        let contentWidth = Math.max(Math.min(utils.ServiceWidth, width), 80);
         let ellipseName = d.shortName;
         let first = ellipseName.length - 4;
         while (width > contentWidth) {
@@ -461,7 +439,7 @@ export class Service {
       .attr("text-anchor", "middle")
       .attr("startOffset", "50%")
       .attr("text-length", "100%")
-      .attr("href", (d) => `#${statId(d)}`);
+      .attr("href", (d) => `#${utils.statId(d)}`);
 
     // update each existing {g.links g.link} element
     selection
@@ -485,9 +463,9 @@ export class Service {
       return 4;
     }
     if (expanded && n.sankeyHeight) {
-      return Math.max(n.sankeyHeight, ServiceHeight);
+      return Math.max(n.sankeyHeight, utils.ServiceHeight);
     }
-    return ServiceHeight;
+    return utils.ServiceHeight;
   };
 
   serviceWidth = (node, expanded) => {
@@ -495,7 +473,7 @@ export class Service {
       ? 4
       : node.contentWidth
       ? node.contentWidth
-      : ServiceWidth;
+      : utils.ServiceWidth;
   };
 
   // returns true if any path or service is currently selected.
@@ -532,7 +510,7 @@ export class Service {
   };
 
   savePosition = (d) => {
-    setSaved(`${SERVICE_POSITION}-${this.uid(d)}`, {
+    utils.setSaved(`${SERVICE_POSITION}-${this.uid(d)}`, {
       x: d.x,
       y: d.y,
       x0: d.x0,
@@ -562,7 +540,7 @@ export class Service {
   }
 
   drawViewPaths(sankey) {
-    updateSankey({
+    utils.updateSankey({
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
@@ -602,7 +580,7 @@ export class Service {
   }
 
   setLinkStat = (show, stat) => {
-    setLinkStat(this.linksSelection, show, stat);
+    utils.setLinkStat(this.linksSelection, show, stat);
   };
 
   setupDrag(drag) {
@@ -650,7 +628,7 @@ export class Service {
   }
 
   transition(sankey, initial, color, viewer) {
-    const duration = initial ? 0 : VIEW_DURATION;
+    const duration = initial ? 0 : utils.VIEW_DURATION;
     viewer.setLinkStat();
     this.setupServiceNodePositions(sankey);
     if (sankey) {
@@ -672,7 +650,7 @@ export class Service {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
-        .call(endall, () => {
+        .call(utils.endall, () => {
           resolve();
         });
 
@@ -769,7 +747,7 @@ export class Service {
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x0},${d.y0})`)
-        .call(endall, () => {
+        .call(utils.endall, () => {
           resolve();
         });
 
@@ -909,24 +887,25 @@ export class Service {
     });
   }
   getSavedZoom = (defaultScale) => {
-    const savedScale = getSaved(ZOOM_SCALE, defaultScale);
-    const savedTranslate = getSaved(ZOOM_TRANSLATE, [0, 0]);
+    const savedScale = utils.getSaved(ZOOM_SCALE, defaultScale);
+    const savedTranslate = utils.getSaved(ZOOM_TRANSLATE, [0, 0]);
     return { savedScale, savedTranslate };
   };
   saveZoom = (zoom) => {
-    setSaved(ZOOM_SCALE, zoom.scale());
-    setSaved(ZOOM_TRANSLATE, zoom.translate());
+    utils.setSaved(ZOOM_SCALE, zoom.scale());
+    utils.setSaved(ZOOM_TRANSLATE, zoom.translate());
   };
 
   static saveOverrideOptions = (options) =>
     options.mode === "graph"
-      ? setOptions(SERVICE_OPTIONS, options, DEFAULT_OPTIONS)
-      : setOptions(SERVICE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
-  getGraphOptions = () => getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS);
-  saveGraphOptions = (options) => setOptions(SERVICE_OPTIONS, options);
+      ? utils.setOptions(SERVICE_OPTIONS, options, DEFAULT_OPTIONS)
+      : utils.setOptions(SERVICE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
+  getGraphOptions = () => utils.getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS);
+  saveGraphOptions = (options) => utils.setOptions(SERVICE_OPTIONS, options);
   getTableOptions = () =>
-    getOptions(SERVICE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);
+    utils.getOptions(SERVICE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);
   getDetailOptions = () =>
-    getOptions(SERVICE_DETAIL_OPTIONS, DEFAULT_DETAIL_OPTIONS);
-  saveDetailOptions = (options) => setOptions(SERVICE_DETAIL_OPTIONS, options);
+    utils.getOptions(SERVICE_DETAIL_OPTIONS, DEFAULT_DETAIL_OPTIONS);
+  saveDetailOptions = (options) =>
+    utils.setOptions(SERVICE_DETAIL_OPTIONS, options);
 }

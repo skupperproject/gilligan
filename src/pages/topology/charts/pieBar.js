@@ -23,19 +23,7 @@ import { Chart, ChartAxis, ChartBar } from "@patternfly/react-charts";
 import * as d3 from "d3";
 import "./charts.css";
 
-import {
-  getSizes,
-  siteColors,
-  serviceColors,
-  shortName,
-  statName,
-  Icap,
-  rgbToHex,
-  lighten,
-  aggregateAttributes,
-  formatStat,
-  formatBytes,
-} from "../../../utilities";
+import { utils } from "../../../utilities";
 
 class PieBar extends Component {
   constructor(props) {
@@ -44,7 +32,7 @@ class PieBar extends Component {
       data: [{ x: "", y: 0 }],
       height: 300,
       width: 300,
-      tickLabel: Icap(statName(this.props.stat)),
+      tickLabel: utils.Icap(utils.statName(this.props.stat)),
     };
     // so we can detect when the stat changes
     this.stat = this.props.stat;
@@ -70,12 +58,16 @@ class PieBar extends Component {
       }
       const kData =
         Array.isArray(this.state.data) &&
-        this.state.data.some((datum) => formatBytes(datum.y).includes("K"));
+        this.state.data.some((datum) =>
+          utils.formatBytes(datum.y).includes("K")
+        );
       const kLabel = this.state.tickLabel.includes("K");
       if (kData !== kLabel || this.props.stat !== this.stat) {
         this.stat = this.props.stat;
         this.setState({
-          tickLabel: `${kData ? "K" : ""} ${Icap(statName(this.props.stat))}`,
+          tickLabel: `${kData ? "K" : ""} ${utils.Icap(
+            utils.statName(this.props.stat)
+          )}`,
         });
       }
     }
@@ -85,15 +77,15 @@ class PieBar extends Component {
     const containerId = this.props.containerId
       ? this.props.containerId
       : "sk-sidebar";
-    const sizes = getSizes(d3.select(`#${containerId}`).node());
+    const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
     let data = [];
     let headerText = "header text not set";
     if (this.props.site) {
       if (this.props.data === null) {
         if (this.props.deployment) {
           // all deployments
-          headerText = Icap(
-            `${statName(this.props.stat)} by ${
+          headerText = utils.Icap(
+            `${utils.statName(this.props.stat)} by ${
               this.props.direction === "in" ? "originating" : "destination"
             } deployment`
           );
@@ -104,10 +96,10 @@ class PieBar extends Component {
             const address = deploymentLink[which].service.address;
             const site = deploymentLink[which].site.site_name;
             if (!requests.hasOwnProperty(address)) requests[address] = {};
-            aggregateAttributes(
+            utils.aggregateAttributes(
               {
                 service: address,
-                shortName: `${shortName(address)} (${site})`,
+                shortName: `${utils.shortName(address)} (${site})`,
                 requests: deploymentLink.request[this.props.stat] || 0,
               },
               requests[address]
@@ -115,14 +107,14 @@ class PieBar extends Component {
           });
           data = Object.keys(requests).map((address) => {
             const request = requests[address];
-            const color = serviceColors[address];
-            const stroke = rgbToHex(d3.rgb(color).darker(0.6));
-            const fill = rgbToHex(d3.rgb(color).brighter(0.6));
+            const color = utils.serviceColors[address];
+            const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
+            const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
             return {
               key: request.service,
               all: true,
               name: request.shortName,
-              value: formatStat(this.props.stat, request.requests),
+              value: utils.formatStat(this.props.stat, request.requests),
               x: `${request.shortName}`,
               y: request.requests,
               stroke,
@@ -142,8 +134,8 @@ class PieBar extends Component {
           }
           const to = this.props.direction === "in" ? "source" : "target";
           const from = this.props.direction === "in" ? "target" : "source";
-          headerText = Icap(
-            `${statName(this.props.stat)} by ${
+          headerText = utils.Icap(
+            `${utils.statName(this.props.stat)} by ${
               this.props.direction === "in" ? "originating" : "destination"
             } site`
           );
@@ -154,7 +146,7 @@ class PieBar extends Component {
             const toId = deploymentLink[to].site.site_id;
             if (fromId !== toId) {
               if (!requests.hasOwnProperty(toId)) requests[toId] = {};
-              aggregateAttributes(
+              utils.aggregateAttributes(
                 {
                   shortName: toName,
                   requests: deploymentLink.request[stat] || 0,
@@ -165,13 +157,13 @@ class PieBar extends Component {
           });
           data = Object.keys(requests).map((site) => {
             const request = requests[site];
-            const color = siteColors[site].color;
-            const stroke = lighten(-0.5, color);
-            const fill = lighten(0.5, color);
+            const color = utils.siteColors[site].color;
+            const stroke = utils.lighten(-0.5, color);
+            const fill = utils.lighten(0.5, color);
             return {
               key: site,
               name: request.shortName,
-              value: formatStat(this.props.stat, request.requests),
+              value: utils.formatStat(this.props.stat, request.requests),
               x: request.shortName,
               y: request.requests,
               stroke,
@@ -196,10 +188,10 @@ class PieBar extends Component {
           }
           const from = this.props.direction === "in" ? "source" : "target";
           const to = this.props.direction === "in" ? "target" : "source";
-          headerText = Icap(
-            `${statName(this.props.stat)} sent ${
+          headerText = utils.Icap(
+            `${utils.statName(this.props.stat)} sent ${
               this.props.direction === "in" ? "from" : "to"
-            } ${shortName(this.props.data.address)} (${
+            } ${utils.shortName(this.props.data.address)} (${
               this.props.data.cluster.site_name
             })`
           );
@@ -209,11 +201,11 @@ class PieBar extends Component {
             const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
             if (fromAddress === adddressSite) {
               if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
-              aggregateAttributes(
+              utils.aggregateAttributes(
                 {
                   fromAddress,
                   colorAddress: deploymentLink[to].service.address,
-                  shortName: `${shortName(
+                  shortName: `${utils.shortName(
                     deploymentLink[to].service.address
                   )} (${deploymentLink[to].site.site_name})`,
                   site: deploymentLink[to].site.site_name,
@@ -225,13 +217,13 @@ class PieBar extends Component {
           });
           data = Object.keys(requests).map((address) => {
             const request = requests[address];
-            const color = serviceColors[request.colorAddress];
-            const stroke = rgbToHex(d3.rgb(color).darker(0.6));
-            const fill = rgbToHex(d3.rgb(color).brighter(0.6));
+            const color = utils.serviceColors[request.colorAddress];
+            const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
+            const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
             return {
               key: `${request.site}:${request.colorAddress}`,
               name: request.shortName,
-              value: formatStat(this.props.stat, request.requests),
+              value: utils.formatStat(this.props.stat, request.requests),
               x: request.shortName,
               y: request.requests,
               stroke,
@@ -253,8 +245,8 @@ class PieBar extends Component {
           const from = this.props.direction === "in" ? "source" : "target";
           const to = this.props.direction === "in" ? "target" : "source";
 
-          headerText = Icap(
-            `${statName(this.props.stat)} sent ${
+          headerText = utils.Icap(
+            `${utils.statName(this.props.stat)} sent ${
               this.props.direction === "in" ? "from" : "to"
             } ${this.props.data.site_name}`
           );
@@ -265,7 +257,7 @@ class PieBar extends Component {
             const toId = deploymentLink[to].site.site_id;
             if (fromId !== toId && fromId === this.props.data.site_id) {
               if (!requests.hasOwnProperty(toId)) requests[toId] = {};
-              aggregateAttributes(
+              utils.aggregateAttributes(
                 {
                   shortName: site,
                   requests: deploymentLink.request[stat] || 0,
@@ -276,13 +268,13 @@ class PieBar extends Component {
           });
           data = Object.keys(requests).map((site) => {
             const request = requests[site];
-            const color = siteColors[site].color;
-            const stroke = lighten(-0.5, color);
-            const fill = lighten(0.5, color);
+            const color = utils.siteColors[site].color;
+            const stroke = utils.lighten(-0.5, color);
+            const fill = utils.lighten(0.5, color);
             return {
               key: site,
               name: request.shortName,
-              value: formatStat(this.props.stat, request.requests),
+              value: utils.formatStat(this.props.stat, request.requests),
               x: request.shortName,
               y: request.requests,
               stroke,
@@ -296,8 +288,8 @@ class PieBar extends Component {
       if (this.props.data === null) {
         // all services
         const VAN = this.props.service.VAN;
-        headerText = Icap(
-          `${statName(this.props.stat)} by ${
+        headerText = utils.Icap(
+          `${utils.statName(this.props.stat)} by ${
             this.props.direction === "in" ? "originating" : "destination"
           } service`
         );
@@ -308,10 +300,10 @@ class PieBar extends Component {
           const which = this.props.direction === "in" ? "source" : "target";
           const address = deploymentLink[which].service.address;
           if (!requests.hasOwnProperty(address)) requests[address] = {};
-          aggregateAttributes(
+          utils.aggregateAttributes(
             {
               service: address,
-              shortName: shortName(address),
+              shortName: utils.shortName(address),
               requests: deploymentLink.request[stat] || 0,
             },
             requests[address]
@@ -319,13 +311,13 @@ class PieBar extends Component {
         });
         data = Object.keys(requests).map((address) => {
           const request = requests[address];
-          const color = serviceColors[address];
-          const stroke = rgbToHex(d3.rgb(color).darker(0.6));
-          const fill = rgbToHex(d3.rgb(color).brighter(0.6));
+          const color = utils.serviceColors[address];
+          const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
+          const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
           return {
             key: address,
             name: request.shortName,
-            value: formatStat(this.props.stat, request.requests),
+            value: utils.formatStat(this.props.stat, request.requests),
             x: request.shortName,
             y: request.requests,
             stroke,
@@ -344,10 +336,10 @@ class PieBar extends Component {
         }
         const from = this.props.direction === "in" ? "source" : "target";
         const to = this.props.direction === "in" ? "target" : "source";
-        headerText = Icap(
-          `${statName(this.props.stat)} sent ${
+        headerText = utils.Icap(
+          `${utils.statName(this.props.stat)} sent ${
             this.props.direction === "in" ? "from" : "to"
-          } ${shortName(this.props.data.address)}`
+          } ${utils.shortName(this.props.data.address)}`
         );
         const VAN = this.props.service.VAN;
         const requests = {};
@@ -356,11 +348,11 @@ class PieBar extends Component {
           const toAddress = deploymentLink[to].service.address;
           if (fromAddress === this.props.data.address) {
             if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
-            aggregateAttributes(
+            utils.aggregateAttributes(
               {
                 fromAddress,
                 toAddress,
-                shortName: shortName(toAddress),
+                shortName: utils.shortName(toAddress),
                 requests: deploymentLink.request[stat] || 0,
               },
               requests[toAddress]
@@ -369,13 +361,13 @@ class PieBar extends Component {
         });
         data = Object.keys(requests).map((address) => {
           const request = requests[address];
-          const color = serviceColors[address];
-          const stroke = rgbToHex(d3.rgb(color).darker(0.6));
-          const fill = rgbToHex(d3.rgb(color).brighter(0.6));
+          const color = utils.serviceColors[address];
+          const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
+          const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
           return {
             key: request.fromAddress,
             name: request.shortName,
-            value: formatStat(this.props.stat, request.requests),
+            value: utils.formatStat(this.props.stat, request.requests),
             x: request.shortName,
             y: request.requests,
             stroke,
@@ -406,7 +398,7 @@ class PieBar extends Component {
   };
 
   tickFormat = (tick, index, ticks) => {
-    let tickValues = ticks.map((v) => formatBytes(v, 0));
+    let tickValues = ticks.map((v) => utils.formatBytes(v, 0));
     if (tickValues.some((v) => v.includes("K"))) {
       tickValues = tickValues.map((v) => v.replace("K", ""));
     }

@@ -34,7 +34,7 @@ import {
 } from "@patternfly/react-core";
 import CardHealth from "../../cardHealth";
 import ListToolbar from "./listToolbar";
-import { safePlural, Icap, strDate } from "../../utilities";
+import { utils } from "../../utilities";
 
 // make sure you've installed @patternfly/patternfly
 class ListPage extends React.Component {
@@ -84,7 +84,7 @@ class ListPage extends React.Component {
 
   getDeployedTitle = (service) => {
     const siteCount = this.siteList(service).length;
-    return safePlural(siteCount, "Deployed at site");
+    return utils.safePlural(siteCount, "Deployed at site");
   };
 
   getRequests = (service) => {
@@ -137,7 +137,7 @@ class ListPage extends React.Component {
     return (
       <div className="body-line">
         {expanded ? (
-          <span className="body-line-prompt">{Icap(title)}</span>
+          <span className="body-line-prompt">{utils.Icap(title)}</span>
         ) : (
           ""
         )}
@@ -200,7 +200,7 @@ class ListPage extends React.Component {
                   Card view
                 </Text>
                 <Text className="overview-loading" component={TextVariants.pre}>
-                  {`Updated ${strDate(this.state.lastUpdated)}`}
+                  {`Updated ${utils.strDate(this.state.lastUpdated)}`}
                 </Text>
               </TextContent>
             </StackItem>
@@ -232,7 +232,7 @@ class ListPage extends React.Component {
                       </CardBody>
                       <CardBody>
                         {this.subNodes(c)}{" "}
-                        {safePlural(this.subNodes(c), "service")}
+                        {utils.safePlural(this.subNodes(c), "service")}
                       </CardBody>
                       {this.siteBodies(c)}
                     </Card>

@@ -30,6 +30,7 @@ import { Button, Pagination } from "@patternfly/react-core";
 import { Redirect } from "react-router-dom";
 import TableToolbar from "./tableToolbar";
 import { viewsMap as VIEWS } from "../topology/views/views";
+import { utils } from "../../utilities";
 
 class TableViewer extends React.Component {
   constructor(props) {
@@ -176,9 +177,7 @@ class TableViewer extends React.Component {
 
   // cell formatter
   prettier = (value, extraInfo) => {
-    return typeof value === "undefined"
-      ? "-"
-      : this.props.service.utilities.pretty(value);
+    return typeof value === "undefined" ? "-" : utils.pretty(value);
   };
 
   // cell formatter, display a component instead of this cell's data

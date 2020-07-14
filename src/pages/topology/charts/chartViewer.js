@@ -23,7 +23,7 @@ import PieBar from "./pieBar";
 import ChartToolbar from "./chartToolbar";
 import SkupperLegend from "./legendComponent";
 import QDRPopup from "../../../qdrPopup";
-import { getSaved, setSaved, positionPopup } from "../../../utilities";
+import { utils } from "../../../utilities";
 
 const CHART_TYPE_KEY = "chrtype";
 const CHART_TYPE_DEFAULT = {
@@ -35,7 +35,7 @@ const CHART_TYPE_DEFAULT = {
 class ChartViewer extends Component {
   constructor(props) {
     super(props);
-    this.savedTypes = getSaved(CHART_TYPE_KEY, CHART_TYPE_DEFAULT);
+    this.savedTypes = utils.getSaved(CHART_TYPE_KEY, CHART_TYPE_DEFAULT);
     this.state = { type: this.savedTypes[this.props.view], popupContent: null };
   }
 
@@ -61,7 +61,7 @@ class ChartViewer extends Component {
   handleChangeChartType = (type) => {
     this.savedTypes[this.props.view] = type;
     this.setState({ type }, () => {
-      setSaved(CHART_TYPE_KEY, this.savedTypes);
+      utils.setSaved(CHART_TYPE_KEY, this.savedTypes);
     });
   };
 
@@ -69,7 +69,7 @@ class ChartViewer extends Component {
     this.setState({ popupContent: content }, () => {
       if (content) {
         // after the content has rendered, position it
-        positionPopup({
+        utils.positionPopup({
           containerSelector: "#skAllCharts",
           popupSelector: "#popover-div",
           constrainY: false,

@@ -19,7 +19,7 @@ Licensed to the Apache Software Foundation (ASF) under one
 
 import RESTService from "./restService";
 import Adapter from "./adapter";
-import { siteColor, serviceColor } from "./utilities";
+import { utils } from "./utilities";
 
 // number of milliseconds between topology updates
 export class QDRService {
@@ -48,10 +48,10 @@ export class QDRService {
 
   initColors = (data) => {
     data.sites.forEach((site) => {
-      siteColor(site.site_name, site.site_id);
+      utils.siteColor(site.site_name, site.site_id);
     });
     data.services.forEach((service) => {
-      serviceColor(service.address);
+      utils.serviceColor(service.address);
     });
   };
 }

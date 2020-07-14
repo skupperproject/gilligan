@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import { safePlural } from "../../../utilities";
+import { utils } from "../../../utilities";
 import { ServiceIcon } from "../../../assets/serviceIcon";
 
 export class ServiceCard {
@@ -61,7 +61,7 @@ export class ServiceCard {
     );
   getDeployedTitle = (service) => {
     const siteCount = this.siteList(service).length;
-    return safePlural(siteCount, "Deployed at site");
+    return utils.safePlural(siteCount, "Deployed at site");
   };
   getProtocol = (service) => service.protocol.toUpperCase();
   getRequests = (service) => {
