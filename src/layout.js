@@ -19,7 +19,6 @@ under the License.
 
 import React from "react";
 import {
-  Avatar,
   Brand,
   Button,
   ButtonVariant,
@@ -43,16 +42,8 @@ import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
 import { QDRService } from "./qdrService";
-import {
-  getSaved,
-  setSaved,
-  idle,
-  viewFromHash,
-  isEmpty,
-  overrideOptions,
-} from "./utilities";
-const gilliganImg = require("./assets/skupper.svg");
-const avatarImg = require("./assets/img_avatar.svg");
+import { utils } from "./utilities";
+import gilliganImg from "./assets/skupper.svg";
 const history = createBrowserHistory();
 const UPDATE_INTERVAL = 2000;
 const VIEW_MODES = "viewModes";
@@ -61,8 +52,8 @@ const LAST_VIEW = "lastView2";
 class PageLayout extends React.Component {
   constructor(props) {
     super(props);
-    const view = getSaved(LAST_VIEW, "service");
-    this.viewModes = getSaved(VIEW_MODES, {
+    const view = utils.getSaved(LAST_VIEW, "service");
+    this.viewModes = utils.getSaved(VIEW_MODES, {
       service: "graph",
       site: "graph",
       deployment: "graph",
@@ -91,7 +82,7 @@ class PageLayout extends React.Component {
   componentDidMount = () => {
     this.doConnect();
     // avoid unresponsive page by reloading after 1 hour of inactivity
-    this.clearIdle = idle(1000 * 60 * 60, this.handleIdleTimeout);
+    this.clearIdle = utils.idle(1000 * 60 * 60, this.handleIdleTimeout);
   };
 
   componentWillUnmount = () => {
@@ -101,16 +92,16 @@ class PageLayout extends React.Component {
   };
 
   componentDidUpdate = () => {
-    const { options } = viewFromHash();
+    const { options } = utils.viewFromHash();
     // a new URL was pasted into the browser's address bar.
     // go to the new view and use its parameters
-    if (this.navSelect !== "userChanged" && !isEmpty(options)) {
+    if (this.navSelect !== "userChanged" && !utils.isEmpty(options)) {
       const view = options.view || "service";
       const mode = options.mode || "graph";
       // save the new options for the new view
-      overrideOptions(view, options);
+      utils.overrideOptions(view, options);
       this.viewModes[view] = mode;
-      setSaved(VIEW_MODES, this.viewModes);
+      utils.setSaved(VIEW_MODES, this.viewModes);
       // tell the current view to update
       this.setState({ view, mode }, () => {
         // prevent infinite loop if user hits back button
@@ -123,13 +114,13 @@ class PageLayout extends React.Component {
   handleChangeViewMode = (mode) => {
     this.viewModes[this.state.view] = mode;
     this.navSelect = "userChanged";
-    setSaved(VIEW_MODES, this.viewModes);
+    utils.setSaved(VIEW_MODES, this.viewModes);
     this.setState({ mode });
   };
 
   setOptions = (options, user) => {
     if (user) this.navSelect = "userChanged";
-    if (!isEmpty(options)) {
+    if (!utils.isEmpty(options)) {
       options.mode = this.getMode();
       const newHash = Object.keys(options)
         .map((key) => {
@@ -209,7 +200,7 @@ class PageLayout extends React.Component {
 
   onNavSelect = (result) => {
     this.navSelect = "userChanged";
-    setSaved(LAST_VIEW, result.itemId);
+    utils.setSaved(LAST_VIEW, result.itemId);
     // when clicking on a nav item, go to the table view instead of the details view
     if (this.viewModes[result.itemId] === "details") {
       this.viewModes[result.itemId] = "table";
@@ -286,7 +277,6 @@ class PageLayout extends React.Component {
           </React.Fragment>
         }
         toolbar={PageToolbar}
-        avatar={<Avatar src={avatarImg} alt="Avatar image" />}
         showNavToggle
       />
     );
