@@ -76,7 +76,10 @@ class ClientRequest extends Component {
               </DataListCell>,
               <DataListCell key="bytes_out">
                 <span className="detail-value">
-                  {utils.formatStat("bytes_out", clientRequest.bytes_out)}
+                  {`${utils.formatStat(
+                    "bytes_out",
+                    clientRequest.bytes_out
+                  )} out`}
                 </span>
               </DataListCell>,
             ]}
