@@ -1118,6 +1118,8 @@ export class Site {
       console.log(p);
       */
       if (
+        chord.info.source &&
+        chord.info.target &&
         chord.info.source.site_id === p.source.site_id &&
         chord.info.target.site_id === p.target.site_id
       ) {
