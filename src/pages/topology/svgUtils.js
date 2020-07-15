@@ -162,6 +162,7 @@ export function addDefs(svg) {
 
   addGlowFilter(svg);
   addMarkers(svg);
+  /*
   addStyles(
     sten,
     {
@@ -171,6 +172,7 @@ export function addDefs(svg) {
     },
     radii
   );
+  */
 }
 
 const addGlowFilter = (svg) => {
@@ -339,6 +341,7 @@ export const midPoints = (source, target) => {
   */
 };
 
+/*
 function addStyles(stend, stateColor, radii) {
   // the <style>
   let element = document.querySelector("style");
@@ -359,6 +362,7 @@ function addStyles(stend, stateColor, radii) {
     }
   }
 }
+*/
 
 export function scaledMouse(node, event) {
   const rect = node.getBoundingClientRect();
