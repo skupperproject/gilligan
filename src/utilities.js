@@ -72,10 +72,10 @@ const unZeroIfyLinks = (links) => {
       delete l.wasZero;
       l.value = 0;
       // set the height to 1
-      l.source.y1 = l.source.y0 + 1;
-      l.target.y1 = l.target.y0 + 1;
-      l.y0 = l.source.y0 + l.source.getHeight() / 2;
-      l.y1 = l.target.y0 + l.target.getHeight() / 2;
+      //l.source.y1 = l.source.y0 + 1;
+      //l.target.y1 = l.target.y0 + 1;
+      //l.y0 = l.source.y0 + l.source.getHeight() / 2;
+      //l.y1 = l.target.y0 + l.target.getHeight() / 2;
       l.width = 1;
     }
   });
@@ -617,7 +617,7 @@ const utils = {
         sankey()
           .nodeWidth(nodeWidth)
           .nodePadding(nodePadding)
-          .iterations(3)
+          .iterations(10)
           .extent([
             [left, top],
             [width - right - left, height - bottom - top],
