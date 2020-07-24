@@ -246,6 +246,7 @@ class Adapter {
         this.data.deployments.push({
           service,
           site,
+          key: `${service.address} (${site.site_id})`,
         });
       });
     });
@@ -262,6 +263,7 @@ class Adapter {
             source: fromDeployment,
             target: toDeployment,
             request: request,
+            key: `${fromDeployment.key}-${toDeployment.key}`,
           });
         }
       });
