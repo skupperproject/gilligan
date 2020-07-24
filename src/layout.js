@@ -41,7 +41,7 @@ import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
-import TimedoutPage from "./pages/connect/timeoutPage";
+import ErrorPage from "./pages/connect/errorPage";
 import { QDRService, UPDATE_INTERVAL } from "./qdrService";
 import { utils } from "./utilities";
 import gilliganImg from "./assets/skupper.svg";
@@ -190,7 +190,7 @@ class PageLayout extends React.Component {
       (e) => {
         clearTimeout(this.connectTimer);
         this.connectTimer = null;
-        this.setState({ connectionError: e });
+        this.setState({ connectionError: e.message });
         console.log(e);
       }
     );
@@ -340,20 +340,33 @@ class PageLayout extends React.Component {
           className={"skupper-console"}
         >
           {!this.state.connected && this.state.connectionTimedout && (
-            <TimedoutPage
+            <ErrorPage
               {...this.props}
               service={this.service}
               handleTryAgain={this.handleTryAgain}
+              error="The request to fetch the data has timed out."
+              title="Timed out"
             />
           )}
-          {!this.state.connected && !this.state.connectionTimedout && (
-            <ConnectPage
+          {!this.state.connected && this.state.connectionError && (
+            <ErrorPage
               {...this.props}
               service={this.service}
-              handleConnect={this.handleConnect}
-              isConnected={false}
+              handleTryAgain={this.handleTryAgain}
+              error={this.state.connectionError}
+              title="Connection error"
             />
           )}
+          {!this.state.connected &&
+            !this.state.connectionError &&
+            !this.state.connectionTimedout && (
+              <ConnectPage
+                {...this.props}
+                service={this.service}
+                handleConnect={this.handleConnect}
+                isConnected={false}
+              />
+            )}
           {this.state.connected && mode === "graph" && (
             <TopologyPage
               ref={(el) => (this.pageRef = el)}

@@ -10,11 +10,13 @@ class RESTService {
       this.fetchFrom(`${this.url}/DATA`)
         .then(resolve)
         .catch((error) => {
+          //reject(error);
           //console.log("failed to get from window url");
           //console.log(error);
           // TODO: remove this for production
           // this was only used to get the data when the console
           // was served by yarn start
+
           if (!alt) {
             alt = "DATA";
           }

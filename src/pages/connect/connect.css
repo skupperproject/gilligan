@@ -22,3 +22,7 @@
   margin-top: 2em;
   margin-left: 4em;
 }
+
+#sk-try-list pre {
+  background-color: #eaeaea;
+}
