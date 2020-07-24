@@ -25,18 +25,27 @@ import SkupperLegend from "./legendComponent";
 import QDRPopup from "../../../qdrPopup";
 import { utils } from "../../../utilities";
 
-const CHART_TYPE_KEY = "chrtype";
+export const LINE_CHART = "line";
+export const BAR_CHART = "bar";
+export const PIE_CHART = "pie";
+export const CHORD_CHART = "chord";
+
+const CHART_TYPE_KEY = "chartype";
 const CHART_TYPE_DEFAULT = {
-  service: "pie",
-  site: "pie",
-  deployment: "pie",
+  service: PIE_CHART,
+  site: PIE_CHART,
+  deployment: PIE_CHART,
 };
 
 class ChartViewer extends Component {
   constructor(props) {
     super(props);
     this.savedTypes = utils.getSaved(CHART_TYPE_KEY, CHART_TYPE_DEFAULT);
-    this.state = { type: this.savedTypes[this.props.view], popupContent: null };
+    this.state = {
+      type: this.savedTypes[this.props.view],
+      duration: "min",
+      popupContent: null,
+    };
   }
 
   componentDidMount = () => {
@@ -44,22 +53,31 @@ class ChartViewer extends Component {
       this.props.handleMounted();
     }
   };
-  doUpdate = () => {
-    this.pieRef1.doUpdate();
-    this.pieRef2.doUpdate();
-    this.chordRef.doUpdate();
+  doUpdate = (type) => {
+    if (this.pieRef1) {
+      this.pieRef1.doUpdate(type);
+      this.pieRef2.doUpdate(type);
+    }
+    if (this.chordRef) {
+      this.chordRef.doUpdate();
+    }
   };
 
   init = () => {
     this.setState({ type: this.savedTypes[this.props.view] }, () => {
-      this.pieRef1.init();
-      this.pieRef2.init();
-      this.chordRef.init();
+      if (this.peiRef1) {
+        this.pieRef1.init();
+        this.pieRef2.init();
+      }
+      if (this.chordRef) {
+        this.chordRef.init();
+      }
     });
   };
 
   handleChangeChartType = (type) => {
     this.savedTypes[this.props.view] = type;
+    this.doUpdate(type);
     this.setState({ type }, () => {
       utils.setSaved(CHART_TYPE_KEY, this.savedTypes);
     });
@@ -81,10 +99,11 @@ class ChartViewer extends Component {
   };
 
   render() {
+    const { type } = this.state;
     return (
       <React.Fragment>
         <ChartToolbar
-          type={this.state.type}
+          type={type}
           handleChangeChartType={this.handleChangeChartType}
         />
         <div className="sk-all-charts-container" id="skAllCharts">
@@ -99,30 +118,39 @@ class ChartViewer extends Component {
           >
             <QDRPopup content={this.state.popupContent}></QDRPopup>
           </div>
-
-          <PieBar
-            ref={(el) => (this.pieRef1 = el)}
-            {...this.props}
-            direction="in"
-            type={this.state.type}
-            showTooltip={this.showTooltip}
-            comment="Pie or bar chart for incoming metric"
-          />
-          <PieBar
-            ref={(el) => (this.pieRef2 = el)}
-            {...this.props}
-            direction="out"
-            type={this.state.type}
-            showTooltip={this.showTooltip}
-            comment="Pie or bar chart for outgoing metric"
-          />
-          <ChordViewer
-            ref={(el) => (this.chordRef = el)}
-            {...this.props}
-            showTooltip={this.showTooltip}
-            noLegend
-            comment="Chord chart that show both incoming and outgoing"
-          />
+          {(type === LINE_CHART ||
+            type === BAR_CHART ||
+            type === PIE_CHART) && (
+            <React.Fragment>
+              <PieBar
+                ref={(el) => (this.pieRef1 = el)}
+                {...this.props}
+                direction="in"
+                type={type}
+                showTooltip={this.showTooltip}
+                duration={this.state.duration}
+                comment="Pie or bar chart for incoming metric"
+              />
+              <PieBar
+                ref={(el) => (this.pieRef2 = el)}
+                {...this.props}
+                direction="out"
+                type={type}
+                showTooltip={this.showTooltip}
+                duration={this.state.duration}
+                comment="Pie or bar chart for outgoing metric"
+              />
+            </React.Fragment>
+          )}
+          {type === CHORD_CHART && (
+            <ChordViewer
+              ref={(el) => (this.chordRef = el)}
+              {...this.props}
+              showTooltip={this.showTooltip}
+              noLegend
+              comment="Chord chart that shows both incoming and outgoing"
+            />
+          )}
           <SkupperLegend
             ref={(el) => (this.legendRef = el)}
             {...this.props}

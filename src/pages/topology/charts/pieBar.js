@@ -19,35 +19,43 @@ under the License.
 
 import React, { Component } from "react";
 import { ChartPie } from "@patternfly/react-charts";
-import { Chart, ChartAxis, ChartBar } from "@patternfly/react-charts";
+import {
+  Chart,
+  ChartAxis,
+  ChartBar,
+  ChartLine,
+  ChartGroup,
+} from "@patternfly/react-charts";
 import * as d3 from "d3";
 import "./charts.css";
-
 import { utils } from "../../../utilities";
+import { LINE_CHART, BAR_CHART, PIE_CHART } from "./chartViewer";
+
+const defaultData = [{ name: " ", x: " ", y: 0 }];
+const defaultAreaData = { service: defaultData };
 
 class PieBar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: [{ x: "", y: 0 }],
+      data: this.props.type === LINE_CHART ? defaultAreaData : defaultData,
       height: 300,
       width: 300,
       tickLabel: utils.Icap(utils.statName(this.props.stat)),
     };
     // so we can detect when the stat changes
     this.stat = this.props.stat;
-  }
 
-  componentWillUnmount = () => {
-    this.unmounting = true;
-  };
+    // detect when type changes
+    this.type = this.props.type;
+  }
 
   componentDidMount = () => {
     this.init();
   };
 
   componentDidUpdate = () => {
-    if (this.props.type === "bar") {
+    if (this.props.type === BAR_CHART) {
       const id = `#sk-chart-container-${this.props.direction} svg`;
       const barChart = d3.select(id);
       const height = this.getHeight() + 20;
@@ -71,123 +79,40 @@ class PieBar extends Component {
         });
       }
     }
+    if (this.props.type !== this.type) {
+      this.type = this.props.type;
+      this.init(this.props.type);
+    }
   };
 
-  init = () => {
-    const containerId = this.props.containerId
-      ? this.props.containerId
-      : "sk-sidebar";
-    const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
-    let data = [];
+  init = (type) => {
+    if (!type) type = this.props.type;
     let headerText = "header text not set";
+    let all = false;
+    let address = this.props.data ? this.props.data.address : null;
+    let site_info;
     if (this.props.site) {
       if (this.props.data === null) {
         if (this.props.deployment) {
           // all deployments
+          all = true;
           headerText = utils.Icap(
             `${utils.statName(this.props.stat)} by ${
               this.props.direction === "in" ? "originating" : "destination"
             } deployment`
           );
-          const VAN = this.props.service.VAN;
-          const requests = {};
-          VAN.deploymentLinks.forEach((deploymentLink) => {
-            const which = this.props.direction === "in" ? "source" : "target";
-            const address = deploymentLink[which].service.address;
-            const site = deploymentLink[which].site.site_name;
-            if (!requests.hasOwnProperty(address)) requests[address] = {};
-            utils.aggregateAttributes(
-              {
-                service: address,
-                shortName: `${utils.shortName(address)} (${site})`,
-                requests: deploymentLink.request[this.props.stat] || 0,
-              },
-              requests[address]
-            );
-          });
-          data = Object.keys(requests).map((address) => {
-            const request = requests[address];
-            const color = utils.serviceColors[address];
-            const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
-            const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
-            return {
-              key: request.service,
-              all: true,
-              name: request.shortName,
-              value: utils.formatStat(this.props.stat, request.requests),
-              x: `${request.shortName}`,
-              y: request.requests,
-              stroke,
-              fill,
-              label: " ",
-            };
-          });
         } else {
           // all sites
-          const VAN = this.props.service.VAN;
-          let stat = this.props.stat;
-          if (this.props.direction === "in" && stat === "bytes_out") {
-            stat = "bytes_in";
-          }
-          if (this.props.direction === "out" && stat === "bytes_in") {
-            stat = "bytes_out";
-          }
-          const to = this.props.direction === "in" ? "source" : "target";
-          const from = this.props.direction === "in" ? "target" : "source";
+          all = true;
           headerText = utils.Icap(
             `${utils.statName(this.props.stat)} by ${
               this.props.direction === "in" ? "originating" : "destination"
             } site`
           );
-          const requests = {};
-          VAN.deploymentLinks.forEach((deploymentLink) => {
-            const toName = deploymentLink[to].site.site_name;
-            const fromId = deploymentLink[from].site.site_id;
-            const toId = deploymentLink[to].site.site_id;
-            if (fromId !== toId) {
-              if (!requests.hasOwnProperty(toId)) requests[toId] = {};
-              utils.aggregateAttributes(
-                {
-                  shortName: toName,
-                  requests: deploymentLink.request[stat] || 0,
-                },
-                requests[toId]
-              );
-            }
-          });
-          data = Object.keys(requests).map((site) => {
-            const request = requests[site];
-            const color = utils.siteColors[site].color;
-            const stroke = utils.lighten(-0.5, color);
-            const fill = utils.lighten(0.5, color);
-            return {
-              key: site,
-              name: request.shortName,
-              value: utils.formatStat(this.props.stat, request.requests),
-              x: request.shortName,
-              y: request.requests,
-              stroke,
-              fill,
-              label: " ",
-            };
-          });
         }
       } else {
         if (this.props.data.address) {
           // specific deployment
-          const VAN = this.props.service.VAN;
-          const requests = {};
-          const adddressSite = `${this.props.data.address} (${this.props.data.cluster.site_name})`;
-
-          let stat = this.props.stat;
-          if (this.props.direction === "in" && stat === "bytes_out") {
-            stat = "bytes_in";
-          }
-          if (this.props.direction === "out" && stat === "bytes_in") {
-            stat = "bytes_out";
-          }
-          const from = this.props.direction === "in" ? "source" : "target";
-          const to = this.props.direction === "in" ? "target" : "source";
           headerText = utils.Icap(
             `${utils.statName(this.props.stat)} sent ${
               this.props.direction === "in" ? "from" : "to"
@@ -195,185 +120,114 @@ class PieBar extends Component {
               this.props.data.cluster.site_name
             })`
           );
-
-          VAN.deploymentLinks.forEach((deploymentLink) => {
-            const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
-            const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
-            if (fromAddress === adddressSite) {
-              if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
-              utils.aggregateAttributes(
-                {
-                  fromAddress,
-                  colorAddress: deploymentLink[to].service.address,
-                  shortName: `${utils.shortName(
-                    deploymentLink[to].service.address
-                  )} (${deploymentLink[to].site.site_name})`,
-                  site: deploymentLink[to].site.site_name,
-                  requests: deploymentLink.request[stat] || 0,
-                },
-                requests[toAddress]
-              );
-            }
-          });
-          data = Object.keys(requests).map((address) => {
-            const request = requests[address];
-            const color = utils.serviceColors[request.colorAddress];
-            const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
-            const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
-            return {
-              key: `${request.site}:${request.colorAddress}`,
-              name: request.shortName,
-              value: utils.formatStat(this.props.stat, request.requests),
-              x: request.shortName,
-              y: request.requests,
-              stroke,
-              fill,
-              label: " ",
-            };
-          });
+          site_info = this.props.data.cluster.site_name;
         } else {
           // for specific site
-          const VAN = this.props.service.VAN;
-          const requests = {};
-          let stat = this.props.stat;
-          if (this.props.direction === "in" && stat === "bytes_out") {
-            stat = "bytes_in";
-          }
-          if (this.props.direction === "out" && stat === "bytes_in") {
-            stat = "bytes_out";
-          }
-          const from = this.props.direction === "in" ? "source" : "target";
-          const to = this.props.direction === "in" ? "target" : "source";
-
           headerText = utils.Icap(
             `${utils.statName(this.props.stat)} sent ${
               this.props.direction === "in" ? "from" : "to"
             } ${this.props.data.site_name}`
           );
-
-          VAN.deploymentLinks.forEach((deploymentLink) => {
-            const site = deploymentLink[to].site.site_name;
-            const fromId = deploymentLink[from].site.site_id;
-            const toId = deploymentLink[to].site.site_id;
-            if (fromId !== toId && fromId === this.props.data.site_id) {
-              if (!requests.hasOwnProperty(toId)) requests[toId] = {};
-              utils.aggregateAttributes(
-                {
-                  shortName: site,
-                  requests: deploymentLink.request[stat] || 0,
-                },
-                requests[toId]
-              );
-            }
-          });
-          data = Object.keys(requests).map((site) => {
-            const request = requests[site];
-            const color = utils.siteColors[site].color;
-            const stroke = utils.lighten(-0.5, color);
-            const fill = utils.lighten(0.5, color);
-            return {
-              key: site,
-              name: request.shortName,
-              value: utils.formatStat(this.props.stat, request.requests),
-              x: request.shortName,
-              y: request.requests,
-              stroke,
-              fill,
-              label: " ",
-            };
-          });
+          address = this.props.data.site_id;
         }
       }
     } else {
       if (this.props.data === null) {
         // all services
-        const VAN = this.props.service.VAN;
+        all = true;
         headerText = utils.Icap(
           `${utils.statName(this.props.stat)} by ${
             this.props.direction === "in" ? "originating" : "destination"
           } service`
         );
-        const stat =
-          this.props.stat === "bytes_in" ? "bytes_out" : this.props.stat;
-        const requests = {};
-        VAN.deploymentLinks.forEach((deploymentLink) => {
-          const which = this.props.direction === "in" ? "source" : "target";
-          const address = deploymentLink[which].service.address;
-          if (!requests.hasOwnProperty(address)) requests[address] = {};
-          utils.aggregateAttributes(
-            {
-              service: address,
-              shortName: utils.shortName(address),
-              requests: deploymentLink.request[stat] || 0,
-            },
-            requests[address]
-          );
-        });
-        data = Object.keys(requests).map((address) => {
-          const request = requests[address];
-          const color = utils.serviceColors[address];
-          const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
-          const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
-          return {
-            key: address,
-            name: request.shortName,
-            value: utils.formatStat(this.props.stat, request.requests),
-            x: request.shortName,
-            y: request.requests,
-            stroke,
-            fill,
-            label: " ",
-          };
-        });
       } else {
         // for specific service
-        let stat = this.props.stat;
-        if (this.props.direction === "in" && stat === "bytes_out") {
-          stat = "bytes_in";
-        }
-        if (this.props.direction === "out" && stat === "bytes_in") {
-          stat = "bytes_out";
-        }
-        const from = this.props.direction === "in" ? "source" : "target";
-        const to = this.props.direction === "in" ? "target" : "source";
         headerText = utils.Icap(
           `${utils.statName(this.props.stat)} sent ${
             this.props.direction === "in" ? "from" : "to"
           } ${utils.shortName(this.props.data.address)}`
         );
-        const VAN = this.props.service.VAN;
-        const requests = {};
-        VAN.deploymentLinks.forEach((deploymentLink) => {
-          const fromAddress = deploymentLink[from].service.address;
-          const toAddress = deploymentLink[to].service.address;
-          if (fromAddress === this.props.data.address) {
-            if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
-            utils.aggregateAttributes(
-              {
-                fromAddress,
-                toAddress,
-                shortName: utils.shortName(toAddress),
-                requests: deploymentLink.request[stat] || 0,
-              },
-              requests[toAddress]
-            );
-          }
+      }
+    }
+    let requests, data;
+    if (type !== LINE_CHART) {
+      if (all) {
+        requests = this.props.viewObj.allRequests(
+          this.props.service.VAN,
+          this.props.direction,
+          this.props.stat
+        );
+      } else {
+        requests = this.props.viewObj.specificRequests(
+          this.props.service.VAN,
+          this.props.direction,
+          this.props.stat,
+          address,
+          site_info
+        );
+      }
+      data = Object.keys(requests).map((key) => {
+        const request = requests[key];
+        const color = request.color;
+        const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
+        const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
+        return {
+          key: request.key,
+          all: request.all,
+          name: request.shortName,
+          value: utils.formatStat(this.props.stat, request.requests),
+          x: request.shortName,
+          y: request.requests,
+          stroke,
+          fill,
+          label: " ",
+        };
+      });
+    } else {
+      // line charts
+      if (all) {
+        requests = this.props.viewObj.allTimeSeries({
+          VAN: this.props.service.VAN,
+          direction: this.props.direction,
+          stat: this.props.stat,
+          duration: this.props.duration,
         });
-        data = Object.keys(requests).map((address) => {
-          const request = requests[address];
-          const color = utils.serviceColors[address];
-          const stroke = utils.rgbToHex(d3.rgb(color).darker(0.6));
-          const fill = utils.rgbToHex(d3.rgb(color).brighter(0.6));
-          return {
-            key: request.fromAddress,
-            name: request.shortName,
-            value: utils.formatStat(this.props.stat, request.requests),
-            x: request.shortName,
-            y: request.requests,
-            stroke,
-            fill,
-            label: " ",
-          };
+      } else {
+        requests = this.props.viewObj.specificTimeSeries({
+          VAN: this.props.service.VAN,
+          direction: this.props.direction,
+          stat: this.props.stat,
+          duration: this.props.duration,
+          address,
+          site_name: site_info,
+        });
+      }
+      /*
+      [
+        { name: "Cats", x: "2015", y: 1 },
+        { name: "Cats", x: "2016", y: 2 },
+        { name: "Cats", x: "2017", y: 5 },
+        { name: "Cats", x: "2018", y: 3 },
+      ]
+      */
+      data = {};
+      const now = new Date();
+      if (requests) {
+        Object.keys(requests).forEach((key) => {
+          data[key] = requests[key].samples.map((sample) => {
+            const timeAgoInSeconds = Math.floor((now - sample.date) / 1000);
+            let { interval, epoch } = utils.getDuration(timeAgoInSeconds);
+            if (epoch === "second") epoch = "sec";
+            if (epoch === "minute") epoch = "min";
+            const suffix = interval === 1 ? "" : "s";
+            return {
+              key,
+              name: utils.shortName(key),
+              x: `${interval} ${epoch}${suffix} ago`,
+              y: sample.val,
+              color: requests[key].color,
+            };
+          });
         });
       }
     }
@@ -385,16 +239,21 @@ class PieBar extends Component {
         data = {};
       }
     }
+    const containerId = this.props.containerId
+      ? this.props.containerId
+      : "sk-sidebar";
+    const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
     this.setState({
       data,
       width: sizes[0],
       height: sizes[0],
       headerText,
+      tickLabel: utils.Icap(utils.statName(this.props.stat)),
     });
   };
 
-  doUpdate = () => {
-    this.init();
+  doUpdate = (type) => {
+    this.init(type);
   };
 
   tickFormat = (tick, index, ticks) => {
@@ -405,12 +264,27 @@ class PieBar extends Component {
     return tickValues[index];
   };
   getHeight = () => {
-    if (this.props.type === "pie") return this.state.height;
+    if (this.props.type === PIE_CHART) return this.state.height;
+    if (this.props.type === LINE_CHART) return this.state.height / 2;
     // 30 for each row, 40 for the x axis, at least 80
-    return Math.max(Object.keys(this.state.data).length * 30 + 40, 80);
+    const perRow = 30;
+    const atLeast = 80;
+    const count = this.state.data.length;
+    return Math.max(count * perRow + 40, atLeast);
   };
 
   render() {
+    const { height, width, headerText, tickLabel } = this.state;
+    let { data } = this.state;
+    // ugly work-around. The views can have different chart types. If the format of the current
+    // state.data doesn't match the requested chart type, default the data to the correct type.
+    // The correct data will be generated immediately after the render.
+    // An alternative is to not store the data in this.state. But to regenerate it before every render.
+    if (this.props.type === LINE_CHART) {
+      if (Array.isArray(data)) data = defaultAreaData;
+    } else {
+      if (!Array.isArray(data)) data = defaultData;
+    }
     // Padding left for bar chart is needed to allow room for the service names.
     // Service names are stored in the .x attribute of the data
     // Use a sliding scale per character as an estimate
@@ -420,34 +294,37 @@ class PieBar extends Component {
         .domain([3, 4, 20, 100])
         .range([48, 50, 170, 800]);
 
-      let padding = Math.max(
-        ...Object.keys(this.state.data).map((k) => this.state.data[k].x.length)
-      );
+      let padding;
+      if (this.props.type !== LINE_CHART) {
+        padding = Math.max(...data.map((datum) => datum.x.length));
+      } else {
+        padding = 3;
+      }
       return ys(padding);
     };
     return (
-      Object.keys(this.state.data).length > 0 && (
+      Object.keys(data).length > 0 && (
         <div
           id={`sk-chart-container-${this.props.direction}`}
           className={`sk-chart-container ${
             this.props.direction === "out" ? "sk-chart-separated" : ""
           }`}
         >
-          <div className="sk-chart-header">{this.state.headerText}</div>
+          <div className="sk-chart-header">{headerText}</div>
           <div
             style={{
               height: `${this.getHeight() + 20}px`,
-              width: `${this.state.width}px`,
+              width: `${width}px`,
             }}
           >
-            {this.props.type === "pie" && (
+            {this.props.type === PIE_CHART && (
               <ChartPie
                 ariaDesc="pie chart"
                 constrainToVisibleArea={true}
                 allowTooltip={false}
-                data={this.state.data}
-                height={this.state.height}
-                width={this.state.width}
+                data={data}
+                height={height}
+                width={width}
                 padding={{
                   bottom: 0,
                   left: 20,
@@ -519,9 +396,131 @@ class PieBar extends Component {
                 ]}
               />
             )}
-            {this.props.type === "bar" && (
+            {this.props.type === LINE_CHART && (
               <Chart
-                ariaDesc={this.state.headerText}
+                ariaDesc={headerText}
+                interpolation="natural"
+                allowTooltip={false}
+                domainPadding={{ y: [10, 10] }}
+                height={this.getHeight()}
+                padding={{
+                  bottom: 50,
+                  left: getPaddingLeft(),
+                  right: 40,
+                  top: 20,
+                }}
+                width={width}
+              >
+                <ChartAxis
+                  tickFormat={(t) => {
+                    if (t === "1 min ago") return t;
+                    const secs = parseInt(t);
+                    // first one
+                    if (secs === 0) return "Now";
+                    const first = Object.keys(data)[0];
+                    const count = data[first].length;
+                    // last one
+                    if ((count - 1) * 2 === secs) return t;
+                    return "";
+                  }}
+                />
+                <ChartAxis
+                  comment="y-axis"
+                  dependentAxis
+                  showGrid
+                  fixLabelOverlap={true}
+                  tickFormat={(tick, index, ticks) => {
+                    const t = utils.formatBytes(tick, 0);
+                    return t;
+                  }}
+                />
+                <ChartGroup>
+                  {Object.keys(data).map((d) => {
+                    return (
+                      <ChartLine
+                        key={d}
+                        data={data[d]}
+                        style={{
+                          data: {
+                            stroke: ({ data }) =>
+                              data.length > 0 ? data[0].color : "#000000",
+                            strokeWidth: 6,
+                            width: "6px",
+                          },
+                        }}
+                        events={[
+                          {
+                            target: "data",
+                            eventHandlers: {
+                              onMouseMove: (event, data) => {
+                                if (this.props.handleArcOver) {
+                                  this.props.handleArcOver(
+                                    {
+                                      key: data.data[0].key,
+                                      all: data.data[0].all,
+                                    },
+                                    true
+                                  );
+                                }
+                                if (this.props.showTooltip) {
+                                  this.props.showTooltip(
+                                    `${data.data[0].name} ${utils.formatStat(
+                                      this.props.stat,
+                                      data.data[0].y
+                                    )}`,
+                                    event.clientX,
+                                    event.clientY
+                                  );
+                                }
+                                return [
+                                  {
+                                    target: "data",
+                                    mutation: (props) => {
+                                      return {
+                                        style: {
+                                          strokeWidth: 2,
+                                          stroke: "#06c",
+                                          fill: props.style.fill,
+                                        },
+                                      };
+                                    },
+                                  },
+                                ];
+                              },
+                              onMouseLeave: (e, data) => {
+                                if (this.props.handleArcOver) {
+                                  this.props.handleArcOver(
+                                    {
+                                      key: data.data[0].key,
+                                      all: data.data[0].all,
+                                    },
+                                    false
+                                  );
+                                }
+                                if (this.props.showTooltip) {
+                                  this.props.showTooltip(null);
+                                }
+                                return [
+                                  {
+                                    target: "data",
+                                    mutation: () => {
+                                      return null;
+                                    },
+                                  },
+                                ];
+                              },
+                            },
+                          },
+                        ]}
+                      />
+                    );
+                  })}
+                </ChartGroup>
+              </Chart>
+            )}
+            {this.props.type === BAR_CHART && (
+              <Chart
+                ariaDesc={headerText}
                 allowTooltip={false}
                 domainPadding={{ x: [0, 0] }}
                 height={this.getHeight()}
@@ -531,7 +530,7 @@ class PieBar extends Component {
                   right: 40,
                   top: 20,
                 }}
-                width={this.state.width}
+                width={width}
               >
                 <ChartAxis />
                 <ChartAxis
@@ -539,11 +538,11 @@ class PieBar extends Component {
                   showGrid
                   fixLabelOverlap={true}
                   tickFormat={this.tickFormat}
-                  label={this.state.tickLabel}
+                  label={tickLabel}
                 />
                 <ChartBar
                   horizontal
-                  data={this.state.data}
+                  data={data}
                   style={{
                     data: {
                       stroke: ({ datum }) => datum.stroke,

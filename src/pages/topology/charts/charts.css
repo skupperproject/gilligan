@@ -27,16 +27,26 @@
   padding-right: 0px;
 }
 
+/*
 .pf-l-split {
-  border-bottom: 1px solid #eaeaea;
+   border-bottom: 1px solid #eaeaea;
 }
+*/
 
 button.selected {
   border-bottom: 2px solid #06c;
 }
 
+button svg.sk-icon-chord {
+  fill: #666666;
+}
+
 button.selected svg {
   fill: #06c;
+}
+
+button.rotated svg {
+  transform: rotate(-90deg) scale(1, -1);
 }
 
 button:focus {

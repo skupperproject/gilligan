@@ -842,6 +842,129 @@ export class Service {
     });
   };
 
+  allRequests = (VAN, direction, stat) => {
+    const requests = {};
+    const which = direction === "in" ? "source" : "target";
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const address = deploymentLink[which].service.address;
+      if (!requests.hasOwnProperty(address)) requests[address] = {};
+      utils.aggregateAttributes(
+        {
+          key: address,
+          service: address,
+          shortName: utils.shortName(address),
+          requests: deploymentLink.request[stat] || 0,
+          color: utils.serviceColors[address],
+        },
+        requests[address]
+      );
+    });
+    return requests;
+  };
+
+  specificRequests = (VAN, direction, stat, address) => {
+    const requests = {};
+    if (direction === "in" && stat === "bytes_out") {
+      stat = "bytes_in";
+    } else if (direction === "out" && stat === "bytes_in") {
+      stat = "bytes_out";
+    }
+    const from = direction === "in" ? "source" : "target";
+    const to = direction === "in" ? "target" : "source";
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const fromAddress = deploymentLink[from].service.address;
+      const toAddress = deploymentLink[to].service.address;
+      if (fromAddress === address) {
+        if (deploymentLink.request[stat] !== undefined) {
+          if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
+          utils.aggregateAttributes(
+            {
+              key: fromAddress,
+              toAddress,
+              shortName: utils.shortName(toAddress),
+              requests: deploymentLink.request[stat],
+              color: utils.serviceColors[toAddress],
+            },
+            requests[toAddress]
+          );
+        }
+      }
+    });
+    return requests;
+  };
+
+  allTimeSeries = ({ VAN, direction, stat, duration = "min" }) => {
+    const requests = {};
+    const which = direction === "in" ? "source" : "target";
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const address = deploymentLink[which].service.address;
+      const samples = utils.getHistory({
+        histories: deploymentLink.history,
+        stat,
+        ago: duration === "min" ? 60 + 1 : 60 * 60 + 1,
+        skipUndefined: true,
+      });
+      if (samples.length > 0) {
+        if (!requests.hasOwnProperty(address)) {
+          requests[address] = {
+            key: address,
+            service: address,
+            shortName: utils.shortName(address),
+            samples,
+            color: utils.serviceColors[address],
+          };
+        } else {
+          utils.combineSamples(requests[address].samples, samples);
+        }
+      }
+    });
+    return requests;
+  };
+
+  specificTimeSeries = ({
+    VAN,
+    direction,
+    stat,
+    duration = "min",
+    address,
+  }) => {
+    const requests = {};
+    if (direction === "in" && stat === "bytes_out") {
+      stat = "bytes_in";
+    } else if (direction === "out" && stat === "bytes_in") {
+      stat = "bytes_out";
+    }
+    const from = direction === "in" ? "source" : "target";
+    const to = direction === "in" ? "target" : "source";
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const fromAddress = deploymentLink[from].service.address;
+      const toAddress = deploymentLink[to].service.address;
+      if (fromAddress === address) {
+        const samples = utils.getHistory({
+          histories: deploymentLink.history,
+          stat,
+          ago: duration === "min" ? 60 + 1 : 60 * 60 + 1,
+          skipUndefined: true,
+        });
+        if (samples.length > 0) {
+          if (!requests.hasOwnProperty(toAddress)) {
+            requests[toAddress] = {
+              key: fromAddress,
+              toAddress,
+              shortName: utils.shortName(toAddress),
+              samples,
+              color: utils.serviceColors[toAddress],
+            };
+          } else {
+            utils.combineSamples(requests[toAddress].samples, samples);
+          }
+        }
+      }
+    });
+    if (address === "cartservice") console.dump(requests);
+    return requests;
+  };
+
   chordOver(chord, over, viewer) {
     d3.select("#SVG_ID")
       .selectAll("path.service")

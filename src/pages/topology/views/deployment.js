@@ -594,6 +594,158 @@ export class Deployment extends Service {
     });
   };
 
+  // get requests for charts
+  allRequests = (VAN, direction, stat) => {
+    const requests = {};
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const which = direction === "in" ? "source" : "target";
+      const address = deploymentLink[which].service.address;
+      const site = deploymentLink[which].site.site_name;
+      if (!requests.hasOwnProperty(address)) requests[address] = {};
+      utils.aggregateAttributes(
+        {
+          key: address,
+          service: address,
+          shortName: `${utils.shortName(address)} (${site})`,
+          requests: deploymentLink.request[stat] || 0,
+          color: utils.serviceColors[address],
+          all: true,
+        },
+        requests[address]
+      );
+    });
+    return requests;
+  };
+
+  specificRequests = (VAN, direction, stat, address, site_name) => {
+    if (site_name === undefined) {
+      return this.Site.specificRequests(VAN, direction, stat, address);
+    }
+    const requests = {};
+    const adddressSite = `${address} (${site_name})`;
+
+    if (direction === "in" && stat === "bytes_out") {
+      stat = "bytes_in";
+    } else if (direction === "out" && stat === "bytes_in") {
+      stat = "bytes_out";
+    }
+    const from = direction === "in" ? "source" : "target";
+    const to = direction === "in" ? "target" : "source";
+
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
+      const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
+      if (fromAddress === adddressSite) {
+        if (deploymentLink.request[stat] !== undefined) {
+          if (!requests.hasOwnProperty(toAddress)) {
+            requests[toAddress] = {
+              fromAddress,
+              shortName: `${utils.shortName(
+                deploymentLink[to].service.address
+              )} (${deploymentLink[to].site.site_name})`,
+              site: deploymentLink[to].site.site_name,
+              requests: deploymentLink.request[stat],
+              color: utils.serviceColors[deploymentLink[to].service.address],
+              key: `${deploymentLink[to].site.site_name}:${deploymentLink[to].service.address}`,
+            };
+          } else {
+            requests[toAddress].requests += deploymentLink.request[stat];
+          }
+        }
+      }
+    });
+    return requests;
+  };
+
+  allTimeSeries = ({ VAN, direction, stat, duration = "min" }) => {
+    const requests = {};
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const which = direction === "in" ? "source" : "target";
+      const address = deploymentLink[which].service.address;
+      const site = deploymentLink[which].site.site_name;
+      const samples = utils.getHistory({
+        histories: deploymentLink.history,
+        stat,
+        ago: duration === "min" ? 60 + 1 : 60 * 60 + 1,
+        skipUndefined: true,
+      });
+      if (samples.length > 0) {
+        if (!requests.hasOwnProperty(address)) {
+          requests[address] = {
+            key: address,
+            service: address,
+            shortName: `${utils.shortName(address)} (${site})`,
+            samples,
+            color: utils.serviceColors[address],
+            all: true,
+          };
+        } else {
+          utils.combineSamples(requests[address].samples, samples);
+        }
+      }
+    });
+    return requests;
+  };
+
+  specificTimeSeries = ({
+    VAN,
+    direction,
+    stat,
+    duration = "min",
+    address,
+    site_name,
+  }) => {
+    if (site_name === undefined) {
+      return this.Site.specificTimeSeries({
+        VAN,
+        direction,
+        stat,
+        duration,
+        address,
+      });
+    }
+    const requests = {};
+    const adddressSite = `${address} (${site_name})`;
+
+    if (direction === "in" && stat === "bytes_out") {
+      stat = "bytes_in";
+    } else if (direction === "out" && stat === "bytes_in") {
+      stat = "bytes_out";
+    }
+    const from = direction === "in" ? "source" : "target";
+    const to = direction === "in" ? "target" : "source";
+
+    VAN.deploymentLinks.forEach((deploymentLink) => {
+      const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
+      const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
+      if (fromAddress === adddressSite) {
+        const samples = utils.getHistory({
+          histories: deploymentLink.history,
+          stat,
+          ago: duration === "min" ? 60 + 1 : 60 * 60 + 1,
+          skipUndefined: true,
+        });
+        if (samples.length > 0) {
+          if (!requests.hasOwnProperty(toAddress)) {
+            requests[toAddress] = {
+              fromAddress,
+              shortName: `${utils.shortName(
+                deploymentLink[to].service.address
+              )} (${deploymentLink[to].site.site_name})`,
+              site: deploymentLink[to].site.site_name,
+              samples,
+              color: utils.serviceColors[deploymentLink[to].service.address],
+              key: `${deploymentLink[to].site.site_name}:${deploymentLink[to].service.address}`,
+            };
+          } else {
+            utils.combineSamples(requests[toAddress].samples, samples);
+          }
+        }
+      }
+    });
+    return requests;
+  };
+
   // handle mouse over a chord. highlight the path
   chordOver(chord, over, viewer) {
     if (!chord.info) return;

@@ -19,8 +19,14 @@ under the License.
 
 import React, { Component } from "react";
 import { Button, Split, SplitItem } from "@patternfly/react-core";
-import { ChartPieIcon, ChartBarIcon } from "@patternfly/react-icons";
+import {
+  ChartPieIcon,
+  ChartBarIcon,
+  ChartLineIcon,
+} from "@patternfly/react-icons";
+import { ChordIcon } from "../../../assets/chordIcon";
 import "./charts.css";
+import { CHORD_CHART, LINE_CHART, BAR_CHART, PIE_CHART } from "./chartViewer";
 
 class ChartToolbar extends Component {
   constructor(props) {
@@ -33,15 +39,28 @@ class ChartToolbar extends Component {
   };
 
   render() {
+    const { type } = this.props;
     return (
       <Split className="sk-chart-toolbar" gutter="md">
         <SplitItem isFilled></SplitItem>
         <SplitItem>
           <Button
             variant="plain"
-            aria-label="Action"
-            className={this.props.type === "bar" ? "selected" : ""}
-            onClick={() => this.handleChangeChartType("bar")}
+            aria-label="Time"
+            className={type === LINE_CHART ? "selected" : ""}
+            onClick={() => this.handleChangeChartType(LINE_CHART)}
+            title="Timeseries charts"
+          >
+            <ChartLineIcon />
+          </Button>
+        </SplitItem>
+        <SplitItem>
+          <Button
+            variant="plain"
+            aria-label={BAR_CHART}
+            className={type === BAR_CHART ? "selected rotated" : "rotated"}
+            onClick={() => this.handleChangeChartType(BAR_CHART)}
+            title="Bar charts"
           >
             <ChartBarIcon />
           </Button>
@@ -49,11 +68,23 @@ class ChartToolbar extends Component {
         <SplitItem>
           <Button
             variant="plain"
-            aria-label="Action"
-            className={this.props.type === "pie" ? "selected" : ""}
-            onClick={() => this.handleChangeChartType("pie")}
+            aria-label={PIE_CHART}
+            className={type === PIE_CHART ? "selected" : ""}
+            onClick={() => this.handleChangeChartType(PIE_CHART)}
+            title="Pie charts"
           >
             <ChartPieIcon />
+          </Button>
+        </SplitItem>
+        <SplitItem>
+          <Button
+            variant="plain"
+            aria-label={CHORD_CHART}
+            className={type === CHORD_CHART ? "selected" : ""}
+            onClick={() => this.handleChangeChartType(CHORD_CHART)}
+            title="Chord chart"
+          >
+            <ChordIcon />
           </Button>
         </SplitItem>
       </Split>
