@@ -173,7 +173,7 @@ class GraphToolbar extends Component {
     const sankeyCheck = () => (
       <React.Fragment>
         <ToolbarItem className="toolbar-item">
-          <Split>
+          <Split className="sk-traffic-split">
             {routerLinksRadio()}
             {trafficCheckOrRadio()}
           </Split>
