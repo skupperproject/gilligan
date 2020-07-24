@@ -61,7 +61,7 @@ export class QDRLogger {
 const zeroIfyLinks = (links) => {
   links.forEach((l) => {
     if (l.value === 0) {
-      l.value = 0.1;
+      l.value = 0.01;
       l.wasZero = true;
     }
   });
@@ -955,6 +955,73 @@ const utils = {
         }
       }
     }
+  },
+
+  // keep a history of a given obj
+  // store the objs in storage[key]
+  keepHistory: ({ obj, storage, key, history = 60 }) => {
+    let list = storage[key];
+    if (!list) {
+      list = storage[key] = [];
+    }
+    // expire old entries
+    while (list.length > history) {
+      list.shift();
+    }
+    list.push({
+      date: new Date(),
+      val: Object.assign({}, obj),
+    });
+  },
+
+  // return the {date:, val:} from the histories array since 'ago' seconds ago
+  getHistory: ({ histories, stat, ago, skipUndefined = false }) => {
+    const values = [];
+    const now = new Date();
+    const then = new Date(now - ago * 1000);
+    histories.forEach((history) => {
+      if (history.date >= then) {
+        let val = history.val[stat];
+        if (val === undefined && !skipUndefined) {
+          val = 0;
+        }
+        if (val !== undefined) {
+          values.push({ date: history.date, val });
+        }
+      }
+    });
+    return values;
+  },
+
+  // for each sample in targetSamples, find the corresponding entry in the
+  // given sample and add the vals
+  combineSamples: (targetSamples, samples) => {
+    targetSamples.forEach((oldSample, i) => {
+      oldSample.val += samples[i].val;
+    });
+  },
+
+  // calculate the average rate of change per second for a list of fields on the given obj
+  rates: ({ fields, storage, key, history = 2 }) => {
+    let list = storage[key];
+    if (!list) {
+      list = storage[key] = [];
+    }
+    history = Math.max(history, 2);
+    let rates = {};
+    for (let i = 0; i < fields.length; i++) {
+      let cumulative = 0;
+      let field = fields[i];
+      for (let j = list.length - 1; j > history - 2; j--) {
+        let elapsed = list[j].date - list[j - 1].date;
+        if (list[j].val[field] !== undefined) {
+          let diff = list[j + 1].val[field] - list[j].val[field];
+          if (elapsed > 100) cumulative += diff / (elapsed / 1000);
+        }
+      }
+      rates[field] = list.length > 1 ? cumulative / (list.length - 1) : 0;
+    }
+    return rates;
   },
 };
 
