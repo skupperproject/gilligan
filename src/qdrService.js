@@ -20,11 +20,13 @@ Licensed to the Apache Software Foundation (ASF) under one
 import RESTService from "./restService";
 import Adapter from "./adapter";
 import { utils } from "./utilities";
+export const UPDATE_INTERVAL = 2000;
 
 // number of milliseconds between topology updates
 export class QDRService {
   constructor(hooks) {
     this.hooks = hooks;
+    this.history = {};
   }
 
   connect() {
@@ -32,9 +34,10 @@ export class QDRService {
       if (!this.rest) this.rest = new RESTService();
       this.rest.getData().then(
         (data) => {
-          if (this.modifier) this.modifier.update(data);
+          if (this.adapter) delete this.adapter;
           this.adapter = new Adapter(data);
           this.VAN = data;
+          this.saveTimeSeries(data);
           this.initColors(data);
           resolve(data);
         },
@@ -52,6 +55,19 @@ export class QDRService {
     });
     data.services.forEach((service) => {
       utils.serviceColor(service.address);
+    });
+  };
+
+  saveTimeSeries = (data) => {
+    // push the current link.request onto link.history
+    data.deploymentLinks.forEach((link) => {
+      utils.keepHistory({
+        obj: link.request,
+        storage: this.history,
+        key: link.key,
+        history: (60 * 60 * 1000) / UPDATE_INTERVAL, // 1 hour of samples
+      });
+      link.history = this.history[link.key];
     });
   };
 }
