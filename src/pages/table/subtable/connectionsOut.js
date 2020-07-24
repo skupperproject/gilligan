@@ -77,21 +77,23 @@ class ConnectionsOut extends Component {
 
   hasRequest = (data) => {
     let has = false;
-    data.targetServices.forEach((target, i) => {
-      if (target.protocol === "tcp") {
-        target.connections_ingress.forEach((ingress) => {
-          for (let connectionId in ingress.connections) {
-            const connection = ingress.connections[connectionId];
-            if (
-              utils.shortName(connection.client) ===
-              utils.shortName(data.address)
-            ) {
-              has = true;
+    if (data.targetServices) {
+      data.targetServices.forEach((target, i) => {
+        if (target.protocol === "tcp") {
+          target.connections_ingress.forEach((ingress) => {
+            for (let connectionId in ingress.connections) {
+              const connection = ingress.connections[connectionId];
+              if (
+                utils.shortName(connection.client) ===
+                utils.shortName(data.address)
+              ) {
+                has = true;
+              }
             }
-          }
-        });
-      }
-    });
+          });
+        }
+      });
+    }
     return has;
   };
 
