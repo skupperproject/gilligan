@@ -162,17 +162,6 @@ export function addDefs(svg) {
 
   addGlowFilter(svg);
   addMarkers(svg);
-  /*
-  addStyles(
-    sten,
-    {
-      selected: "#33F",
-      highlighted: "#6F6",
-      unknown: "#888",
-    },
-    radii
-  );
-  */
 }
 
 const addGlowFilter = (svg) => {
@@ -313,56 +302,7 @@ export const midPoints = (source, target) => {
     tx: target.x0 + target.getWidth() / 2,
     ty: target.y0 + 20,
   };
-  /*
-  // get center of source and target rects
-  const sxc = source.x + source.getWidth() / 2;
-  const syc = source.y + source.getHeight() / 2;
-  const txc = target.x + target.getWidth() / 2;
-  const tyc = target.y + target.getHeight() / 2;
-
-  const x = txc - sxc; // length of triangle base
-  const y = syc - tyc; // length of triangle side
-
-  const sx = sxc - source.x; // source similar triangle base
-  const sy = (y / x) * sx; // source similar triangle side
-
-  const tx = txc - target.x; // target similar triangle base
-  const ty = (y / x) * tx; // target similar triangle side
-
-  console.log(`${source.name} - ${target.name}`);
-  console.log(`source center (${sxc},${syc}) target center (${txc},${tyc}) `);
-  console.log(`x ${x} y ${y}`);
-  console.log(`sx ${sx} sy ${sy}  tx ${tx} ty ${ty}`);
-  console.log(
-    `source intersect (${sxc + sx},${syc - sy}) target intersect (${txc -
-      tx},${tyc + ty})`
-  );
-  return { sx: sxc + sx, sy: syc - sy, tx: txc - tx, ty: tyc + ty };
-  */
 };
-
-/*
-function addStyles(stend, stateColor, radii) {
-  // the <style>
-  let element = document.querySelector("style");
-  // Reference to the stylesheet
-  let sheet = element.sheet;
-
-  let states = Object.keys(stateColor);
-  // create styles for each combo of 'stend-state-radii'
-  for (let istend = 0; istend < stend.length; istend++) {
-    for (let istate = 0; istate < states.length; istate++) {
-      let selectors = [];
-      for (let iradii = 0; iradii < radii.length; iradii++) {
-        selectors.push(`#${stend[istend]}-${states[istate]}-${radii[iradii]}`);
-      }
-      let color = stateColor[states[istate]];
-      let sels = `${selectors.join(",")} {fill: ${color}; stroke: ${color};}`;
-      sheet.insertRule(sels, 0);
-    }
-  }
-}
-*/
 
 export function scaledMouse(node, event) {
   const rect = node.getBoundingClientRect();
