@@ -47,18 +47,10 @@ class LegendComponent extends Component {
       y: containerRect.height - legendRect.height - 10 + initialOffset.y,
     };
     this.setState({ legendPosition });
-    console.log(
-      `containerRect ${JSON.stringify(
-        containerRect,
-        null,
-        2
-      )} legendRect ${JSON.stringify(legendRect, null, 2)}`
-    );
     this.svg = d3
       .select("#sk-legend-svg")
       .append("svg")
       .attr("width", legendRect.width);
-    //.attr("id", "LEGEND_ID");
 
     this.svg.append("svg:defs").attr("class", "marker-defs");
 
@@ -102,43 +94,6 @@ class LegendComponent extends Component {
       .attr("y", 15)
       .text((d) => d.text);
 
-    /*
-    const endpoint_data = [
-      {
-        shape: "circle",
-        text: "Egress",
-        attrs: { r: 6, cx: 0, cy: 10 },
-      },
-      {
-        shape: "rect",
-        text: "Ingress",
-        attrs: { x: 2, y: 2, width: 10, height: 10, transform: "rotate(45)" },
-      },
-    ];
-
-    let endpoints = this.svg.append("g").attr("class", "endpoints");
-    endpoints.attr("transform", "translate(320, 0)");
-    endpoints = endpoints.selectAll("g").data(endpoint_data);
-    let endpSection = endpoints
-      .enter()
-      .append("g")
-      .attr("transform", (d, i) => `translate(0, ${i * 25})`);
-    endpSection.each(function(d) {
-      const shape = d3
-        .select(this)
-        .append(d.shape)
-        .attr("class", "end-point source");
-      for (let attr in d.attrs) {
-        shape.attr(attr, d.attrs[attr]);
-      }
-
-      d3.select(this)
-        .append("text")
-        .attr("x", 20)
-        .attr("y", 15)
-        .text(d.text);
-    });
-*/
     let objs = this.svg.append("g").attr("class", "objects");
     objs.attr("transform", "translate(320, 0)");
     const site = objs.append("g");
