@@ -41,13 +41,14 @@ import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
-import { QDRService } from "./qdrService";
+import TimedoutPage from "./pages/connect/timeoutPage";
+import { QDRService, UPDATE_INTERVAL } from "./qdrService";
 import { utils } from "./utilities";
 import gilliganImg from "./assets/skupper.svg";
 const history = createBrowserHistory();
-const UPDATE_INTERVAL = 2000;
 const VIEW_MODES = "viewModes";
 const LAST_VIEW = "lastView2";
+const CONNECT_TIMEOUT = 10 * 1000;
 
 class PageLayout extends React.Component {
   constructor(props) {
@@ -68,6 +69,8 @@ class PageLayout extends React.Component {
       username: "",
       view,
       mode: this.viewModes[view],
+      connectionError: null,
+      connectionTimedout: false,
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
@@ -87,6 +90,9 @@ class PageLayout extends React.Component {
 
   componentWillUnmount = () => {
     clearInterval(this.timer);
+    if (this.connectTimer) {
+      clearTimeout(this.connectTimer);
+    }
     this.clearIdle();
     this.unmounted = true;
   };
@@ -170,16 +176,35 @@ class PageLayout extends React.Component {
   };
 
   doConnect = () => {
+    this.connectTimer = setTimeout(this.connectTimeout, CONNECT_TIMEOUT);
     this.service.connect().then(
       (r) => {
+        if (this.connectTimer) {
+          clearTimeout(this.connectTimer);
+          this.connectTimer = null;
+        } else {
+          // we got a response after the connection timer
+        }
         this.handleConnect(this.props.fromPath, true);
       },
       (e) => {
+        clearTimeout(this.connectTimer);
+        this.connectTimer = null;
+        this.setState({ connectionError: e });
         console.log(e);
       }
     );
   };
 
+  connectTimeout = () => {
+    this.setState({ connectionTimedout: true });
+  };
+
+  handleTryAgain = () => {
+    this.setState({ connectionTimedout: false, connectionError: null }, () => {
+      this.doConnect();
+    });
+  };
   handleConnect = (connectPath) => {
     if (this.state.connected) {
       this.setState({ connected: false }, () => {
@@ -314,7 +339,14 @@ class PageLayout extends React.Component {
           skipToContent={PageSkipToContent}
           className={"skupper-console"}
         >
-          {!this.state.connected && (
+          {!this.state.connected && this.state.connectionTimedout && (
+            <TimedoutPage
+              {...this.props}
+              service={this.service}
+              handleTryAgain={this.handleTryAgain}
+            />
+          )}
+          {!this.state.connected && !this.state.connectionTimedout && (
             <ConnectPage
               {...this.props}
               service={this.service}
