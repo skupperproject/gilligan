@@ -68,11 +68,6 @@ export class Deployment extends Service {
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
-    /*
-    console.log(this.Site.siteNodes);
-    console.log(this.serviceNodes);
-    console.log(this.serviceLinks);
-    */
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
@@ -672,7 +667,7 @@ export class Deployment extends Service {
       if (samples.length > 0) {
         if (!requests.hasOwnProperty(address)) {
           requests[address] = {
-            key: address,
+            key: `${address} (${site})`,
             service: address,
             shortName: `${utils.shortName(address)} (${site})`,
             samples,
@@ -735,7 +730,7 @@ export class Deployment extends Service {
               site: deploymentLink[to].site.site_name,
               samples,
               color: utils.serviceColors[deploymentLink[to].service.address],
-              key: `${deploymentLink[to].site.site_name}:${deploymentLink[to].service.address}`,
+              key: `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`,
             };
           } else {
             utils.combineSamples(requests[toAddress].samples, samples);
@@ -777,18 +772,22 @@ export class Deployment extends Service {
 
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
-    d3.selectAll("rect.service-type").each(function(d) {
-      let match = `${d.address} (${d.parentNode.site_name})`;
-      if (arc.all) {
-        match = d.address;
-      }
-      if (arc.key === match) {
-        d.selected = over;
-        viewer.blurAll(over, d);
-        viewer.opaqueServiceType(d);
-        viewer.restart();
-      }
-    });
+    if (arc.legend) {
+      this.Site.arcOver(arc, over, viewer);
+    } else {
+      d3.selectAll("rect.service-type").each(function(d) {
+        let match = `${d.address} (${d.parentNode.site_name})`;
+        if (arc.all) {
+          match = d.address;
+        }
+        if (arc.key === match) {
+          d.selected = over;
+          viewer.blurAll(over, d);
+          viewer.opaqueServiceType(d);
+          viewer.restart();
+        }
+      });
+    }
   }
   getSavedZoom = (defaultScale) => {
     const savedScale = utils.getSaved(ZOOM_SCALE, defaultScale);

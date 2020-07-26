@@ -34,10 +34,6 @@ class ChartToolbar extends Component {
     this.state = {};
   }
 
-  handleChangeChartType = (type) => {
-    this.props.handleChangeChartType(type);
-  };
-
   render() {
     const { type } = this.props;
     return (
@@ -48,7 +44,7 @@ class ChartToolbar extends Component {
             variant="plain"
             aria-label="Time"
             className={type === LINE_CHART ? "selected" : ""}
-            onClick={() => this.handleChangeChartType(LINE_CHART)}
+            onClick={() => this.props.handleChangeChartType(LINE_CHART)}
             title="Timeseries charts"
           >
             <ChartLineIcon />
@@ -59,7 +55,7 @@ class ChartToolbar extends Component {
             variant="plain"
             aria-label={BAR_CHART}
             className={type === BAR_CHART ? "selected rotated" : "rotated"}
-            onClick={() => this.handleChangeChartType(BAR_CHART)}
+            onClick={() => this.props.handleChangeChartType(BAR_CHART)}
             title="Bar charts"
           >
             <ChartBarIcon />
@@ -70,7 +66,7 @@ class ChartToolbar extends Component {
             variant="plain"
             aria-label={PIE_CHART}
             className={type === PIE_CHART ? "selected" : ""}
-            onClick={() => this.handleChangeChartType(PIE_CHART)}
+            onClick={() => this.props.handleChangeChartType(PIE_CHART)}
             title="Pie charts"
           >
             <ChartPieIcon />
@@ -81,7 +77,7 @@ class ChartToolbar extends Component {
             variant="plain"
             aria-label={CHORD_CHART}
             className={type === CHORD_CHART ? "selected" : ""}
-            onClick={() => this.handleChangeChartType(CHORD_CHART)}
+            onClick={() => this.props.handleChangeChartType(CHORD_CHART)}
             title="Chord chart"
           >
             <ChordIcon />

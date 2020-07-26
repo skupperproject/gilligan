@@ -221,8 +221,8 @@ class PieBar extends Component {
             if (epoch === "minute") epoch = "min";
             const suffix = interval === 1 ? "" : "s";
             return {
-              key,
-              name: utils.shortName(key),
+              key: requests[key].key,
+              name: requests[key].shortName,
               x: `${interval} ${epoch}${suffix} ago`,
               y: sample.val,
               color: requests[key].color,
@@ -263,6 +263,73 @@ class PieBar extends Component {
     }
     return tickValues[index];
   };
+
+  events = ({ accessor, tooltipGenerator, strokeWidth }) => {
+    return [
+      {
+        target: "data",
+        eventHandlers: {
+          onMouseMove: (event, data) => {
+            if (this.props.handleArcOver) {
+              this.props.handleArcOver(
+                {
+                  key: accessor(data).key,
+                  all: accessor(data).all,
+                  legend: this.props.deployment && this.props.data !== null,
+                },
+                true
+              );
+            }
+            if (this.props.showTooltip) {
+              this.props.showTooltip(
+                tooltipGenerator(data),
+                event.clientX,
+                event.clientY
+              );
+            }
+            return [
+              {
+                target: "data",
+                mutation: (props) => {
+                  return {
+                    style: {
+                      strokeWidth,
+                      stroke: "#06c",
+                      fill: props.style.fill,
+                    },
+                  };
+                },
+              },
+            ];
+          },
+          onMouseLeave: (e, data) => {
+            if (this.props.handleArcOver) {
+              this.props.handleArcOver(
+                {
+                  key: accessor(data).key,
+                  all: accessor(data).all,
+                  legend: this.props.deployment && this.props.data !== null,
+                },
+                false
+              );
+            }
+            if (this.props.showTooltip) {
+              this.props.showTooltip(null);
+            }
+            return [
+              {
+                target: "data",
+                mutation: () => {
+                  return null;
+                },
+              },
+            ];
+          },
+        },
+      },
+    ];
+  };
+
   getHeight = () => {
     if (this.props.type === PIE_CHART) return this.state.height;
     if (this.props.type === LINE_CHART) return this.state.height / 2;
@@ -276,15 +343,25 @@ class PieBar extends Component {
   render() {
     const { height, width, headerText, tickLabel } = this.state;
     let { data } = this.state;
-    // ugly work-around. The views can have different chart types. If the format of the current
-    // state.data doesn't match the requested chart type, default the data to the correct type.
-    // The correct data will be generated immediately after the render.
-    // An alternative is to not store the data in this.state. But to regenerate it before every render.
-    if (this.props.type === LINE_CHART) {
-      if (Array.isArray(data)) data = defaultAreaData;
-    } else {
-      if (!Array.isArray(data)) data = defaultData;
+
+    // This component handles rendering linecharts and pie/bar charts. When switching between
+    // chart types, if the format of the current state.data doesn't match
+    // the requested chart type, don't render the chart.
+    // The correct data will be generated immediately after this render and the chart will be
+    // re-rendered.
+    // An alternative is to not store the data in this.state, but to regenerate it before every render.
+    // However, that would be inefficient since this component is rendered often.
+    // TODO: A better alternative is to separate the chart types into their own components
+    // and have the common methods in a base class.
+    if (
+      (this.props.type === LINE_CHART && Array.isArray(data)) ||
+      (this.props.type !== LINE_CHART && !Array.isArray(data))
+    ) {
+      // The chart type changed but the data hasn't been recreated.
+      // Don't render anything
+      return null;
     }
+
     // Padding left for bar chart is needed to allow room for the service names.
     // Service names are stored in the .x attribute of the data
     // Use a sliding scale per character as an estimate
@@ -339,61 +416,12 @@ class PieBar extends Component {
                     fill: ({ datum }) => datum.fill,
                   },
                 }}
-                events={[
-                  {
-                    target: "data",
-                    eventHandlers: {
-                      onMouseMove: (event, data) => {
-                        if (this.props.handleArcOver) {
-                          this.props.handleArcOver(
-                            { key: data.datum.key, all: data.datum.all },
-                            true
-                          );
-                        }
-                        if (this.props.showTooltip) {
-                          this.props.showTooltip(
-                            `${data.datum.name} ${data.datum.value}`,
-                            event.clientX,
-                            event.clientY
-                          );
-                        }
-                        return [
-                          {
-                            target: "data",
-                            mutation: (props) => {
-                              return {
-                                style: {
-                                  strokeWidth: 2,
-                                  stroke: "#06c",
-                                  fill: props.style.fill,
-                                },
-                              };
-                            },
-                          },
-                        ];
-                      },
-                      onMouseLeave: (e, data) => {
-                        if (this.props.handleArcOver) {
-                          this.props.handleArcOver(
-                            { key: data.datum.key, all: data.datum.all },
-                            false
-                          );
-                        }
-                        if (this.props.showTooltip) {
-                          this.props.showTooltip(null);
-                        }
-                        return [
-                          {
-                            target: "data",
-                            mutation: () => {
-                              return null;
-                            },
-                          },
-                        ];
-                      },
-                    },
-                  },
-                ]}
+                events={this.events({
+                  accessor: (data) => data.datum,
+                  tooltipGenerator: (data) =>
+                    `${data.datum.name} ${data.datum.value}`,
+                  strokeWidth: 2,
+                })}
               />
             )}
             {this.props.type === LINE_CHART && (
@@ -444,74 +472,21 @@ class PieBar extends Component {
                           data: {
                             stroke: ({ data }) =>
                               data.length > 0 ? data[0].color : "#000000",
+                            fill: ({ data }) =>
+                              data.length > 0 ? data[0].color : "#000000",
                             strokeWidth: 6,
                             width: "6px",
                           },
                         }}
-                        events={[
-                          {
-                            target: "data",
-                            eventHandlers: {
-                              onMouseMove: (event, data) => {
-                                if (this.props.handleArcOver) {
-                                  this.props.handleArcOver(
-                                    {
-                                      key: data.data[0].key,
-                                      all: data.data[0].all,
-                                    },
-                                    true
-                                  );
-                                }
-                                if (this.props.showTooltip) {
-                                  this.props.showTooltip(
-                                    `${data.data[0].name} ${utils.formatStat(
-                                      this.props.stat,
-                                      data.data[0].y
-                                    )}`,
-                                    event.clientX,
-                                    event.clientY
-                                  );
-                                }
-                                return [
-                                  {
-                                    target: "data",
-                                    mutation: (props) => {
-                                      return {
-                                        style: {
-                                          strokeWidth: 2,
-                                          stroke: "#06c",
-                                          fill: props.style.fill,
-                                        },
-                                      };
-                                    },
-                                  },
-                                ];
-                              },
-                              onMouseLeave: (e, data) => {
-                                if (this.props.handleArcOver) {
-                                  this.props.handleArcOver(
-                                    {
-                                      key: data.data[0].key,
-                                      all: data.data[0].all,
-                                    },
-                                    false
-                                  );
-                                }
-                                if (this.props.showTooltip) {
-                                  this.props.showTooltip(null);
-                                }
-                                return [
-                                  {
-                                    target: "data",
-                                    mutation: () => {
-                                      return null;
-                                    },
-                                  },
-                                ];
-                              },
-                            },
-                          },
-                        ]}
+                        events={this.events({
+                          accessor: (data) => data.data[0],
+                          tooltipGenerator: (data) =>
+                            `${data.data[0].name} ${utils.formatStat(
+                              this.props.stat,
+                              data.data[0].y
+                            )}`,
+                          strokeWidth: 6,
+                        })}
                       />
                     );
                   })}
@@ -550,6 +525,12 @@ class PieBar extends Component {
                       fill: ({ datum }) => datum.fill,
                     },
                   }}
+                  events={this.events({
+                    accessor: (data) => data.datum,
+                    tooltipGenerator: (data) =>
+                      `${data.datum.name} ${data.datum.value}`,
+                    strokeWidth: 2,
+                  })}
                 />
               </Chart>
             )}

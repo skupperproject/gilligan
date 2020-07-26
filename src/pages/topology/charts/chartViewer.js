@@ -54,11 +54,11 @@ class ChartViewer extends Component {
     }
   };
   doUpdate = (type) => {
-    if (this.pieRef1) {
+    if (this.pieRef1 && type !== CHORD_CHART) {
       this.pieRef1.doUpdate(type);
       this.pieRef2.doUpdate(type);
     }
-    if (this.chordRef) {
+    if (this.chordRef && (type === undefined || type === CHORD_CHART)) {
       this.chordRef.doUpdate();
     }
   };
@@ -77,8 +77,8 @@ class ChartViewer extends Component {
 
   handleChangeChartType = (type) => {
     this.savedTypes[this.props.view] = type;
-    this.doUpdate(type);
     this.setState({ type }, () => {
+      this.doUpdate(type);
       utils.setSaved(CHART_TYPE_KEY, this.savedTypes);
     });
   };
@@ -148,6 +148,7 @@ class ChartViewer extends Component {
               {...this.props}
               showTooltip={this.showTooltip}
               noLegend
+              type={type}
               comment="Chord chart that shows both incoming and outgoing"
             />
           )}

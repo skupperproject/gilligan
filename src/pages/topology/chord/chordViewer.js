@@ -149,10 +149,10 @@ class ChordViewer extends Component {
       setTimeout(this.windowResized, 1);
     });
 
-    // get the raw data and render the svg
     this.getMatrix();
   };
 
+  // get the raw data and render the svg
   getMatrix = () => {
     if (this.props.site) {
       if (this.props.data === null) {
@@ -907,9 +907,6 @@ class ChordViewer extends Component {
     } else {
       this.leaveLegend();
     }
-  };
-  handleHoverSite = (site, over) => {
-    //console.log(`handleHoverSite ${site}, ${over}`);
   };
 
   // called when mouse enters one of the router legends

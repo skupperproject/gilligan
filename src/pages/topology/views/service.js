@@ -879,7 +879,7 @@ export class Service {
           if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
           utils.aggregateAttributes(
             {
-              key: fromAddress,
+              key: toAddress,
               toAddress,
               shortName: utils.shortName(toAddress),
               requests: deploymentLink.request[stat],
@@ -949,7 +949,7 @@ export class Service {
         if (samples.length > 0) {
           if (!requests.hasOwnProperty(toAddress)) {
             requests[toAddress] = {
-              key: fromAddress,
+              key: toAddress, // used for chart mouseover to highlight the service
               toAddress,
               shortName: utils.shortName(toAddress),
               samples,
