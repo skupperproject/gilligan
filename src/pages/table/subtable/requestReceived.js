@@ -59,12 +59,6 @@ class RequestReceived extends Component {
   );
 
   request = (data, r, ikey) => {
-    console.log(`--- rendering request ${data.address}`);
-    console.log(r);
-    console.log(this.props.service);
-    const VANData = this.props.service.adapter.findService(data.address);
-    console.log(VANData);
-    console.log(data);
     const clients = Object.keys(r.by_client);
     return clients.map((client, i) => {
       return this.client(r.by_client[client], client, `${ikey}-${i}`);
