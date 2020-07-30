@@ -557,6 +557,7 @@ const utils = {
       const selWidth = container.offsetWidth;
       const selHeight = container.offsetHeight;
       const selTop = container.offsetTop;
+      const selLeft = container.offsetLeft;
       // get mouse position relative to container
       let mouse;
       try {
@@ -576,6 +577,9 @@ const utils = {
         // if popover is too wide to use the desired left
         if (constrainX && left + width + padding > selWidth) {
           left = selWidth - width - padding;
+        }
+        if (constrainX && left < selLeft) {
+          left = selLeft;
         }
         if (constrainY && top + height + padding > selHeight) {
           top = selHeight - height - padding;
