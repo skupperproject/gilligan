@@ -43,11 +43,8 @@ class SubDetails extends Component {
 
   render() {
     if (!this.props.info.extraInfo) {
-      console.log("no extraInfo");
       return <div />;
     }
-    console.log("--- subDetails::render info");
-    console.log(this.props.info);
     const data = this.props.info.extraInfo.rowData.data.cardData;
     return (
       <div className="sk-subdetails">

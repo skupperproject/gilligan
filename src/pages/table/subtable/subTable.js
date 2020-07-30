@@ -28,17 +28,17 @@ import {
   BreadcrumbHeading,
 } from "@patternfly/react-core";
 import LastUpdated from "../../../lastUpdated";
-import SubNav from "./subNav";
 import SubDetails from "./subDetails";
 import PopupCard from "../../../popupCard";
 import PieBar from "../../topology/charts/pieBar";
+import QDRPopup from "../../../qdrPopup";
 import { viewsMap as VIEWS } from "../../topology/views/views";
 import { utils } from "../../../utilities";
 
 class SubTable extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = { popupContent: null };
     this.viewObj = new VIEWS[this.props.view](this.props.service);
     this.view = this.props.view;
   }
@@ -53,23 +53,35 @@ class SubTable extends Component {
   };
 
   update = () => {
-    //this.tableRef.update();
     this.handleChangeLastUpdated();
     if (this.pieRef1) this.pieRef1.doUpdate();
     if (this.pieRef2) this.pieRef2.doUpdate();
+    if (this.lineRef1) this.lineRef1.doUpdate();
+    if (this.lineRef2) this.lineRef2.doUpdate();
   };
 
   returnToTable = () => {
     this.props.handleChangeViewMode("table");
   };
 
-  showTooltip = () => {};
+  showTooltip = (content, eventX, eventY) => {
+    this.setState({ popupContent: content }, () => {
+      if (content) {
+        // after the content has rendered, position it
+        utils.positionPopup({
+          containerSelector: "#skSubtableCharts",
+          popupSelector: "#popover-div",
+          constrainY: false,
+          eventX,
+          eventY,
+        });
+      }
+    });
+  };
   data = () => this.props.info.extraInfo.rowData.data.cardData;
 
   render() {
     const { options } = utils.viewFromHash();
-    console.log(`subTable props`);
-    console.log(this.props);
     return (
       <React.Fragment>
         <StackItem className="sk-breadcrumbs">
@@ -90,7 +102,19 @@ class SubTable extends Component {
             </SplitItem>
           </Split>
         </StackItem>
-        <StackItem className="sk-subtable">
+        <StackItem className="sk-subtable" id="skSubtableCharts">
+          <div
+            id="popover-div"
+            className={
+              this.state.popupContent
+                ? "sk-popover-div"
+                : "sk-popover-div hidden"
+            }
+            ref={(el) => (this.popupRef = el)}
+          >
+            <QDRPopup content={this.state.popupContent}></QDRPopup>
+          </div>
+
           {this.props.info.extraInfo && (
             <Flex direction={{ default: "column", lg: "row" }}>
               <FlexItem>
@@ -104,6 +128,44 @@ class SubTable extends Component {
                 />
               </FlexItem>
               <Flex direction={{ default: "column", lg: "row" }}>
+                <FlexItem id="sk-subTable-line1">
+                  <PieBar
+                    ref={(el) => (this.lineRef1 = el)}
+                    service={this.props.service}
+                    site={
+                      this.props.view === "site" ||
+                      this.props.view === "deployment"
+                    }
+                    deployment={this.props.view === "deployment"}
+                    stat="bytes_out"
+                    direction="in"
+                    type="line"
+                    viewObj={this.viewObj}
+                    containerId="sk-subTable-line1"
+                    data={this.data()}
+                    showTooltip={this.showTooltip}
+                    comment="LIne chart for incoming metric"
+                  />
+                </FlexItem>
+                <FlexItem id="sk-subTable-line2">
+                  <PieBar
+                    ref={(el) => (this.lineRef2 = el)}
+                    service={this.props.service}
+                    site={
+                      this.props.view === "site" ||
+                      this.props.view === "deployment"
+                    }
+                    deployment={this.props.view === "deployment"}
+                    stat="bytes_out"
+                    direction="out"
+                    type="line"
+                    viewObj={this.viewObj}
+                    containerId="sk-subTable-line2"
+                    data={this.data()}
+                    showTooltip={this.showTooltip}
+                    comment="LIne chart for outgoing metric"
+                  />
+                </FlexItem>
                 <FlexItem id="sk-subTable-bar1">
                   <PieBar
                     ref={(el) => (this.pieRef1 = el)}
@@ -145,7 +207,6 @@ class SubTable extends Component {
               </Flex>
             </Flex>
           )}
-          {false && <SubNav view={this.props.view} />}
           <SubDetails {...this.props} />
         </StackItem>
       </React.Fragment>

@@ -333,11 +333,11 @@ class PieBar extends Component {
   getHeight = () => {
     if (this.props.type === PIE_CHART) return this.state.height;
     if (this.props.type === LINE_CHART) return this.state.height / 2;
-    // 30 for each row, 40 for the x axis, at least 80
     const perRow = 30;
     const atLeast = 80;
+    const xAxis = 40;
     const count = this.state.data.length;
-    return Math.max(count * perRow + 40, atLeast);
+    return Math.max(count * perRow + xAxis, atLeast);
   };
 
   render() {
@@ -433,7 +433,7 @@ class PieBar extends Component {
                 height={this.getHeight()}
                 padding={{
                   bottom: 50,
-                  left: getPaddingLeft(),
+                  left: getPaddingLeft() + 10,
                   right: 40,
                   top: 20,
                 }}
@@ -498,14 +498,14 @@ class PieBar extends Component {
                 ariaDesc={headerText}
                 allowTooltip={false}
                 domainPadding={{ x: [0, 0] }}
+                width={width}
                 height={this.getHeight()}
                 padding={{
-                  bottom: 50,
+                  bottom: 60,
                   left: getPaddingLeft(),
                   right: 40,
                   top: 20,
                 }}
-                width={width}
               >
                 <ChartAxis />
                 <ChartAxis
