@@ -56,6 +56,7 @@ class RequestSent extends Component {
   requests = (data) => {
     const sent = [];
     if (data.nodeType === "cluster") {
+      /*
       const requests = this.props.service.adapter.specificSite(
         data.site_id,
         "in",
@@ -63,6 +64,7 @@ class RequestSent extends Component {
       );
       //sent = siteData.data.map((site) => {});
       console.log(requests);
+      */
     } else {
       const VANData = this.props.service.adapter.findService(data.address);
       VANData.targetServices.forEach((target, i) => {

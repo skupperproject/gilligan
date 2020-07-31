@@ -72,3 +72,8 @@
 #sk-subTable-bar2 {
   width: 30em;
 }
+
+#sk-subTable-line1,
+#sk-subTable-line2 {
+  width: 20em;
+}

@@ -56,13 +56,13 @@ class PieBar extends Component {
 
   componentDidUpdate = () => {
     if (this.props.type === BAR_CHART) {
-      const id = `#sk-chart-container-${this.props.direction} svg`;
+      const id = `#sk-chart-container-${this.props.type}-${this.props.direction} svg`;
       const barChart = d3.select(id);
       const height = this.getHeight() + 20;
       if (barChart && barChart.size() > 0) {
         barChart
           .attr("height", height)
-          .attr("viewBox", `0 0 ${barChart.attr("width")} ${height}`);
+          .attr("viewBox", `0 0 ${this.state.width} ${height}`);
       }
       const kData =
         Array.isArray(this.state.data) &&
@@ -382,7 +382,7 @@ class PieBar extends Component {
     return (
       Object.keys(data).length > 0 && (
         <div
-          id={`sk-chart-container-${this.props.direction}`}
+          id={`sk-chart-container-${this.props.type}-${this.props.direction}`}
           className={`sk-chart-container ${
             this.props.direction === "out" ? "sk-chart-separated" : ""
           }`}
@@ -430,6 +430,7 @@ class PieBar extends Component {
                 interpolation="natural"
                 allowTooltip={false}
                 domainPadding={{ y: [10, 10] }}
+                width={width}
                 height={this.getHeight()}
                 padding={{
                   bottom: 50,
@@ -437,7 +438,6 @@ class PieBar extends Component {
                   right: 40,
                   top: 20,
                 }}
-                width={width}
               >
                 <ChartAxis
                   tickFormat={(t) => {

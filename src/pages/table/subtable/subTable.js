@@ -79,9 +79,29 @@ class SubTable extends Component {
     });
   };
   data = () => this.props.info.extraInfo.rowData.data.cardData;
-
+  anyRequests = (direction) => {
+    const data = this.data();
+    let address = data ? data.address : null;
+    let site_info = null;
+    if (this.props.view === "deployment" && data.address) {
+      site_info = data.cluster.site_name;
+    } else if (this.props.view === "site" && !data.address) {
+      address = data.site_id;
+    }
+    const requests = this.viewObj.specificTimeSeries({
+      VAN: this.props.service.VAN,
+      direction,
+      stat: "bytes_out",
+      duration: "min",
+      address,
+      site_name: site_info,
+    });
+    return Object.keys(requests).length > 0;
+  };
   render() {
     const { options } = utils.viewFromHash();
+    const hasIn = this.anyRequests("in");
+    const hasOut = this.anyRequests("out");
     return (
       <React.Fragment>
         <StackItem className="sk-breadcrumbs">
@@ -120,7 +140,7 @@ class SubTable extends Component {
               <FlexItem>
                 <PopupCard
                   cardSize="expanded"
-                  cardService={this.props.info.extraInfo.rowData.data.cardData}
+                  cardService={this.data()}
                   card={this.props.info.card}
                   service={this.props.service}
                   inline
@@ -128,82 +148,90 @@ class SubTable extends Component {
                 />
               </FlexItem>
               <Flex direction={{ default: "column", lg: "row" }}>
-                <FlexItem id="sk-subTable-line1">
-                  <PieBar
-                    ref={(el) => (this.lineRef1 = el)}
-                    service={this.props.service}
-                    site={
-                      this.props.view === "site" ||
-                      this.props.view === "deployment"
-                    }
-                    deployment={this.props.view === "deployment"}
-                    stat="bytes_out"
-                    direction="in"
-                    type="line"
-                    viewObj={this.viewObj}
-                    containerId="sk-subTable-line1"
-                    data={this.data()}
-                    showTooltip={this.showTooltip}
-                    comment="LIne chart for incoming metric"
-                  />
-                </FlexItem>
-                <FlexItem id="sk-subTable-line2">
-                  <PieBar
-                    ref={(el) => (this.lineRef2 = el)}
-                    service={this.props.service}
-                    site={
-                      this.props.view === "site" ||
-                      this.props.view === "deployment"
-                    }
-                    deployment={this.props.view === "deployment"}
-                    stat="bytes_out"
-                    direction="out"
-                    type="line"
-                    viewObj={this.viewObj}
-                    containerId="sk-subTable-line2"
-                    data={this.data()}
-                    showTooltip={this.showTooltip}
-                    comment="LIne chart for outgoing metric"
-                  />
-                </FlexItem>
-                <FlexItem id="sk-subTable-bar1">
-                  <PieBar
-                    ref={(el) => (this.pieRef1 = el)}
-                    service={this.props.service}
-                    site={
-                      this.props.view === "site" ||
-                      this.props.view === "deployment"
-                    }
-                    deployment={this.props.view === "deployment"}
-                    stat="bytes_out"
-                    direction="in"
-                    type="bar"
-                    viewObj={this.viewObj}
-                    containerId="sk-subTable-bar1"
-                    data={this.data()}
-                    showTooltip={this.showTooltip}
-                    comment="Pie or bar chart for incoming metric"
-                  />
-                </FlexItem>
-                <FlexItem id="sk-subTable-bar2">
-                  <PieBar
-                    ref={(el) => (this.pieRef2 = el)}
-                    service={this.props.service}
-                    site={
-                      this.props.view === "site" ||
-                      this.props.view === "deployment"
-                    }
-                    deployment={this.props.view === "deployment"}
-                    stat="bytes_out"
-                    direction="out"
-                    type="bar"
-                    viewObj={this.viewObj}
-                    containerId="sk-subTable-bar2"
-                    data={this.data()}
-                    showTooltip={this.showTooltip}
-                    comment="Pie or bar chart for incoming metric"
-                  />
-                </FlexItem>
+                {hasIn && (
+                  <FlexItem id="sk-subTable-line1">
+                    <PieBar
+                      ref={(el) => (this.lineRef1 = el)}
+                      service={this.props.service}
+                      site={
+                        this.props.view === "site" ||
+                        this.props.view === "deployment"
+                      }
+                      deployment={this.props.view === "deployment"}
+                      stat="bytes_out"
+                      direction="in"
+                      type="line"
+                      viewObj={this.viewObj}
+                      containerId="sk-subTable-line1"
+                      data={this.data()}
+                      showTooltip={this.showTooltip}
+                      comment="LIne chart for incoming metric"
+                    />
+                  </FlexItem>
+                )}
+                {hasOut && (
+                  <FlexItem id="sk-subTable-line2">
+                    <PieBar
+                      ref={(el) => (this.lineRef2 = el)}
+                      service={this.props.service}
+                      site={
+                        this.props.view === "site" ||
+                        this.props.view === "deployment"
+                      }
+                      deployment={this.props.view === "deployment"}
+                      stat="bytes_out"
+                      direction="out"
+                      type="line"
+                      viewObj={this.viewObj}
+                      containerId="sk-subTable-line2"
+                      data={this.data()}
+                      showTooltip={this.showTooltip}
+                      comment="LIne chart for outgoing metric"
+                    />
+                  </FlexItem>
+                )}
+                {hasIn && (
+                  <FlexItem id="sk-subTable-bar1">
+                    <PieBar
+                      ref={(el) => (this.pieRef1 = el)}
+                      service={this.props.service}
+                      site={
+                        this.props.view === "site" ||
+                        this.props.view === "deployment"
+                      }
+                      deployment={this.props.view === "deployment"}
+                      stat="bytes_out"
+                      direction="in"
+                      type="bar"
+                      viewObj={this.viewObj}
+                      containerId="sk-subTable-bar1"
+                      data={this.data()}
+                      showTooltip={this.showTooltip}
+                      comment="Pie or bar chart for incoming metric"
+                    />
+                  </FlexItem>
+                )}
+                {hasOut && (
+                  <FlexItem id="sk-subTable-bar2">
+                    <PieBar
+                      ref={(el) => (this.pieRef2 = el)}
+                      service={this.props.service}
+                      site={
+                        this.props.view === "site" ||
+                        this.props.view === "deployment"
+                      }
+                      deployment={this.props.view === "deployment"}
+                      stat="bytes_out"
+                      direction="out"
+                      type="bar"
+                      viewObj={this.viewObj}
+                      containerId="sk-subTable-bar2"
+                      data={this.data()}
+                      showTooltip={this.showTooltip}
+                      comment="Pie or bar chart for incoming metric"
+                    />
+                  </FlexItem>
+                )}
               </Flex>
             </Flex>
           )}
