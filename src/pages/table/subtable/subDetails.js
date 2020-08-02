@@ -46,6 +46,8 @@ class SubDetails extends Component {
       return <div />;
     }
     const data = this.props.info.extraInfo.rowData.data.cardData;
+    console.log(`subDetails data`);
+    console.log(data);
     return (
       <div className="sk-subdetails">
         <React.Fragment>

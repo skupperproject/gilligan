@@ -17,7 +17,6 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import React from "react";
 import * as d3 from "d3";
 import { utils } from "../../../utilities";
 import { genPath, pathBetween } from "../../../paths";
@@ -51,10 +50,6 @@ const DEFAULT_TABLE_OPTIONS = {
   perPage: 10,
 };
 
-const SiteName = ({ value, extraInfo }) => {
-  return <span>{value}</span>;
-};
-
 export class Site {
   constructor(data) {
     this.data = data;
@@ -64,7 +59,7 @@ export class Site {
     this.nodes = () => this.siteNodes;
     this.links = () => this.trafficLinks;
     this.fields = [
-      { title: "Name", field: "site_name", formatter: SiteName },
+      { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
     ];
     this.card = new SiteCard();

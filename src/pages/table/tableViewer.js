@@ -140,7 +140,7 @@ class TableViewer extends React.Component {
     return (
       <Button
         className="link-button"
-        onClick={() => this.detailClick(value, extraInfo)}
+        onClick={(event) => this.detailClick(value, extraInfo)}
       >
         {value}
       </Button>
