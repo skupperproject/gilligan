@@ -729,9 +729,3 @@ class Adapter {
   };
 }
 export default Adapter;
-
-/*
-https://gist.github.com/ssorj/1282800acfa7ddf22a78155cece19b3a
-https://gist.github.com/ssorj/dfff3b401f0156332083893902f726f5
-https://gist.github.com/ssorj/3f1f70b6df745c04e1effff416794476
-*/
