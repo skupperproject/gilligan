@@ -46,43 +46,41 @@ class SubDetails extends Component {
       return <div />;
     }
     const data = this.props.info.extraInfo.rowData.data.cardData;
-    console.log(`subDetails data`);
-    console.log(data);
     return (
       <div className="sk-subdetails">
-        <React.Fragment>
+        {data.protocol && (
           <div className="details-section">
             <span className="detail-prompt">Protocol</span> {data.protocol}
           </div>
-          {data.protocol === "http" && (
-            <RequestReceived
-              data={data}
-              service={this.props.service}
-              toggle={this.toggle}
-              expanded={this.state.expanded}
-            />
-          )}
-          <RequestSent
+        )}
+        {data.protocol === "http" && (
+          <RequestReceived
             data={data}
             service={this.props.service}
             toggle={this.toggle}
             expanded={this.state.expanded}
           />
-          {data.protocol === "tcp" && (
-            <ConnectionsIn
-              data={data}
-              service={this.props.service}
-              toggle={this.toggle}
-              expanded={this.state.expanded}
-            />
-          )}
-          <ConnectionsOut
+        )}
+        <RequestSent
+          data={data}
+          service={this.props.service}
+          toggle={this.toggle}
+          expanded={this.state.expanded}
+        />
+        {data.protocol === "tcp" && (
+          <ConnectionsIn
             data={data}
             service={this.props.service}
             toggle={this.toggle}
             expanded={this.state.expanded}
           />
-        </React.Fragment>
+        )}
+        <ConnectionsOut
+          data={data}
+          service={this.props.service}
+          toggle={this.toggle}
+          expanded={this.state.expanded}
+        />
       </div>
     );
   }

@@ -31,6 +31,7 @@ import LastUpdated from "../../../lastUpdated";
 import SubDetails from "./subDetails";
 import PopupCard from "../../../popupCard";
 import PieBar from "../../topology/charts/pieBar";
+import TimeSeries from "../../topology/charts/timeSeries";
 import QDRPopup from "../../../qdrPopup";
 import { viewsMap as VIEWS } from "../../topology/views/views";
 import { utils } from "../../../utilities";
@@ -150,7 +151,7 @@ class SubTable extends Component {
               <Flex direction={{ default: "column", lg: "row" }}>
                 {hasIn && (
                   <FlexItem id="sk-subTable-line1">
-                    <PieBar
+                    <TimeSeries
                       ref={(el) => (this.lineRef1 = el)}
                       service={this.props.service}
                       site={
@@ -171,7 +172,7 @@ class SubTable extends Component {
                 )}
                 {hasOut && (
                   <FlexItem id="sk-subTable-line2">
-                    <PieBar
+                    <TimeSeries
                       ref={(el) => (this.lineRef2 = el)}
                       service={this.props.service}
                       site={
