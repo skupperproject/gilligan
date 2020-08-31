@@ -74,7 +74,6 @@ class TopologyPage extends Component {
                   </TextContent>
                 </SplitItem>
                 <SplitItem isFilled className="sk-dropdown-prompt">
-                  View
                   <NavDropdown
                     view={this.props.view}
                     mode={this.props.mode}

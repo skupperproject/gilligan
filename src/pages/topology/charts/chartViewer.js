@@ -20,6 +20,7 @@ under the License.
 import React, { Component } from "react";
 import ChordViewer from "../chord/chordViewer";
 import PieBar from "./pieBar";
+import TimeSeries from "./timeSeries";
 import ChartToolbar from "./chartToolbar";
 import SkupperLegend from "./legendComponent";
 import QDRPopup from "../../../qdrPopup";
@@ -54,9 +55,9 @@ class ChartViewer extends Component {
     }
   };
   doUpdate = (type) => {
-    if (this.pieRef1 && type !== CHORD_CHART) {
-      this.pieRef1.doUpdate(type);
-      this.pieRef2.doUpdate(type);
+    if (this.chartRef1 && type !== CHORD_CHART) {
+      this.chartRef1.doUpdate(type);
+      this.chartRef2.doUpdate(type);
     }
     if (this.chordRef && (type === undefined || type === CHORD_CHART)) {
       this.chordRef.doUpdate();
@@ -65,9 +66,9 @@ class ChartViewer extends Component {
 
   init = () => {
     this.setState({ type: this.savedTypes[this.props.view] }, () => {
-      if (this.peiRef1) {
-        this.pieRef1.init();
-        this.pieRef2.init();
+      if (this.chartRef1) {
+        this.chartRef1.init();
+        this.chartRef2.init();
       }
       if (this.chordRef) {
         this.chordRef.init();
@@ -118,12 +119,32 @@ class ChartViewer extends Component {
           >
             <QDRPopup content={this.state.popupContent}></QDRPopup>
           </div>
-          {(type === LINE_CHART ||
-            type === BAR_CHART ||
-            type === PIE_CHART) && (
+          {type === LINE_CHART && (
+            <React.Fragment>
+              <TimeSeries
+                ref={(el) => (this.chartRef1 = el)}
+                {...this.props}
+                direction="in"
+                type={type}
+                showTooltip={this.showTooltip}
+                duration={this.state.duration}
+                comment="Time series chart for incoming metric"
+              />
+              <TimeSeries
+                ref={(el) => (this.chartRef2 = el)}
+                {...this.props}
+                direction="out"
+                type={type}
+                showTooltip={this.showTooltip}
+                duration={this.state.duration}
+                comment="Time series chart for outgoing metric"
+              />
+            </React.Fragment>
+          )}
+          {(type === BAR_CHART || type === PIE_CHART) && (
             <React.Fragment>
               <PieBar
-                ref={(el) => (this.pieRef1 = el)}
+                ref={(el) => (this.chartRef1 = el)}
                 {...this.props}
                 direction="in"
                 type={type}
@@ -132,7 +153,7 @@ class ChartViewer extends Component {
                 comment="Pie or bar chart for incoming metric"
               />
               <PieBar
-                ref={(el) => (this.pieRef2 = el)}
+                ref={(el) => (this.chartRef2 = el)}
                 {...this.props}
                 direction="out"
                 type={type}
