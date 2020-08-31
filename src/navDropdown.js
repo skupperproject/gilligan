@@ -18,19 +18,13 @@ under the License.
 */
 
 import React, { Component } from "react";
-import {
-  Dropdown,
-  DropdownPosition,
-  DropdownToggle,
-  DropdownItem,
-} from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
+import "./navDropdown.css";
 
 class NavDropdown extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      isDropDownOpen: false,
-    };
+    this.state = {};
     this.dropdownItems = [
       {
         key: "graph",
@@ -41,37 +35,24 @@ class NavDropdown extends Component {
           this.props.mode === "",
         path: "",
         enabled: true,
+        icon: "pf-icon-topology",
+        iconClass: "pf-icon",
       },
-      /*{
-        key: "card",
-        description: "Card",
-        selected: viewType === "card",
-      },*/
       {
         key: "table",
         description: "Table",
         selected: this.props.mode === "table",
         path: "Table",
         enabled: true,
+        icon: "fa-table",
+        iconClass: "fas",
       },
     ];
-    /* console.log(
-      `NAVDROPDOWN mode ${this.props.mode} items ${JSON.stringify(
-        this.dropdownItems
-      )}`
-    );*/
   }
-  onDropDownToggle = (isOpen) => {
-    this.setState({
-      isDropDownOpen: isOpen,
-    });
-  };
 
-  onDropDownSelect = (event) => {
-    this.setState({
-      isDropDownOpen: !this.state.isDropDownOpen,
-    });
-    const desc = event.target.text;
+  onDropDownSelect = (e) => {
+    // clicked on text => use target.text, clicked on icon => use target.id
+    const desc = e.event.target.text || e.event.target.id;
     this.dropdownItems.forEach((item) => {
       item.selected = item.description === desc;
       if (item.selected) {
@@ -80,33 +61,29 @@ class NavDropdown extends Component {
     });
   };
 
-  /*
-              component={
-              <Link to={`/${this.props.view}${item.path}`}>
-                {item.description}
-              </Link>
-            }
-*/
   render() {
-    const { isDropDownOpen } = this.state;
+    const selectedItem = this.dropdownItems.find(
+      (item) => item.selected === true
+    );
     return (
-      <Dropdown
-        id="navDropdown"
-        onSelect={this.onDropDownSelect}
-        position={DropdownPosition.left}
-        toggle={
-          <DropdownToggle onToggle={this.onDropDownToggle}>
-            {
-              this.dropdownItems.find((item) => item.selected === true)
-                .description
-            }
-          </DropdownToggle>
-        }
-        isOpen={isDropDownOpen}
-        dropdownItems={this.dropdownItems.map((item) => (
-          <DropdownItem key={item.key}>{item.description}</DropdownItem>
-        ))}
-      />
+      <Nav onSelect={this.onDropDownSelect} variant="tertiary">
+        <NavList>
+          {this.dropdownItems.map((item, num) => (
+            <NavItem
+              key={item.key}
+              itemId={num}
+              isActive={selectedItem.key === item.key}
+              title={`Show ${item.description} view`}
+            >
+              <i
+                className={`${item.iconClass} ${item.icon} sk-nav-icon`}
+                id={`${item.description}`}
+              />
+              {`${item.description}`}
+            </NavItem>
+          ))}
+        </NavList>
+      </Nav>
     );
   }
 }
