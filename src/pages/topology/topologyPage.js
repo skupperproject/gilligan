@@ -51,7 +51,6 @@ class TopologyPage extends Component {
   };
 
   handleOverrideOptions = (newOptions) => {
-    debugger;
     if (this.graphRef && this.graphRef.handleOverrideOptions)
       this.graphRef.handleOverrideOptions(newOptions);
   };
