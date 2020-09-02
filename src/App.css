@@ -774,29 +774,6 @@ div.qdrChord {
 circle.flow {
   pointer-events: none;
 }
-/* for message flow chord diagram */
-#chordContainer {
-  /* height: 300px; */
-  background-color: white;
-  padding-top: 1em;
-  padding-left: 1em;
-  padding-right: 1em;
-}
-
-#chordContainer .chord-close {
-  position: absolute;
-  right: -1em;
-  top: 0.5em;
-}
-
-.chord-title {
-  text-align: center;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
-  border-top: 1px solid #eaeaea;
-  margin-bottom: 0.5em;
-  font-weight: bold;
-}
 
 @media (min-width: 768px) {
   .qdrTopology .pf-topology-side-bar.shown {
@@ -836,10 +813,6 @@ g.arc text {
   fill: black;
   stroke-width: 0;
 }
-#chord {
-  /* position: absolute; */
-}
-
 path.empty {
   fill: rgb(31, 119, 180);
   fill-opacity: 0.67;
@@ -914,7 +887,7 @@ ul.pf-c-nav__list * {
   text-align: left;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1250px) {
   .navbar-collapse.page-menu {
     left: 0;
     top: 0;
@@ -1809,4 +1782,32 @@ g.cluster-rects.user-hidden circle.network {
 
 g.service-type.user-hidden text.service-type {
   opacity: 0;
+}
+
+#sk-topology-container {
+  height: 100%;
+}
+
+#chord svg {
+  display: block;
+  margin: auto;
+}
+
+/* for message flow chord diagram */
+#chordContainer {
+  background-color: white;
+}
+
+#chordContainer .chord-close {
+  position: absolute;
+  right: -1em;
+  top: 0.5em;
+}
+
+.chord-title {
+  text-align: center;
+  /* margin-top: 1em; */
+  margin-bottom: 0.5em;
+  /* border-top: 1px solid #eaeaea; */
+  font-weight: bold;
 }

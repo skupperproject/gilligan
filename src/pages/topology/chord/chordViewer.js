@@ -225,14 +225,14 @@ class ChordViewer extends Component {
   getRadius = () => {
     const sizes = utils.getSizes(d3.select("#sk-sidebar").node());
     const width = sizes[0];
-    /*
+
     const height = sizes[1];
     const radius = Math.max(
-      Math.floor((Math.min(width, height) * 0.9) / 2),
+      Math.floor((Math.min(width, height) * 0.95) / 2),
       MIN_RADIUS
     );
-    */
-    const radius = Math.max(Math.floor(width * 0.45), MIN_RADIUS);
+
+    //const radius = Math.max(Math.floor(width * 0.45), MIN_RADIUS);
     return radius;
   };
 
@@ -952,13 +952,13 @@ class ChordViewer extends Component {
         if (this.props.data === null) {
           if (this.props.deployment) {
             return (
-              <div className="chord-title">{`Traffic in ${utils.Icap(
+              <div className="sk-chart-header">{`Traffic in ${utils.Icap(
                 utils.statName(this.props.stat)
               )} between deployments`}</div>
             );
           } else {
             return (
-              <div className="chord-title">{`${utils.Icap(
+              <div className="sk-chart-header">{`${utils.Icap(
                 utils.statName(this.props.stat)
               )} by site`}</div>
             );
@@ -968,7 +968,7 @@ class ChordViewer extends Component {
           // site to site for a service
           return (
             this.props.data.parentNode && (
-              <div className="chord-title">
+              <div className="sk-chart-header">
                 {
                   <span>
                     {`${utils.Icap(utils.statName(this.props.stat))} involving 
@@ -982,7 +982,7 @@ class ChordViewer extends Component {
           );
         }
         return (
-          <div className="chord-title">
+          <div className="sk-chart-header">
             {`${utils.Icap(utils.statName(this.props.stat))} involving site ${
               this.props.data.name
             }`}
@@ -990,13 +990,13 @@ class ChordViewer extends Component {
         );
       } else if (this.props.data === null) {
         return (
-          <div className="chord-title">{`${utils.Icap(
+          <div className="sk-chart-header">{`${utils.Icap(
             utils.statName(this.props.stat)
           )} between services`}</div>
         );
       }
       return (
-        <div className="chord-title">
+        <div className="sk-chart-header">
           {`${utils.Icap(utils.statName(this.props.stat))} involving ${
             this.props.data.shortName
           }`}

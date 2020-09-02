@@ -137,6 +137,7 @@ class PieBar extends Component {
       data,
       width: sizes[0],
       height: sizes[0],
+      realHeight: sizes[1],
       headerText,
       tickLabel: utils.Icap(utils.statName(this.props.stat)),
     });
@@ -147,7 +148,9 @@ class PieBar extends Component {
   };
 
   getHeight = () => {
-    if (this.props.type === PIE_CHART) return this.state.height;
+    if (this.props.type === PIE_CHART) {
+      return Math.min(this.state.width, this.state.realHeight);
+    }
     const perRow = 30;
     const atLeast = 80;
     const xAxis = 40;
@@ -156,7 +159,7 @@ class PieBar extends Component {
   };
 
   render() {
-    const { height, width, headerText, tickLabel } = this.state;
+    const { width, headerText, tickLabel } = this.state;
     let { data } = this.state;
 
     // Padding left for bar chart is needed to allow room for the service names.
@@ -192,7 +195,7 @@ class PieBar extends Component {
                 constrainToVisibleArea={true}
                 allowTooltip={false}
                 data={data}
-                height={height}
+                height={this.getHeight()}
                 width={width}
                 padding={{
                   bottom: 0,

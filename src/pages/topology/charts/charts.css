@@ -14,9 +14,11 @@
 }
 .sk-chart-header {
   align-self: center;
+  text-align: center;
   font-weight: bold;
   margin-left: 1em;
   margin-top: 1em;
+  margin-bottom: 1em;
 }
 
 .sk-chart-container.sk-chart-separated {
@@ -56,6 +58,10 @@ button:focus {
 .sk-chart-toolbar {
   background-color: #eaeaea;
   border-bottom: 1px solid #cccccc;
+}
+
+.sk-chart-toolbar button {
+  padding-bottom: 0;
 }
 
 #popover-div {

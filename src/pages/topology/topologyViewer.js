@@ -52,6 +52,7 @@ class TopologyViewer extends Component {
       initial: true,
       options: this.getOptions(true),
       overridden: false,
+      chartExpanded: false,
     };
     this.popupCancelled = true;
 
@@ -143,7 +144,6 @@ class TopologyViewer extends Component {
 
   // called when a new URL is pasted/typed into the address bar
   handleOverrideOptions = () => {
-    debugger;
     this.setState({ options: this.getOptions() }, this.updateComponent);
   };
 
@@ -212,12 +212,20 @@ class TopologyViewer extends Component {
   // initialize the nodes and links array
   init = () => {
     let sizes = utils.getSizes(this.topologyRef);
+    const splitterPosition = utils.getSaved(SPLITTER_POSITION, 360);
     this.width =
-      sizes[0] -
-      (this.state.options.hideChart
-        ? 0
-        : utils.getSaved(SPLITTER_POSITION, 360));
+      sizes[0] - (this.state.options.hideChart ? 0 : splitterPosition);
     this.height = sizes[1];
+
+    const leftPane = d3.select(SPLITTER_LEFT);
+    const rightPane = d3.select(SPLITTER_RIGHT);
+    leftPane
+      .style("width", `calc(100% - ${splitterPosition}px)`)
+      .style("min-width", "unset");
+    rightPane
+      .style("width", `${splitterPosition}px`)
+      .style("max-width", "unset")
+      .style("min-width", "unset");
 
     this.mouseover_node = null;
     this.selected_node = null;
@@ -702,11 +710,12 @@ class TopologyViewer extends Component {
   };
 
   handleSplitterChange = (moved) => {
-    const minRight = 240;
-    const maxRight = this.width / 2;
+    const minRight = 260;
+    let sizes = utils.getSizes(this.viewRef);
+    const maxRight = sizes[0];
     const rightPane = d3.select(SPLITTER_RIGHT);
     let rightWidth = Math.min(
-      Math.max(parseInt(rightPane.style("max-width"), 10) + moved, minRight),
+      Math.max(parseInt(rightPane.style("width"), 10) + moved, minRight),
       maxRight
     );
     this.setChordWidth(rightWidth);
@@ -720,18 +729,33 @@ class TopologyViewer extends Component {
     this.viewObj.setClass(hide, "user-hidden", this);
   };
 
+  handleExpandChart = () => {
+    this.setState({ chartExpanded: !this.state.chartExpanded }, () => {
+      let sizes = utils.getSizes(this.viewRef);
+      const rightWidth = this.state.chartExpanded
+        ? sizes[0]
+        : utils.getSaved(SPLITTER_POSITION);
+      d3.select(SPLITTER_RIGHT).style("width", `${rightWidth}px`);
+      //.style("width", `${sizes[0]}px`);
+      this.chordRef.init();
+      this.resize();
+    });
+  };
+
   setChordWidth = (rightWidth) => {
     const leftPane = d3.select(SPLITTER_LEFT);
     const rightPane = d3.select(SPLITTER_RIGHT);
-    leftPane.style("min-width", `calc(100% - ${rightWidth}px)`);
-    rightPane.style("max-width", `${rightWidth}px`);
+    leftPane.style("width", `calc(100% - ${rightWidth}px)`);
+    rightPane.style("width", `${rightWidth}px`);
   };
 
   handleSplitterEnd = () => {
-    if (!this.state.options.hideChart) {
-      this.chordRef.init();
-    }
-    this.resize();
+    this.setState({ chartExpanded: false }, () => {
+      if (!this.state.options.hideChart) {
+        this.chordRef.init();
+      }
+      this.resize();
+    });
   };
 
   statProtocol = () => {
@@ -767,78 +791,82 @@ class TopologyViewer extends Component {
     });
 
     return (
-      <TopologyView
-        aria-label="topology-viewer"
-        viewToolbar={
-          <GraphToolbar
-            handleChangeSankey={this.handleChangeSankey}
-            handleChangeShowStat={this.handleChangeShowStat}
-            handleChangeHideChart={this.handleChangeHideChart}
-            handleChangeWidth={this.handleChangeWidth}
-            handleChangeColor={this.handleChangeColor}
-            handleChangeMetric={this.handleChangeMetric}
-            handleHighlightService={this.handleHighlightService}
-            handleHideService={this.handleHideService}
-            statProtocol={this.statProtocol()} // http || tcp || both
-            stat={this.statForProtocol()} // requests || bytes_out etc.
-            options={this.state.options}
-            view={this.props.view}
-          />
-        }
-        controlBar={<TopologyControlBar controlButtons={controlButtons} />}
-        sideBar={
-          <TopologySideBar
-            id="sk-sidebar"
-            className={"no-fade"}
-            show={!this.state.options.hideChart}
-          >
-            <SplitterBar
-              onDrag={this.handleSplitterChange}
-              onDragEnd={this.handleSplitterEnd}
-            />
-            <ChartViewer
-              ref={(el) => (this.chordRef = el)}
-              initial={this.state.initial}
-              service={this.props.service}
-              data={this.state.chordData}
-              deploymentLinks={this.viewObj.links().links}
-              deployment={this.view === "deployment"}
-              site={this.view === "site" || this.view === "deployment"}
-              stat={this.statForProtocol()}
-              handleShowAll={this.handleShowAll}
-              handleChordOver={this.handleChordOver}
-              handleArcOver={this.handleArcOver}
+      <div id="sk-topology-container" ref={(el) => (this.viewRef = el)}>
+        <TopologyView
+          aria-label="topology-viewer"
+          viewToolbar={
+            <GraphToolbar
+              handleChangeSankey={this.handleChangeSankey}
+              handleChangeShowStat={this.handleChangeShowStat}
+              handleChangeHideChart={this.handleChangeHideChart}
+              handleChangeWidth={this.handleChangeWidth}
+              handleChangeColor={this.handleChangeColor}
+              handleChangeMetric={this.handleChangeMetric}
+              handleHighlightService={this.handleHighlightService}
+              handleHideService={this.handleHideService}
+              statProtocol={this.statProtocol()} // http || tcp || both
+              stat={this.statForProtocol()} // requests || bytes_out etc.
+              options={this.state.options}
               view={this.props.view}
-              viewObj={this.viewObj}
             />
-          </TopologySideBar>
-        }
-        sideBarOpen={this.state.options.hideChart}
-        className="qdrTopology"
-      >
-        <div className="diagram">
-          <div ref={(el) => (this.topologyRef = el)} id="topology" />
-          <div
-            id="topo_popover-div"
-            className={this.state.showCard ? "" : "hidden"}
-          >
-            {this.state.showCard && (
-              <PopupCard
-                cardSize="expanded"
-                cardService={this.state.cardService}
-                card={this.state.cardInfo}
-                service={this.props.service}
+          }
+          controlBar={<TopologyControlBar controlButtons={controlButtons} />}
+          sideBar={
+            <TopologySideBar
+              id="sk-sidebar"
+              className={"no-fade"}
+              show={!this.state.options.hideChart}
+            >
+              <SplitterBar
+                onDrag={this.handleSplitterChange}
+                onDragEnd={this.handleSplitterEnd}
               />
-            )}
+              <ChartViewer
+                ref={(el) => (this.chordRef = el)}
+                initial={this.state.initial}
+                service={this.props.service}
+                data={this.state.chordData}
+                deploymentLinks={this.viewObj.links().links}
+                deployment={this.view === "deployment"}
+                site={this.view === "site" || this.view === "deployment"}
+                stat={this.statForProtocol()}
+                handleShowAll={this.handleShowAll}
+                handleChordOver={this.handleChordOver}
+                handleArcOver={this.handleArcOver}
+                handleExpandChart={this.handleExpandChart}
+                chartExpanded={this.state.chartExpanded}
+                view={this.props.view}
+                viewObj={this.viewObj}
+              />
+            </TopologySideBar>
+          }
+          sideBarOpen={this.state.options.hideChart}
+          className="qdrTopology"
+        >
+          <div className="diagram">
+            <div ref={(el) => (this.topologyRef = el)} id="topology" />
+            <div
+              id="topo_popover-div"
+              className={this.state.showCard ? "" : "hidden"}
+            >
+              {this.state.showCard && (
+                <PopupCard
+                  cardSize="expanded"
+                  cardService={this.state.cardService}
+                  card={this.state.cardInfo}
+                  service={this.props.service}
+                />
+              )}
+            </div>
           </div>
-        </div>
-        {this.state.showLegend && (
-          <LegendComponent
-            nodes={this.viewObj.nodes()}
-            handleCloseLegend={this.handleCloseLegend}
-          />
-        )}
-      </TopologyView>
+          {this.state.showLegend && (
+            <LegendComponent
+              nodes={this.viewObj.nodes()}
+              handleCloseLegend={this.handleCloseLegend}
+            />
+          )}
+        </TopologyView>
+      </div>
     );
   }
 }
