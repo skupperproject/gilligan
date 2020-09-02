@@ -484,7 +484,10 @@ const utils = {
     const parts = name.split("-");
     if (parts.length > 2) {
       const len = parts.length;
-      if (parts[len - 1].length === 5 && parts[len - 2].length === 10) {
+      if (
+        parts[len - 1].length === 5 &&
+        (parts[len - 2].length === 10 || parts[len - 2].length === 9)
+      ) {
         parts.splice(len - 2, 2);
         return parts.join("-");
       }
