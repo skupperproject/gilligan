@@ -112,7 +112,7 @@ class TimeSeries extends Component {
     if (Object.keys(data).length === 1) {
       const key = Object.keys(data)[0];
       if (data[key].y === 0) {
-        data = {};
+        data = defaultTSData;
       }
     }
     const containerId = this.props.containerId
@@ -181,15 +181,11 @@ class TimeSeries extends Component {
               }}
             >
               <ChartAxis
-                tickFormat={(t) => {
-                  if (t === "1 min ago") return t;
-                  const secs = parseInt(t);
+                tickFormat={(t, index, ticks) => {
                   // first one
-                  if (secs === 0) return "Now";
-                  const first = Object.keys(data)[0];
-                  const count = data[first].length;
+                  if (index === ticks.length - 1) return "Now";
                   // last one
-                  if ((count - 1) * 2 === secs) return t;
+                  if (index === 0) return t;
                   return "";
                 }}
               />
@@ -198,7 +194,7 @@ class TimeSeries extends Component {
                 dependentAxis
                 showGrid
                 fixLabelOverlap={true}
-                tickFormat={(tick, index, ticks) => {
+                tickFormat={(tick) => {
                   const t = utils.formatBytes(tick, 0);
                   return t;
                 }}
@@ -212,8 +208,6 @@ class TimeSeries extends Component {
                       style={{
                         data: {
                           stroke: ({ data }) =>
-                            data.length > 0 ? data[0].color : "#000000",
-                          fill: ({ data }) =>
                             data.length > 0 ? data[0].color : "#000000",
                           strokeWidth: 6,
                           width: "6px",
