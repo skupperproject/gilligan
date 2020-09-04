@@ -37,7 +37,7 @@ const DEFAULT_DETAIL_OPTIONS = {
 };
 const DEFAULT_OPTIONS = {
   radio: false,
-  traffic: true,
+  traffic: false,
   showMetric: false,
   hideChart: false,
   http: "bytes_out",

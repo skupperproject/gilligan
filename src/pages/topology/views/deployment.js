@@ -32,7 +32,7 @@ const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
 const DEFAULT_OPTIONS = {
   radio: false,
-  traffic: true,
+  traffic: false,
   showMetric: false,
   hideChart: false,
   http: "bytes_out",
