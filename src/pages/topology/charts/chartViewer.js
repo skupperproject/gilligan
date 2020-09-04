@@ -107,6 +107,7 @@ class ChartViewer extends Component {
           type={type}
           handleChangeChartType={this.handleChangeChartType}
           handleExpandChart={this.props.handleExpandChart}
+          handleCloseChart={this.props.handleCloseChart}
           chartExpanded={this.props.chartExpanded}
         />
         <div className="sk-all-charts-container" id="skAllCharts">

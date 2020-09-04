@@ -37,6 +37,7 @@ import { viewsMap as VIEWS } from "./views/views";
 const SPLITTER_POSITION = "split";
 const SPLITTER_LEFT = "div.pf-topology-content";
 const SPLITTER_RIGHT = "div.pf-topology-side-bar";
+const SPLITTER_MIN_CHART_WIDTH = 300;
 
 class TopologyViewer extends Component {
   constructor(props) {
@@ -165,17 +166,16 @@ class TopologyViewer extends Component {
   resize = () => {
     if (!this.svg) return;
     let sizes = utils.getSizes(this.topologyRef);
-    //console.log(`resize got sizes at ${sizes[0]}, ${sizes[1]}`);
     this.width = sizes[0];
     this.height = sizes[1];
     if (this.width > 0) {
       // set attrs and 'resume' force
-      d3.select("#SVG_ID").attr("width", this.width);
-      d3.select("#SVG_ID").attr("height", this.height);
+      d3.select("#SVG_ID")
+        .attr("width", this.width)
+        .attr("height", this.height);
       this.force.size(sizes).resume();
     }
     this.doUpdate();
-    //this.updateLegend();
   };
 
   setFixed = (item, data) => {
@@ -219,9 +219,7 @@ class TopologyViewer extends Component {
 
     const leftPane = d3.select(SPLITTER_LEFT);
     const rightPane = d3.select(SPLITTER_RIGHT);
-    leftPane
-      .style("width", `calc(100% - ${splitterPosition}px)`)
-      .style("min-width", "unset");
+    leftPane.style("width", "100%").style("min-width", "unset");
     rightPane
       .style("width", `${splitterPosition}px`)
       .style("max-width", "unset")
@@ -710,12 +708,14 @@ class TopologyViewer extends Component {
   };
 
   handleSplitterChange = (moved) => {
-    const minRight = 260;
     let sizes = utils.getSizes(this.viewRef);
     const maxRight = sizes[0];
     const rightPane = d3.select(SPLITTER_RIGHT);
     let rightWidth = Math.min(
-      Math.max(parseInt(rightPane.style("width"), 10) + moved, minRight),
+      Math.max(
+        parseInt(rightPane.style("width"), 10) + moved,
+        SPLITTER_MIN_CHART_WIDTH
+      ),
       maxRight
     );
     this.setChordWidth(rightWidth);
@@ -736,16 +736,19 @@ class TopologyViewer extends Component {
         ? sizes[0]
         : utils.getSaved(SPLITTER_POSITION);
       d3.select(SPLITTER_RIGHT).style("width", `${rightWidth}px`);
-      //.style("width", `${sizes[0]}px`);
       this.chordRef.init();
       this.resize();
     });
   };
 
+  handleCloseChart = () => {
+    this.handleChangeHideChart(true);
+  };
+
   setChordWidth = (rightWidth) => {
     const leftPane = d3.select(SPLITTER_LEFT);
     const rightPane = d3.select(SPLITTER_RIGHT);
-    leftPane.style("width", `calc(100% - ${rightWidth}px)`);
+    leftPane.style("width", "100%");
     rightPane.style("width", `${rightWidth}px`);
   };
 
@@ -834,6 +837,7 @@ class TopologyViewer extends Component {
                 handleChordOver={this.handleChordOver}
                 handleArcOver={this.handleArcOver}
                 handleExpandChart={this.handleExpandChart}
+                handleCloseChart={this.handleCloseChart}
                 chartExpanded={this.state.chartExpanded}
                 view={this.props.view}
                 viewObj={this.viewObj}

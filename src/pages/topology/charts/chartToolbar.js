@@ -25,6 +25,7 @@ import {
   ChartLineIcon,
 } from "@patternfly/react-icons";
 import ExpandChartBar from "./expandChart";
+import CloseChartButton from "./closeChart";
 import { ChordIcon } from "../../../assets/chordIcon";
 
 import "./charts.css";
@@ -90,6 +91,9 @@ class ChartToolbar extends Component {
             handleExpandChart={this.props.handleExpandChart}
             expanded={this.props.chartExpanded}
           />
+        </SplitItem>
+        <SplitItem>
+          <CloseChartButton handleCloseChart={this.props.handleCloseChart} />
         </SplitItem>
       </Split>
     );
