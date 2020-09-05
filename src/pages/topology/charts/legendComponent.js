@@ -35,7 +35,8 @@ class SkupperLegend extends Component {
     const getArcColors = () => {
       if (
         this.props.site &&
-        (!this.props.deployment || this.props.data !== null)
+        (!this.props.deployment ||
+          (this.props.data !== null && this.props.data.nodeType === "cluster"))
       ) {
         const colors = {};
         for (let site_id in utils.siteColors) {
