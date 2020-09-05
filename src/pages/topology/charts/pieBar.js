@@ -174,8 +174,12 @@ class PieBar extends Component {
       const padding = Math.max(...data.map((datum) => datum.x.length));
       return ys(padding);
     };
+    const showChart =
+      Object.keys(data).length > 0 &&
+      JSON.stringify(data) !== JSON.stringify(defaultData);
+
     return (
-      Object.keys(data).length > 0 && (
+      showChart && (
         <div
           id={`sk-chart-container-${this.props.type}-${this.props.direction}`}
           className={`sk-chart-container ${

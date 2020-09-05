@@ -107,8 +107,6 @@ class TimeSeries extends Component {
         });
       });
     }
-    console.log("----- data");
-    console.log(data);
     // only one datum and its value is 0? remove it
     // this can happen when a service has no input or output
     if (Object.keys(data).length === 1) {
