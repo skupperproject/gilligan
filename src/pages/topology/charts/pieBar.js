@@ -178,9 +178,6 @@ class PieBar extends Component {
       Object.keys(data).length > 0 &&
       JSON.stringify(data) !== JSON.stringify(defaultData);
 
-    if (showChart) {
-      console.log(data);
-    }
     return (
       showChart && (
         <div

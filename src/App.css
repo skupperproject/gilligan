@@ -1776,6 +1776,12 @@ g.cluster-rects.highlighted circle.network {
   filter: url("#glow");
 }
 
+g.service-type.chosen rect.service-type,
+g.cluster.chosen circle.network {
+  stroke-width: 4;
+  stroke-dasharray: 4;
+}
+
 g.service-type.user-hidden rect.service-type,
 g.cluster-rects.user-hidden circle.network {
   stroke-width: 0;

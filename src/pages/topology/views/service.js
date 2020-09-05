@@ -365,13 +365,18 @@ export class Service {
         if (d3.event.defaultPrevented) return; // click suppressed
         viewer.showChord(d);
         viewer.showPopup(d, this.card);
+        this.clearChosen();
+        d.chosen = true;
+        viewer.restart();
         d3.event.stopPropagation();
         d3.event.preventDefault();
       });
 
-    selection.classed("selected", (d) => d.selected);
+    selection
+      .classed("selected", (d) => d.selected)
+      .classed("hidden", (d) => d.cluster.site_name === "unknown")
+      .classed("chosen", (d) => d.chosen);
 
-    selection.classed("hidden", (d) => d.cluster.site_name === "unknown");
     return selection;
   };
 
@@ -485,6 +490,9 @@ export class Service {
   unSelectAll = () => {
     this.serviceLinks.links.forEach((l) => (l.selected = false));
     this.serviceNodes.nodes.forEach((n) => (n.selected = false));
+  };
+  clearChosen = () => {
+    this.serviceNodes.nodes.forEach((n) => (n.chosen = false));
   };
   selectServiceType = (d) => {
     d.selected = true;

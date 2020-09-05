@@ -428,12 +428,16 @@ export class Site {
         viewer.clearPopups();
         viewer.showChord(d);
         viewer.showPopup(d, this.card);
+        viewer.clearChosen();
+        d.chosen = true;
+        viewer.restart();
         d3.event.stopPropagation();
       });
 
     selection
       .classed("selected", (d) => d.selected)
-      .classed("highlighted", (d) => d.highlighted);
+      .classed("highlighted", (d) => d.highlighted)
+      .classed("chosen", (d) => d.chosen);
     selection
       .selectAll("circle.network")
       .classed("dim", viewer.view === "deployment");
@@ -700,6 +704,10 @@ export class Site {
     this.siteNodes.nodes.some((n) => n.selected) ||
     this.trafficLinks.links.some((l) => l.selected) ||
     this.routerLinks.links.some((l) => l.selected);
+
+  clearChosen = () => {
+    this.siteNodes.nodes.forEach((n) => (n.chosen = false));
+  };
 
   unSelectAll = () => {
     this.siteNodes.nodes.forEach((n) => (n.selected = false));

@@ -377,6 +377,11 @@ export class Deployment extends Service {
     d[key].y = d.y - d.parentNode.y;
   };
 
+  clearChosen = () => {
+    this.Site.siteNodes.nodes.forEach((n) => (n.chosen = false));
+    this.serviceNodes.nodes.forEach((n) => (n.chosen = false));
+  };
+
   saveAllPositions = () => {
     this.Site.siteNodes.nodes.forEach((site) => {
       this.savePosition(site);

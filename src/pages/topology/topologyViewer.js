@@ -208,6 +208,9 @@ class TopologyViewer extends Component {
       this.setState({ showCard: false });
     }
   };
+  clearChosen = () => {
+    this.viewObj.clearChosen();
+  };
 
   // initialize the nodes and links array
   init = () => {
@@ -244,6 +247,8 @@ class TopologyViewer extends Component {
         .on("click", () => {
           this.showChord(null, false);
           this.clearPopups();
+          this.viewObj.clearChosen();
+          this.restart();
         })
         .call(this.zoom)
         .append("g")
