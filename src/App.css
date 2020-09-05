@@ -908,6 +908,7 @@ span.legend-color {
   height: 20px;
   display: inline-block;
   margin-right: 0.5em;
+  border: 1px solid;
 }
 
 span.legend-router {

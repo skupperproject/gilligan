@@ -45,6 +45,11 @@ class RoutersComponent extends Component {
                   className="legend-color"
                   style={{
                     backgroundColor: this.color(this.props.arcColors[router]),
+                    borderColor: utils.rgbToHex(
+                      d3
+                        .rgb(this.color(this.props.arcColors[router]))
+                        .darker(0.6)
+                    ),
                   }}
                 ></span>
                 <span className="legend-router legend-text" title={router}>
