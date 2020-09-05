@@ -72,3 +72,7 @@ button:focus {
   margin-left: 1em;
   margin-top: 2em;
 }
+
+.sk-all-charts-container.chosen {
+  border: 2px dashed;
+}

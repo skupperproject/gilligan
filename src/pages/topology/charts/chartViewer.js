@@ -110,7 +110,12 @@ class ChartViewer extends Component {
           handleCloseChart={this.props.handleCloseChart}
           chartExpanded={this.props.chartExpanded}
         />
-        <div className="sk-all-charts-container" id="skAllCharts">
+        <div
+          className={`sk-all-charts-container${
+            this.props.data !== null ? " chosen" : ""
+          }`}
+          id="skAllCharts"
+        >
           <div
             id="popover-div"
             className={
