@@ -1106,11 +1106,7 @@ export class Site {
   // get requests for all sites
   allRequests = (VAN, direction, stat) => {
     const requests = {};
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
+    stat = "bytes_out";
     const to = direction === "in" ? "source" : "target";
     const from = direction === "in" ? "target" : "source";
 
@@ -1122,6 +1118,7 @@ export class Site {
         if (!requests.hasOwnProperty(toId)) requests[toId] = {};
         utils.aggregateAttributes(
           {
+            key: toName,
             shortName: toName,
             requests: deploymentLink.request[stat] || 0,
             color: utils.siteColors[toId].color,
@@ -1135,11 +1132,7 @@ export class Site {
 
   specificRequests = (VAN, direction, stat, site_id) => {
     const requests = {};
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
+    stat = "bytes_out";
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
 
@@ -1167,11 +1160,7 @@ export class Site {
 
   allTimeSeries = ({ VAN, direction, stat, duration = "min" }) => {
     const requests = {};
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
+    stat = "bytes_out";
     const to = direction === "in" ? "source" : "target";
     const from = direction === "in" ? "target" : "source";
 
@@ -1192,6 +1181,7 @@ export class Site {
               shortName: toName,
               samples,
               color: utils.siteColors[toId].color,
+              key: toName,
             };
           } else {
             utils.combineSamples(requests[toId].samples, samples);
@@ -1210,11 +1200,7 @@ export class Site {
     address,
   }) => {
     const requests = {};
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
+    stat = "bytes_out";
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
 
