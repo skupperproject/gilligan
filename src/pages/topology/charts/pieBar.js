@@ -114,7 +114,7 @@ class PieBar extends Component {
         all: request.all,
         name: request.shortName,
         value: utils.formatStat(this.props.stat, request.requests),
-        x: request.shortName,
+        x: request.baseName,
         y: request.requests,
         stroke,
         fill,
@@ -178,6 +178,9 @@ class PieBar extends Component {
       Object.keys(data).length > 0 &&
       JSON.stringify(data) !== JSON.stringify(defaultData);
 
+    if (showChart) {
+      console.log(data);
+    }
     return (
       showChart && (
         <div

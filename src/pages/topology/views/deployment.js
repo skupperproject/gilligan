@@ -602,6 +602,7 @@ export class Deployment extends Service {
           key: address,
           service: address,
           shortName: `${utils.shortName(address)} (${site})`,
+          baseName: utils.shortName(address),
           requests: deploymentLink.request[stat] || 0,
           color: utils.serviceColors[address],
           all: true,
@@ -638,6 +639,7 @@ export class Deployment extends Service {
               shortName: `${utils.shortName(
                 deploymentLink[to].service.address
               )} (${deploymentLink[to].site.site_name})`,
+              baseName: utils.shortName(deploymentLink[to].service.address),
               site: deploymentLink[to].site.site_name,
               requests: deploymentLink.request[stat],
               color: utils.serviceColors[deploymentLink[to].service.address],

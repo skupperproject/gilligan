@@ -1120,6 +1120,7 @@ export class Site {
           {
             key: toName,
             shortName: toName,
+            baseName: toName,
             requests: deploymentLink.request[stat] || 0,
             color: utils.siteColors[toId].color,
           },
@@ -1147,6 +1148,7 @@ export class Site {
             {
               key: site,
               shortName: site,
+              baseName: site,
               requests: deploymentLink.request[stat],
               color: utils.siteColors[toId].color,
             },
