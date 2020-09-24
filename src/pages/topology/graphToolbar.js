@@ -40,10 +40,9 @@ class GraphToolbar extends Component {
   static propTypes = {
     handleChangeSankey: PropTypes.func.isRequired,
     handleChangeShowStat: PropTypes.func.isRequired,
-    handleChangeHideChart: PropTypes.func.isRequired,
-    handleChangeWidth: PropTypes.func.isRequired,
     handleChangeColor: PropTypes.func.isRequired,
     handleChangeMetric: PropTypes.func.isRequired,
+    handleChangeExternal: PropTypes.func.isRequired,
     statProtocol: PropTypes.string.isRequired, // http || tcp || both
     stat: PropTypes.string.isRequired, // requests || bytes_in || bytes_out, etc.
     options: PropTypes.object.isRequired,
@@ -85,16 +84,14 @@ class GraphToolbar extends Component {
     const { name } = event.target;
     if (name === "showSankey") {
       this.props.handleChangeSankey(checked);
-    } else if (name === "showWidth") {
-      this.props.handleChangeWidth(checked);
     } else if (name === "showStat") {
       this.props.handleChangeShowStat(checked);
     } else if (name === "showColor") {
       this.props.handleChangeColor(checked);
     } else if (name === "showRouterLinks") {
       this.props.handleChangeSankey(!checked);
-    } else if (name === "hideChart") {
-      this.props.handleChangeHideChart(!checked);
+    } else if (name === "showExternal") {
+      this.props.handleChangeExternal(checked);
     }
   };
 
@@ -124,7 +121,7 @@ class GraphToolbar extends Component {
 
   render() {
     const { statProtocol } = this.props;
-    const { radio, traffic, showMetric, hideChart } = this.props.options;
+    const { radio, traffic, showMetric, showExternal } = this.props.options;
     const { isOpen } = this.state;
     const routerLinksRadio = () => {
       if (radio) {
@@ -212,15 +209,15 @@ class GraphToolbar extends Component {
       </OverflowMenuItem>
     );
 
-    const sidebarCheck = () => (
+    const derivedCheck = () => (
       <OverflowMenuItem className="toolbar-item" isPersistent>
         <Checkbox
-          label="Show charts"
-          isChecked={!hideChart}
+          label="Show external clients"
+          isChecked={showExternal}
           onChange={this.handleChange}
-          aria-label="show charts"
-          id="hideChart"
-          name="hideChart"
+          aria-label="show external clients"
+          id="showExternal"
+          name="showExternal"
         />
       </OverflowMenuItem>
     );
@@ -248,7 +245,7 @@ class GraphToolbar extends Component {
           <OverflowMenuGroup isPersistent>
             {sankeyCheck()}
             {metricCheck()}
-            {sidebarCheck()}
+            {derivedCheck()}
             <OverflowMenuItem className="toolbar-item last-item">
               {highlight()}
             </OverflowMenuItem>

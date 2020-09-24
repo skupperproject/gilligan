@@ -20,6 +20,8 @@ class Adapter {
       console.log("finished parsing data");
       console.log(this.data);
     }
+    data.getDeploymentLinks = (showExternal) =>
+      this.getDeploymentLinks(showExternal);
   }
 
   // if multiple sites have the same name,
@@ -132,6 +134,7 @@ class Adapter {
   newService = ({ address, protocol = "http", client, site_id }) => {
     const service = {
       derived: true,
+      isExternal: address === "undefined" || this.isIP(address),
       address,
       protocol,
       targets: [{ name: client, site_id }],
@@ -268,6 +271,16 @@ class Adapter {
         }
       });
     });
+  };
+
+  getDeploymentLinks = (showExternal = true) => {
+    if (!showExternal) {
+      return this.data.deploymentLinks.filter(
+        (link) =>
+          !link.source.service.isExternal && !link.target.service.isExternal
+      );
+    }
+    return this.data.deploymentLinks;
   };
 
   fromTo2 = (from, fromSite, to, toSite) => {

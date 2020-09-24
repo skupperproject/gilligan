@@ -45,6 +45,7 @@ import ErrorPage from "./pages/connect/errorPage";
 import { QDRService, UPDATE_INTERVAL } from "./qdrService";
 import { utils } from "./utilities";
 import gilliganImg from "./assets/skupper.svg";
+import "./layout.css";
 const history = createBrowserHistory();
 const VIEW_MODES = "viewModes";
 const LAST_VIEW = "lastView2";
@@ -149,6 +150,7 @@ class PageLayout extends React.Component {
     );
   };
 
+  // called from setInterval to update the DATA
   update = () => {
     if (this.updating) {
       console.log(

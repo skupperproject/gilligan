@@ -39,7 +39,8 @@ const DEFAULT_OPTIONS = {
   radio: true,
   traffic: false,
   showMetric: false,
-  hideChart: false,
+  isExpanded: 0,
+  showExternal: false,
   http: "bytes_out",
   tcp: "bytes_out",
 };
@@ -1112,13 +1113,13 @@ export class Site {
   };
 
   // get requests for all sites
-  allRequests = (VAN, direction, stat) => {
+  allRequests = (VAN, direction, stat, showExternal = true) => {
     const requests = {};
     stat = "bytes_out";
     const to = direction === "in" ? "source" : "target";
     const from = direction === "in" ? "target" : "source";
 
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const toName = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;
@@ -1139,13 +1140,13 @@ export class Site {
     return requests;
   };
 
-  specificRequests = (VAN, direction, stat, site_id) => {
+  specificRequests = (VAN, direction, stat, site_id, showExternal = true) => {
     const requests = {};
     stat = "bytes_out";
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
 
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const site = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;
@@ -1168,13 +1169,19 @@ export class Site {
     return requests;
   };
 
-  allTimeSeries = ({ VAN, direction, stat, duration = "min" }) => {
+  allTimeSeries = ({
+    VAN,
+    direction,
+    stat,
+    duration = "min",
+    showExternal = true,
+  }) => {
     const requests = {};
     stat = "bytes_out";
     const to = direction === "in" ? "source" : "target";
     const from = direction === "in" ? "target" : "source";
 
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const toName = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;
@@ -1208,13 +1215,14 @@ export class Site {
     stat,
     duration = "min",
     address,
+    showExternal = true,
   }) => {
     const requests = {};
     stat = "bytes_out";
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
 
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const site = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;

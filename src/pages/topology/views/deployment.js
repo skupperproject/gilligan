@@ -34,7 +34,8 @@ const DEFAULT_OPTIONS = {
   radio: false,
   traffic: false,
   showMetric: false,
-  hideChart: false,
+  isExpanded: 0,
+  showExternal: false,
   http: "bytes_out",
   tcp: "bytes_out",
 };
@@ -71,7 +72,7 @@ export class Deployment extends Service {
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
-  updateNodesAndLinks = (viewer) => {
+  updateNodesAndLinks = (viewer, debug) => {
     const newSiteNodes = new Nodes();
     const newServiceNodes = new Nodes();
     const newServiceLinks = new Links();
@@ -104,7 +105,7 @@ export class Deployment extends Service {
 
   initNodes = (siteNodes, serviceNodes, viewer) => {
     this.Site.initNodes(siteNodes);
-    super.initNodes(serviceNodes, true);
+    super.initNodes(serviceNodes, true, viewer.state.options.showExternal);
     this.setParentNodes(siteNodes, serviceNodes, viewer);
     this.adjustSites(siteNodes, serviceNodes, viewer);
   };
@@ -228,29 +229,31 @@ export class Deployment extends Service {
     const stat = viewer.statForProtocol();
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
-    this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
-      const source = subNodes.find(
-        (n) =>
-          n.address === deploymentLink.source.service.address &&
-          n.cluster.site_id === deploymentLink.source.site.site_id
-      );
-      const target = subNodes.find(
-        (n) =>
-          n.address === deploymentLink.target.service.address &&
-          n.cluster.site_id === deploymentLink.target.site.site_id
-      );
-      const linkIndex = links.addLink({
-        source,
-        target,
-        dir: "out",
-        cls: "node2node",
-        uid: `Link-${source.uuid}-${target.uuid}`,
+    this.data.adapter
+      .getDeploymentLinks(viewer.state.options.showExternal)
+      .forEach((deploymentLink) => {
+        const source = subNodes.find(
+          (n) =>
+            n.address === deploymentLink.source.service.address &&
+            n.cluster.site_id === deploymentLink.source.site.site_id
+        );
+        const target = subNodes.find(
+          (n) =>
+            n.address === deploymentLink.target.service.address &&
+            n.cluster.site_id === deploymentLink.target.site.site_id
+        );
+        const linkIndex = links.addLink({
+          source,
+          target,
+          dir: "out",
+          cls: "node2node",
+          uid: `Link-${source.uuid}-${target.uuid}`,
+        });
+        const link = links.links[linkIndex];
+        link.request = deploymentLink.request;
+        link.value = link.request[stat] || 0;
+        link.getColor = () => utils.linkColor(link, links.links);
       });
-      const link = links.links[linkIndex];
-      link.request = deploymentLink.request;
-      link.value = link.request[stat] || 0;
-      link.getColor = () => utils.linkColor(link, links.links);
-    });
     // get the sankey height of each node based on link.value
     utils.initSankey({
       nodes: subNodes,
@@ -359,17 +362,19 @@ export class Deployment extends Service {
       bottom: d.parentNode.y + d.parentNode.getHeight(),
     };
 
-    if (d.px > bbox.right) {
-      d.x = bbox.right;
-    }
-    if (d.px < bbox.left - d.getWidth()) {
-      d.x = bbox.left - d.getWidth();
-    }
-    if (d.py > bbox.bottom) {
-      d.y = bbox.bottom;
-    }
-    if (d.py < bbox.top - d.getHeight()) {
-      d.y = bbox.top - d.getHeight();
+    if (!d.isExternal) {
+      if (d.px > bbox.right) {
+        d.x = bbox.right;
+      }
+      if (d.px < bbox.left - d.getWidth()) {
+        d.x = bbox.left - d.getWidth();
+      }
+      if (d.py > bbox.bottom) {
+        d.y = bbox.bottom;
+      }
+      if (d.py < bbox.top - d.getHeight()) {
+        d.y = bbox.top - d.getHeight();
+      }
     }
     // update the offsets within the site
     const key = sankey ? "sankeySiteOffset" : "siteOffset";
@@ -595,9 +600,9 @@ export class Deployment extends Service {
   };
 
   // get requests for charts
-  allRequests = (VAN, direction, stat) => {
+  allRequests = (VAN, direction, stat, showExternal = true) => {
     const requests = {};
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const which = direction === "in" ? "source" : "target";
       const address = deploymentLink[which].service.address;
       const site = deploymentLink[which].site.site_name;
@@ -618,7 +623,14 @@ export class Deployment extends Service {
     return requests;
   };
 
-  specificRequests = (VAN, direction, stat, address, site_name) => {
+  specificRequests = (
+    VAN,
+    direction,
+    stat,
+    address,
+    site_name,
+    showExternal = true
+  ) => {
     if (site_name === undefined) {
       return this.Site.specificRequests(VAN, direction, stat, address);
     }
@@ -633,7 +645,7 @@ export class Deployment extends Service {
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
 
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
       const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
       if (fromAddress === adddressSite) {
@@ -659,9 +671,15 @@ export class Deployment extends Service {
     return requests;
   };
 
-  allTimeSeries = ({ VAN, direction, stat, duration = "min" }) => {
+  allTimeSeries = ({
+    VAN,
+    direction,
+    stat,
+    duration = "min",
+    showExternal = true,
+  }) => {
     const requests = {};
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const which = direction === "in" ? "source" : "target";
       const address = deploymentLink[which].service.address;
       const site = deploymentLink[which].site.site_name;
@@ -696,6 +714,7 @@ export class Deployment extends Service {
     duration = "min",
     address,
     site_name,
+    showExternal = true,
   }) => {
     if (site_name === undefined) {
       return this.Site.specificTimeSeries({
@@ -717,7 +736,7 @@ export class Deployment extends Service {
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
 
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
       const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
       if (fromAddress === adddressSite) {

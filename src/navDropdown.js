@@ -19,6 +19,8 @@ under the License.
 
 import React, { Component } from "react";
 import { Nav, NavList, NavItem } from "@patternfly/react-core";
+import { GraphIcon } from "./assets/graphIcon";
+
 import "./navDropdown.css";
 
 class NavDropdown extends Component {
@@ -35,7 +37,7 @@ class NavDropdown extends Component {
           this.props.mode === "",
         path: "",
         enabled: true,
-        icon: "pf-icon-topology",
+        icon: <GraphIcon width={36} className="sk-nav-icon" />,
         iconClass: "pf-icon",
       },
       {
@@ -61,6 +63,19 @@ class NavDropdown extends Component {
     });
   };
 
+  itemIcon = (item) => {
+    if (typeof item.icon === "string") {
+      return (
+        <i
+          className={`${item.iconClass} ${item.icon} sk-nav-icon`}
+          id={item.description}
+        ></i>
+      );
+    }
+    if (typeof item.icon === "object") {
+      return item.icon;
+    }
+  };
   render() {
     const selectedItem = this.dropdownItems.find(
       (item) => item.selected === true
@@ -75,10 +90,7 @@ class NavDropdown extends Component {
               isActive={selectedItem.key === item.key}
               title={`Show ${item.description} view`}
             >
-              <i
-                className={`${item.iconClass} ${item.icon} sk-nav-icon`}
-                id={`${item.description}`}
-              />
+              {this.itemIcon(item)}
               {`${item.description}`}
             </NavItem>
           ))}

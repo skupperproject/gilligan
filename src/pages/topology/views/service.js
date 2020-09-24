@@ -39,7 +39,8 @@ const DEFAULT_OPTIONS = {
   radio: false,
   traffic: false,
   showMetric: false,
-  hideChart: false,
+  isExpanded: 0,
+  showExternal: false,
   http: "bytes_out",
   tcp: "bytes_out",
 };
@@ -78,7 +79,7 @@ export class Service {
   }
 
   initNodesAndLinks = (viewer) => {
-    this.initNodes(this.serviceNodes, false);
+    this.initNodes(this.serviceNodes, false, viewer.state.options.showExternal);
     const vsize = { width: viewer.width, height: viewer.height };
     const size = this.initLinks(
       this.serviceNodes.nodes,
@@ -92,7 +93,7 @@ export class Service {
   updateNodesAndLinks = (viewer) => {
     const newNodes = new Nodes();
     const newLinks = new Links();
-    this.initNodes(newNodes, false);
+    this.initNodes(newNodes, false, viewer.state.options.showExternal);
     const vsize = { width: viewer.width, height: viewer.height };
     this.initLinks(newNodes.nodes, newLinks, vsize, viewer);
     utils.reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
@@ -101,40 +102,42 @@ export class Service {
     viewer.restart();
   };
 
-  initNodes(serviceNodes, includeDuplicate) {
-    this.data.adapter.data.services.forEach((service) => {
-      // if we haven't already added this service || or we want duplicates
-      if (
-        includeDuplicate ||
-        !serviceNodes.nodes.some((n) => n.address === service.address)
-      ) {
-        // get the sites in which this service is deployed
-        let serviceSites = this.data.adapter.getServiceSites(service);
-        serviceSites.forEach((site, i) => {
-          if (i === 0 || includeDuplicate) {
-            const subNode = new Node({
-              name: service.address,
-              nodeType: "service",
-              fixed: true,
-              heightFn: this.serviceHeight,
-              widthFn: this.serviceWidth,
-            });
-            subNode.mergeWith(service);
-            subNode.lightColor = d3
-              .rgb(utils.serviceColor(subNode.name))
-              .brighter(0.6);
-            subNode.color = utils.serviceColor(subNode.name);
-            subNode.cluster = site;
-            subNode.shortName = utils.shortName(subNode.name);
-            if (i > 0) {
-              subNode.extra = true;
+  initNodes(serviceNodes, includeDuplicate, showExternal) {
+    this.data.adapter.data.services
+      .filter((service) => !service.isExternal || showExternal)
+      .forEach((service) => {
+        // if we haven't already added this service || or we want duplicates
+        if (
+          includeDuplicate ||
+          !serviceNodes.nodes.some((n) => n.address === service.address)
+        ) {
+          // get the sites in which this service is deployed
+          let serviceSites = this.data.adapter.getServiceSites(service);
+          serviceSites.forEach((site, i) => {
+            if (i === 0 || includeDuplicate) {
+              const subNode = new Node({
+                name: service.address,
+                nodeType: "service",
+                fixed: true,
+                heightFn: this.serviceHeight,
+                widthFn: this.serviceWidth,
+              });
+              subNode.mergeWith(service);
+              subNode.lightColor = d3
+                .rgb(utils.serviceColor(subNode.name))
+                .brighter(0.6);
+              subNode.color = utils.serviceColor(subNode.name);
+              subNode.cluster = site;
+              subNode.shortName = utils.shortName(subNode.name);
+              if (i > 0) {
+                subNode.extra = true;
+              }
+              subNode.uuid = `${site.site_id}-${subNode.address}`;
+              serviceNodes.add(subNode);
             }
-            subNode.uuid = `${site.site_id}-${subNode.address}`;
-            serviceNodes.add(subNode);
-          }
-        });
-      }
-    });
+          });
+        }
+      });
   }
 
   // initialize the service to service links for the service view
@@ -142,7 +145,10 @@ export class Service {
     //const options = viewer.state.options;
     let stat = viewer.statForProtocol();
     if (stat === "bytes_in") stat = "bytes_out";
-    this.data.adapter.data.deploymentLinks.forEach((deploymentLink) => {
+    let deploymentLinks = this.data.adapter.getDeploymentLinks(
+      viewer.state.options.showExternal
+    );
+    deploymentLinks.forEach((deploymentLink) => {
       const source = serviceNodes.find(
         (n) => n.address === deploymentLink.source.service.address
       );
@@ -526,17 +532,21 @@ export class Service {
     });
   };
   dragStart = (d) => {
+    if (isNaN(d.px)) {
+      d.px = isNaN(d.x) ? d.x0 : d.x;
+      d.py = isNaN(d.y) ? d.y0 : d.y;
+    }
     d.x = d.x0;
     d.y = d.y0;
-    this.savePosition(d);
   };
 
   drag = (d) => {
     d.x = d.x0 = d.px;
     d.y = d.y0 = d.py;
+  };
+  dragEnd = (d) => {
     this.savePosition(d);
   };
-  dragEnd = () => {};
   drawViewNodes(sankey) {
     this.servicesSelection.attr("transform", (d) => {
       d.x0 = d.x;
@@ -850,10 +860,15 @@ export class Service {
     });
   };
 
-  allRequests = (VAN, direction, stat) => {
+  isExternal = (name) =>
+    this.data.adapter.data.services.some(
+      (service) => service.address === name && service.isExternal
+    );
+
+  allRequests = (VAN, direction, stat, showExternal = true) => {
     const requests = {};
     const which = direction === "in" ? "source" : "target";
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const address = deploymentLink[which].service.address;
       if (!requests.hasOwnProperty(address)) requests[address] = {};
       utils.aggregateAttributes(
@@ -871,7 +886,7 @@ export class Service {
     return requests;
   };
 
-  specificRequests = (VAN, direction, stat, address) => {
+  specificRequests = (VAN, direction, stat, address, showExternal = true) => {
     const requests = {};
     if (direction === "in" && stat === "bytes_out") {
       stat = "bytes_in";
@@ -880,7 +895,7 @@ export class Service {
     }
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = deploymentLink[from].service.address;
       const toAddress = deploymentLink[to].service.address;
       if (fromAddress === address) {
@@ -903,10 +918,16 @@ export class Service {
     return requests;
   };
 
-  allTimeSeries = ({ VAN, direction, stat, duration = "min" }) => {
+  allTimeSeries = ({
+    VAN,
+    direction,
+    stat,
+    duration = "min",
+    showExternal = true,
+  }) => {
     const requests = {};
     const which = direction === "in" ? "source" : "target";
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const address = deploymentLink[which].service.address;
       const samples = utils.getHistory({
         histories: deploymentLink.history,
@@ -937,6 +958,7 @@ export class Service {
     stat,
     duration = "min",
     address,
+    showExternal = true,
   }) => {
     const requests = {};
     if (direction === "in" && stat === "bytes_out") {
@@ -946,7 +968,7 @@ export class Service {
     }
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
-    VAN.deploymentLinks.forEach((deploymentLink) => {
+    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = deploymentLink[from].service.address;
       const toAddress = deploymentLink[to].service.address;
       if (fromAddress === address) {
