@@ -120,6 +120,9 @@ const utils = {
   ServiceStart: 50,
   ClusterPadding: 20,
   SiteRadius: 100,
+  siteColors: {},
+  serviceColors: {},
+
   safePlural: (count, str) => {
     if (count === 1) return str;
     var es = ["x", "ch", "ss", "sh"];
@@ -153,11 +156,11 @@ const utils = {
     return url;
   },
 
-  getSizes: (component) => {
+  getSizes: (component, defaultValue = [300, 300]) => {
     const gap = 5;
     let legendWidth = 4;
-    let width = 300;
-    let height = 300;
+    let width = defaultValue[0];
+    let height = defaultValue[1];
     if (component && component.offsetWidth) {
       let topoWidth = component.offsetWidth;
       if (topoWidth < 768) legendWidth = 0;
@@ -244,6 +247,7 @@ const utils = {
         }
       }
     };
+
     links.forEach((l) => {
       if (!loops.some((loop) => loop.includes(l))) {
         const linkChain = [l];
@@ -445,15 +449,14 @@ const utils = {
     });
   },
 
-  siteColors: {},
-  serviceColors: {},
-
   removeSiteColor: (site_id) => {
     if (utils.siteColors[site_id]) {
       delete utils.siteColors[site_id];
     }
   },
 
+  // there are 20 colors available from colorGen().
+  // site colors are the even colors. service colors are the odd colors
   siteColor: (name, site_id) => {
     if (site_id === "unknownID") return "#FFFFFF";
     if (!(site_id in utils.siteColors)) {
@@ -472,9 +475,33 @@ const utils = {
   },
   serviceColor: (name) => {
     if (!(name in utils.serviceColors)) {
-      utils.serviceColors[name] = colorGen(
-        19 - Object.keys(utils.serviceColors).length * 2
-      );
+      let found = false;
+      let i = 19;
+      while (!found) {
+        let color = colorGen(i);
+        if (
+          !Object.keys(utils.serviceColors).some(
+            (service) => utils.serviceColors[service] === color
+          )
+        ) {
+          found = true;
+          utils.serviceColors[name] = color;
+        } else {
+          i -= 2;
+          if (i < 0) {
+            if (i === -2) {
+              // there are more than 20 services. just reuse some colors
+              found = true;
+              utils.serviceColors[name] = colorGen(
+                Object.keys(utils.serviceColors).length
+              );
+            }
+            // there are more than 10 services.
+            // start to use site colors
+            i = 20;
+          }
+        }
+      }
     }
     return utils.serviceColors[name];
   },
@@ -723,6 +750,19 @@ const utils = {
     }
   },
 
+  // Loop through the sources/targets in the links array and
+  // find a node that matches the given uuid.
+  findNodeInLinks: (links, uuid) => {
+    let node;
+    links.some((l) => {
+      if (l.source.uuid === uuid) node = l.source;
+      else if (l.target.uuid === uuid) node = l.target;
+      // exit loop if found
+      return node;
+    });
+    return node;
+  },
+
   reconcileArrays: (existing, newArray) => {
     const attrs = [
       "value",
@@ -777,6 +817,22 @@ const utils = {
           e.target = tmp;
         }
       });
+    });
+    // fix targets
+    newLinks.forEach((n) => {
+      // if new link.
+      // New links have a source or target that refers to a new node.
+      // We need to have the links refer to nodes in the existing nodes.
+      if (!existingLinks.some((e) => e.uuid === n.uuid)) {
+        const source = utils.findNodeInLinks(existingLinks, n.source.uuid);
+        const target = utils.findNodeInLinks(existingLinks, n.target.uuid);
+        if (source) {
+          n.source = source;
+        }
+        if (target) {
+          n.target = target;
+        }
+      }
     });
     utils.reconcileArrays(existingLinks, newLinks);
   },
@@ -1004,7 +1060,9 @@ const utils = {
   // given sample and add the vals
   combineSamples: (targetSamples, samples) => {
     targetSamples.forEach((oldSample, i) => {
-      oldSample.val += samples[i].val;
+      if (oldSample && samples[i]) {
+        oldSample.val += samples[i].val;
+      }
     });
   },
 
