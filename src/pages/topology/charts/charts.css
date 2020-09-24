@@ -1,24 +1,10 @@
-/*
-#sk-sidebar {
-  overflow-y: hidden;
-}
-
-.sk-all-charts-container {
-  overflow: auto;
-}
-*/
-
-.sk-chart-container {
-  display: flex;
-  flex-direction: column;
-}
 .sk-chart-header {
   align-self: center;
   text-align: center;
   font-weight: bold;
-  margin-left: 1em;
-  margin-top: 1em;
-  margin-bottom: 1em;
+  padding-left: 1em;
+  padding-top: 1em;
+  padding-bottom: 1em;
 }
 
 .sk-chart-container.sk-chart-separated {
@@ -69,8 +55,9 @@ button:focus {
 }
 
 .sk-chart-legend-container {
-  margin-left: 1em;
-  margin-top: 2em;
+  padding-left: 1em;
+  padding-bottom: 2em;
+  display: flex;
 }
 
 .sk-all-charts-container.chosen {

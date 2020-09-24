@@ -26,8 +26,6 @@ import { qdrRibbon } from "./ribbon/ribbon.js";
 import { qdrlayoutChord } from "./layout/layout.js";
 import * as d3 from "d3";
 import RoutersComponent from "./routersComponent";
-//import PieBreakdownComponent from "./pieComponent";
-import KebabDropdown from "./kebob";
 import PropTypes from "prop-types";
 
 const DOUGHNUT = "#chord svg .empty";
@@ -42,7 +40,6 @@ class ChordViewer extends Component {
     service: PropTypes.object.isRequired,
     data: PropTypes.object,
     site: PropTypes.bool.isRequired,
-    handleShowAll: PropTypes.func.isRequired,
   };
 
   constructor(props) {
@@ -97,6 +94,10 @@ class ChordViewer extends Component {
 
   init = () => {
     this.setSizes();
+    let allChartsContainer = d3.select("#skAllCharts");
+    if (!allChartsContainer.empty()) {
+      allChartsContainer.style("display", "block");
+    }
 
     // used to transition chords along a circular path instead of linear.
     // qdrRibbon is a replacement for d3.svg.chord() that avoids the twists
@@ -223,16 +224,22 @@ class ChordViewer extends Component {
   };
   // size the diagram based on the browser window size
   getRadius = () => {
-    const sizes = utils.getSizes(d3.select("#sk-sidebar").node());
-    const width = sizes[0];
+    const containerId = this.props.containerId
+      ? this.props.containerId
+      : "skAllCharts";
 
-    const height = sizes[1];
+    const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
+    const legendSize = utils.getSizes(
+      d3.select(".sk-chart-legend-container").node()
+    );
+    const toolbarSize = utils.getSizes(d3.select(".sk-chart-toolbar").node());
+
+    const width = sizes[0];
+    const height = sizes[1] - legendSize[1] - toolbarSize[1] - 60;
     const radius = Math.max(
-      Math.floor((Math.min(width, height) * 0.95) / 2),
+      Math.floor(Math.min(width, height) / 2),
       MIN_RADIUS
     );
-
-    //const radius = Math.max(Math.floor(width * 0.45), MIN_RADIUS);
     return radius;
   };
 
@@ -952,7 +959,7 @@ class ChordViewer extends Component {
         if (this.props.data === null) {
           if (this.props.deployment) {
             return (
-              <div className="sk-chart-header">{`Traffic in ${utils.Icap(
+              <div className="sk-chart-header">{`${utils.Icap(
                 utils.statName(this.props.stat)
               )} between deployments`}</div>
             );
@@ -1004,16 +1011,7 @@ class ChordViewer extends Component {
       );
     };
     return (
-      <div id="chordContainer" className="qdrChord">
-        {false && (
-          <div className="chord-kebob">
-            <KebabDropdown
-              disableAll={!this.props.data ? true : false}
-              allText={this.props.site ? "sites" : "services"}
-              handleShowAll={this.props.handleShowAll}
-            />
-          </div>
-        )}
+      <div id="chordContainer" className="qdrChord sk-chart-container">
         {getTitle()}
         <div aria-label="chord-diagram" id="chord"></div>
         {!this.props.noLegend && (

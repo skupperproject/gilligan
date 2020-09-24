@@ -31,7 +31,39 @@ class RoutersComponent extends Component {
 
   render() {
     return (
-      <React.Fragment>
+      <ul className="sk-topology-legend-container">
+        {Object.keys(this.props.arcColors).map((router, i) => {
+          const color = this.props.arcColors[router];
+          return (
+            <li
+              className="sk-topology-legend-line"
+              key={`legend-${i}`}
+              onMouseEnter={() => this.props.handleHoverRouter(router, true)}
+              onMouseLeave={() => this.props.handleHoverRouter(router, false)}
+            >
+              <span
+                className="sk-topology-legend-color"
+                style={{
+                  backgroundColor: this.color(color),
+                  borderColor: utils.rgbToHex(
+                    d3.rgb(this.color(color)).darker(0.6)
+                  ),
+                }}
+              ></span>
+              <span className="sk-topology-legend-text" title={router}>
+                {utils.shortName(router)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+}
+
+export default RoutersComponent;
+
+/*
         <ul className="routers">
           {Object.keys(this.props.arcColors).map((router, i) => {
             return (
@@ -59,9 +91,4 @@ class RoutersComponent extends Component {
             );
           })}
         </ul>
-      </React.Fragment>
-    );
-  }
-}
-
-export default RoutersComponent;
+*/

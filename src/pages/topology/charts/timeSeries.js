@@ -37,8 +37,11 @@ class TimeSeries extends Component {
     super(props);
     this.state = {
       data: defaultTSData,
-      height: 300,
+      height: 0,
       width: 300,
+      legendHeight: 31,
+      toolbarHeight: 36,
+      headerHeight: 56,
       tickLabel: utils.Icap(utils.statName(this.props.stat)),
     };
     // so we can detect when the stat changes
@@ -76,6 +79,7 @@ class TimeSeries extends Component {
         direction: this.props.direction,
         stat: this.props.stat,
         duration: this.props.duration,
+        showExternal: this.props.showExternal,
       });
     } else {
       requests = this.props.viewObj.specificTimeSeries({
@@ -85,6 +89,7 @@ class TimeSeries extends Component {
         duration: this.props.duration,
         address,
         site_name: site_info,
+        showExternal: this.props.showExternal,
       });
     }
     let data = {};
@@ -115,14 +120,45 @@ class TimeSeries extends Component {
         data = defaultTSData;
       }
     }
+    let {
+      legendHeight,
+      toolbarHeight,
+      headerHeight,
+      width,
+      height,
+    } = this.state;
+    //if (height === 0) {
     const containerId = this.props.containerId
       ? this.props.containerId
-      : "sk-sidebar";
+      : "skAllCharts";
     const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
+    const legendSize = utils.getSizes(
+      d3.select(".sk-chart-legend-container").node()
+    );
+    const toolbarSize = utils.getSizes(d3.select(".sk-chart-toolbar").node());
+    const headerSize = utils.getSizes(d3.select(".sk-chart-header").node(), [
+      toolbarSize[0],
+      56,
+    ]);
+    width = sizes[0];
+    height = sizes[1];
+    legendHeight = legendSize[1];
+    toolbarHeight = toolbarSize[1];
+    headerHeight = headerSize[1];
+    //console.log(`${containerId} width ${width} height ${height} legend ${legendHeight} toolbar ${toolbarHeight} header ${headerHeight}`)
+    //}
+    let allChartsContainer = d3.select("#skAllCharts");
+    if (!allChartsContainer.empty()) {
+      allChartsContainer.style("display", "block");
+    }
+
     this.setState({
       data,
-      width: sizes[0],
-      height: sizes[0],
+      width,
+      height,
+      legendHeight,
+      toolbarHeight,
+      headerHeight,
       headerText,
       tickLabel: utils.Icap(utils.statName(this.props.stat)),
     });
@@ -133,7 +169,17 @@ class TimeSeries extends Component {
   };
 
   getHeight = () => {
-    return this.state.height / 2;
+    const { data } = this.state;
+    const perRow = 30;
+    const atLeast = 80;
+    const xAxis = 40;
+    const count = Object.keys(data).length;
+
+    //console.log(`${this.props.direction} count ${count} height ${Math.max(count * perRow + xAxis, atLeast)}`);
+    //if (this.props.direction === "out") console.log(data);
+    return Math.max(count * perRow + xAxis, atLeast);
+
+    //return (height - toolbarHeight - headerHeight * 2 - legendHeight) / 2 - 10;
   };
 
   render() {
@@ -151,6 +197,9 @@ class TimeSeries extends Component {
 
       return ys(3);
     };
+    if (this.state.height === 0) {
+      return <React.Fragment />;
+    }
     return (
       Object.keys(data).length > 0 && (
         <div
@@ -162,7 +211,7 @@ class TimeSeries extends Component {
           <div className="sk-chart-header">{headerText}</div>
           <div
             style={{
-              height: `${this.getHeight() + 20}px`,
+              height: `${this.getHeight()}px`,
               width: `${width}px`,
             }}
           >

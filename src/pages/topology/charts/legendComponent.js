@@ -33,20 +33,28 @@ class SkupperLegend extends Component {
 
   render() {
     const getArcColors = () => {
+      const colors = {};
       if (
         this.props.site &&
         (!this.props.deployment ||
           (this.props.data !== null && this.props.data.nodeType === "cluster"))
       ) {
-        const colors = {};
         for (let site_id in utils.siteColors) {
           let name = utils.siteColors[site_id].name;
           const color = utils.siteColors[site_id].color;
           colors[name] = color;
         }
-        return colors;
+      } else {
+        Object.keys(utils.serviceColors).forEach((service) => {
+          if (
+            this.props.showExternal ||
+            !this.props.viewObj.isExternal(service)
+          ) {
+            colors[service] = utils.serviceColors[service];
+          }
+        });
       }
-      return utils.serviceColors;
+      return colors;
     };
 
     return (

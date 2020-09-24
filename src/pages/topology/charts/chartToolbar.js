@@ -24,8 +24,7 @@ import {
   ChartBarIcon,
   ChartLineIcon,
 } from "@patternfly/react-icons";
-import ExpandChartBar from "./expandChart";
-import CloseChartButton from "./closeChart";
+import ExpandButton from "../expandButton";
 import { ChordIcon } from "../../../assets/chordIcon";
 
 import "./charts.css";
@@ -41,6 +40,14 @@ class ChartToolbar extends Component {
     const { type } = this.props;
     return (
       <Split className="sk-chart-toolbar" gutter="md">
+        <SplitItem>
+          <ExpandButton
+            expanded={this.props.isExpanded}
+            handleExpandDrawer={this.props.handleExpandDrawer}
+            handleCollapseDrawer={this.props.handleCollapseDrawer}
+          />
+        </SplitItem>
+        <SplitItem isFilled></SplitItem>
         <SplitItem>
           <Button
             variant="plain"
@@ -84,16 +91,6 @@ class ChartToolbar extends Component {
           >
             <ChordIcon />
           </Button>
-        </SplitItem>
-        <SplitItem isFilled></SplitItem>
-        <SplitItem>
-          <ExpandChartBar
-            handleExpandChart={this.props.handleExpandChart}
-            expanded={this.props.chartExpanded}
-          />
-        </SplitItem>
-        <SplitItem>
-          <CloseChartButton handleCloseChart={this.props.handleCloseChart} />
         </SplitItem>
       </Split>
     );

@@ -25,6 +25,7 @@ import ChartToolbar from "./chartToolbar";
 import SkupperLegend from "./legendComponent";
 import QDRPopup from "../../../qdrPopup";
 import { utils } from "../../../utilities";
+import * as d3 from "d3";
 
 export const LINE_CHART = "line";
 export const BAR_CHART = "bar";
@@ -53,6 +54,30 @@ class ChartViewer extends Component {
     if (this.props.handleMounted) {
       this.props.handleMounted();
     }
+    this.setOverflow();
+  };
+  componentDidUpdate = () => {
+    this.setOverflow();
+  };
+
+  setOverflow = () => {
+    const container = d3.select("#skAllCharts");
+    const containerSize = utils.getSizes(container.node());
+    const children = d3.selectAll(".sk-chart-container");
+    let childrenHeight = 0;
+    if (!children.empty()) {
+      children[0].forEach((child) => {
+        const childSize = utils.getSizes(child);
+        childrenHeight += childSize[1];
+      });
+      container.style(
+        "overflow-y",
+        container.style("display") === "block" &&
+          childrenHeight > containerSize[1]
+          ? "auto"
+          : "hidden"
+      );
+    }
   };
   doUpdate = (type) => {
     if (this.chartRef1 && type !== CHORD_CHART) {
@@ -74,6 +99,12 @@ class ChartViewer extends Component {
         this.chordRef.init();
       }
     });
+  };
+
+  resize = () => {
+    if (this.chordRef) {
+      this.chordRef.init();
+    }
   };
 
   handleChangeChartType = (type) => {
@@ -106,9 +137,9 @@ class ChartViewer extends Component {
         <ChartToolbar
           type={type}
           handleChangeChartType={this.handleChangeChartType}
-          handleExpandChart={this.props.handleExpandChart}
-          handleCloseChart={this.props.handleCloseChart}
-          chartExpanded={this.props.chartExpanded}
+          handleExpandDrawer={this.props.handleExpandDrawer}
+          handleCollapseDrawer={this.props.handleCollapseDrawer}
+          isExpanded={this.props.isExpanded}
         />
         <div
           className={`sk-all-charts-container${
@@ -116,17 +147,6 @@ class ChartViewer extends Component {
           }`}
           id="skAllCharts"
         >
-          <div
-            id="popover-div"
-            className={
-              this.state.popupContent
-                ? "sk-popover-div"
-                : "sk-popover-div hidden"
-            }
-            ref={(el) => (this.popupRef = el)}
-          >
-            <QDRPopup content={this.state.popupContent}></QDRPopup>
-          </div>
           {type === LINE_CHART && (
             <React.Fragment>
               <TimeSeries
@@ -181,12 +201,25 @@ class ChartViewer extends Component {
               comment="Chord chart that shows both incoming and outgoing"
             />
           )}
+        </div>
+        <div>
           <SkupperLegend
             ref={(el) => (this.legendRef = el)}
             {...this.props}
             showTooltip={this.showTooltip}
             comment="Stand-alone legend"
           />
+          <div
+            id="popover-div"
+            className={
+              this.state.popupContent
+                ? "sk-popover-div"
+                : "sk-popover-div hidden"
+            }
+            ref={(el) => (this.popupRef = el)}
+          >
+            <QDRPopup content={this.state.popupContent}></QDRPopup>
+          </div>
         </div>
       </React.Fragment>
     );
