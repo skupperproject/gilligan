@@ -1,0 +1,61 @@
+.sk-drawer-content {
+  overflow: hidden;
+}
+
+#sk-topology-expand-fixed {
+  position: absolute;
+  right: 0px;
+  top: 131px;
+  z-index: 201;
+}
+
+button.sk-topology-expand-button {
+  background-color: #eaeaea !important;
+}
+
+button.sk-topology-expand-button * {
+  color: black;
+}
+
+.sk-topology-show-charts {
+  padding-right: 0.5em;
+}
+
+.sk-topology-legend-container {
+  text-align: center;
+  margin: auto;
+  /* display: flex; */
+}
+
+.sk-topology-legend-container:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.sk-topology-legend-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 0.25em;
+  position: relative;
+  top: 5px;
+  border: 1px solid;
+}
+
+.sk-topology-legend-line {
+  padding: 0 1em 0.25em 0;
+  float: left;
+}
+
+#sk-drawer-panel-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+#skAllCharts {
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: flex;
+}
