@@ -623,47 +623,56 @@ export class Deployment extends Service {
     return requests;
   };
 
-  specificRequests = (
+  specificRequests = ({
     VAN,
     direction,
     stat,
     address,
-    site_name,
-    showExternal = true
-  ) => {
-    if (site_name === undefined) {
-      return this.Site.specificRequests(VAN, direction, stat, address);
+    site_info,
+    showExternal = true,
+  }) => {
+    if (address === undefined) {
+      return this.Site.specificRequests({
+        VAN,
+        direction,
+        stat,
+        site_info,
+        showExternal,
+      });
     }
     const requests = {};
-    const adddressSite = `${address} (${site_name})`;
+    const adddressSite = `${address} (${site_info})`;
 
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
-
+    stat = "bytes_out";
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
-      const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
-      const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
-      if (fromAddress === adddressSite) {
+      const test = direction === "in" ? "target" : "source";
+      const other = direction === "out" ? "target" : "source";
+      const testAddress = `${deploymentLink[test].service.address} (${deploymentLink[test].site.site_name})`;
+      const otherShortBaseAdddress = utils.shortName(
+        deploymentLink[other].service.address
+      );
+      const otherSite = deploymentLink[other].site.site_name;
+      const otherBaseAddress = `${deploymentLink[other].service.address} (${otherSite})`;
+      const otherShortSiteAddress = `${otherShortBaseAdddress} (${otherSite})`;
+
+      const otherAddress =
+        direction === "out"
+          ? `${deploymentLink.target.service.address} (${deploymentLink.target.site.site_name})`
+          : `${deploymentLink.source.service.address} (${deploymentLink.source.site.site_name})`;
+      if (testAddress === adddressSite) {
         if (deploymentLink.request[stat] !== undefined) {
-          if (!requests.hasOwnProperty(toAddress)) {
-            requests[toAddress] = {
-              fromAddress,
-              shortName: `${utils.shortName(
-                deploymentLink[to].service.address
-              )} (${deploymentLink[to].site.site_name})`,
-              baseName: utils.shortName(deploymentLink[to].service.address),
-              site: deploymentLink[to].site.site_name,
+          if (!requests.hasOwnProperty(otherAddress)) {
+            requests[otherAddress] = {
+              fromAddress: otherBaseAddress,
+              shortName: otherShortSiteAddress,
+              baseName: otherShortBaseAdddress,
+              site: otherSite,
               requests: deploymentLink.request[stat],
-              color: utils.serviceColors[deploymentLink[to].service.address],
-              key: `${deploymentLink[to].site.site_name}:${deploymentLink[to].service.address}`,
+              color: utils.serviceColors[deploymentLink[other].service.address],
+              key: `${deploymentLink[other].site.site_name}:${deploymentLink[other].service.address}`,
             };
           } else {
-            requests[toAddress].requests += deploymentLink.request[stat];
+            requests[otherAddress].requests += deploymentLink.request[stat];
           }
         }
       }

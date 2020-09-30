@@ -148,7 +148,7 @@ export class Service {
     let deploymentLinks = this.data.adapter.getDeploymentLinks(
       viewer.state.options.showExternal
     );
-    deploymentLinks.forEach((deploymentLink) => {
+    deploymentLinks.forEach((deploymentLink, i) => {
       const source = serviceNodes.find(
         (n) => n.address === deploymentLink.source.service.address
       );
@@ -169,7 +169,7 @@ export class Service {
           `Link-${deploymentLink.source.site.site_id}-${source.address}-${deploymentLink.target.site.site_id}-${target.address}`
         );
         const link = links.links[Math.abs(linkIndex)];
-        link.request = deploymentLink.request;
+        link.request = { ...deploymentLink.request };
         link.value = link.request[stat] || 0;
         link.getColor = () => utils.linkColor(link, links.links);
       } else {
@@ -179,7 +179,8 @@ export class Service {
         } else {
           value += found.value;
         }
-        utils.aggregateAttributes(deploymentLink.request, found.request);
+        //utils.aggregateAttributes(deploymentLinks.request, found.request);
+        found.request[stat] = value;
         found.value = value;
       }
     });
@@ -235,9 +236,9 @@ export class Service {
 
     // regen the link.paths
     utils.updateSankey({ nodes: serviceNodes, links: links.links });
-    //Sankey().update({ nodes: serviceNodes, links: links.links });
     return newSize;
   };
+
   uid = (n) => `${n.cluster.site_id}-${n.name}`;
 
   createStatsGroup = (svg) => svg.append("svg:defs").attr("class", "statPaths");
@@ -886,31 +887,38 @@ export class Service {
     return requests;
   };
 
-  specificRequests = (VAN, direction, stat, address, showExternal = true) => {
+  specificRequests = ({
+    VAN,
+    direction,
+    stat,
+    address,
+    showExternal = true,
+  }) => {
     const requests = {};
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
+    stat = "bytes_out";
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
-      const fromAddress = deploymentLink[from].service.address;
-      const toAddress = deploymentLink[to].service.address;
-      if (fromAddress === address) {
+      const testAddress =
+        direction === "in"
+          ? deploymentLink.target.service.address
+          : deploymentLink.source.service.address;
+      const otherAddress =
+        direction === "out"
+          ? deploymentLink.target.service.address
+          : deploymentLink.source.service.address;
+      if (testAddress === address) {
         if (deploymentLink.request[stat] !== undefined) {
-          if (!requests.hasOwnProperty(toAddress)) requests[toAddress] = {};
+          if (!requests.hasOwnProperty(otherAddress))
+            requests[otherAddress] = {};
           utils.aggregateAttributes(
             {
-              key: toAddress,
-              toAddress,
-              shortName: utils.shortName(toAddress),
-              baseName: utils.shortName(toAddress),
+              key: otherAddress,
+              toAddress: testAddress,
+              shortName: utils.shortName(otherAddress),
+              baseName: utils.shortName(otherAddress),
               requests: deploymentLink.request[stat],
-              color: utils.serviceColors[toAddress],
+              color: utils.serviceColors[otherAddress],
             },
-            requests[toAddress]
+            requests[otherAddress]
           );
         }
       }
@@ -961,11 +969,7 @@ export class Service {
     showExternal = true,
   }) => {
     const requests = {};
-    if (direction === "in" && stat === "bytes_out") {
-      stat = "bytes_in";
-    } else if (direction === "out" && stat === "bytes_in") {
-      stat = "bytes_out";
-    }
+    stat = "bytes_out";
     const from = direction === "in" ? "source" : "target";
     const to = direction === "in" ? "target" : "source";
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {

@@ -56,10 +56,28 @@ button:focus {
 
 .sk-chart-legend-container {
   padding-left: 1em;
-  padding-bottom: 2em;
+  padding-bottom: 1em;
   display: flex;
 }
 
 .sk-all-charts-container.chosen {
   border: 2px dashed;
+}
+
+.sk-chart-legend-parent {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.sk-full-page,
+.sk-collapse {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 202;
+  padding: 4px !important;
+  margin: 0 !important;
+  border: 1px solid #ccc !important;
+  width: 2em !important;
 }

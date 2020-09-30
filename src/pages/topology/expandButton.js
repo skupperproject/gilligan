@@ -36,19 +36,34 @@ class ExpandButton extends React.Component {
           <Button
             aria-expanded={this.props.expanded > 0}
             onClick={this.props.handleExpandDrawer}
-            className="sk-topology-expand-button"
+            className={`sk-topology-expand-button${
+              this.props.expanded === 1 ? " sk-full-page" : ""
+            }`}
           >
-            <i className="fas fa-angle-double-left sk-topology-show-charts" />
-            {this.props.expanded === 0 && Charts}
+            <i
+              className={`fas ${
+                this.props.expanded === 0
+                  ? "fa-angle-double-left"
+                  : "fa-expand-arrows-alt"
+              } sk-topology-show-charts`}
+            />
           </Button>
         )}
         {this.props.expanded > 0 && (
           <Button
             aria-expanded={true}
             onClick={this.props.handleCollapseDrawer}
-            className="sk-topology-expand-button"
+            className={`sk-topology-expand-button${
+              this.props.expanded === 2 ? " sk-collapse" : ""
+            }`}
           >
-            <i className="fas fa-angle-double-right sk-topology-show-charts" />
+            <i
+              className={`fas ${
+                this.props.expanded === 2
+                  ? "fa-compress-arrows-alt"
+                  : "fa-angle-double-right"
+              } sk-topology-show-charts`}
+            />
           </Button>
         )}
       </div>

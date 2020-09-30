@@ -5,21 +5,30 @@
 #sk-topology-expand-fixed {
   position: absolute;
   right: 0px;
-  top: 131px;
+  top: 68px;
   z-index: 201;
+  height: calc(100% - 68px);
+  background-color: #eaeaea;
+  border-left: 1px solid #ccc;
+  width: 2em;
 }
 
 button.sk-topology-expand-button {
   background-color: #eaeaea !important;
+  width: 1em;
+  padding: 0.125em;
+  margin: 6px 8px 0px 8px;
 }
 
 button.sk-topology-expand-button * {
   color: black;
 }
 
+/*
 .sk-topology-show-charts {
   padding-right: 0.5em;
 }
+*/
 
 .sk-topology-legend-container {
   text-align: center;
@@ -49,12 +58,25 @@ button.sk-topology-expand-button * {
 }
 
 #sk-drawer-panel-content {
-  height: 100%;
+  height: calc(100vh - 67px);
   overflow: hidden;
+  position: absolute;
+  top: 67px;
+  right: 0;
+  display: block;
+  transform: translate(0);
+}
+
+#sk-drawer-panel-content.pf-m-width-25 {
+  width: 25%;
+}
+
+#sk-drawer-panel-content.pf-m-width-100 {
+  width: calc(100% - 160px);
 }
 
 #skAllCharts {
-  height: 100%;
+  /* height: 100%; */
   overflow-y: hidden;
   overflow-x: hidden;
   display: flex;

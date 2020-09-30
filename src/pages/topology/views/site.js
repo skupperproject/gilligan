@@ -1140,28 +1140,41 @@ export class Site {
     return requests;
   };
 
-  specificRequests = (VAN, direction, stat, site_id, showExternal = true) => {
+  specificRequests = ({
+    VAN,
+    direction,
+    stat,
+    site_info,
+    showExternal = true,
+  }) => {
     const requests = {};
     stat = "bytes_out";
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
-
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
-      const site = deploymentLink[to].site.site_name;
-      const fromId = deploymentLink[from].site.site_id;
-      const toId = deploymentLink[to].site.site_id;
-      if (fromId !== toId && fromId === site_id) {
+      const testSiteId =
+        direction === "in"
+          ? deploymentLink.target.site.site_id
+          : deploymentLink.source.site.site_id;
+      const otherSiteId =
+        direction === "out"
+          ? deploymentLink.target.site.site_id
+          : deploymentLink.source.site.site_id;
+      const otherSiteName =
+        direction === "out"
+          ? deploymentLink.target.site.site_name
+          : deploymentLink.source.site.site_name;
+
+      if (testSiteId !== otherSiteId && testSiteId === site_info) {
         if (deploymentLink.request[stat] !== undefined) {
-          if (!requests.hasOwnProperty(toId)) requests[toId] = {};
+          if (!requests.hasOwnProperty(testSiteId)) requests[testSiteId] = {};
           utils.aggregateAttributes(
             {
-              key: site,
-              shortName: site,
-              baseName: site,
+              key: otherSiteName,
+              shortName: otherSiteName,
+              baseName: otherSiteName,
               requests: deploymentLink.request[stat],
-              color: utils.siteColors[toId].color,
+              color: utils.siteColors[otherSiteId].color,
             },
-            requests[toId]
+            requests[testSiteId]
           );
         }
       }

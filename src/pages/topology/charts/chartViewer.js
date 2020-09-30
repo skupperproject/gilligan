@@ -202,7 +202,7 @@ class ChartViewer extends Component {
             />
           )}
         </div>
-        <div>
+        <div className="sk-chart-legend-parent">
           <SkupperLegend
             ref={(el) => (this.legendRef = el)}
             {...this.props}

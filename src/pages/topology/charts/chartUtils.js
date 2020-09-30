@@ -50,8 +50,10 @@ const chartUtils = {
           // specific deployment
           headerText = utils.Icap(
             `${utils.statName(stat)} sent ${
-              direction === "in" ? "from" : "to"
-            } ${utils.shortName(data.address)} (${data.cluster.site_name})`
+              direction === "out" ? "from" : "to"
+            } ${utils.shortName(data.address)}${
+              !data.isExternal ? " (" + data.cluster.site_name + ")" : ""
+            }`
           );
           site_info = data.cluster.site_name;
         } else {
@@ -61,7 +63,7 @@ const chartUtils = {
               direction === "in" ? "from" : "to"
             } ${data.site_name}`
           );
-          address = data.site_id;
+          site_info = data.site_id;
         }
       }
     } else {

@@ -101,14 +101,14 @@ class PieBar extends Component {
         this.props.showExternal
       );
     } else {
-      requests = this.props.viewObj.specificRequests(
-        this.props.service.VAN,
-        this.props.direction,
-        this.props.stat,
+      requests = this.props.viewObj.specificRequests({
+        VAN: this.props.service.VAN,
+        direction: this.props.direction,
+        stat: this.props.stat,
         address,
         site_info,
-        this.props.showExternal
-      );
+        showExternal: this.props.showExternal,
+      });
     }
     data = Object.keys(requests).map((key) => {
       const request = requests[key];
