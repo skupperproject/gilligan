@@ -81,3 +81,15 @@ button:focus {
   border: 1px solid #ccc !important;
   width: 2em !important;
 }
+
+.sk-expand-charts {
+  padding-top: 2em;
+}
+
+.sk-expand-charts button {
+  padding-right: 0;
+  padding-left: 0;
+}
+.sk-expand-charts button * {
+  cursor: pointer;
+}

@@ -45,6 +45,7 @@ class ChartToolbar extends Component {
             expanded={this.props.isExpanded}
             handleExpandDrawer={this.props.handleExpandDrawer}
             handleCollapseDrawer={this.props.handleCollapseDrawer}
+            handleChangeChartType={this.props.handleChangeChartType}
           />
         </SplitItem>
         <SplitItem isFilled></SplitItem>

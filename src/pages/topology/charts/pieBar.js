@@ -257,7 +257,8 @@ class PieBar extends Component {
         this.state.legendHeight -
         this.state.toolbarHeight -
         this.state.headerHeight * 2) /
-      2
+        2 -
+      100
     );
   };
 
@@ -319,7 +320,7 @@ class PieBar extends Component {
                 bottom: 20,
                 left: 20,
                 right: 20,
-                top: 0,
+                top: -60,
               }}
               padAngle={0.5}
               height={this.getPieHeight()}

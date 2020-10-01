@@ -19,6 +19,18 @@ under the License.
 
 import React from "react";
 import { Button } from "@patternfly/react-core";
+import {
+  ChartPieIcon,
+  ChartBarIcon,
+  ChartLineIcon,
+} from "@patternfly/react-icons";
+import { ChordIcon } from "../../assets/chordIcon";
+import {
+  CHORD_CHART,
+  LINE_CHART,
+  BAR_CHART,
+  PIE_CHART,
+} from "./charts/chartViewer";
 
 class ExpandButton extends React.Component {
   constructor(props) {
@@ -27,27 +39,65 @@ class ExpandButton extends React.Component {
   }
 
   render() {
-    const Charts = <span>Charts</span>;
     return (
       <div
         id={`${this.props.expanded === 0 ? "sk-topology-expand-fixed" : ""}`}
       >
         {this.props.expanded < 2 && (
-          <Button
-            aria-expanded={this.props.expanded > 0}
-            onClick={this.props.handleExpandDrawer}
-            className={`sk-topology-expand-button${
-              this.props.expanded === 1 ? " sk-full-page" : ""
-            }`}
-          >
-            <i
-              className={`fas ${
-                this.props.expanded === 0
-                  ? "fa-angle-double-left"
-                  : "fa-expand-arrows-alt"
-              } sk-topology-show-charts`}
-            />
-          </Button>
+          <React.Fragment>
+            <Button
+              aria-expanded={this.props.expanded > 0}
+              onClick={this.props.handleExpandDrawer}
+              className={`sk-topology-expand-button${
+                this.props.expanded === 1 ? " sk-full-page" : ""
+              }`}
+            >
+              <i
+                className={`fas ${
+                  this.props.expanded === 0
+                    ? "fa-angle-double-left"
+                    : "fa-expand-arrows-alt"
+                } sk-topology-show-charts`}
+              />
+            </Button>
+            {this.props.expanded === 0 && (
+              <div className="sk-expand-charts">
+                <Button
+                  variant="plain"
+                  aria-label="Time"
+                  onClick={() => this.props.handleChangeChartType(LINE_CHART)}
+                  title="Timeseries charts"
+                >
+                  <ChartLineIcon />
+                </Button>
+                <Button
+                  variant="plain"
+                  aria-label={BAR_CHART}
+                  className="rotated"
+                  onClick={() => this.props.handleChangeChartType(BAR_CHART)}
+                  title="Bar charts"
+                >
+                  <ChartBarIcon />
+                </Button>
+                <Button
+                  variant="plain"
+                  aria-label={PIE_CHART}
+                  onClick={() => this.props.handleChangeChartType(PIE_CHART)}
+                  title="Pie charts"
+                >
+                  <ChartPieIcon />
+                </Button>
+                <Button
+                  variant="plain"
+                  aria-label={CHORD_CHART}
+                  onClick={() => this.props.handleChangeChartType(CHORD_CHART)}
+                  title="Chord chart"
+                >
+                  <ChordIcon />
+                </Button>
+              </div>
+            )}
+          </React.Fragment>
         )}
         {this.props.expanded > 0 && (
           <Button

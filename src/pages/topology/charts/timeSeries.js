@@ -170,14 +170,17 @@ class TimeSeries extends Component {
 
   getHeight = () => {
     const { data } = this.state;
-    const perRow = 30;
     const atLeast = 80;
     const xAxis = 40;
     const count = Object.keys(data).length;
 
     //console.log(`${this.props.direction} count ${count} height ${Math.max(count * perRow + xAxis, atLeast)}`);
     //if (this.props.direction === "out") console.log(data);
-    return Math.max(count * perRow + xAxis, atLeast);
+    const scale = d3.scale
+      .linear()
+      .domain([1, 5, 100])
+      .range([100, 40, 30]);
+    return Math.max(count * scale(count) + xAxis, atLeast);
 
     //return (height - toolbarHeight - headerHeight * 2 - legendHeight) / 2 - 10;
   };

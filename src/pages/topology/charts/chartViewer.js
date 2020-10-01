@@ -108,11 +108,13 @@ class ChartViewer extends Component {
   };
 
   handleChangeChartType = (type) => {
-    this.savedTypes[this.props.view] = type;
-    this.setState({ type }, () => {
-      this.doUpdate(type);
-      utils.setSaved(CHART_TYPE_KEY, this.savedTypes);
-    });
+    if (type) {
+      this.savedTypes[this.props.view] = type;
+      this.setState({ type }, () => {
+        this.doUpdate(type);
+        utils.setSaved(CHART_TYPE_KEY, this.savedTypes);
+      });
+    }
   };
 
   showTooltip = (content, eventX, eventY) => {
@@ -209,17 +211,15 @@ class ChartViewer extends Component {
             showTooltip={this.showTooltip}
             comment="Stand-alone legend"
           />
-          <div
-            id="popover-div"
-            className={
-              this.state.popupContent
-                ? "sk-popover-div"
-                : "sk-popover-div hidden"
-            }
-            ref={(el) => (this.popupRef = el)}
-          >
-            <QDRPopup content={this.state.popupContent}></QDRPopup>
-          </div>
+        </div>
+        <div
+          id="popover-div"
+          className={
+            this.state.popupContent ? "sk-popover-div" : "sk-popover-div hidden"
+          }
+          ref={(el) => (this.popupRef = el)}
+        >
+          <QDRPopup content={this.state.popupContent}></QDRPopup>
         </div>
       </React.Fragment>
     );

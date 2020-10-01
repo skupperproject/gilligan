@@ -71,7 +71,7 @@ class TopologyViewer extends Component {
   componentDidMount = () => {
     //debugger;
     window.addEventListener("resize", this.resize);
-    this.chordRef.init();
+    if (this.chordRef && this.chordRef.init) this.chordRef.init();
 
     // create the svg
     this.init();
@@ -726,13 +726,13 @@ class TopologyViewer extends Component {
       : this.state.options.http;
 */
 
-  handleExpandDrawer = () => {
+  handleExpandDrawer = (e, type = null) => {
     const { options } = this.state;
     options.isExpanded = Math.min(options.isExpanded + 1, 2);
     const expandPanel = d3.select("#sk-drawer-panel-content");
     expandPanel.classed("pf-m-width-25", options.isExpanded === 1);
     expandPanel.classed("pf-m-width-100", options.isExpanded === 2);
-    this.setState({ options }, this.handleResizeDrawer);
+    this.setState({ options }, () => this.handleResizeDrawer(type));
   };
 
   handleCollapseDrawer = () => {
@@ -741,17 +741,24 @@ class TopologyViewer extends Component {
     const expandPanel = d3.select("#sk-drawer-panel-content");
     expandPanel.classed("pf-m-width-25", options.isExpanded < 2);
     expandPanel.classed("pf-m-width-100", options.isExpanded === 2);
-    this.setState({ options }, this.handleResizeDrawer);
+    this.setState({ options }, () => this.handleResizeDrawer());
   };
 
-  handleResizeDrawer = () => {
+  handleResizeDrawer = (type) => {
     this.viewObj.saveGraphOptions(
       this.state.options,
       this.props.history,
       this.view
     );
-    this.chordRef.doUpdate();
-    this.chordRef.resize();
+    if (this.state.options.isExpanded > 0) {
+      this.chordRef.handleChangeChartType(type);
+      this.chordRef.doUpdate();
+      this.chordRef.resize();
+    }
+  };
+
+  handleChangeChartType = (type) => {
+    this.handleExpandDrawer(null, type);
   };
 
   render() {
@@ -794,6 +801,7 @@ class TopologyViewer extends Component {
           <ExpandButton
             expanded={isExpanded}
             handleExpandDrawer={this.handleExpandDrawer}
+            handleChangeChartType={this.handleChangeChartType}
           />
         )}
         <Drawer isExpanded={isExpanded}>
