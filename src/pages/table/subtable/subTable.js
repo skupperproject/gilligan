@@ -123,7 +123,7 @@ class SubTable extends Component {
             </SplitItem>
           </Split>
         </StackItem>
-        <StackItem className="sk-subtable" id="skSubtableCharts">
+        <StackItem className="sk-subtable-content" id="skSubtableCharts">
           <div
             id="popover-div"
             className={
