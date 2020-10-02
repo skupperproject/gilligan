@@ -89,6 +89,9 @@ class NavDropdown extends Component {
               itemId={num}
               isActive={selectedItem.key === item.key}
               title={`Show ${item.description} view`}
+              className={`${
+                typeof item.icon === "object" ? "sk-custom-icon" : ""
+              }`}
             >
               {this.itemIcon(item)}
               {`${item.description}`}

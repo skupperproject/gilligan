@@ -81,3 +81,20 @@ button.sk-topology-expand-button * {
   overflow-x: hidden;
   display: flex;
 }
+
+a.sk-custom-icon svg {
+  cursor: pointer;
+}
+
+a.sk-custom-icon:hover svg {
+  stroke: #06c;
+  stroke-width: 2;
+}
+
+a.sk-custom-icon svg {
+  stroke: black;
+  stroke-width: 1;
+  fill: white;
+  /* force parent to handle mouse clicks */
+  pointer-events: none;
+}

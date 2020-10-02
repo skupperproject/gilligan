@@ -124,6 +124,10 @@ class TopologyViewer extends Component {
     ) {
       saved.isExpanded = 0;
     }
+    if (saved.showExternal === undefined) {
+      saved.showExternal = false;
+    }
+
     // update the address search parameters with the saved options
     //this.setHash(saved);
     //if (!skip) {
