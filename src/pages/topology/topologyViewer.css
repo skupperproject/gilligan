@@ -86,15 +86,15 @@ a.sk-custom-icon svg {
   cursor: pointer;
 }
 
-a.sk-custom-icon:hover svg {
+a.sk-custom-icon:hover svg,
+a.sk-custom-icon.pf-m-current svg {
   stroke: #06c;
-  stroke-width: 2;
 }
 
 a.sk-custom-icon svg {
   stroke: black;
   stroke-width: 1;
-  fill: white;
+  fill: transparent;
   /* force parent to handle mouse clicks */
   pointer-events: none;
 }

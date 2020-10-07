@@ -47,7 +47,7 @@ const DEFAULT_TABLE_OPTIONS = {
 };
 
 export class Deployment extends Service {
-  constructor(data) {
+  constructor(data, SVG_ID = "SVG_ID") {
     super(data);
     this.Site = new Site(data);
     this.fields = [
@@ -55,6 +55,7 @@ export class Deployment extends Service {
       { title: "Protocol", field: "protocol" },
       { title: "Site", field: "site_name" },
     ];
+    this.SVG_ID = `#${SVG_ID}`;
   }
 
   initNodesAndLinks = (viewer) => {
@@ -72,7 +73,7 @@ export class Deployment extends Service {
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
-  updateNodesAndLinks = (viewer, debug) => {
+  updateNodesAndLinks = (viewer) => {
     const newSiteNodes = new Nodes();
     const newServiceNodes = new Nodes();
     const newServiceLinks = new Links();
@@ -487,7 +488,8 @@ export class Deployment extends Service {
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
       .attr("d", (d) => genPath({ link: d }));
 
-    d3.select("defs.statPaths")
+    d3.select(this.SVG_ID)
+      .select("defs.statPaths")
       .selectAll("path")
       .attr("d", (d) =>
         genPath({
@@ -528,13 +530,15 @@ export class Deployment extends Service {
   };
 
   toColor = (duration) => {
-    d3.select("g.clusters")
+    d3.select(this.SVG_ID)
+      .select("g.clusters")
       .transition()
       .duration(duration)
       .attr("opacity", 1);
 
     // transition the containers to their proper position
-    d3.selectAll(".cluster")
+    d3.select(this.SVG_ID)
+      .selectAll(".cluster")
       .transition()
       .duration(duration)
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
@@ -547,7 +551,8 @@ export class Deployment extends Service {
           .style("display", "block");
       });
 
-    d3.select("g.clusters")
+    d3.select(this.SVG_ID)
+      .select("g.clusters")
       .selectAll("circle.network")
       .transition()
       .duration(duration)
@@ -555,7 +560,8 @@ export class Deployment extends Service {
       .attr("cx", (d) => d.r)
       .attr("cy", (d) => d.r);
 
-    d3.select("g.clusters")
+    d3.select(this.SVG_ID)
+      .select("g.clusters")
       .selectAll("text.cluster-name")
       .transition()
       .duration(duration)
@@ -564,7 +570,8 @@ export class Deployment extends Service {
   };
 
   toSankey = (duration) => {
-    d3.select("g.clusters")
+    d3.select(this.SVG_ID)
+      .select("g.clusters")
       .selectAll("circle.network")
       .transition()
       .duration(duration)
@@ -572,13 +579,15 @@ export class Deployment extends Service {
       .attr("cx", (d) => d.r)
       .attr("cy", (d) => d.r);
 
-    d3.select("g.clusters")
+    d3.select(this.SVG_ID)
+      .select("g.clusters")
       .selectAll("g.cluster")
       .transition()
       .duration(duration)
       .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
-    d3.select("g.clusters")
+    d3.select(this.SVG_ID)
+      .select("g.clusters")
       .selectAll("text.cluster-name")
       .transition()
       .duration(duration)
@@ -779,7 +788,7 @@ export class Deployment extends Service {
   // handle mouse over a chord. highlight the path
   chordOver(chord, over, viewer) {
     if (!chord.info) return;
-    d3.select("#SVG_ID")
+    d3.select(this.SVG_ID)
       .selectAll("path.service")
       .each(function(p) {
         if (
@@ -797,11 +806,13 @@ export class Deployment extends Service {
 
   setClass = (address, cls, viewer) => {
     super.setClass(address, cls, viewer);
-    d3.selectAll("g.cluster-rects").each(function(d) {
-      const match = d.site_name.includes(address) && address.length > 0;
-      d3.select(this).classed(cls, match);
-      d[cls] = match;
-    });
+    d3.select(this.SVG_ID)
+      .selectAll("g.cluster-rects")
+      .each(function(d) {
+        const match = d.site_name.includes(address) && address.length > 0;
+        d3.select(this).classed(cls, match);
+        d[cls] = match;
+      });
     viewer.restart();
   };
 
@@ -810,18 +821,20 @@ export class Deployment extends Service {
     if (arc.legend) {
       this.Site.arcOver(arc, over, viewer);
     } else {
-      d3.selectAll("rect.service-type").each(function(d) {
-        let match = `${d.address} (${d.parentNode.site_name})`;
-        if (arc.all) {
-          match = d.address;
-        }
-        if (arc.key === match) {
-          d.selected = over;
-          viewer.blurAll(over, d);
-          viewer.opaqueServiceType(d);
-          viewer.restart();
-        }
-      });
+      d3.select(this.SVG_ID)
+        .selectAll("rect.service-type")
+        .each(function(d) {
+          let match = `${d.address} (${d.parentNode.site_name})`;
+          if (arc.all) {
+            match = d.address;
+          }
+          if (arc.key === match) {
+            d.selected = over;
+            viewer.blurAll(over, d);
+            viewer.opaqueServiceType(d);
+            viewer.restart();
+          }
+        });
     }
   }
   getSavedZoom = (defaultScale) => {

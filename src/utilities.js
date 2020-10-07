@@ -272,7 +272,7 @@ const utils = {
     // special case: all the nodes are in the 1st column
     // and they are not connected to each other.
     // spread the nodes into separate columns
-    if (!align === "vertical") {
+    if (!(align === "vertical")) {
       if (leftMost.length === nodes.length && links.length === 0) {
         leftMost.forEach((n, i) => (n.col = i));
       }
@@ -473,28 +473,27 @@ const utils = {
       delete utils.serviceColors[name];
     }
   },
-  serviceColor: (name) => {
-    if (!(name in utils.serviceColors)) {
+  serviceColor: (name, colorsObj) => {
+    const serviceColors = colorsObj ? colorsObj : utils.serviceColors;
+    if (!(name in serviceColors)) {
       let found = false;
       let i = 19;
       while (!found) {
         let color = colorGen(i);
         if (
-          !Object.keys(utils.serviceColors).some(
-            (service) => utils.serviceColors[service] === color
+          !Object.keys(serviceColors).some(
+            (service) => serviceColors[service] === color
           )
         ) {
           found = true;
-          utils.serviceColors[name] = color;
+          serviceColors[name] = color;
         } else {
           i -= 2;
           if (i < 0) {
             if (i === -2) {
               // there are more than 20 services. just reuse some colors
               found = true;
-              utils.serviceColors[name] = colorGen(
-                Object.keys(utils.serviceColors).length
-              );
+              serviceColors[name] = colorGen(Object.keys(serviceColors).length);
             }
             // there are more than 10 services.
             // start to use site colors
@@ -503,7 +502,7 @@ const utils = {
         }
       }
     }
-    return utils.serviceColors[name];
+    return serviceColors[name];
   },
 
   //hello-world-frontend-759cdcf7f9-phcjq
@@ -558,8 +557,11 @@ const utils = {
     }
   },
 
-  statId: (link) => {
-    const parts = ["statPath"];
+  statId: (link, id) => {
+    if (id.startsWith("#")) {
+      id = id.substr(1);
+    }
+    const parts = [id, "statPath"];
     if (link.source.parentNode) {
       parts.push(link.source.parentNode.site_id);
     }

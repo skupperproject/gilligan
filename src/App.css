@@ -1525,15 +1525,16 @@ circle.end-point {
 }
 .toolbar-item {
   height: 2em;
-  border-right: 1px solid black;
+  /* border-right: 1px solid black; */
   padding-top: 0.4em;
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
+/*
 .toolbar-item.last-item {
   border-right: 0;
 }
-
+*/
 /*
 .pf-l-toolbar__item.toolbar-item.drowdown-group {
   height: 2em;

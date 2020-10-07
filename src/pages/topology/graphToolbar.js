@@ -18,22 +18,20 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { Checkbox, Radio } from "@patternfly/react-core";
+import { Button, Checkbox } from "@patternfly/react-core";
 import PropTypes from "prop-types";
 import { Split, SplitItem, TextInput } from "@patternfly/react-core";
+import { CogIcon } from "@patternfly/react-icons";
+
 import {
   OverflowMenu,
-  OverflowMenuControl,
   OverflowMenuContent,
-  OverflowMenuGroup,
   OverflowMenuItem,
-  OverflowMenuDropdownItem,
 } from "@patternfly/react-core";
-import { Dropdown, KebabToggle } from "@patternfly/react-core";
+import TrafficModal from "./trafficModal";
 import { utils } from "../../utilities";
 import "./graphToolbar.css";
 
-import MetricsDrowdown from "./metricsDropdown";
 const lastHighlightKey = "highlight";
 
 class GraphToolbar extends Component {
@@ -51,7 +49,11 @@ class GraphToolbar extends Component {
   constructor(props) {
     super(props);
     const lastHighlight = utils.getSaved(lastHighlightKey, "");
-    this.state = { searchValue: lastHighlight, isOpen: false };
+    this.state = {
+      searchValue: lastHighlight,
+      isOpen: false,
+      isTrafficModelOpen: false,
+    };
     this.dropdownItems = [
       {
         key: "requests",
@@ -76,6 +78,19 @@ class GraphToolbar extends Component {
   onToggle = (isOpen) => {
     this.setState({
       isOpen,
+    });
+  };
+
+  onSelect = (event) => {
+    console.log("onSelect called");
+    event.persist();
+    console.log(event);
+    if (event.target.id === "trafficOptions") {
+      console.log("showing traffic modal");
+      this.handleShowTrafficModal();
+    }
+    this.setState({
+      isOpen: !this.state.isOpen,
     });
   };
 
@@ -118,113 +133,61 @@ class GraphToolbar extends Component {
       this.highlightString(value);
     });
   };
+  handleShowTrafficModal = () => {
+    this.setState({ isTrafficModelOpen: true }, () => {
+      if (this.trafficRef) {
+        this.trafficRef.init();
+      }
+    });
+  };
+
+  handleTrafficModalToggle = (confirmed, state) => {
+    if (confirmed) {
+      this.props.handleChangeSankey(state.traffic);
+      this.props.handleChangeShowStat(state.showMetrics);
+      this.props.handleChangeMetric(state.metric);
+    }
+    this.setState({ isTrafficModelOpen: false });
+  };
 
   render() {
-    const { statProtocol } = this.props;
-    const { radio, traffic, showMetric, showExternal } = this.props.options;
-    const { isOpen } = this.state;
-    const routerLinksRadio = () => {
-      if (radio) {
-        return (
-          <SplitItem>
-            <Radio
-              label="Show connections"
-              isChecked={!traffic}
-              onChange={this.handleChange}
-              aria-label="router links"
-              id="showRouterLinks"
-              name="showRouterLinks"
-              className="router-links"
-            />
-          </SplitItem>
-        );
-      }
-    };
-    const metricDropdown = () => (
+    const { showExternal } = this.props.options;
+
+    const derivedCheck = () => (
+      <Checkbox
+        label="Show external clients"
+        isChecked={showExternal}
+        onChange={this.handleChange}
+        aria-label="show external clients"
+        id="showExternal"
+        name="showExternal"
+      />
+    );
+
+    const metricCheck = () => (
       <SplitItem>
-        <span>Traffic metric</span>
-        <MetricsDrowdown
-          dropdownItems={this.dropdownItems.filter(
-            (i) => !i.type || i.type === statProtocol
-          )}
+        <Button
+          variant="link"
+          icon={<CogIcon />}
+          onClick={this.handleShowTrafficModal}
+          iconPosition="right"
+        >
+          Traffic options
+        </Button>
+        <TrafficModal
+          ref={(el) => (this.trafficRef = el)}
+          isTrafficModalOpen={this.state.isTrafficModelOpen}
+          handleTrafficModalToggle={this.handleTrafficModalToggle}
+          handleChangeSankey={this.props.handleChangeSankey}
+          options={this.props.options}
           stat={this.props.stat}
-          handleChangeOption={this.props.handleChangeMetric}
-          isDisabled={this.disableAll()}
         />
       </SplitItem>
     );
 
-    const trafficCheckOrRadio = () => {
-      return (
-        <SplitItem>
-          {radio && (
-            <Radio
-              label="Show relative traffic"
-              isChecked={traffic}
-              onChange={this.handleChange}
-              aria-label="show relative traffic"
-              id="showSankey"
-              name="showSankey"
-            />
-          )}
-          {!radio && (
-            <Checkbox
-              label="Show relative traffic"
-              isChecked={traffic}
-              onChange={this.handleChange}
-              aria-label="show relative traffic"
-              id="showSankey"
-              name="showSankey"
-            />
-          )}
-        </SplitItem>
-      );
-    };
-
-    const sankeyCheck = () => (
-      <React.Fragment>
-        <OverflowMenuItem className="toolbar-item" isPersistent>
-          <Split className="sk-traffic-split">
-            {routerLinksRadio()}
-            {trafficCheckOrRadio()}
-          </Split>
-        </OverflowMenuItem>
-        <OverflowMenuItem className="drowdown-group" isPersistent>
-          {metricDropdown()}
-        </OverflowMenuItem>
-      </React.Fragment>
-    );
-
-    const metricCheck = () => (
-      <OverflowMenuItem className="toolbar-item show-stat" isPersistent>
-        <Checkbox
-          label="Show metrics"
-          isChecked={showMetric}
-          isDisabled={this.disableAll()}
-          onChange={this.handleChange}
-          aria-label="show metrics"
-          id="showStat"
-          name="showStat"
-        />
-      </OverflowMenuItem>
-    );
-
-    const derivedCheck = () => (
-      <OverflowMenuItem className="toolbar-item" isPersistent>
-        <Checkbox
-          label="Show external clients"
-          isChecked={showExternal}
-          onChange={this.handleChange}
-          aria-label="show external clients"
-          id="showExternal"
-          name="showExternal"
-        />
-      </OverflowMenuItem>
-    );
-
     const highlight = () => (
       <Split>
-        <SplitItem>
+        <SplitItem id="skToolbarHighlight">
           <span>Highlight</span>
         </SplitItem>
         <SplitItem className="sk-toolbar-filter">
@@ -240,7 +203,36 @@ class GraphToolbar extends Component {
     );
 
     return (
-      <OverflowMenu className="graph-toolbar" breakpoint="lg">
+      <OverflowMenu className="graph-toolbar" breakpoint="md">
+        <OverflowMenuContent isPersistent>
+          <OverflowMenuItem isPersistent>{derivedCheck()}</OverflowMenuItem>
+        </OverflowMenuContent>
+        <OverflowMenuContent className="hasButton">
+          <OverflowMenuItem>{metricCheck()}</OverflowMenuItem>
+        </OverflowMenuContent>
+        <OverflowMenuContent>
+          <OverflowMenuItem>{highlight()}</OverflowMenuItem>
+        </OverflowMenuContent>
+      </OverflowMenu>
+    );
+  }
+}
+
+export default GraphToolbar;
+
+/*
+        <OverflowMenuControl>
+          <Dropdown
+            onSelect={this.onSelect}
+            toggle={<KebabToggle onToggle={this.onToggle} />}
+            isOpen={isOpen}
+            isPlain
+            dropdownItems={dropdownItems}
+          />
+        </OverflowMenuControl>
+
+
+        <OverflowMenu className="graph-toolbar" breakpoint="lg">
         <OverflowMenuContent isPersistent>
           <OverflowMenuGroup isPersistent>
             {sankeyCheck()}
@@ -272,8 +264,4 @@ class GraphToolbar extends Component {
           </OverflowMenuControl>
         )}
       </OverflowMenu>
-    );
-  }
-}
-
-export default GraphToolbar;
+*/

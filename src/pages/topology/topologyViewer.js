@@ -334,9 +334,9 @@ class TopologyViewer extends Component {
     this.restart();
   };
 
-  doUpdate = (debug = false) => {
+  doUpdate = () => {
     if (!this.unmounting) {
-      this.viewObj.updateNodesAndLinks(this, debug);
+      this.viewObj.updateNodesAndLinks(this);
       this.force
         .nodes(this.viewObj.nodes().nodes)
         .links(this.viewObj.links().links);
@@ -677,7 +677,7 @@ class TopologyViewer extends Component {
         this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.props.service.update().then(() => {
           this.setHash(options);
-          this.doUpdate(true);
+          this.doUpdate();
         });
       });
     }

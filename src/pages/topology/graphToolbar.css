@@ -22,16 +22,15 @@
   margin-right: 1em;
 }
 
+/*
 .graph-toolbar .pf-c-radio,
 .graph-toolbar .pf-c-check {
   margin-right: 1.5em;
 }
+*/
 
 .graph-toolbar .sk-toolbar-filter {
   padding-left: 0.5em;
-  position: relative;
-  top: -0.5em;
-  padding-right: 1em;
 }
 
 .graph-toolbar .sk-toolbar-filter-input {
@@ -40,6 +39,84 @@
 .graph-toolbar * {
   white-space: nowrap;
 }
+
+#skToolbarHighlight span {
+  position: relative;
+  top: 0.4em;
+  margin-left: 1em;
+}
+
+.sk-inline {
+  display: inline-flex;
+  border-right: 1px solid;
+}
+.sk-inline svg {
+  /* position: relative; */
+  top: 4px;
+  color: #06c;
+  cursor: pointer;
+}
+.sk-inline .pf-c-check {
+  margin-right: 0.5em;
+}
+
+.sk-traffic-checkbox {
+  margin-left: 2.25em;
+}
+
+/*
+.sk-traffic-svg {
+  top: -2em;
+}
+*/
+
+#skTrafficMetrics {
+  border-top: 1px solid #eaeaea;
+  padding-top: 1em;
+}
+
+#skTrafficMetrics .pf-c-check,
+#skTrafficMetrics .pf-c-radio {
+  margin-left: 2.25em;
+}
+
+.sk-flex {
+  display: flex;
+}
+
+#skTrafficRadioContainer {
+  margin-left: 1.25em;
+  margin-top: 0.5em;
+}
+
+#skTrafficModal .pf-c-modal-box__body {
+  padding-bottom: 1em;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.graph-toolbar .pf-c-overflow-menu__content:not(:last-of-type) {
+  padding-right: 1em;
+  border-right: 1px solid #ccc;
+}
+
+.pf-c-overflow-menu__content {
+  height: 2.2em;
+  margin-right: 0;
+}
+
+.graph-toolbar .hasButton {
+  padding-right: 0 !important;
+}
+
+.graph-toolbar .hasButton svg {
+  padding-left: 4px;
+  padding-top: 4px;
+}
+/*
+.sk-traffic-form .sk-traffic-section {
+  margin-left: 1em;
+}
+*/
 /*
 .graph-toolbar div.color-gradient svg {
   padding-top: 0.5em;

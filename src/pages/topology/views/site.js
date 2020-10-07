@@ -52,7 +52,7 @@ const DEFAULT_TABLE_OPTIONS = {
 };
 
 export class Site {
-  constructor(data) {
+  constructor(data, SVG_ID = "SVG_ID") {
     this.data = data;
     this.siteNodes = new Nodes();
     this.routerLinks = new Links();
@@ -65,6 +65,7 @@ export class Site {
     ];
     this.card = new SiteCard();
     this.linkCard = new LinkCard();
+    this.SVG_ID = `#${SVG_ID}`;
     //this.detailFormatter = true;
   }
 
@@ -286,6 +287,7 @@ export class Site {
 
   setupStats = () => {
     const selection = d3
+      .select(this.SVG_ID)
       .select("defs.statPaths")
       .selectAll("path")
       .data(
@@ -298,7 +300,7 @@ export class Site {
     selection
       .enter()
       .append("path")
-      .attr("id", (d) => utils.statId(d));
+      .attr("id", (d) => utils.statId(d, this.SVG_ID));
   };
 
   setupMasks = (viewer) => {
@@ -515,10 +517,14 @@ export class Site {
       .attr("text-anchor", "middle")
       .attr("startOffset", "50%")
       .attr("text-length", "100%")
-      .attr("href", (d) => `#${utils.statId(d)}`);
+      .attr("href", (d) => `#${utils.statId(d, this.SVG_ID)}`);
 
-    d3.selectAll(".siteTrafficLink").classed("selected", (d) => d.selected);
-    d3.selectAll("path.mask").classed("selected", (d) => d.link.selected);
+    d3.select(this.SVG_ID)
+      .selectAll(".siteTrafficLink")
+      .classed("selected", (d) => d.selected);
+    d3.select(this.SVG_ID)
+      .selectAll("path.mask")
+      .classed("selected", (d) => d.link.selected);
 
     return selection;
   };
@@ -655,11 +661,14 @@ export class Site {
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
       .attr("d", (d) => this.genTrafficDir(d, sankey));
 
-    d3.selectAll("path.mask").attr("d", function(d) {
-      return self.genMask(d, this, sankey);
-    });
+    d3.select(this.SVG_ID)
+      .selectAll("path.mask")
+      .attr("d", function(d) {
+        return self.genMask(d, this, sankey);
+      });
 
-    d3.select("defs.statPaths")
+    d3.select(this.SVG_ID)
+      .select("defs.statPaths")
       .selectAll("path")
       .attr("d", (d) => this.genStatPath(d, sankey));
   };
@@ -773,7 +782,8 @@ export class Site {
   toSiteColor = (duration) => {
     return new Promise((resolve) => {
       const self = this;
-      d3.select("g.siteTrafficLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteTrafficLinks")
         .style("display", null)
         .transition()
         .duration(duration)
@@ -783,7 +793,8 @@ export class Site {
         });
 
       // hide the wide traffic paths
-      d3.selectAll("path.siteTrafficLink")
+      d3.select(this.SVG_ID)
+        .selectAll("path.siteTrafficLink")
         .transition()
         .duration(duration)
         .attr("stroke-width", 2)
@@ -793,7 +804,8 @@ export class Site {
         });
 
       // transition the containers to their proper position
-      d3.selectAll(".cluster")
+      d3.select(this.SVG_ID)
+        .selectAll(".cluster")
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
@@ -812,7 +824,8 @@ export class Site {
             .style("display", "block");
         });
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("circle.network")
         .transition()
         .duration(duration)
@@ -820,7 +833,8 @@ export class Site {
         .attr("cx", (d) => d.r)
         .attr("cy", (d) => d.r);
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
@@ -828,12 +842,14 @@ export class Site {
         .attr("y", (d) => d.getHeight() / 2);
 
       // traffic mouseover path
-      d3.selectAll("path.hittarget")
+      d3.select(this.SVG_ID)
+        .selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", 6)
         .attr("d", (d) => this.genTrafficDir(d, false));
 
-      d3.select("defs.statPaths")
+      d3.select(this.SVG_ID)
+        .select("defs.statPaths")
         .selectAll("path")
         .transition()
         .duration(duration)
@@ -844,7 +860,8 @@ export class Site {
         });
 
       // show the traffic direction in color
-      d3.selectAll("path.siteTrafficDir")
+      d3.select(this.SVG_ID)
+        .selectAll("path.siteTrafficDir")
         .transition()
         .duration(duration)
         .attr("opacity", function(d) {
@@ -860,7 +877,8 @@ export class Site {
         });
 
       // let the stats show if/when the checkbox is checked
-      d3.select("g.siteTrafficLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteTrafficLinks")
         .selectAll("text.stats")
         .transition()
         .duration(duration)
@@ -871,7 +889,8 @@ export class Site {
 
       // hide the wide masks
 
-      d3.selectAll("path.mask")
+      d3.select(this.SVG_ID)
+        .selectAll("path.mask")
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
@@ -887,7 +906,8 @@ export class Site {
         });
 
       // hide all inter-router paths
-      d3.select("g.siteRouterLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteRouterLinks")
         .transition()
         .duration(duration)
         .attr("opacity", 0);
@@ -899,7 +919,8 @@ export class Site {
     return new Promise((resolve) => {
       const self = this;
       // hide all traffic paths
-      d3.select("g.siteTrafficLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteTrafficLinks")
         .transition()
         .duration(duration)
         .attr("opacity", 0)
@@ -908,7 +929,8 @@ export class Site {
           d3.select(this).style("display", "none");
         });
 
-      d3.select("g.siteRouterLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteRouterLinks")
         .transition()
         .duration(duration)
         .attr("opacity", function(d) {
@@ -935,7 +957,8 @@ export class Site {
         });
 
       // transition the containers to their proper position
-      d3.selectAll(".cluster")
+      d3.select(this.SVG_ID)
+        .selectAll(".cluster")
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
@@ -956,12 +979,14 @@ export class Site {
 
       //d3.selectAll("path.hittarget").style("display", "none");
 
-      d3.selectAll("path.mask")
+      d3.select(this.SVG_ID)
+        .selectAll("path.mask")
         .transition()
         .duration(duration)
         .attr("opacity", 0);
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("circle.network")
         .transition()
         .duration(duration)
@@ -969,17 +994,22 @@ export class Site {
         .attr("cx", (d) => d.r)
         .attr("cy", (d) => d.r);
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
         .attr("x", (d) => d.getWidth() / 2)
         .attr("y", (d) => d.getHeight() / 2);
 
-      d3.selectAll("text.cluster-name").attr("y", (d) => d.getHeight() / 2);
+      d3.select(this.SVG_ID)
+        .selectAll("text.cluster-name")
+        .attr("y", (d) => d.getHeight() / 2);
 
       // hide services
-      d3.selectAll("g.services").style("display", "none");
+      d3.select(this.SVG_ID)
+        .selectAll("g.services")
+        .style("display", "none");
     });
   };
 
@@ -987,7 +1017,8 @@ export class Site {
   toSiteSankey = (duration) => {
     return new Promise((resolve) => {
       const self = this;
-      d3.select("g.siteTrafficLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteTrafficLinks")
         .style("display", null)
         .transition()
         .duration(duration)
@@ -996,7 +1027,8 @@ export class Site {
           return self.anySelected() ? current : 1;
         });
 
-      d3.select("g.siteRouterLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteRouterLinks")
         .transition()
         .duration(duration)
         .attr("opacity", 0)
@@ -1004,7 +1036,8 @@ export class Site {
           resolve();
         });
 
-      d3.select("defs.statPaths")
+      d3.select(this.SVG_ID)
+        .select("defs.statPaths")
         .selectAll("path")
         .transition()
         .duration(duration)
@@ -1014,7 +1047,8 @@ export class Site {
           return interpolatePath(previous, current);
         });
 
-      d3.selectAll("path.siteTrafficDir")
+      d3.select(this.SVG_ID)
+        .selectAll("path.siteTrafficDir")
         .transition()
         .duration(duration)
         .attr("opacity", function(d) {
@@ -1029,7 +1063,8 @@ export class Site {
           return interpolatePath(previous, current);
         });
 
-      d3.select("g.siteTrafficLinks")
+      d3.select(this.SVG_ID)
+        .select("g.siteTrafficLinks")
         .selectAll("text.stats")
         .transition()
         .duration(duration)
@@ -1038,7 +1073,8 @@ export class Site {
           return self.anySelected() ? current : 1;
         });
 
-      d3.selectAll("path.siteTrafficLink")
+      d3.select(this.SVG_ID)
+        .selectAll("path.siteTrafficLink")
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
@@ -1053,12 +1089,14 @@ export class Site {
           return interpolatePath(previous, current);
         });
 
-      d3.selectAll("path.hittarget")
+      d3.select(this.SVG_ID)
+        .selectAll("path.hittarget")
         .style("display", "block")
         .attr("stroke-width", (d) => Math.max(d.width, 6))
         .attr("d", (d) => this.genTrafficDir(d, true));
 
-      d3.selectAll("path.mask")
+      d3.select(this.SVG_ID)
+        .selectAll("path.mask")
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
@@ -1073,7 +1111,8 @@ export class Site {
           return interpolatePath(previous, current);
         });
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("circle.network")
         .transition()
         .duration(duration)
@@ -1081,13 +1120,15 @@ export class Site {
         .attr("cx", (d) => d.r)
         .attr("cy", (d) => d.r);
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("g.cluster")
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
-      d3.select("g.clusters")
+      d3.select(this.SVG_ID)
+        .select("g.clusters")
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
@@ -1267,45 +1308,51 @@ export class Site {
   chordOver(chord, over, viewer) {
     if (!chord.info) return;
     //console.log(`------- chordOver site path`);
-    d3.selectAll("path.siteTrafficLink").each(function(p) {
-      /*
+    d3.select(this.SVG_ID)
+      .selectAll("path.siteTrafficLink")
+      .each(function(p) {
+        /*
       console.log(`${p.source.site_name}-${p.target.site_name} chordInfo is`);
       console.log(chord.info);
       console.log(p);
       */
-      if (
-        chord.info.source &&
-        chord.info.target &&
-        chord.info.source.site_id === p.source.site_id &&
-        chord.info.target.site_id === p.target.site_id
-      ) {
-        p.selected = over;
-        viewer.blurAll(over, p);
-        viewer.restart();
-      }
-    });
+        if (
+          chord.info.source &&
+          chord.info.target &&
+          chord.info.source.site_id === p.source.site_id &&
+          chord.info.target.site_id === p.target.site_id
+        ) {
+          p.selected = over;
+          viewer.blurAll(over, p);
+          viewer.restart();
+        }
+      });
   }
 
   setClass(site, cls, viewer) {
-    d3.selectAll("g.cluster-rects").each(function(d) {
-      const match = d.site_name.includes(site) && site.length > 0;
-      d3.select(this).classed(cls, match);
-      d[cls] = match;
-    });
+    d3.select(this.SVG_ID)
+      .selectAll("g.cluster-rects")
+      .each(function(d) {
+        const match = d.site_name.includes(site) && site.length > 0;
+        d3.select(this).classed(cls, match);
+        d[cls] = match;
+      });
 
     viewer.restart();
   }
 
   // handle mouse over an arc. highlight the service
   arcOver(arc, over, viewer) {
-    d3.selectAll("g.cluster").each(function(d) {
-      const match = arc.legend ? d.site_name : d.site_id;
-      if (arc.key === match) {
-        d.selected = over;
-        viewer.blurAll(over, d);
-        viewer.restart();
-      }
-    });
+    d3.select(this.SVG_ID)
+      .selectAll("g.cluster")
+      .each(function(d) {
+        const match = arc.legend ? d.site_name : d.site_id;
+        if (arc.key === match) {
+          d.selected = over;
+          viewer.blurAll(over, d);
+          viewer.restart();
+        }
+      });
   }
   getSavedZoom = (defaultScale) => {
     const savedScale = utils.getSaved(ZOOM_SCALE, defaultScale);
