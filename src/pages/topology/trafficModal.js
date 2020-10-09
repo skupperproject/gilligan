@@ -20,7 +20,7 @@ under the License.
 import React, { Component } from "react";
 import { Modal } from "@patternfly/react-core";
 import { Flex, FlexItem } from "@patternfly/react-core";
-import { Grid, GridItem } from "@patternfly/react-core";
+import { Split, SplitItem } from "@patternfly/react-core";
 import { Button, Radio, Checkbox } from "@patternfly/react-core";
 import { Service } from "../topology/views/service";
 import { Site } from "../topology/views/site";
@@ -75,7 +75,9 @@ class TrafficModal extends Component {
 
     // site view uses circles, otherwise use service rectangles
     this.view = this.props.view;
-    //this.setupViews();
+
+    this.xtrans = -40;
+    this.ytrans = -80;
   }
 
   // called by react when the state or properties changes
@@ -89,6 +91,7 @@ class TrafficModal extends Component {
       options.showMetric = nextprops.options.showMetric;
       options.stat = nextprops.stat;
       options.traffic = nextprops.options.traffic;
+      options.color = nextprops.options.color;
       this.setState({ options }, () => {
         if (changedStat) {
           this.setShowMetric(true);
@@ -96,7 +99,6 @@ class TrafficModal extends Component {
       });
       if (nextprops.view !== this.view) {
         this.view = nextprops.view;
-        //this.setupViews();
       }
     }
   };
@@ -105,14 +107,14 @@ class TrafficModal extends Component {
   setupViews = () => {
     if (this.view === "site") {
       this.lineView = new Site({ adapter: this.adapter }, "SVG_LINE");
-      this.sankeyView = new Site({ adapter: this.adapter }, "SVG_SANKEY");
+      //this.sankeyView = new Site({ adapter: this.adapter }, "SVG_SANKEY");
     } else {
       this.lineView = new Service({ adapter: this.adapter }, "SVG_LINE");
-      this.sankeyView = new Service({ adapter: this.adapter }, "SVG_SANKEY");
+      //this.sankeyView = new Service({ adapter: this.adapter }, "SVG_SANKEY");
     }
 
     this.lineController = new Controller(this.lineView, 400, this.state);
-    this.sankeyController = new Controller(this.sankeyView, 600, this.state);
+    //this.sankeyController = new Controller(this.sankeyView, 600, this.state);
   };
 
   // called externally when this modal is displayed to create the svg diagrams
@@ -127,9 +129,9 @@ class TrafficModal extends Component {
     ]);
 
     // set the svgs' width to the width of the modal's diagram container / 2
-    this.lineController.width = sizes[0] / 2;
-    this.sankeyController.width =
-      this.view === "site" ? sizes[0] : this.lineController.width;
+    this.lineController.width = sizes[0];
+    //this.sankeyController.width =
+    //  this.view === "site" ? sizes[0] : this.lineController.width;
 
     const setupService = (view, controller, id, sankey) => {
       d3.select(`#SVG_${id}`).remove();
@@ -143,6 +145,7 @@ class TrafficModal extends Component {
         .append("g")
         .attr("class", "zoom");
       addDefs(svg);
+      controller.svg = svg;
       view.createSelections(svg);
 
       // TODO: fix possible bug in when contentWidth is calculated
@@ -172,24 +175,12 @@ class TrafficModal extends Component {
       controller.force.stop();
       controller.force.start();
       controller.restart();
-      console.log(size);
-      if (this.view === "site") {
-        if (sankey) {
-          svg.attr("transform", "translate(-100, -30) scale(.7)");
-        } else {
-          svg.attr("transform", "translate(0,-40)");
-        }
-      }
-      view.transition(
-        sankey,
-        true,
-        this.view === "site" ? !sankey : sankey,
-        controller
-      );
+      this.transition(true);
     };
     setupService(this.lineView, this.lineController, "LINE", false);
-    setupService(this.sankeyView, this.sankeyController, "SANKEY", true);
+    //setupService(this.sankeyView, this.sankeyController, "SANKEY", true);
 
+    /*
     // move the expanded "s" up a bit for cosmetic reasons
     this.sankeyView.nodes().nodes.some((n) => {
       if (n.address === "s") {
@@ -201,33 +192,70 @@ class TrafficModal extends Component {
       return false;
     });
     this.sankeyController.restart();
+    */
     this.setShowMetric(true);
   };
 
-  // the show traffic as line/sankey radio buttons were changed
-  handleChangeSankey = () => {
+  // show the diagram collapsed/expanded based on options.traffic
+  transition = (initial) => {
     const { options } = this.state;
-    options.traffic = !options.traffic;
-    this.setState({ options });
+    if (options.traffic) {
+      this.lineView.expandNodes();
+    } else {
+      this.lineView.collapseNodes();
+    }
+    let sankey = options.traffic;
+    let color = options.color;
+
+    if (this.view === "site") {
+      if (color) {
+        sankey = false;
+        color = false;
+      } else {
+        color = true;
+      }
+    }
+    if (this.view === "site") {
+      let transX = this.props.options.traffic ? 20 : -20;
+      let transY = this.props.options.traffic ? 20 : -40;
+      const duration = initial ? 0 : utils.VIEW_DURATION;
+      if (this.state.options.traffic && !this.state.options.color) {
+        transX = this.props.options.traffic ? 0 : -60;
+        transY = this.props.options.traffic ? -20 : -80;
+      }
+      this.lineController.svg
+        .transition()
+        .duration(duration)
+        .attr("transform", `translate(${transX},${transY})`);
+    }
+
+    this.lineView.transition(sankey, initial, color, this.lineController);
   };
 
   // change the sankey link sizes to reflect which metric is being used
   // if initial is false, the transition will be animated
   resizeLinks = (initial) => {
     // resize the sankey links for the new metric
-    this.sankeyView.nodes().nodes.forEach((n) => {
-      //delete n.contentWidth;
-      n.expanded = true;
-    });
-    this.sankeyView.updateNodesAndLinks(
-      this.sankeyController,
-      this.view === "site" ? this.siteColors : this.colors,
-      this.siteRadius
-    );
-    this.sankeyController.force
-      .nodes(this.sankeyView.nodes().nodes)
-      .links(this.sankeyView.links().links);
-    this.sankeyView.transition(true, initial, true, this.sankeyController);
+    if (this.state.options.traffic) {
+      this.lineView.updateNodesAndLinks(
+        this.lineController,
+        this.view === "site" ? this.siteColors : this.colors,
+        this.siteRadius
+      );
+      this.lineController.force
+        .nodes(this.lineView.nodes().nodes)
+        .links(this.lineView.links().links);
+      this.transition(initial);
+    }
+  };
+
+  // this modal was either dismissed/cancelled or confirmed
+  handleTrafficModalToggle = (e) => {
+    if (e && e.target.textContent === "Confirm") {
+      this.props.handleTrafficModalToggle(true, this.state.options);
+    } else {
+      this.props.handleTrafficModalToggle(false);
+    }
   };
 
   // display the current metric states
@@ -238,10 +266,12 @@ class TrafficModal extends Component {
       this.state.options.showMetric, // show or hide the stat
       this.state.options.stat // which stat to show
     );
+    /*
     this.sankeyView.setLinkStat(
       this.state.options.showMetric, // show or hide the stat
       this.state.options.stat // which stat to show
     );
+    */
   };
 
   // the show/hide metric checkbox was changed
@@ -263,50 +293,89 @@ class TrafficModal extends Component {
     });
   };
 
-  // this modal was either dismissed/cancelled or confirmed
-  handleTrafficModalToggle = (e) => {
-    if (e && e.target.textContent === "Confirm") {
-      this.props.handleTrafficModalToggle(true, this.state.options);
+  // the show traffic as line/sankey radio buttons were changed
+  handleChangeSankey = (checked, event) => {
+    const { options } = this.state;
+    const targetId = event.target.id;
+    if (targetId === "showAsLine") {
+      options.traffic = false;
     } else {
-      this.props.handleTrafficModalToggle(false);
+      options.traffic = true;
+    }
+    options.color = false;
+    this.setState({ options }, () => {
+      this.transition(false);
+    });
+  };
+
+  // the show router connections radio was changed
+  handleChangeConnection = () => {
+    const { options } = this.state;
+    options.color = true;
+    this.setState({ options }, () => {
+      this.transition(false);
+    });
+  };
+
+  radio = (which) => {
+    if (this.view === "site") {
+      if (which === "connections") return this.state.options.color;
+      if (which === "line")
+        return this.state.options.color ? false : !this.state.options.traffic;
+      return this.state.options.color ? false : this.state.options.traffic;
+    } else {
+      if (which === "line") {
+        return !this.state.options.traffic;
+      }
+      return this.state.options.traffic;
     }
   };
 
   render() {
     const { isTrafficModalOpen } = this.props;
-    const { traffic, showMetric, stat } = this.state.options;
+    const { showMetric, stat } = this.state.options;
 
     const showTraffic = (
-      <Grid hasGutter>
-        <GridItem span={6}>
-          <Radio
-            className="sk-traffic-checkbox"
-            label="Show traffic as a line"
-            isChecked={!traffic}
-            onChange={this.handleChangeSankey}
-            aria-label="show traffic as line"
-            id="showAsLine"
-            name="showAsLine"
-          />
-        </GridItem>
-        <GridItem span={6}>
-          <Radio
-            className="sk-traffic-checkbox"
-            label="Show traffic using relative size"
-            isChecked={traffic}
-            onChange={this.handleChangeSankey}
-            aria-label="show relative traffic"
-            id="showAsSankey"
-            name="showAsSankey"
-          />
-        </GridItem>
-        <GridItem span={6}>
-          <div className="sk-traffic-svg" id="DIV_LINE" />
-        </GridItem>
-        <GridItem span={6}>
-          <div className="sk-traffic-svg" id="DIV_SANKEY" />
-        </GridItem>
-      </Grid>
+      <React.Fragment>
+        <Split>
+          {this.view === "site" && (
+            <SplitItem>
+              <Radio
+                className="sk-traffic-checkbox"
+                label="Show site connections"
+                isChecked={this.radio("connections")}
+                onChange={this.handleChangeConnection}
+                aria-label="show connection direction"
+                id="showConnections"
+                name="showConnections"
+              />
+            </SplitItem>
+          )}
+          <SplitItem>
+            <Radio
+              className="sk-traffic-checkbox"
+              label="Show traffic as a line"
+              isChecked={this.radio("line")}
+              onChange={this.handleChangeSankey}
+              aria-label="show traffic as line"
+              id="showAsLine"
+              name="showAsLine"
+            />
+          </SplitItem>
+          <SplitItem>
+            <Radio
+              className="sk-traffic-checkbox"
+              label="Show relative traffic"
+              isChecked={this.radio("sankey")}
+              onChange={this.handleChangeSankey}
+              aria-label="show relative traffic"
+              id="showAsSankey"
+              name="showAsSankey"
+            />
+          </SplitItem>
+        </Split>
+        <div className="sk-traffic-svg" id="DIV_LINE" />
+      </React.Fragment>
     );
 
     const showMetricsCheckbox = (
@@ -338,7 +407,7 @@ class TrafficModal extends Component {
       <Modal
         id="skTrafficModal"
         width={"800px"}
-        title="Traffic options"
+        title={this.props.view === "site" ? "Graph options" : "Traffic options"}
         isOpen={isTrafficModalOpen}
         onClose={this.handleTrafficModalToggle}
         actions={[

@@ -799,8 +799,10 @@ export class Site {
     if (sankey) {
       return this.toSiteSankey(duration);
     } else if (color) {
+      console.log("site transition tositecolor");
       return this.toSiteColor(duration);
     } else {
+      console.log("site transition tosite");
       return this.toSite(duration);
     }
   };
@@ -1026,13 +1028,13 @@ export class Site {
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
-        .attr("x", (d) => d.getWidth() / 2)
-        .attr("y", (d) => d.getHeight() / 2);
-
+        .attr("x", (d) => d.r)
+        .attr("y", (d) => d.r);
+      /*
       d3.select(this.SVG_ID)
         .selectAll("text.cluster-name")
         .attr("y", (d) => d.getHeight() / 2);
-
+*/
       // hide services
       d3.select(this.SVG_ID)
         .selectAll("g.services")

@@ -28,7 +28,7 @@ export const data = {
     {
       site_name: "s1",
       site_id: "site1id",
-      connected: [],
+      connected: ["site2id"],
       namespace: "site1",
       url: "10.106.199.200",
       edge: false,
@@ -36,7 +36,7 @@ export const data = {
     {
       site_name: "s2",
       site_id: "site2id",
-      connected: [],
+      connected: ["site1id"],
       namespace: "site2",
       url: "10.106.199.201",
       edge: false,

@@ -143,6 +143,11 @@ class GraphToolbar extends Component {
 
   handleTrafficModalToggle = (confirmed, state) => {
     if (confirmed) {
+      if (state.traffic && state.color) {
+        state.traffic = false;
+        //state.color = false;
+      }
+      this.props.handleChangeColor(state.color);
       this.props.handleChangeSankey(state.traffic);
       this.props.handleChangeShowStat(state.showMetric);
       this.props.handleChangeMetric(state.stat);
@@ -172,7 +177,7 @@ class GraphToolbar extends Component {
           onClick={this.handleShowTrafficModal}
           iconPosition="right"
         >
-          Traffic options
+          {this.props.view === "site" ? "Graph options" : "Traffic options"}
         </Button>
         <TrafficModal
           ref={(el) => (this.trafficRef = el)}

@@ -340,7 +340,12 @@ class TopologyViewer extends Component {
       this.force
         .nodes(this.viewObj.nodes().nodes)
         .links(this.viewObj.links().links);
-      this.viewObj.transition(this.sankey, false, this.getShowColor(), this);
+      this.viewObj.transition(
+        this.sankey,
+        false,
+        this.state.options.color,
+        this
+      );
       this.props.handleChangeLastUpdated();
       this.setState({ initial: false }, () => {
         if (this.state.options.isExpanded > 0) {
@@ -558,13 +563,16 @@ class TopologyViewer extends Component {
   };
 
   tosite = (initial) => {
+    console.log(
+      `tosite called with traffic ${this.state.options.traffic} color ${this.state.options.color}`
+    );
     this.view = "site";
     this.showChord(null, initial);
-    this.sankey = this.state.options.traffic && !this.state.options.color;
+    this.sankey = false;
     this.viewObj.collapseNodes();
     this.viewObj.transitioning = true;
     this.viewObj
-      .transition(this.sankey, initial, this.getShowColor(), this)
+      .transition(false, initial, this.state.options.color, this)
       .then(() => {
         this.viewObj.transitioning = false;
       });
@@ -627,32 +635,41 @@ class TopologyViewer extends Component {
     }
   };
 
+  overrideSankeyColor = (traffic, color) => {
+    const { options } = this.state;
+    if (!traffic && color) {
+      this.sankey = false;
+      options.color = true;
+    }
+  };
+
+  handleChangeSankeyColor = (options) => {
+    this.setState({ options }, () => {
+      this.viewObj.saveGraphOptions(options, this.props.history, this.view);
+      this.callTransitions();
+      this.setHash(options);
+      //this.props.setOptions(options, true);
+    });
+  };
+
   handleChangeSankey = (checked) => {
     if (!this.unmounting) {
       const { options } = this.state;
       options.traffic = checked;
-      this.setState({ options }, () => {
-        this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
-        this.callTransitions();
-        this.setHash(options);
-        //this.props.setOptions(options, true);
-      });
+      this.sankey = options.traffic && !options.color;
+      this.handleChangeSankeyColor(options);
     }
   };
+
   handleChangeColor = (checked) => {
     if (!this.unmounting) {
       const { options } = this.state;
       options.color = checked;
-      this.setState({ options }, () => {
-        this.sankey = options.traffic && !options.color;
-        this.viewObj.saveGraphOptions(options, this.props.history, this.view);
-        this.callTransitions();
-        this.setHash(options);
-        //this.props.setOptions(options, true);
-      });
+      this.sankey = options.traffic && !options.color;
+      this.handleChangeSankeyColor(options);
     }
   };
+
   handleChangeMetric = (metric) => {
     if (!this.unmounting) {
       const { options } = this.state;
