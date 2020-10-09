@@ -142,7 +142,7 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
       ? link.y1 - offsetY
       : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
   const mid = (x0 + x1) / 2;
-  if (isNaN(mid)) debugger;
+  //if (isNaN(mid)) debugger;
   const path = d3path.path();
   if (sankey) {
     const halfWidth = width / 2;

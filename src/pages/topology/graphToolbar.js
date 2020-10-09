@@ -144,8 +144,8 @@ class GraphToolbar extends Component {
   handleTrafficModalToggle = (confirmed, state) => {
     if (confirmed) {
       this.props.handleChangeSankey(state.traffic);
-      this.props.handleChangeShowStat(state.showMetrics);
-      this.props.handleChangeMetric(state.metric);
+      this.props.handleChangeShowStat(state.showMetric);
+      this.props.handleChangeMetric(state.stat);
     }
     this.setState({ isTrafficModelOpen: false });
   };
@@ -181,6 +181,7 @@ class GraphToolbar extends Component {
           handleChangeSankey={this.props.handleChangeSankey}
           options={this.props.options}
           stat={this.props.stat}
+          view={this.props.view}
         />
       </SplitItem>
     );

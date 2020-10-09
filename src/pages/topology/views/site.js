@@ -77,39 +77,43 @@ export class Site {
     this.sitesSelection = this.createSitesSelection(svg);
   };
 
-  setupSelections = (viewer) => {
+  setupSelections = (viewer, handleEvents = true) => {
     this.setupStats();
     this.masksSelection = this.setupMasks(viewer);
-    this.sitesSelection = this.setupSitesSelection(viewer);
-    this.trafficLinksSelection = this.setupTrafficLinks(viewer);
-    this.routerLinksSelection = this.setupRouterLinks(viewer);
+    this.sitesSelection = this.setupSitesSelection(viewer, handleEvents);
+    this.trafficLinksSelection = this.setupTrafficLinks(viewer, handleEvents);
+    this.routerLinksSelection = this.setupRouterLinks(viewer, handleEvents);
   };
 
-  initNodesAndLinks = (viewer) => {
-    this.initNodes(this.siteNodes);
+  initNodesAndLinks = (viewer, colors, radius) => {
+    if (!radius) radius = utils.SiteRadius;
+    this.initNodes(this.siteNodes, viewer, colors, radius);
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initRouterLinks(this.siteNodes, this.routerLinks, vsize);
     vsize = this.initTrafficLinks(
       this.siteNodes,
       this.trafficLinks,
       vsize,
-      viewer.state.options
+      viewer,
+      radius
     );
     return { nodeCount: this.siteNodes.nodes.length, size: vsize };
   };
 
-  updateNodesAndLinks = (viewer) => {
+  updateNodesAndLinks = (viewer, colors, radius) => {
+    if (!radius) radius = utils.SiteRadius;
     const newNodes = new Nodes();
     const newRouterLinks = new Links();
     const newTrafficLinks = new Links();
-    this.initNodes(newNodes);
+    this.initNodes(newNodes, viewer, colors, radius);
     let vsize = { width: viewer.width, height: viewer.height };
     vsize = this.initRouterLinks(newNodes, newRouterLinks, vsize);
-    this.initTrafficLinks(
+    vsize = this.initTrafficLinks(
       newNodes,
       newTrafficLinks,
       vsize,
-      viewer.state.options
+      viewer,
+      radius
     );
 
     utils.reconcileArrays(this.siteNodes.nodes, newNodes.nodes);
@@ -124,9 +128,11 @@ export class Site {
       this.siteNodes.nodes
     );
     viewer.restart();
+    return { size: vsize };
   };
 
-  initNodes = (siteNodes) => {
+  initNodes = (siteNodes, viewer, colors, radius) => {
+    if (!radius) radius = utils.SiteRadius;
     const clusters = this.data.adapter.data.sites;
     clusters.forEach((cluster) => {
       const name = cluster.site_name;
@@ -139,18 +145,24 @@ export class Site {
         widthFn: this.clusterWidth,
       });
       clusterNode.mergeWith(cluster);
-      clusterNode.color = utils.siteColor(name, cluster.site_id);
-      clusterNode.r = utils.SiteRadius;
-      clusterNode.normalR = utils.SiteRadius;
-      clusterNode.sankeyR = utils.SiteRadius;
+      clusterNode.color = utils.siteColor(name, cluster.site_id, colors);
+      clusterNode.r = radius;
+      clusterNode.normalR = radius;
+      clusterNode.sankeyR = radius;
+      clusterNode.expanded = viewer.state.options.traffic;
     });
   };
 
-  initTrafficLinks = (nodes, links, vsize, options) => {
-    const deploymentLinks = this.data.adapter.data.deploymentLinks;
+  initTrafficLinks = (nodes, links, vsize, viewer, radius) => {
+    let deploymentLinks = this.data.adapter.getDeploymentLinks(
+      viewer.state.options.showExternal
+    );
     deploymentLinks.forEach((link) => {
-      const stat = options[link.target.service.protocol];
+      let stat = viewer.statForProtocol();
+      if (stat === "bytes_in") stat = "bytes_out";
+      // only traffic between sites
       if (link.source.site.site_id !== link.target.site.site_id) {
+        // see if we already have a link between these sites
         const found = links.links.find(
           (l) =>
             l.source.site_id === link.source.site.site_id &&
@@ -179,8 +191,8 @@ export class Site {
           });
           const alink = links.links[linkIndex];
           alink.value = value;
-          alink.request = utils.copy(link.request);
-          alink.getColor = () => utils.linkColor(alink, links.links);
+          alink.request = { ...link.request };
+          alink.getColor = () => "black"; //utils.linkColor(alink, links.links);
         }
       }
     });
@@ -203,7 +215,7 @@ export class Site {
         links: links.links,
         width: vsize.width,
         height: vsize.height - 50,
-        nodeWidth: utils.ServiceWidth,
+        nodeWidth: 1,
         nodePadding: utils.ClusterPadding,
         left: 50,
         top: 10,
@@ -235,9 +247,19 @@ export class Site {
       n.x1 = n.x + n.getWidth();
       n.y1 = n.y + n.getHeight();
     });
+
+    // don't let sites overlap or expand beyond width of container
+    const finalSize = utils.adjustPositions({
+      nodes: nodes.nodes,
+      links: links.links,
+      width: vsize.width,
+      height: vsize.height,
+    });
+    vsize = { width: finalSize.width, height: finalSize.height };
+
     if (links.links.length > 0) {
       // update the links
-      utils.updateSankey({ nodes: nodes.nodes, links: links.links });
+      //utils.updateSankey({ nodes: nodes.nodes, links: links.links });
     }
     return vsize;
   };
@@ -318,7 +340,7 @@ export class Site {
     return selection;
   };
 
-  setupSitesSelection = (viewer) => {
+  setupSitesSelection = (viewer, handleEvents = true) => {
     const selection = this.sitesSelection.data(this.siteNodes.nodes, (d) =>
       d.uid()
     );
@@ -342,7 +364,7 @@ export class Site {
             2 -
             d.getHeight() / 2})`
       )
-      .attr("id", (d) => `$cluster-${d.name}`);
+      .attr("id", (d) => `${this.SVG_ID}-$cluster-${d.name}`);
 
     const rects = enterCircle
       .append("svg:g")
@@ -368,74 +390,76 @@ export class Site {
       .attr("text-anchor", "middle")
       .text((d) => d.name);
 
-    enterCircle
-      .on("mouseover", (d) => {
-        viewer.viewObj.mouseoverCircle(d, viewer);
-        viewer.restart();
-      })
-      .on("mouseout", (d) => {
-        viewer.viewObj.mouseoutCircle(d, viewer);
-        viewer.restart();
-      })
-      .on("mousedown", (d) => {
-        // mouse down for circle
-        viewer.current_node = d;
-        if (d3.event.button !== 0) {
-          // ignore all but left button
-          return;
-        }
-        viewer.mousedown_node = d;
-        // mouse position relative to svg
-        viewer.initial_mouse_down_position = d3
-          .mouse(viewer.topologyRef.parentNode.parentNode.parentNode)
-          .slice();
-      })
-      .on("mouseup", (d) => {
-        // mouse up for circle
-        if (!viewer.mousedown_node) return;
-
-        // check for drag
-        viewer.mouseup_node = d;
-
-        // if we dragged the node, make it fixed
-        let cur_mouse = d3.mouse(viewer.svg.node());
-        if (
-          cur_mouse[0] !== viewer.initial_mouse_down_position[0] ||
-          cur_mouse[1] !== viewer.initial_mouse_down_position[1]
-        ) {
-          d3.event.preventDefault();
-
-          this.siteNodes.setFixed(d, true);
-          viewer.resetMouseVars();
+    if (handleEvents) {
+      enterCircle
+        .on("mouseover", (d) => {
+          viewer.viewObj.mouseoverCircle(d, viewer);
           viewer.restart();
+        })
+        .on("mouseout", (d) => {
+          viewer.viewObj.mouseoutCircle(d, viewer);
+          viewer.restart();
+        })
+        .on("mousedown", (d) => {
+          // mouse down for circle
+          viewer.current_node = d;
+          if (d3.event.button !== 0) {
+            // ignore all but left button
+            return;
+          }
+          viewer.mousedown_node = d;
+          // mouse position relative to svg
+          viewer.initial_mouse_down_position = d3
+            .mouse(viewer.topologyRef.parentNode.parentNode.parentNode)
+            .slice();
+        })
+        .on("mouseup", (d) => {
+          // mouse up for circle
+          if (!viewer.mousedown_node) return;
+
+          // check for drag
+          viewer.mouseup_node = d;
+
+          // if we dragged the node, make it fixed
+          let cur_mouse = d3.mouse(viewer.svg.node());
+          if (
+            cur_mouse[0] !== viewer.initial_mouse_down_position[0] ||
+            cur_mouse[1] !== viewer.initial_mouse_down_position[1]
+          ) {
+            d3.event.preventDefault();
+
+            this.siteNodes.setFixed(d, true);
+            viewer.resetMouseVars();
+            viewer.restart();
+            viewer.mousedown_node = null;
+            return;
+          }
+          viewer.clearAllHighlights();
           viewer.mousedown_node = null;
-          return;
-        }
-        viewer.clearAllHighlights();
-        viewer.mousedown_node = null;
-        // apply any data changes to the interface
-        viewer.restart();
-      })
-      .on("dblclick", (d) => {
-        // circle
-        d3.event.preventDefault();
-        if (d.fixed) {
-          this.siteNodes.setFixed(d, false);
-          viewer.restart(); // redraw the node without a dashed line
-          viewer.force.start(); // let the nodes move to a new position
-        }
-      })
-      .on("click", (d) => {
-        // circle
-        if (d3.event.defaultPrevented) return; // click suppressed
-        viewer.clearPopups();
-        viewer.showChord(d);
-        viewer.showPopup(d, this.card);
-        viewer.clearChosen();
-        d.chosen = true;
-        viewer.restart();
-        d3.event.stopPropagation();
-      });
+          // apply any data changes to the interface
+          viewer.restart();
+        })
+        .on("dblclick", (d) => {
+          // circle
+          d3.event.preventDefault();
+          if (d.fixed) {
+            this.siteNodes.setFixed(d, false);
+            viewer.restart(); // redraw the node without a dashed line
+            viewer.force.start(); // let the nodes move to a new position
+          }
+        })
+        .on("click", (d) => {
+          // circle
+          if (d3.event.defaultPrevented) return; // click suppressed
+          viewer.clearPopups();
+          viewer.showChord(d);
+          viewer.showPopup(d, this.card);
+          viewer.clearChosen();
+          d.chosen = true;
+          viewer.restart();
+          d3.event.stopPropagation();
+        });
+    }
 
     selection
       .classed("selected", (d) => d.selected)
@@ -461,7 +485,7 @@ export class Site {
     viewer.clearAllHighlights();
   };
 
-  setupTrafficLinks = (viewer) => {
+  setupTrafficLinks = (viewer, handleEvents) => {
     const links = this.trafficLinks.links;
     const selection = this.trafficLinksSelection.data(
       links.sort((a, b) =>
@@ -487,26 +511,26 @@ export class Site {
       .attr("stroke-width", 1);
     //.attr("marker-end", "url(#end--15)");
 
-    enter
-      .append("path")
-      .attr("class", "hittarget")
-      //.attr("id", d => `dir-${d.source.name}-${d.target.name}`)
-      .on("click", (d) => {
-        d3.event.stopPropagation();
-        viewer.clearPopups();
-      })
-      .on("mouseover", (d) => {
-        viewer.blurAll(true, d);
-        d.selected = true;
-        viewer.showPopup(d, this.linkCard);
-        viewer.restart();
-      })
-      .on("mouseout", (d) => {
-        d.selected = false;
-        viewer.blurAll(false, d);
-        viewer.clearPopups();
-        viewer.restart();
-      });
+    const eventPath = enter.append("path").attr("class", "hittarget");
+    if (handleEvents) {
+      eventPath
+        .on("click", (d) => {
+          d3.event.stopPropagation();
+          viewer.clearPopups();
+        })
+        .on("mouseover", (d) => {
+          viewer.blurAll(true, d);
+          d.selected = true;
+          viewer.showPopup(d, this.linkCard);
+          viewer.restart();
+        })
+        .on("mouseout", (d) => {
+          d.selected = false;
+          viewer.blurAll(false, d);
+          viewer.clearPopups();
+          viewer.restart();
+        });
+    }
 
     enter
       .append("text")
@@ -529,7 +553,7 @@ export class Site {
     return selection;
   };
 
-  setupRouterLinks = (viewer) => {
+  setupRouterLinks = (viewer, handleEvents) => {
     const links = this.routerLinks.links;
     const selection = this.routerLinksSelection.data(links, (d) => d.uid);
 
@@ -538,26 +562,29 @@ export class Site {
 
     enter.append("path").attr("class", "site");
 
-    enter
+    const eventPath = enter
       .append("path")
       .attr("marker-end", "url(#site-end)")
       .attr("class", "site-hittarget")
-      .attr("stroke-width", 6)
-      .on("click", (d) => {
-        d3.event.stopPropagation();
-        viewer.clearPopups();
-        viewer.showPopup(d, this.linkCard);
-      })
-      .on("mouseover", (d) => {
-        d.highlighted = true;
-        d.selected = true;
-        viewer.restart();
-      })
-      .on("mouseout", (d) => {
-        d.highlighted = false;
-        d.selected = false;
-        viewer.restart();
-      });
+      .attr("stroke-width", 6);
+    if (handleEvents) {
+      eventPath
+        .on("click", (d) => {
+          d3.event.stopPropagation();
+          viewer.clearPopups();
+          viewer.showPopup(d, this.linkCard);
+        })
+        .on("mouseover", (d) => {
+          d.highlighted = true;
+          d.selected = true;
+          viewer.restart();
+        })
+        .on("mouseout", (d) => {
+          d.highlighted = false;
+          d.selected = false;
+          viewer.restart();
+        });
+    }
 
     selection
       .selectAll("path.site")

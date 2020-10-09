@@ -23,377 +23,250 @@ import { Flex, FlexItem } from "@patternfly/react-core";
 import { Grid, GridItem } from "@patternfly/react-core";
 import { Button, Radio, Checkbox } from "@patternfly/react-core";
 import { Service } from "../topology/views/service";
+import { Site } from "../topology/views/site";
 import Adapter from "../../adapter";
 import { addDefs } from "../topology/svgUtils";
 import { utils } from "../../utilities";
+import { data } from "./modalData";
 import * as d3 from "d3";
+
+class Controller {
+  constructor(view, width, state) {
+    this.viewObj = view;
+    this.width = width;
+    this.height = 280;
+    this.state = state;
+  }
+  statForProtocol = () => this.state.options.stat;
+  restart = () => this.viewObj.setupSelections(this, false); // no event handlers
+  setLinkStat = () => {
+    this.viewObj.setLinkStat(
+      this.state.options.showMetric, // show or hide the stat
+      this.state.options.stat // which stat to show
+    );
+  };
+}
 
 class TrafficModal extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      traffic: this.props.options.traffic,
-      showMetrics: this.props.options.showMetric,
-      metric: this.props.stat,
+      options: { ...this.props.options },
     };
     this.dropdownItems = [
       {
         key: "requests",
         name: "Requests",
-        type: "http",
       },
       {
         key: "bytes_out",
         name: "Bytes",
       },
     ];
-    // keep our service colors separate from main view's colors
+    // keep our colors separate from main view's colors
     this.colors = {};
+    this.siteColors = {};
 
-    let t1Requests = 8;
-    let t2Requests = 4;
-    let t1RequestSize = 400;
-    let t2RequestSize = 350;
-    const data = {
-      sites: [
-        {
-          site_name: "west",
-          site_id: "west_site",
-          connected: [],
-          namespace: "west",
-          url: "10.106.199.200",
-          edge: false,
-        },
-      ],
-      services: [
-        {
-          address: "s",
-          protocol: "http",
-          targets: [
-            {
-              name: "s",
-              site_id: "west_site",
-            },
-          ],
-          requests_received: [],
-          requests_handled: [],
-        },
-        {
-          address: "t1",
-          protocol: "http",
-          targets: [
-            {
-              name: "t1",
-              site_id: "west_site",
-            },
-          ],
-          requests_received: [
-            {
-              site_id: "west_site",
-              by_client: {
-                s: {
-                  requests: t1Requests,
-                  bytes_in: 0,
-                  bytes_out: t1Requests * t1RequestSize,
-                  details: {
-                    "GET:200": t1Requests,
-                  },
-                  latency_max: 9,
-                  by_handling_site: {
-                    west_site: {
-                      requests: t1Requests,
-                      bytes_in: 0,
-                      bytes_out: t1Requests * t1RequestSize,
-                      details: {
-                        "GET:200": t1Requests,
-                      },
-                      latency_max: 9,
-                    },
-                  },
-                },
-              },
-            },
-          ],
-          requests_handled: [
-            {
-              site_id: "west_site",
-              by_server: {
-                t1: {
-                  requests: t1Requests,
-                  bytes_in: 0,
-                  bytes_out: t1Requests * t1RequestSize,
-                  details: {
-                    "GET:200": t1Requests,
-                  },
-                  latency_max: 3,
-                },
-              },
-              by_originating_site: {
-                west_site: {
-                  requests: t1Requests,
-                  bytes_in: 0,
-                  bytes_out: t1Requests * t1RequestSize,
-                  details: {
-                    "GET:200": t1Requests,
-                  },
-                  latency_max: 3,
-                },
-              },
-            },
-          ],
-        },
-        {
-          address: "t2",
-          protocol: "http",
-          targets: [
-            {
-              name: "t2",
-              site_id: "west_site",
-            },
-          ],
-          requests_received: [
-            {
-              site_id: "west_site",
-              by_client: {
-                s: {
-                  requests: t2Requests,
-                  bytes_in: 0,
-                  bytes_out: t2Requests * t2RequestSize,
-                  details: {
-                    "GET:200": t2Requests,
-                  },
-                  latency_max: 9,
-                  by_handling_site: {
-                    west_site: {
-                      requests: t2Requests,
-                      bytes_in: 0,
-                      bytes_out: t2Requests * t2RequestSize,
-                      details: {
-                        "GET:200": t2Requests,
-                      },
-                      latency_max: 9,
-                    },
-                  },
-                },
-              },
-            },
-          ],
-          requests_handled: [
-            {
-              site_id: "west_site",
-              by_server: {
-                t2: {
-                  requests: t2Requests,
-                  bytes_in: 0,
-                  bytes_out: t2Requests * t2RequestSize,
-                  details: {
-                    "GET:200": t2Requests,
-                  },
-                  latency_max: 3,
-                },
-              },
-              by_originating_site: {
-                west_site: {
-                  requests: t2Requests,
-                  bytes_in: 0,
-                  bytes_out: t2Requests * t2RequestSize,
-                  details: {
-                    "GET:200": t2Requests,
-                  },
-                  latency_max: 3,
-                },
-              },
-            },
-          ],
-        },
-      ],
-    };
-    const adapter = new Adapter(data);
+    // radius of circles when showing sites
+    this.siteRadius = 40;
 
-    this.serviceLine = new Service({ adapter }, "SVG_LINE");
-    this.serviceSankey = new Service({ adapter }, "SVG_SANKEY");
+    // use static data for the diagrams
+    this.adapter = new Adapter(data);
 
-    this.lineViewer = {
-      width: 400,
-      height: 300,
-      sankey: false,
-      statForProtocol: () => "bytes_out",
-      restart: () => {
-        this.serviceLine.setupSelections(this.lineViewer, false);
-      },
-      setLinkStat: () => {
-        this.serviceLine.setLinkStat(
-          false, // show or hide the stat
-          "bytes_out" // which stat to show
-        );
-      },
-      blurAll: () => {},
-      showPopup: () => {},
-      clearPopups: () => {},
-      showChord: () => {},
-      state: {
-        options: {
-          showExternal: false,
-          traffic: false,
-        },
-      },
-    };
-    this.lineViewer.viewObj = this.serviceLine;
-
-    this.sankeyViewer = {
-      width: 400,
-      height: 300,
-      sankey: true,
-      statForProtocol: () => "bytes_out",
-      restart: () => {
-        this.serviceSankey.setupSelections(this.sankeyViewer, false);
-      },
-      setLinkStat: () => {
-        this.serviceSankey.setLinkStat(
-          false, // show or hide the stat
-          "bytes_out" // which stat to show
-        );
-      },
-      blurAll: () => {},
-      showPopup: () => {},
-      clearPopups: () => {},
-      showChord: () => {},
-      state: {
-        options: {
-          showExternal: false,
-          traffic: true,
-        },
-      },
-    };
-    this.sankeyViewer.viewObj = this.serviceSankey;
+    // site view uses circles, otherwise use service rectangles
+    this.view = this.props.view;
+    //this.setupViews();
   }
 
-  componentDidUpdate = (lastp, lasts) => {
-    if (lastp.isTrafficModalOpen !== this.props.isTrafficModalOpen) {
+  // called by react when the state or properties changes
+  componentDidUpdate = (nextprops) => {
+    if (nextprops.isTrafficModalOpen !== this.props.isTrafficModalOpen) {
       let changedStat = false;
-      if (lastp.stat !== this.state.metric) {
+      if (nextprops.stat !== this.state.options.stat) {
         changedStat = true;
       }
-      this.setState(
-        {
-          showMetrics: lastp.options.showMetric,
-          metric: lastp.stat,
-          traffic: lastp.options.traffic,
-        },
-        () => {
-          if (changedStat) {
-            this.setShowMetric();
-          }
+      const { options } = this.state;
+      options.showMetric = nextprops.options.showMetric;
+      options.stat = nextprops.stat;
+      options.traffic = nextprops.options.traffic;
+      this.setState({ options }, () => {
+        if (changedStat) {
+          this.setShowMetric(true);
         }
-      );
+      });
+      if (nextprops.view !== this.view) {
+        this.view = nextprops.view;
+        //this.setupViews();
+      }
     }
   };
+
+  // create the views and controllers
+  setupViews = () => {
+    if (this.view === "site") {
+      this.lineView = new Site({ adapter: this.adapter }, "SVG_LINE");
+      this.sankeyView = new Site({ adapter: this.adapter }, "SVG_SANKEY");
+    } else {
+      this.lineView = new Service({ adapter: this.adapter }, "SVG_LINE");
+      this.sankeyView = new Service({ adapter: this.adapter }, "SVG_SANKEY");
+    }
+
+    this.lineController = new Controller(this.lineView, 400, this.state);
+    this.sankeyController = new Controller(this.sankeyView, 600, this.state);
+  };
+
+  // called externally when this modal is displayed to create the svg diagrams
   init = () => {
     if (d3.select("#DIV_LINE").empty()) {
       return;
     }
-    //this.setState({ traffic: this.props.options.traffic });
-    const sizes = utils.getSizes(d3.select(".sk-traffic-section").node(), [
+    this.setupViews();
+    const sizes = utils.getSizes(d3.select("#skTrafficDiagrams").node(), [
       400,
-      200,
+      280,
     ]);
 
-    this.lineViewer.width = this.sankeyViewer.width = sizes[0] / 2 - 5;
+    // set the svgs' width to the width of the modal's diagram container / 2
+    this.lineController.width = sizes[0] / 2;
+    this.sankeyController.width =
+      this.view === "site" ? sizes[0] : this.lineController.width;
 
-    const setupService = (service, viewer, id, sankey) => {
+    const setupService = (view, controller, id, sankey) => {
       d3.select(`#SVG_${id}`).remove();
       const svg = d3
         .select(`#DIV_${id}`)
         .append("svg")
         .attr("id", `SVG_${id}`)
-        .attr("width", viewer.width)
-        .attr("height", viewer.height)
+        .attr("width", this.lineController.width)
+        .attr("height", controller.height)
         .append("g")
         .append("g")
         .attr("class", "zoom");
       addDefs(svg);
-      service.createSelections(svg);
+      view.createSelections(svg);
 
-      // TODO: fix possible bug in calculating contentWidth
-      service.nodes().nodes.forEach((n) => delete n.contentWidth);
-
-      let { nodeCount } = service.initNodesAndLinks(viewer, this.colors);
-      viewer.force = d3.layout
+      // TODO: fix possible bug in when contentWidth is calculated
+      view.nodes().nodes.forEach((n) => {
+        delete n.contentWidth;
+      });
+      let { nodeCount, size } = view.initNodesAndLinks(
+        controller,
+        this.view === "site" ? this.siteColors : this.colors,
+        this.siteRadius
+      );
+      controller.force = d3.layout
         .force()
-        .nodes(service.nodes().nodes)
-        .links(service.links().links)
-        .size([viewer.width, viewer.height])
+        .nodes(view.nodes().nodes)
+        .links(view.links().links)
+        .size([this.lineController.width, controller.height])
         .linkDistance((d) => {
-          return service.nodes().linkDistance(d, nodeCount);
+          return view.nodes().linkDistance(d, nodeCount);
         })
         .charge((d) => {
-          return service.nodes().charge(d, nodeCount);
+          return view.nodes().charge(d, nodeCount);
         })
         .friction(0.1)
         .gravity((d) => {
-          return service.nodes().gravity(d, nodeCount);
+          return view.nodes().gravity(d, nodeCount);
         });
-      viewer.force.stop();
-      viewer.force.start();
-      service.nodes().nodes.forEach((n) => (n.expanded = sankey));
-      viewer.restart();
-      service.transition(sankey, true, sankey, viewer);
+      controller.force.stop();
+      controller.force.start();
+      controller.restart();
+      console.log(size);
+      if (this.view === "site") {
+        if (sankey) {
+          svg.attr("transform", "translate(-100, -30) scale(.7)");
+        } else {
+          svg.attr("transform", "translate(0,-40)");
+        }
+      }
+      view.transition(
+        sankey,
+        true,
+        this.view === "site" ? !sankey : sankey,
+        controller
+      );
     };
-    setupService(this.serviceLine, this.lineViewer, "LINE", false);
-    setupService(this.serviceSankey, this.sankeyViewer, "SANKEY", true);
-    // move the expanded "s" to a bit for cosmetic reasons
+    setupService(this.lineView, this.lineController, "LINE", false);
+    setupService(this.sankeyView, this.sankeyController, "SANKEY", true);
 
-    this.serviceSankey.nodes().nodes.some((n) => {
+    // move the expanded "s" up a bit for cosmetic reasons
+    this.sankeyView.nodes().nodes.some((n) => {
       if (n.address === "s") {
         let sheight = n.y1 - n.y0;
-        n.y0 = n.y / 2;
+        n.y0 = 60;
         n.y1 = n.y0 + sheight;
         return true;
       }
       return false;
     });
-    this.sankeyViewer.restart();
-    this.serviceSankey.transition(true, true, true, this.sankeyViewer);
-
-    this.setShowMetric();
+    this.sankeyController.restart();
+    this.setShowMetric(true);
   };
 
+  // the show traffic as line/sankey radio buttons were changed
   handleChangeSankey = () => {
-    this.setState({ traffic: !this.state.traffic });
+    const { options } = this.state;
+    options.traffic = !options.traffic;
+    this.setState({ options });
   };
 
-  setShowMetric = () => {
-    this.serviceLine.setLinkStat(
-      this.state.showMetrics, // show or hide the stat
-      this.state.metric // which stat to show
+  // change the sankey link sizes to reflect which metric is being used
+  // if initial is false, the transition will be animated
+  resizeLinks = (initial) => {
+    // resize the sankey links for the new metric
+    this.sankeyView.nodes().nodes.forEach((n) => {
+      //delete n.contentWidth;
+      n.expanded = true;
+    });
+    this.sankeyView.updateNodesAndLinks(
+      this.sankeyController,
+      this.view === "site" ? this.siteColors : this.colors,
+      this.siteRadius
     );
-    this.serviceSankey.setLinkStat(
-      this.state.showMetrics, // show or hide the stat
-      this.state.metric // which stat to show
+    this.sankeyController.force
+      .nodes(this.sankeyView.nodes().nodes)
+      .links(this.sankeyView.links().links);
+    this.sankeyView.transition(true, initial, true, this.sankeyController);
+  };
+
+  // display the current metric states
+  setShowMetric = (initial) => {
+    this.resizeLinks(initial);
+    // show/hide the new metric
+    this.lineView.setLinkStat(
+      this.state.options.showMetric, // show or hide the stat
+      this.state.options.stat // which stat to show
+    );
+    this.sankeyView.setLinkStat(
+      this.state.options.showMetric, // show or hide the stat
+      this.state.options.stat // which stat to show
     );
   };
 
+  // the show/hide metric checkbox was changed
   handleChangeShowMetric = (checked) => {
-    this.setState({ showMetrics: checked }, () => {
+    const { options } = this.state;
+    options.showMetric = checked;
+    this.setState({ options }, () => {
       this.setShowMetric();
     });
   };
 
+  // the bytes/requests radio buttons were changed
   handleChangeMetric = (checked, e) => {
     const id = e.target.id;
-    this.setState(
-      {
-        metric: id === "traffic-requests" ? "requests" : "bytes_out",
-      },
-      () => {
-        this.setShowMetric();
-      }
-    );
+    const { options } = this.state;
+    options.stat = id === "traffic-requests" ? "requests" : "bytes_out";
+    this.setState({ options }, () => {
+      this.setShowMetric(false);
+    });
   };
 
+  // this modal was either dismissed/cancelled or confirmed
   handleTrafficModalToggle = (e) => {
     if (e && e.target.textContent === "Confirm") {
-      this.props.handleTrafficModalToggle(true, this.state);
+      this.props.handleTrafficModalToggle(true, this.state.options);
     } else {
       this.props.handleTrafficModalToggle(false);
     }
@@ -401,7 +274,7 @@ class TrafficModal extends Component {
 
   render() {
     const { isTrafficModalOpen } = this.props;
-    const { traffic, showMetrics, metric } = this.state;
+    const { traffic, showMetric, stat } = this.state.options;
 
     const showTraffic = (
       <Grid hasGutter>
@@ -439,19 +312,19 @@ class TrafficModal extends Component {
     const showMetricsCheckbox = (
       <React.Fragment>
         <Checkbox
-          label="Show traffic metrics"
-          isChecked={showMetrics}
+          label="Show traffic metrics as"
+          isChecked={showMetric}
           onChange={this.handleChangeShowMetric}
           aria-label="show metrics"
-          id="showMetrics"
-          name="showMetrics"
+          id="showMetric"
+          name="showMetric"
         />
-        <div id="skTrafficRadioContainer" className="sk-flex">
+        <div className="sk-flex">
           {this.dropdownItems.map((item) => (
             <Radio
               label={item.name}
               key={item.key}
-              isChecked={item.key === metric}
+              isChecked={item.key === stat}
               onChange={this.handleChangeMetric}
               aria-label={`show ${item.name} metric`}
               id={`traffic-${item.key}`}
@@ -486,10 +359,8 @@ class TrafficModal extends Component {
         ]}
       >
         <Flex className="sk-traffic-form" direction={{ default: "column" }}>
-          <FlexItem className="sk-traffic-section">{showTraffic}</FlexItem>
-          <FlexItem className="sk-traffic-section" id="skTrafficMetrics">
-            {showMetricsCheckbox}
-          </FlexItem>
+          <FlexItem id="skTrafficDiagrams">{showTraffic}</FlexItem>
+          <FlexItem id="skTrafficMetrics">{showMetricsCheckbox}</FlexItem>
         </Flex>
       </Modal>
     );

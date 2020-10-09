@@ -70,6 +70,11 @@ export class Deployment extends Service {
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
+    this.Site.siteNodes.nodes.forEach((n) => {
+      if (isNaN(n.x)) {
+        console.log(`(${n.address}).x was NaN`);
+      }
+    });
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
@@ -105,7 +110,7 @@ export class Deployment extends Service {
   };
 
   initNodes = (siteNodes, serviceNodes, viewer) => {
-    this.Site.initNodes(siteNodes);
+    this.Site.initNodes(siteNodes, viewer);
     super.initNodes(serviceNodes, true, viewer.state.options.showExternal);
     this.setParentNodes(siteNodes, serviceNodes, viewer);
     this.adjustSites(siteNodes, serviceNodes, viewer);

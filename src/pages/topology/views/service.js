@@ -96,10 +96,10 @@ export class Service {
     return { nodeCount: this.serviceNodes.nodes.length, size };
   };
 
-  updateNodesAndLinks = (viewer) => {
+  updateNodesAndLinks = (viewer, colors) => {
     const newNodes = new Nodes();
     const newLinks = new Links();
-    this.initNodes(newNodes, false, viewer.state.options.showExternal);
+    this.initNodes(newNodes, false, viewer.state.options.showExternal, colors);
     const vsize = { width: viewer.width, height: viewer.height };
     this.initLinks(newNodes.nodes, newLinks, vsize, viewer);
     utils.reconcileArrays(this.serviceNodes.nodes, newNodes.nodes);
@@ -529,12 +529,12 @@ export class Service {
     l.source.selected = true;
     l.target.selected = true;
   };
-  setupServiceNodePositions = (sankey) => {
+  setupServiceNodePositions = (sankey, duration) => {
     this.serviceNodes.nodes.forEach((n) => {
       n.x = n.x0;
       n.y = n.y0;
     });
-    this.drawViewPaths(sankey);
+    this.drawViewPaths(sankey, duration);
   };
 
   savePosition = (d) => {
@@ -571,25 +571,36 @@ export class Service {
     });
   }
 
-  drawViewPaths(sankey) {
+  drawViewPaths(sankey, duration) {
+    // coerse undefined to 0
+    if (!duration) duration = 0;
+
     utils.updateSankey({
       nodes: this.serviceNodes.nodes,
       links: this.serviceLinks.links,
     });
     this.linksSelection
+      .transition()
+      .duration(duration)
       .selectAll("path.service")
       .attr("d", (d) => genPath({ link: d, sankey: true }));
 
     this.linksSelection
+      .transition()
+      .duration(duration)
       .selectAll("path.servicesankeyDir")
       .attr("d", (d) => genPath({ link: d, width: sankey ? d.width : 1 }));
 
     this.linksSelection
+      .transition()
+      .duration(duration)
       .selectAll("path.hittarget")
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
       .attr("d", (d) => genPath({ link: d }));
 
     d3.select(this.SVG_ID)
+      .transition()
+      .duration(duration)
       .select("defs.statPaths")
       .selectAll("path")
       .attr("d", (d) =>
@@ -663,7 +674,7 @@ export class Service {
   transition(sankey, initial, color, viewer) {
     const duration = initial ? 0 : utils.VIEW_DURATION;
     viewer.setLinkStat();
-    this.setupServiceNodePositions(sankey);
+    this.setupServiceNodePositions(sankey, duration);
     if (sankey) {
       return this.toServiceSankey(duration);
     } else {

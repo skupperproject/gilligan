@@ -457,15 +457,16 @@ const utils = {
 
   // there are 20 colors available from colorGen().
   // site colors are the even colors. service colors are the odd colors
-  siteColor: (name, site_id) => {
+  siteColor: (name, site_id, colorsObj) => {
     if (site_id === "unknownID") return "#FFFFFF";
-    if (!(site_id in utils.siteColors)) {
-      utils.siteColors[site_id] = {
+    const siteColors = colorsObj ? colorsObj : utils.siteColors;
+    if (!(site_id in siteColors)) {
+      siteColors[site_id] = {
         name: name,
-        color: colorGen(Object.keys(utils.siteColors).length * 2),
+        color: colorGen(Object.keys(siteColors).length * 2),
       };
     }
-    return utils.siteColors[site_id].color;
+    return siteColors[site_id].color;
   },
 
   removeServiceColor: (name) => {
