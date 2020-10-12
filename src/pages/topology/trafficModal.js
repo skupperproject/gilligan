@@ -75,9 +75,6 @@ class TrafficModal extends Component {
 
     // site view uses circles, otherwise use service rectangles
     this.view = this.props.view;
-
-    this.xtrans = -40;
-    this.ytrans = -80;
   }
 
   // called by react when the state or properties changes
@@ -92,6 +89,9 @@ class TrafficModal extends Component {
       options.stat = nextprops.stat;
       options.traffic = nextprops.options.traffic;
       options.color = nextprops.options.color;
+      console.log(
+        `trafficModal radio ${options.radio} traffic ${options.traffic} color ${options.color}`
+      );
       this.setState({ options }, () => {
         if (changedStat) {
           this.setShowMetric(true);
@@ -107,14 +107,11 @@ class TrafficModal extends Component {
   setupViews = () => {
     if (this.view === "site") {
       this.lineView = new Site({ adapter: this.adapter }, "SVG_LINE");
-      //this.sankeyView = new Site({ adapter: this.adapter }, "SVG_SANKEY");
     } else {
       this.lineView = new Service({ adapter: this.adapter }, "SVG_LINE");
-      //this.sankeyView = new Service({ adapter: this.adapter }, "SVG_SANKEY");
     }
 
     this.lineController = new Controller(this.lineView, 400, this.state);
-    //this.sankeyController = new Controller(this.sankeyView, 600, this.state);
   };
 
   // called externally when this modal is displayed to create the svg diagrams
@@ -130,9 +127,6 @@ class TrafficModal extends Component {
 
     // set the svgs' width to the width of the modal's diagram container / 2
     this.lineController.width = sizes[0];
-    //this.sankeyController.width =
-    //  this.view === "site" ? sizes[0] : this.lineController.width;
-
     const setupService = (view, controller, id, sankey) => {
       d3.select(`#SVG_${id}`).remove();
       const svg = d3
@@ -152,7 +146,7 @@ class TrafficModal extends Component {
       view.nodes().nodes.forEach((n) => {
         delete n.contentWidth;
       });
-      let { nodeCount, size } = view.initNodesAndLinks(
+      let { nodeCount } = view.initNodesAndLinks(
         controller,
         this.view === "site" ? this.siteColors : this.colors,
         this.siteRadius
@@ -177,22 +171,8 @@ class TrafficModal extends Component {
       controller.restart();
       this.transition(true);
     };
-    setupService(this.lineView, this.lineController, "LINE", false);
-    //setupService(this.sankeyView, this.sankeyController, "SANKEY", true);
 
-    /*
-    // move the expanded "s" up a bit for cosmetic reasons
-    this.sankeyView.nodes().nodes.some((n) => {
-      if (n.address === "s") {
-        let sheight = n.y1 - n.y0;
-        n.y0 = 60;
-        n.y1 = n.y0 + sheight;
-        return true;
-      }
-      return false;
-    });
-    this.sankeyController.restart();
-    */
+    setupService(this.lineView, this.lineController, "LINE", false);
     this.setShowMetric(true);
   };
 
@@ -204,32 +184,25 @@ class TrafficModal extends Component {
     } else {
       this.lineView.collapseNodes();
     }
-    let sankey = options.traffic;
-    let color = options.color;
-
     if (this.view === "site") {
-      if (color) {
-        sankey = false;
-        color = false;
-      } else {
-        color = true;
-      }
-    }
-    if (this.view === "site") {
-      let transX = this.props.options.traffic ? 20 : -20;
-      let transY = this.props.options.traffic ? 20 : -40;
+      let transX = options.traffic ? -60 : -20;
+      let transY = options.traffic ? -80 : -40;
       const duration = initial ? 0 : utils.VIEW_DURATION;
-      if (this.state.options.traffic && !this.state.options.color) {
-        transX = this.props.options.traffic ? 0 : -60;
-        transY = this.props.options.traffic ? -20 : -80;
+      if (this.props.options.traffic) {
+        transX = options.traffic ? 0 : 40;
+        transY = options.traffic ? -20 : 40;
       }
       this.lineController.svg
         .transition()
         .duration(duration)
         .attr("transform", `translate(${transX},${transY})`);
     }
-
-    this.lineView.transition(sankey, initial, color, this.lineController);
+    this.lineView.transition(
+      options.traffic,
+      initial,
+      options.color,
+      this.lineController
+    );
   };
 
   // change the sankey link sizes to reflect which metric is being used
@@ -294,24 +267,23 @@ class TrafficModal extends Component {
   };
 
   // the show traffic as line/sankey radio buttons were changed
-  handleChangeSankey = (checked, event) => {
+  handleChangeSankey = (checked) => {
     const { options } = this.state;
-    const targetId = event.target.id;
-    if (targetId === "showAsLine") {
-      options.traffic = false;
-    } else {
-      options.traffic = true;
-    }
-    options.color = false;
+    console.log(
+      `handleChangeSankey called with checked ${checked} options traffic was ${options.traffic}`
+    );
+    options.traffic = checked;
     this.setState({ options }, () => {
       this.transition(false);
     });
   };
 
   // the show router connections radio was changed
-  handleChangeConnection = () => {
+  handleChangeConnection = (checked, event) => {
     const { options } = this.state;
-    options.color = true;
+    const id = event.target.id;
+    options.traffic = false;
+    options.color = id === "showAsLine" ? true : false;
     this.setState({ options }, () => {
       this.transition(false);
     });
@@ -333,7 +305,7 @@ class TrafficModal extends Component {
 
   render() {
     const { isTrafficModalOpen } = this.props;
-    const { showMetric, stat } = this.state.options;
+    const { showMetric, stat, color, traffic } = this.state.options;
 
     const showTraffic = (
       <React.Fragment>
@@ -343,7 +315,7 @@ class TrafficModal extends Component {
               <Radio
                 className="sk-traffic-checkbox"
                 label="Show site connections"
-                isChecked={this.radio("connections")}
+                isChecked={traffic === false && color !== true}
                 onChange={this.handleChangeConnection}
                 aria-label="show connection direction"
                 id="showConnections"
@@ -355,8 +327,8 @@ class TrafficModal extends Component {
             <Radio
               className="sk-traffic-checkbox"
               label="Show traffic as a line"
-              isChecked={this.radio("line")}
-              onChange={this.handleChangeSankey}
+              isChecked={traffic === false && color === true}
+              onChange={this.handleChangeConnection}
               aria-label="show traffic as line"
               id="showAsLine"
               name="showAsLine"
@@ -366,7 +338,7 @@ class TrafficModal extends Component {
             <Radio
               className="sk-traffic-checkbox"
               label="Show relative traffic"
-              isChecked={this.radio("sankey")}
+              isChecked={traffic}
               onChange={this.handleChangeSankey}
               aria-label="show relative traffic"
               id="showAsSankey"

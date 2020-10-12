@@ -31,8 +31,8 @@ const DEPLOYMENT_TABLE_OPTIONS = "dpopts";
 const ZOOM_SCALE = "dscale";
 const ZOOM_TRANSLATE = "dtrans";
 const DEFAULT_OPTIONS = {
-  radio: false,
   traffic: false,
+  color: true,
   showMetric: false,
   isExpanded: 0,
   showExternal: false,

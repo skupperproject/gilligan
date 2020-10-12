@@ -36,8 +36,8 @@ const DEFAULT_DETAIL_OPTIONS = {
 };
 
 const DEFAULT_OPTIONS = {
-  radio: true,
   traffic: false,
+  color: true,
   showMetric: false,
   isExpanded: 0,
   showExternal: false,
@@ -797,6 +797,7 @@ export class Site {
 
     const duration = initial ? 0 : utils.VIEW_DURATION;
     if (sankey) {
+      console.log("site transition tositesankey");
       return this.toSiteSankey(duration);
     } else if (color) {
       console.log("site transition tositecolor");

@@ -36,8 +36,8 @@ const DEFAULT_DETAIL_OPTIONS = {
   item: undefined,
 };
 const DEFAULT_OPTIONS = {
-  radio: false,
   traffic: false,
+  color: true,
   showMetric: false,
   isExpanded: 0,
   showExternal: false,
@@ -718,7 +718,7 @@ export class Service {
         .selectAll("path.servicesankeyDir")
         .transition()
         .duration(duration)
-        .attr("stroke", (d) => (color ? d.getColor() : "black"))
+        .attr("stroke", (d) => "black")
         .attr("stroke-width", 1)
         .attrTween("d", function(d, i) {
           const previous = d3.select(this).attr("d");
@@ -735,10 +735,10 @@ export class Service {
         .selectAll("path.hittarget")
         .attr("d", (d) => genPath({ link: d }))
         .attr("stroke-width", 6)
-        .attr("stroke", (d) => (color ? d.getColor() : null))
+        .attr("stroke", (d) => null)
         .attr("opacity", function(d) {
           const current = d3.select(this).attr("opacity");
-          return self.anySelected() ? current : color ? 0.125 : null;
+          return self.anySelected() ? current : null;
         });
 
       // collapse the rects (getWidth() and getHeight() will return non-expanded sizes)

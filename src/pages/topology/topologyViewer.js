@@ -90,19 +90,12 @@ class TopologyViewer extends Component {
   };
 
   componentDidUpdate = () => {
-    /*console.log(
-      `TOPOLOGYVIEWER::COMPONTENTDIDUPDATE called this.view ${this.view} this.props.view ${this.props.view}`
-    );*/
     if (this.view !== this.props.view) {
-      //console.log(`view changed so re-initializing graph`);
       this.view = this.props.view;
       this.viewObj = new VIEWS[this.view](this.props.service);
-      //debugger;
       const options = this.getOptions();
       this.setHash(options);
       this.setState({ options, showCard: false }, this.updateComponent);
-    } else {
-      //console.log("view didn't change so not getting new options");
     }
   };
 
@@ -126,6 +119,9 @@ class TopologyViewer extends Component {
     }
     if (saved.showExternal === undefined) {
       saved.showExternal = false;
+    }
+    if (saved.color === undefined) {
+      saved.color = true;
     }
 
     // update the address search parameters with the saved options
@@ -155,8 +151,11 @@ class TopologyViewer extends Component {
   };
 
   callTransitions = (initial) => {
-    this.sankey = this.state.options.traffic && !this.state.options.color;
+    this.sankey = this.state.options.traffic;
     const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
+    console.log(
+      `callTransition ${to} traffic ${this.state.options.traffic} color ${this.state.options.color} sankey ${this.sankey}`
+    );
     this[to](initial);
   };
 
@@ -563,9 +562,6 @@ class TopologyViewer extends Component {
   };
 
   tosite = (initial) => {
-    console.log(
-      `tosite called with traffic ${this.state.options.traffic} color ${this.state.options.color}`
-    );
     this.view = "site";
     this.showChord(null, initial);
     this.sankey = false;
@@ -580,10 +576,6 @@ class TopologyViewer extends Component {
   };
 
   tositesankey = (initial) => {
-    if (this.state.options.color) {
-      this.sankey = false;
-      return this.tosite(initial);
-    }
     this.showChord(null, initial);
     this.view = "site";
     this.viewObj.expandNodes();
@@ -705,7 +697,7 @@ class TopologyViewer extends Component {
   setLinkStat = () => {
     const { options } = this.state;
     this.viewObj.setLinkStat(
-      !(options.radio && !options.traffic) && this.state.options.showMetric, // show or hide the stat
+      options.showMetric && (options.color || options.traffic), // show or hide the stat
       this.statForProtocol() // which stat to show
     );
   };
