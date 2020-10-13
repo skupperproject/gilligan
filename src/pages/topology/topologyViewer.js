@@ -61,7 +61,6 @@ class TopologyViewer extends Component {
     this.popupCancelled = true;
 
     this.force = null;
-    this.sankey = this.state.options.traffic;
     this.resetScale = 1;
     this.initialTransition = true;
     //debugger;
@@ -151,11 +150,7 @@ class TopologyViewer extends Component {
   };
 
   callTransitions = (initial) => {
-    this.sankey = this.state.options.traffic;
-    const to = `to${this.view}${this.sankey ? "sankey" : ""}`;
-    console.log(
-      `callTransition ${to} traffic ${this.state.options.traffic} color ${this.state.options.color} sankey ${this.sankey}`
-    );
+    const to = `to${this.view}${this.state.options.traffic ? "sankey" : ""}`;
     this[to](initial);
   };
 
@@ -298,7 +293,7 @@ class TopologyViewer extends Component {
       .on("dragstart", (d) => {
         // don't pan while dragging
         d3.event.sourceEvent.stopPropagation();
-        this.viewObj.dragStart(d, this.sankey);
+        this.viewObj.dragStart(d, this.state.options.traffic);
         this.viewObj.dragging = true;
       })
       .on("drag", (d) => {
@@ -307,12 +302,12 @@ class TopologyViewer extends Component {
           d.px = d.x;
           d.py = d.y;
         }
-        this.viewObj.drag(d, this.sankey);
+        this.viewObj.drag(d, this.state.options.traffic);
         this.drawNodesAndPaths();
         this.setLinkStat();
       })
       .on("dragend", (d) => {
-        this.viewObj.dragEnd(d, this.sankey);
+        this.viewObj.dragEnd(d, this.state.options.traffic);
         this.viewObj.dragging = false;
         // force d3 to honor the new positions
         // of nodes that were moved but not directly dragged
@@ -339,12 +334,7 @@ class TopologyViewer extends Component {
       this.force
         .nodes(this.viewObj.nodes().nodes)
         .links(this.viewObj.links().links);
-      this.viewObj.transition(
-        this.sankey,
-        false,
-        this.state.options.color,
-        this
-      );
+      this.callTransitions(false);
       this.props.handleChangeLastUpdated();
       this.setState({ initial: false }, () => {
         if (this.state.options.isExpanded > 0) {
@@ -368,14 +358,19 @@ class TopologyViewer extends Component {
   };
 
   highlightConnection = (highlight, link, d, self) => {
-    if (this.transitioning) return;
-    this.viewObj.blurAll(highlight, link, this.sankey, this.getShowColor());
+    if (this.viewObj.transitioning) return;
+    this.viewObj.blurAll(
+      highlight,
+      link,
+      this.state.options.traffic,
+      this.state.options.color
+    );
     this.viewObj.highlightLink(
       highlight,
       link,
       d,
-      this.sankey,
-      this.getShowColor()
+      this.state.options.traffic,
+      this.state.options.color
     );
   };
 
@@ -391,13 +386,13 @@ class TopologyViewer extends Component {
       highlight,
       link,
       d,
-      this.sankey,
-      this.getShowColor()
+      this.state.options.traffic,
+      this.state.options.color
     );
   };
 
   highlightServiceType = (highlight, st, d, self) => {
-    if (this.transitioning) return;
+    if (this.viewObj.transitioning) return;
     this.blurAll(highlight, d);
     d3.select("#SVG_ID")
       .selectAll(`g.links g`)
@@ -411,7 +406,7 @@ class TopologyViewer extends Component {
   };
 
   highlightNamespace = (highlight, nsBox, d, self) => {
-    if (this.transitioning) return;
+    if (this.viewObj.transitioning) return;
     this.blurAll(highlight, d);
     d.highlighted = highlight;
     // highlight all the services
@@ -420,7 +415,12 @@ class TopologyViewer extends Component {
   };
 
   blurAll = (blur, d) => {
-    this.viewObj.blurAll(blur, d, this.sankey, this.getShowColor());
+    this.viewObj.blurAll(
+      blur,
+      d,
+      this.state.options.traffic,
+      this.state.options.color
+    );
   };
 
   // Takes the forceData.nodes and forceData.links array and creates svg elements
@@ -467,9 +467,9 @@ class TopologyViewer extends Component {
   // update force layout (called automatically each iteration)
   drawNodesAndPaths = () => {
     // move the sites or services
-    this.viewObj.drawViewNodes(this.sankey);
+    this.viewObj.drawViewNodes(this.state.options.traffic);
     // draw lines between services
-    this.viewObj.drawViewPaths(this.sankey);
+    this.viewObj.drawViewPaths(this.state.options.traffic);
   };
 
   clearAllHighlights = () => {
@@ -523,16 +523,21 @@ class TopologyViewer extends Component {
   toservice = (initial) => {
     this.showChord(null, initial);
     this.view = "service";
-    this.transitioning = true;
+    this.viewObj.transitioning = true;
 
     // collapse the service rects
     this.viewObj.collapseNodes();
     this.viewObj
-      .transition(this.sankey, initial, this.getShowColor(), this)
+      .transition(
+        this.state.options.traffic,
+        initial,
+        this.state.options.color,
+        this
+      )
       .then(() => {
         // after all the transitions are done:
         // allow mouse events to be processed
-        this.transitioning = false;
+        this.viewObj.transitioning = false;
       });
   };
 
@@ -543,7 +548,12 @@ class TopologyViewer extends Component {
     // transition rects and paths
     this.viewObj.transitioning = true;
     this.viewObj
-      .transition(this.sankey, initial, this.getShowColor(), this)
+      .transition(
+        this.state.options.traffic,
+        initial,
+        this.state.options.color,
+        this
+      )
       .then(() => {
         this.viewObj.transitioning = false;
       });
@@ -555,7 +565,7 @@ class TopologyViewer extends Component {
     // transition rects and paths
     this.viewObj.transitioning = true;
     this.viewObj
-      .transition(this.sankey, initial, this.getShowColor(), this)
+      .transition(true, initial, this.state.options.color, this)
       .then(() => {
         this.viewObj.transitioning = false;
       });
@@ -564,7 +574,6 @@ class TopologyViewer extends Component {
   tosite = (initial) => {
     this.view = "site";
     this.showChord(null, initial);
-    this.sankey = false;
     this.viewObj.collapseNodes();
     this.viewObj.transitioning = true;
     this.viewObj
@@ -581,7 +590,7 @@ class TopologyViewer extends Component {
     this.viewObj.expandNodes();
     this.viewObj.transitioning = true;
     this.viewObj
-      .transition(this.sankey, initial, this.getShowColor(), this)
+      .transition(true, initial, this.state.options.color, this)
       .then(() => {
         this.viewObj.transitioning = false;
       });
@@ -596,7 +605,7 @@ class TopologyViewer extends Component {
     this.viewObj.expandNodes();
 
     // transition rects and paths
-    this.viewObj.transition(this.sankey, initial, this.getShowColor(), this);
+    this.viewObj.transition(true, initial, this.state.options.color, this);
     this.restart();
   };
 
@@ -627,14 +636,6 @@ class TopologyViewer extends Component {
     }
   };
 
-  overrideSankeyColor = (traffic, color) => {
-    const { options } = this.state;
-    if (!traffic && color) {
-      this.sankey = false;
-      options.color = true;
-    }
-  };
-
   handleChangeSankeyColor = (options) => {
     this.setState({ options }, () => {
       this.viewObj.saveGraphOptions(options, this.props.history, this.view);
@@ -648,7 +649,6 @@ class TopologyViewer extends Component {
     if (!this.unmounting) {
       const { options } = this.state;
       options.traffic = checked;
-      this.sankey = options.traffic && !options.color;
       this.handleChangeSankeyColor(options);
     }
   };
@@ -657,7 +657,6 @@ class TopologyViewer extends Component {
     if (!this.unmounting) {
       const { options } = this.state;
       options.color = checked;
-      this.sankey = options.traffic && !options.color;
       this.handleChangeSankeyColor(options);
     }
   };
@@ -669,7 +668,6 @@ class TopologyViewer extends Component {
       const stat = protocolsPresent === "both" ? "tcp" : protocolsPresent;
       options[stat] = metric;
       this.setState({ options }, () => {
-        this.sankey = options.traffic;
         this.viewObj.saveGraphOptions(options, this.props.history, this.view);
         this.doUpdate();
         this.setHash(options);
@@ -691,8 +689,6 @@ class TopologyViewer extends Component {
       });
     }
   };
-  // only show links in color if showing traffic and by color
-  getShowColor = () => this.state.options.traffic && this.state.options.color;
 
   setLinkStat = () => {
     const { options } = this.state;
