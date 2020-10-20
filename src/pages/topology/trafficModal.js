@@ -89,9 +89,6 @@ class TrafficModal extends Component {
       options.stat = nextprops.stat;
       options.traffic = nextprops.options.traffic;
       options.color = nextprops.options.color;
-      console.log(
-        `trafficModal radio ${options.radio} traffic ${options.traffic} color ${options.color}`
-      );
       this.setState({ options }, () => {
         if (changedStat) {
           this.setShowMetric(true);
@@ -269,9 +266,6 @@ class TrafficModal extends Component {
   // the show traffic as line/sankey radio buttons were changed
   handleChangeSankey = (checked) => {
     const { options } = this.state;
-    console.log(
-      `handleChangeSankey called with checked ${checked} options traffic was ${options.traffic}`
-    );
     options.traffic = checked;
     this.setState({ options }, () => {
       this.transition(false);

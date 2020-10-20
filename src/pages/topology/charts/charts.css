@@ -54,7 +54,8 @@ button:focus {
   pointer-events: none;
 }
 
-.sk-chart-legend-container {
+.sk-chart-legend-container,
+.skModalsk-chart-legend-container {
   padding-left: 1em;
   padding-bottom: 1em;
   display: flex;
@@ -92,4 +93,24 @@ button:focus {
 }
 .sk-expand-charts button * {
   cursor: pointer;
+}
+
+#skChartsKebob {
+  padding: 10px 8px;
+  display: inline-block;
+}
+
+#skChartMatch > span {
+  margin-right: 0.5em;
+  position: relative;
+  top: 0.5em;
+}
+
+.sk-chart-service-section {
+  margin-top: 1em;
+}
+
+#skChartServiceList {
+  max-height: 12em;
+  overflow-y: auto;
 }

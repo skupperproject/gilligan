@@ -19,6 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import { utils } from "../../../utilities";
+import { appendCloud } from "../svgUtils";
 import { genPath } from "../../../paths";
 
 import { interpolatePath } from "d3-interpolate-path";
@@ -211,6 +212,9 @@ export class Service {
       n.expanded = true;
     });
 
+    serviceNodes.forEach((n) => {
+      if (n.derived) console.log(`before adjust ${n.address}.y was ${n.y}`);
+    });
     // set the x,y based on links and expanded node sizes
     const newSize = utils.adjustPositions({
       nodes: serviceNodes,
@@ -219,6 +223,9 @@ export class Service {
       height: vsize.height - 50,
       align: "right",
       sort: true,
+    });
+    serviceNodes.forEach((n) => {
+      if (n.derived) console.log(`after adjust ${n.address}.y was ${n.y}`);
     });
 
     // move the sankey x,y
@@ -291,13 +298,16 @@ export class Service {
       .append("svg:g")
       .attr("class", "service-type")
       .classed("extra", (d) => d.extra)
+      .classed("external", (d) => d.derived)
       .attr("transform", (d) => {
         return `translate(${d.x},${d.y})`;
       });
 
     serviceTypesEnter.append("svg:title").text((d) => d.shortName);
 
-    serviceTypesEnter
+    const actualServices = serviceTypesEnter.filter((d) => !d.derived);
+    const externalClients = serviceTypesEnter.filter((d) => d.derived);
+    actualServices
       .append("svg:rect")
       .attr("class", "service-type")
       .attr("rx", 5)
@@ -306,7 +316,9 @@ export class Service {
       .attr("height", (d) => d.getHeight())
       .attr("fill", "#FFFFFF");
 
-    serviceTypesEnter
+    appendCloud(externalClients);
+
+    actualServices
       .append("svg:text")
       .attr("class", "service-type")
       .text(function(d) {
@@ -331,14 +343,14 @@ export class Service {
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle");
 
-    serviceTypesEnter
+    actualServices
       .selectAll("rect.service-type")
       .attr("width", (d) => d.getWidth());
 
     const links = this.serviceLinks.links;
     // draw circle on right if this serviceType
     // is a source of a link
-    serviceTypesEnter
+    actualServices
       .filter((d) => {
         return links.some((l) => l.source.name === d.name);
       })
@@ -350,7 +362,7 @@ export class Service {
 
     // draw diamond on left if this serviceType
     // is a target of a link
-    serviceTypesEnter
+    actualServices
       .filter((d) => {
         return links.some((l) => l.target.name === d.name);
       })
@@ -490,6 +502,9 @@ export class Service {
     if (expanded && n.sankeyHeight) {
       return Math.max(n.sankeyHeight, utils.ServiceHeight);
     }
+    if (n.derived) {
+      return 47;
+    }
     return utils.ServiceHeight;
   };
 
@@ -498,6 +513,8 @@ export class Service {
       ? 4
       : node.contentWidth
       ? node.contentWidth
+      : node.derived
+      ? 94
       : utils.ServiceWidth;
   };
 
@@ -563,6 +580,7 @@ export class Service {
   };
   drawViewNodes(sankey) {
     this.servicesSelection.attr("transform", (d) => {
+      if (d.derived) console.log(`moving ${d.address} x0 to ${d.x}`);
       d.x0 = d.x;
       d.y0 = d.y;
       d.x1 = d.x0 + d.getWidth();

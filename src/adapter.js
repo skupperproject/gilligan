@@ -112,7 +112,7 @@ class Adapter {
     for (let i = this.data.services.length - 1; i >= 0; i--) {
       const service = this.data.services[i];
       if (service.requests_received && service.requests_received.length === 0) {
-        this.data.emptyHttpServices.push(JSON.parse(JSON.stringify(service)));
+        this.data.emptyHttpServices.push({ ...service });
         this.data.services.splice(i, 1);
       }
     }
@@ -133,7 +133,7 @@ class Adapter {
   // that don't receive messages / have no connections_egress
   newService = ({ address, protocol = "http", client, site_id }) => {
     const service = {
-      derived: true,
+      derived: !this.data.emptyHttpServices.some((s) => s.address === address),
       isExternal: address === "undefined" || this.isIP(address),
       address,
       protocol,
@@ -273,7 +273,7 @@ class Adapter {
     });
   };
 
-  getDeploymentLinks = (showExternal = true) => {
+  getDeploymentLinks = (showExternal = false) => {
     if (!showExternal) {
       return this.data.deploymentLinks.filter(
         (link) =>
@@ -541,7 +541,8 @@ class Adapter {
   matrix = (involvingService, stat) => {
     if (!stat) stat = "bytes_out";
     const matrix = [];
-    this.data.deploymentLinks.forEach((link) => {
+    const deploymentLinks = this.getDeploymentLinks();
+    deploymentLinks.forEach((link) => {
       if (
         link.source.service.address === involvingService.address ||
         link.target.service.address === involvingService.address
@@ -550,6 +551,18 @@ class Adapter {
           ingress: link.source.service.address,
           egress: link.target.service.address,
           address: involvingService.address,
+          info: {
+            source: {
+              site_name: link.source.site.site_name,
+              site_id: link.source.site.site_id,
+              address: link.source.service.address,
+            },
+            target: {
+              site_name: link.target.site.site_name,
+              site_id: link.target.site.site_id,
+              address: link.target.service.address,
+            },
+          },
           messages: link.request[stat] !== undefined ? link.request[stat] : 0,
         };
         const found = matrix.find(
@@ -586,7 +599,8 @@ class Adapter {
   siteMatrix = (stat) => {
     const matrix = [];
     if (!stat) stat = "bytes_out";
-    this.data.deploymentLinks.forEach((link) => {
+    const deploymentLinks = this.getDeploymentLinks();
+    deploymentLinks.forEach((link) => {
       if (link.source.site.site_id !== link.target.site.site_id) {
         matrix.push({
           ingress: link.source.site.site_name,
@@ -615,7 +629,8 @@ class Adapter {
   allServiceMatrix = (stat) => {
     const matrix = [];
     if (!stat) stat = "bytes_out";
-    this.data.deploymentLinks.forEach((link) => {
+    const deploymentLinks = this.getDeploymentLinks();
+    deploymentLinks.forEach((link) => {
       matrix.push({
         ingress: link.source.service.address,
         egress: link.target.service.address,

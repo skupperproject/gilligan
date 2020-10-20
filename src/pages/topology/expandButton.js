@@ -56,7 +56,7 @@ class ExpandButton extends React.Component {
                 className={`fas ${
                   this.props.expanded === 0
                     ? "fa-angle-double-left"
-                    : "fa-expand-arrows-alt"
+                    : "fa-expand"
                 } sk-topology-show-charts`}
               />
             </Button>
@@ -110,7 +110,7 @@ class ExpandButton extends React.Component {
             <i
               className={`fas ${
                 this.props.expanded === 2
-                  ? "fa-compress-arrows-alt"
+                  ? "fa-compress"
                   : "fa-angle-double-right"
               } sk-topology-show-charts`}
             />

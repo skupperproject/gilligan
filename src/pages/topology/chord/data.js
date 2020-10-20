@@ -117,25 +117,69 @@ class ChordData {
     });
   }
 
-  getDeploymentMatrix(d, converter, deploymentLinks) {
+  getSite2SiteMatrix(d, converter, deploymentLinks, stat) {
     let self = this;
     return new Promise((resolve) => {
       const values = [];
       deploymentLinks.forEach((link) => {
-        if (link.source === d || link.target === d) {
+        if (
+          link.source.service.address === d.address ||
+          link.target.service.address === d.address
+        ) {
           values.push({
-            ingress: `${link.source.address} (${link.source.parentNode.site_name})`,
-            egress: `${link.target.address} (${link.target.parentNode.site_name})`,
+            ingress: link.source.site.site_name,
+            egress: link.target.site.site_name,
+            info: {
+              source: {
+                site_name: link.source.site.site_name,
+                site_id: link.source.site.site_id,
+                address: link.source.service.address,
+              },
+              target: {
+                site_name: link.target.site.site_name,
+                site_id: link.target.site.site_id,
+                address: link.target.service.address,
+              },
+            },
+            messages: link.request[stat],
+          });
+        }
+      });
+      const matrix = convert(self, values, converter);
+      resolve(matrix);
+    });
+  }
+
+  getDeploymentMatrix(d, converter, deploymentLinks) {
+    let self = this;
+    return new Promise((resolve) => {
+      const values = [];
+      const siteAttr = (sourceTarget, attr) => {
+        if (sourceTarget.parentNode) return sourceTarget.parentNode[attr];
+        if (sourceTarget.cluster) return sourceTarget.cluster[attr];
+        return null;
+      };
+      deploymentLinks.forEach((link) => {
+        if (link.source === d || link.target === d) {
+          const sourceSiteName = siteAttr(link.source, "site_name");
+          const ingressSite = sourceSiteName ? ` (${sourceSiteName})` : "";
+          const sourceSiteId = siteAttr(link.source, "site_id");
+          const targetSiteName = siteAttr(link.target, "site_name");
+          const egressSite = targetSiteName ? ` (${targetSiteName})` : "";
+          const targetSiteId = siteAttr(link.target, "site_id");
+          values.push({
+            ingress: `${link.source.address}${ingressSite}`,
+            egress: `${link.target.address}${egressSite}`,
             address: d.address,
             info: {
               source: {
-                site_name: link.source.parentNode.site_name,
-                site_id: link.source.parentNode.site_id,
+                site_name: sourceSiteName ? sourceSiteName : "",
+                site_id: sourceSiteId ? sourceSiteId : "",
                 address: link.source.address,
               },
               target: {
-                site_name: link.target.parentNode.site_name,
-                site_id: link.target.parentNode.site_id,
+                site_name: targetSiteName ? targetSiteName : "",
+                site_id: targetSiteId ? targetSiteId : "",
                 address: link.target.address,
               },
             },
@@ -148,28 +192,61 @@ class ChordData {
     });
   }
 
-  getAllDeploymentMatrix(deploymentLinks, converter) {
+  getAllDeploymentMatrix(
+    deploymentLinks,
+    onlyServices,
+    service,
+    stat,
+    converter
+  ) {
     let self = this;
     return new Promise((resolve) => {
       const values = [];
+      if (onlyServices.length > 0) {
+        deploymentLinks = service.VAN.deploymentLinks.filter((l) => {
+          return onlyServices.some(
+            (os) =>
+              os.address === l.source.service.address ||
+              os.address === l.target.service.address
+          );
+        });
+      }
       deploymentLinks.forEach((link) => {
+        let source, target, sourceSite, targetSite, value;
+        if (link.source.address) {
+          source = link.source;
+          target = link.target;
+          sourceSite = link.source.parentNode;
+          targetSite = link.target.parentNode;
+          value = link.value;
+        } else {
+          source = link.source.service;
+          target = link.target.service;
+          sourceSite = link.source.site;
+          targetSite = link.target.site;
+          value = link.request[stat];
+        }
         values.push({
-          ingress: `${link.source.address} (${link.source.parentNode.site_name})`,
-          egress: `${link.target.address} (${link.target.parentNode.site_name})`,
-          address: link.target.address,
+          ingress: `${source.address}${
+            !source.derived ? ` (${sourceSite.site_name})` : ""
+          }`,
+          egress: `${target.address}${
+            !target.derived ? ` (${targetSite.site_name})` : ""
+          }`,
+          address: target.address,
           info: {
             source: {
-              site_name: link.source.parentNode.site_name,
-              site_id: link.source.parentNode.site_id,
-              address: link.source.address,
+              site_name: sourceSite.site_name,
+              site_id: sourceSite.site_id,
+              address: source.address,
             },
             target: {
-              site_name: link.target.parentNode.site_name,
-              site_id: link.target.parentNode.site_id,
-              address: link.target.address,
+              site_name: targetSite.site_name,
+              site_id: targetSite.site_id,
+              address: target.address,
             },
           },
-          messages: link.value,
+          messages: value,
         });
       });
       const matrix = convert(self, values, converter);

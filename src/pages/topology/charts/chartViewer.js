@@ -47,6 +47,7 @@ class ChartViewer extends Component {
       type: this.savedTypes[this.props.view],
       duration: "min",
       popupContent: null,
+      filterServices: [],
     };
   }
 
@@ -132,16 +133,24 @@ class ChartViewer extends Component {
     });
   };
 
+  // called by the service popup when a service was checked/uncheked
+  // we need to only include the services that are checked in the charts
+  selectChartService = (services) => {
+    const filterServices = this.props.service.VAN.services.filter(
+      (s) => services[s.address] && services[s.address].checked
+    );
+    this.setState({ filterServices }, () => this.doUpdate(this.state.type));
+  };
+
   render() {
     const { type } = this.state;
     return (
       <React.Fragment>
         <ChartToolbar
           type={type}
+          {...this.props}
           handleChangeChartType={this.handleChangeChartType}
-          handleExpandDrawer={this.props.handleExpandDrawer}
-          handleCollapseDrawer={this.props.handleCollapseDrawer}
-          isExpanded={this.props.isExpanded}
+          selectChartService={this.selectChartService}
         />
         <div
           className={`sk-all-charts-container${
@@ -197,6 +206,7 @@ class ChartViewer extends Component {
             <ChordViewer
               ref={(el) => (this.chordRef = el)}
               {...this.props}
+              onlyServices={this.state.filterServices}
               showTooltip={this.showTooltip}
               noLegend
               type={type}

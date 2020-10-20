@@ -39,11 +39,12 @@ export function appendCloud(g) {
     .attr(
       "d",
       "M 25,60 a 20,20 1 0,0 0,40 h 50 a 20,20 1 0,0 0,-40 a 10,10 1 0,0 -15,-10 a 15,15 1 0,0 -35,10 z"
-    );
+    )
+    .attr("transform", "translate(0,-58)");
   g.append("svg:text")
     .attr("class", "cloud")
     .attr("x", 50)
-    .attr("y", 80)
+    .attr("y", 24)
     .attr("dominant-baseline", "middle")
     .attr("text-anchor", "middle")
     .text((d) => d.name);

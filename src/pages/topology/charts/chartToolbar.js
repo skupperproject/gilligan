@@ -36,6 +36,8 @@ class ChartToolbar extends Component {
     this.state = {};
   }
 
+  onToggle = () => {};
+
   render() {
     const { type } = this.props;
     return (

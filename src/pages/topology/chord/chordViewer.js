@@ -40,6 +40,7 @@ class ChordViewer extends Component {
     service: PropTypes.object.isRequired,
     data: PropTypes.object,
     site: PropTypes.bool.isRequired,
+    deployment: PropTypes.bool.isRequired,
   };
 
   constructor(props) {
@@ -76,6 +77,7 @@ class ChordViewer extends Component {
     this.popoverChord = null;
     this.popoverArc = null;
     this.theyveBeenWarned = false;
+    this.prefix = this.props.prefix ? this.props.prefix : "";
   }
 
   // called only once when the component is initialized
@@ -94,7 +96,7 @@ class ChordViewer extends Component {
 
   init = () => {
     this.setSizes();
-    let allChartsContainer = d3.select("#skAllCharts");
+    let allChartsContainer = d3.select(`#${this.prefix}skAllCharts`);
     if (!allChartsContainer.empty()) {
       allChartsContainer.style("display", "block");
     }
@@ -116,12 +118,12 @@ class ChordViewer extends Component {
       .innerRadius(this.innerRadius)
       .outerRadius(this.textRadius);
 
-    d3.select("#chord svg").remove();
+    d3.select(`#${this.prefix}chord svg`).remove();
 
     let xtrans =
       this.outerRadius === MIN_RADIUS ? SMALL_OFFSET : this.outerRadius;
     this.svg = d3
-      .select("#chord")
+      .select(`#${this.prefix}chord`)
       .append("svg")
       .attr("width", this.outerRadius * 2)
       .attr("height", this.outerRadius * 2)
@@ -161,6 +163,9 @@ class ChordViewer extends Component {
           this.chordData
             .getAllDeploymentMatrix(
               this.props.deploymentLinks,
+              this.props.onlyServices,
+              this.props.service,
+              this.props.stat,
               separateAddresses
             )
             .then(this.renderChord);
@@ -172,14 +177,25 @@ class ChordViewer extends Component {
         }
       } else {
         if (this.props.data.address) {
-          // site traffic involving a service
-          this.chordData
-            .getDeploymentMatrix(
-              this.props.data,
-              aggregateAddresses,
-              this.props.deploymentLinks
-            )
-            .then(this.renderChord);
+          if (this.props.site2site) {
+            this.chordData
+              .getSite2SiteMatrix(
+                this.props.data,
+                aggregateAddresses,
+                this.props.deploymentLinks,
+                this.props.stat
+              )
+              .then(this.renderChord);
+          } else {
+            // site traffic involving a service
+            this.chordData
+              .getDeploymentMatrix(
+                this.props.data,
+                aggregateAddresses,
+                this.props.deploymentLinks
+              )
+              .then(this.renderChord);
+          }
         } else {
           // for specific site
           this.chordData
@@ -230,9 +246,12 @@ class ChordViewer extends Component {
 
     const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
     const legendSize = utils.getSizes(
-      d3.select(".sk-chart-legend-container").node()
+      d3.select(`.${this.prefix}sk-chart-legend-container`).node()
     );
-    const toolbarSize = utils.getSizes(d3.select(".sk-chart-toolbar").node());
+    const toolbarSize = utils.getSizes(
+      d3.select(`#${containerId} .sk-chart-toolbar`).node(),
+      [0, 30]
+    );
 
     const width = sizes[0];
     const height = sizes[1] - legendSize[1] - toolbarSize[1] - 60;
@@ -269,7 +288,8 @@ class ChordViewer extends Component {
 
   // fade out the empty circle that is shown when there is no traffic
   fadeDoughnut = () => {
-    d3.select(DOUGHNUT)
+    this.svg
+      .select(DOUGHNUT)
       .transition()
       .duration(200)
       .attr("opacity", 0)
@@ -285,12 +305,22 @@ class ChordViewer extends Component {
       : this.getChordColor(router);
   };
 
+  siteChordColor = (matrixValues, d) => {
+    const sourceValue = d.source.value;
+    const targetValue = d.target.value;
+    const greaterSiteName =
+      sourceValue > targetValue
+        ? matrixValues.rows[d.source.orgindex].chordName
+        : matrixValues.rows[d.target.orgindex].chordName;
+    return this.arcColorFromName(greaterSiteName);
+  };
   // return the color associated with a chord.
   // if viewing by address, the color will be the address color.
   // if viewing aggregate, the color will be the router color of the largest chord ending
   fillChord = (matrixValues, d) => {
     // aggregate
     if (matrixValues.aggregate) {
+      if (this.props.site2site) return this.siteChordColor(matrixValues, d);
       return this.fillArc(matrixValues, d.source.index);
     }
     // by address
@@ -299,11 +329,14 @@ class ChordViewer extends Component {
       : matrixValues.rows[d.orgIndex].ingress;
       */
     let addr = matrixValues.getAddress(d.source.orgindex, d.source.orgsubindex);
+    //addr = matrixValues.rows[d.target.orgindex].egress;
+    addr = d.info.source.address;
+    //if (this.getChordColor(addr) === undefined) debugger;
     return this.getChordColor(addr);
   };
 
   emptyCircle = () => {
-    d3.select(DOUGHNUT).remove();
+    this.svg.select(DOUGHNUT).remove();
 
     let arc = d3.svg
       .arc()
@@ -312,7 +345,8 @@ class ChordViewer extends Component {
       .startAngle(0)
       .endAngle(Math.PI * 2);
 
-    d3.select("#circle")
+    this.svg
+      .select("#circle")
       .append("path")
       .attr("class", "empty")
       .attr("d", arc);
@@ -439,13 +473,16 @@ class ChordViewer extends Component {
       fg.key = matrix.routerName(fg.index);
       fg.components = [fg.index];
       fg.router = matrix.aggregate ? fg.key : matrix.getEgress(fg.index);
-      //console.log(`decorateArcData key is ${fg.key} router is ${fg.router}`);
       fg.info = this.arcInfo(fg, matrix);
-      fg.color = this.props.site
-        ? this.props.deployment
-          ? this.getArcColor(fg.info)
-          : this.arcColorFromName(fg.router)
-        : this.getChordColor(fg.router);
+      if (this.props.site2site) {
+        fg.color = this.arcColorFromName(fg.router);
+      } else {
+        fg.color = this.props.site
+          ? this.props.deployment
+            ? this.getArcColor(fg.info)
+            : this.arcColorFromName(fg.router)
+          : this.getChordColor(fg.router);
+      }
     });
     return fixedGroups;
   };
@@ -526,10 +563,12 @@ class ChordViewer extends Component {
     arcsGroup
       .on("mouseover", (d) => {
         // fade all chords that don't belong to the given arc index
-        d3.selectAll("path.chord").classed(
-          "fade",
-          (p) => d.index !== p.source.index && d.index !== p.target.index
-        );
+        this.svg
+          .selectAll("path.chord")
+          .classed(
+            "fade",
+            (p) => d.index !== p.source.index && d.index !== p.target.index
+          );
         // highlight the corresponding site
         const key = this.getArcOverKey(d);
         this.props.handleArcOver({ key }, true);
@@ -929,12 +968,14 @@ class ChordViewer extends Component {
         if (row.ingress === router || row.egress === router) indexes.push(r);
       }
     });
-    d3.selectAll("path.chord").classed(
-      "fade",
-      (p) =>
-        indexes.indexOf(p.source.orgindex) < 0 &&
-        indexes.indexOf(p.target.orgindex) < 0
-    );
+    this.svg
+      .selectAll("path.chord")
+      .classed(
+        "fade",
+        (p) =>
+          indexes.indexOf(p.source.orgindex) < 0 &&
+          indexes.indexOf(p.target.orgindex) < 0
+      );
   };
   leaveLegend = () => {
     this.showAllChords();
@@ -1011,9 +1052,9 @@ class ChordViewer extends Component {
       );
     };
     return (
-      <div id="chordContainer" className="qdrChord sk-chart-container">
+      <div id="chordContainer" className={`qdrChord sk-chart-container`}>
         {getTitle()}
-        <div aria-label="chord-diagram" id="chord"></div>
+        <div aria-label="chord-diagram" id={`${this.prefix}chord`}></div>
         {!this.props.noLegend && (
           <RoutersComponent
             arcColors={getArcColors()}

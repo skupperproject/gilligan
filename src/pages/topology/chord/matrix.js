@@ -39,6 +39,7 @@ let valuesMatrixRow = function(r, chordName, ingress, egress) {
 // a matrix column
 let valuesMatrixCol = function(messages, row, c, address) {
   this.messages = messages;
+  //if (address === undefined) debugger;
   this.address = address;
   this.index = c;
   this.row = row;
@@ -62,6 +63,7 @@ valuesMatrix.prototype.setRowCol = function(
   this.rows[r].ingress = ingress;
   this.rows[r].egress = egress;
   this.rows[r].cols[c].messages = value;
+  //if (address === undefined) debugger;
   this.rows[r].cols[c].address = address;
 };
 
@@ -157,7 +159,13 @@ valuesMatrix.prototype.addRow = function(
   info
 ) {
   let rowIndex = this.rows.length;
-  let newRow = new valuesMatrixRow(rowIndex, chordName, ingress, egress);
+  let newRow = new valuesMatrixRow(
+    rowIndex,
+    chordName,
+    ingress,
+    egress,
+    address
+  );
   newRow.info = info;
   this.rows.push(newRow);
   // add new column to all rows
@@ -187,6 +195,7 @@ valuesMatrixCol.prototype.addMessages = function(messages) {
     this.messages += messages;
 };
 valuesMatrixCol.prototype.setAddress = function(address) {
+  //if (address === undefined) debugger;
   this.address = address;
 };
 valuesMatrix.prototype.getChordList = function() {
@@ -199,7 +208,7 @@ valuesMatrix.prototype.sorted = function() {
   newChordList.sort();
   let m = new valuesMatrix(this.aggregate);
   m.zeroInit(this.rows.length);
-  this.rows.forEach(row => {
+  this.rows.forEach((row) => {
     let chordName = row.chordName;
     row.cols.forEach((col, c) => {
       let newRow = newChordList.indexOf(chordName);
@@ -209,6 +218,8 @@ valuesMatrix.prototype.sorted = function() {
       m.rows[newRow].egress = row.egress;
       m.rows[newRow].info = row.info;
       m.rows[newRow].cols[newCol].messages = col.messages;
+      if (col.address === undefined) col.address = row.info.source.address;
+      //if (col.address === undefined) debugger;
       m.rows[newRow].cols[newCol].address = col.address;
     });
   });

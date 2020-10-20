@@ -27,13 +27,20 @@ class PopupCard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
+    this.updateFns = [];
   }
+
   bodyLine = (obj, prop) => {
-    let property = prop.getFn ? prop.getFn(obj) : obj[prop];
+    let property = prop.getFn ? prop.getFn(obj, this.props) : obj[prop];
     if (typeof property === "boolean") {
       property = property.toString();
     }
     const title = this.cardTitle(obj, prop);
+    if (prop.doUpdate) {
+      if (!this.updateFns.includes(prop.doUpdate)) {
+        this.updateFns.push(prop.doUpdate);
+      }
+    }
     return (
       <div className="body-line">
         <span className="body-line-prompt">{utils.Icap(title)}</span>
@@ -60,7 +67,12 @@ class PopupCard extends React.Component {
     const expanded = this.props.cardSize === "expanded";
     let attrs = this.props.card.popupInfo.compact;
     if (expanded) {
-      attrs = [...attrs, ...this.props.card.popupInfo.expanded];
+      attrs = [
+        ...attrs,
+        ...this.props.card.popupInfo.expanded.filter(
+          (e) => !e.views || e.views.includes(this.props.view)
+        ),
+      ];
     }
     let bodies = attrs.map((attr, i) => {
       const exists = this.attrExists(obj, attr);
@@ -93,6 +105,13 @@ class PopupCard extends React.Component {
       return card.getTitle(data);
     }
   };
+
+  doUpdate = () => {
+    this.updateFns.forEach((fn) => {
+      fn(this.props);
+    });
+  };
+
   render() {
     let { cardService, card, hideBody, hideHeading } = this.props;
     return (

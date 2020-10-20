@@ -58,7 +58,11 @@ class SkupperLegend extends Component {
     };
 
     return (
-      <div className="sk-chart-legend-container">
+      <div
+        className={`${
+          this.props.prefix ? this.props.prefix : ""
+        }sk-chart-legend-container`}
+      >
         <RoutersComponent
           arcColors={getArcColors()}
           handleHoverRouter={this.handleHoverLegend}

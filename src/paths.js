@@ -127,7 +127,7 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
     x0 -= link.source.getWidth() / 2;
   }
   const { offsetX, offsetY } = calcOffsets(link, offset);
-  const y0 =
+  let y0 =
     link.source.expanded && !isNaN(link.y0)
       ? link.y0 - offsetY
       : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
@@ -137,33 +137,28 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
   }
   x0 += offsetX;
   x1 += offsetX;
-  const y1 =
+  let y1 =
     link.target.expanded && !isNaN(link.y1)
       ? link.y1 - offsetY
       : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
-  const mid = (x0 + x1) / 2;
+  let mid = (x0 + x1) / 2;
   //if (isNaN(mid)) debugger;
+  let halfWidth = width / 2;
+  let leftTop = y0 - halfWidth;
+  let leftBottom = y0 + halfWidth;
+  let rightTop = y1 - halfWidth;
+  let rightBottom = y1 + halfWidth;
+  if (link.source.derived) {
+    leftTop = link.source.y + 22 - offsetY;
+    leftBottom = link.source.y + 26 - offsetY;
+    y0 = link.source.y + 24 - offsetY;
+  }
   const path = d3path.path();
   if (sankey) {
-    const halfWidth = width / 2;
-    path.moveTo(x0, y0 - halfWidth);
-    path.bezierCurveTo(
-      mid,
-      y0 - halfWidth,
-      mid,
-      y1 - halfWidth,
-      x1,
-      y1 - halfWidth
-    );
+    path.moveTo(x0, leftTop);
+    path.bezierCurveTo(mid, leftTop, mid, rightTop, x1, rightTop);
     path.lineTo(x1, y1 + halfWidth);
-    path.bezierCurveTo(
-      mid,
-      y1 + halfWidth,
-      mid,
-      y0 + halfWidth,
-      x0,
-      y0 + halfWidth
-    );
+    path.bezierCurveTo(mid, rightBottom, mid, leftBottom, x0, leftBottom);
     path.closePath();
   } else {
     if (reverse) {
@@ -226,6 +221,10 @@ const circular = (link, key, sankey, width, reverse, off, site) => {
   let by = bottomY + offset - offsetY;
   let sr = r + offset;
 
+  if (link.source.derived) {
+    sy = link.source.y + 24;
+    sr = 8;
+  }
   let path = d3path.path();
 
   if (!reverse) {

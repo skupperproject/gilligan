@@ -98,3 +98,31 @@ a.sk-custom-icon svg {
   /* force parent to handle mouse clicks */
   pointer-events: none;
 }
+
+#skSiteModal {
+  height: 620px;
+}
+
+#skSiteModal .sk-modal-button {
+  background-color: white !important;
+  position: absolute;
+  right: 3em;
+  top: 1.1em;
+}
+
+.sk-title {
+  font-weight: bold;
+  font-size: large;
+}
+
+#skModalChordContainer {
+  width: 100%;
+  height: 550px;
+  height: 100%;
+  text-align: center;
+}
+
+#skModalChordContainer #chordContainer {
+  text-align: center;
+  padding-top: 1em;
+}

@@ -1799,6 +1799,14 @@ g.service-type.user-hidden text.service-type {
   opacity: 0;
 }
 
+g.external rect.external-client {
+  fill: black;
+}
+
+g.external text {
+  stroke: lightskyblue;
+}
+
 #sk-topology-container {
   height: 100%;
 }

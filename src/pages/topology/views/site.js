@@ -797,13 +797,10 @@ export class Site {
 
     const duration = initial ? 0 : utils.VIEW_DURATION;
     if (sankey) {
-      console.log("site transition tositesankey");
       return this.toSiteSankey(duration);
     } else if (color) {
-      console.log("site transition tositecolor");
       return this.toSiteColor(duration);
     } else {
-      console.log("site transition tosite");
       return this.toSite(duration);
     }
   };

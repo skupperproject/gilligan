@@ -206,9 +206,11 @@ class GraphToolbar extends Component {
 
     return (
       <OverflowMenu className="graph-toolbar" breakpoint="md">
-        <OverflowMenuContent isPersistent>
-          <OverflowMenuItem isPersistent>{derivedCheck()}</OverflowMenuItem>
-        </OverflowMenuContent>
+        {false && (
+          <OverflowMenuContent isPersistent>
+            <OverflowMenuItem isPersistent>{derivedCheck()}</OverflowMenuItem>
+          </OverflowMenuContent>
+        )}
         <OverflowMenuContent className="hasButton">
           <OverflowMenuItem>{metricCheck()}</OverflowMenuItem>
         </OverflowMenuContent>
@@ -221,49 +223,3 @@ class GraphToolbar extends Component {
 }
 
 export default GraphToolbar;
-
-/*
-        <OverflowMenuControl>
-          <Dropdown
-            onSelect={this.onSelect}
-            toggle={<KebabToggle onToggle={this.onToggle} />}
-            isOpen={isOpen}
-            isPlain
-            dropdownItems={dropdownItems}
-          />
-        </OverflowMenuControl>
-
-
-        <OverflowMenu className="graph-toolbar" breakpoint="lg">
-        <OverflowMenuContent isPersistent>
-          <OverflowMenuGroup isPersistent>
-            {sankeyCheck()}
-            {metricCheck()}
-            {derivedCheck()}
-            <OverflowMenuItem className="toolbar-item last-item">
-              {highlight()}
-            </OverflowMenuItem>
-          </OverflowMenuGroup>
-        </OverflowMenuContent>
-        {false && (
-          <OverflowMenuControl>
-            <Dropdown
-              toggle={<KebabToggle onToggle={this.onToggle} />}
-              isOpen={isOpen}
-              isPlain
-              dropdownItems={[
-                <OverflowMenuDropdownItem key="action" isShared>
-                  <TextInput
-                    className="sk-toolbar-filter-input"
-                    value={this.state.searchValue}
-                    type="text"
-                    onChange={this.handleTextInputChange}
-                    aria-label="text input example"
-                  />
-                </OverflowMenuDropdownItem>,
-              ]}
-            />
-          </OverflowMenuControl>
-        )}
-      </OverflowMenu>
-*/

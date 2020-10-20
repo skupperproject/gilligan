@@ -63,12 +63,10 @@ class TopologyViewer extends Component {
     this.force = null;
     this.resetScale = 1;
     this.initialTransition = true;
-    //debugger;
   }
 
   // called only once when the component is initialized
   componentDidMount = () => {
-    //debugger;
     window.addEventListener("resize", this.resize);
     if (this.chordRef && this.chordRef.init) this.chordRef.init();
 
@@ -119,6 +117,7 @@ class TopologyViewer extends Component {
     if (saved.showExternal === undefined) {
       saved.showExternal = false;
     }
+    saved.showExternal = false;
     if (saved.color === undefined) {
       saved.color = true;
     }
@@ -334,11 +333,21 @@ class TopologyViewer extends Component {
       this.force
         .nodes(this.viewObj.nodes().nodes)
         .links(this.viewObj.links().links);
-      this.callTransitions(false);
+      this.viewObj.transition(
+        this.state.options.traffic,
+        false,
+        this.state.options.color,
+        this
+      );
       this.props.handleChangeLastUpdated();
       this.setState({ initial: false }, () => {
         if (this.state.options.isExpanded > 0) {
           this.chordRef.doUpdate();
+        }
+        if (this.state.cardInfo) {
+          if (this.cardRef && this.cardRef.doUpdate) {
+            this.cardRef.doUpdate();
+          }
         }
         this.restart();
       });
@@ -850,10 +859,15 @@ class TopologyViewer extends Component {
                     >
                       {this.state.showCard && (
                         <PopupCard
+                          ref={(el) => (this.cardRef = el)}
                           cardSize="expanded"
                           cardService={this.state.cardService}
                           card={this.state.cardInfo}
                           service={this.props.service}
+                          deploymentLinks={this.viewObj.links().links}
+                          viewObj={this.viewObj}
+                          view={this.view}
+                          stat={this.statForProtocol()}
                         />
                       )}
                     </div>
