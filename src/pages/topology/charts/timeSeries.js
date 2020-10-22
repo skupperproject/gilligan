@@ -64,11 +64,15 @@ class TimeSeries extends Component {
 
   init = (type) => {
     if (!type) type = this.props.type;
+    let dir = this.props.direction;
+    if (this.props.data) {
+      dir = this.props.direction === "in" ? "out" : "in";
+    }
     let { all, headerText, address, site_info } = chartUtils.init(
       this.props.site,
       this.props.data,
       this.props.deployment,
-      this.props.direction,
+      dir,
       this.props.stat
     );
     let requests;

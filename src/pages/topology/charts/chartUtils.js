@@ -28,9 +28,9 @@ const chartUtils = {
 
     if (site) {
       if (data === null) {
+        all = true;
         if (deployment) {
           // all deployments
-          all = true;
           headerText = utils.Icap(
             `${utils.statName(stat)} by ${
               direction === "in" ? "originating" : "destination"
@@ -38,7 +38,6 @@ const chartUtils = {
           );
         } else {
           // all sites
-          all = true;
           headerText = utils.Icap(
             `${utils.statName(stat)} by ${
               direction === "in" ? "originating" : "destination"
@@ -79,7 +78,7 @@ const chartUtils = {
         // for specific service
         headerText = utils.Icap(
           `${utils.statName(stat)} sent ${
-            direction === "in" ? "from" : "to"
+            direction === "in" ? "to" : "from"
           } ${utils.shortName(data.address)}`
         );
       }
