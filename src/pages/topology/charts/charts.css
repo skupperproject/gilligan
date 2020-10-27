@@ -61,9 +61,11 @@ button:focus {
   display: flex;
 }
 
+/* Puts dashed lines around charts when a single service/deployment is selected. This is to match the dashed lines around the service/deployment on the graph view 
 .sk-all-charts-container.chosen {
   border: 2px dashed;
 }
+*/
 
 .sk-chart-legend-parent {
   position: absolute;
