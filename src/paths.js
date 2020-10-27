@@ -148,7 +148,7 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
   let leftBottom = y0 + halfWidth;
   let rightTop = y1 - halfWidth;
   let rightBottom = y1 + halfWidth;
-  if (link.source.derived) {
+  if (link.source.isExternal) {
     leftTop = link.source.y + 22 - offsetY;
     leftBottom = link.source.y + 26 - offsetY;
     y0 = link.source.y + 24 - offsetY;
@@ -221,7 +221,7 @@ const circular = (link, key, sankey, width, reverse, off, site) => {
   let by = bottomY + offset - offsetY;
   let sr = r + offset;
 
-  if (link.source.derived) {
+  if (link.source.isExternal) {
     sy = link.source.y + 24;
     sr = 8;
   }
