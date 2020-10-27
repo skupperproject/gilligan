@@ -618,17 +618,18 @@ export class Deployment extends Service {
     const requests = {};
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const which = direction === "in" ? "source" : "target";
-      const address = deploymentLink[which].service.address;
       const site = deploymentLink[which].site.site_name;
+      const address = `${deploymentLink[which].service.address}\n(${site})`;
+      const serviceAddress = deploymentLink[which].service.address;
       if (!requests.hasOwnProperty(address)) requests[address] = {};
       utils.aggregateAttributes(
         {
           key: address,
-          service: address,
-          shortName: `${utils.shortName(address)} (${site})`,
-          baseName: utils.shortName(address),
+          service: serviceAddress,
+          shortName: `${utils.shortName(serviceAddress)} (${site})`,
+          baseName: utils.shortName(serviceAddress),
           requests: deploymentLink.request[stat] || 0,
-          color: utils.serviceColors[address],
+          color: utils.serviceColors[serviceAddress],
           all: true,
         },
         requests[address]

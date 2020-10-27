@@ -114,9 +114,11 @@ class TopologyViewer extends Component {
     ) {
       saved.isExpanded = 0;
     }
+    /*
     if (saved.showExternal === undefined) {
       saved.showExternal = false;
     }
+    */
     saved.showExternal = false;
     if (saved.color === undefined) {
       saved.color = true;
