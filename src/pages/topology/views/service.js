@@ -111,7 +111,7 @@ export class Service {
 
   initNodes(serviceNodes, includeDuplicate, showExternal, colors) {
     this.data.adapter.data.services
-      .filter((service) => !service.isExternal || showExternal)
+      .filter((service) => !service.isExternal)
       .forEach((service) => {
         // if we haven't already added this service || or we want duplicates
         if (
@@ -212,9 +212,6 @@ export class Service {
       n.expanded = true;
     });
 
-    serviceNodes.forEach((n) => {
-      if (n.derived) console.log(`before adjust ${n.address}.y was ${n.y}`);
-    });
     // set the x,y based on links and expanded node sizes
     const newSize = utils.adjustPositions({
       nodes: serviceNodes,
@@ -223,9 +220,6 @@ export class Service {
       height: vsize.height - 50,
       align: "right",
       sort: true,
-    });
-    serviceNodes.forEach((n) => {
-      if (n.derived) console.log(`after adjust ${n.address}.y was ${n.y}`);
     });
 
     // move the sankey x,y
@@ -298,15 +292,15 @@ export class Service {
       .append("svg:g")
       .attr("class", "service-type")
       .classed("extra", (d) => d.extra)
-      .classed("external", (d) => d.derived)
+      .classed("external", (d) => d.isExternal)
       .attr("transform", (d) => {
         return `translate(${d.x},${d.y})`;
       });
 
     serviceTypesEnter.append("svg:title").text((d) => d.shortName);
 
-    const actualServices = serviceTypesEnter.filter((d) => !d.derived);
-    const externalClients = serviceTypesEnter.filter((d) => d.derived);
+    const actualServices = serviceTypesEnter.filter((d) => !d.isExternal);
+    const externalClients = serviceTypesEnter.filter((d) => d.isExternal);
     actualServices
       .append("svg:rect")
       .attr("class", "service-type")
@@ -502,7 +496,7 @@ export class Service {
     if (expanded && n.sankeyHeight) {
       return Math.max(n.sankeyHeight, utils.ServiceHeight);
     }
-    if (n.derived) {
+    if (n.isExternal) {
       return 47;
     }
     return utils.ServiceHeight;
@@ -513,7 +507,7 @@ export class Service {
       ? 4
       : node.contentWidth
       ? node.contentWidth
-      : node.derived
+      : node.isExternal
       ? 94
       : utils.ServiceWidth;
   };
@@ -580,7 +574,7 @@ export class Service {
   };
   drawViewNodes(sankey) {
     this.servicesSelection.attr("transform", (d) => {
-      if (d.derived) console.log(`moving ${d.address} x0 to ${d.x}`);
+      if (d.isExternal) console.log(`moving ${d.address} x0 to ${d.x}`);
       d.x0 = d.x;
       d.y0 = d.y;
       d.x1 = d.x0 + d.getWidth();
