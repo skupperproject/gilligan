@@ -18,7 +18,13 @@ under the License.
 */
 
 import React, { Component } from "react";
-import { Chart, ChartAxis, ChartBar, ChartPie } from "@patternfly/react-charts";
+import {
+  Chart,
+  ChartAxis,
+  ChartBar,
+  ChartStack,
+  ChartPie,
+} from "@patternfly/react-charts";
 import * as d3 from "d3";
 import "./charts.css";
 import { utils } from "../../../utilities";
@@ -100,6 +106,9 @@ class PieBar extends Component {
         this.props.stat,
         this.props.showExternal
       );
+      if (this.props.deployment) {
+        //console.log(requests);
+      }
     } else {
       requests = this.props.viewObj.specificRequests({
         VAN: this.props.service.VAN,
@@ -271,6 +280,8 @@ class PieBar extends Component {
   render() {
     const { width, headerText, tickLabel } = this.state;
     let { data } = this.state;
+    //console.log("charts data");
+    //console.log(data);
 
     // Padding left for bar chart is needed to allow room for the service names.
     // Service names are stored in the .x attribute of the data
@@ -358,35 +369,41 @@ class PieBar extends Component {
                 top: 20,
               }}
             >
-              <ChartAxis />
+              <ChartAxis className="sk-x-axis" />
               <ChartAxis
+                className="sk-y-axis"
                 dependentAxis
                 showGrid
                 fixLabelOverlap={true}
                 tickFormat={chartUtils.tickFormat}
                 label={tickLabel}
               />
-              <ChartBar
-                horizontal
-                data={data}
-                style={{
-                  data: {
-                    stroke: ({ datum }) => datum.stroke,
-                    strokeWidth: 1,
-                    fill: ({ datum }) => datum.fill,
-                  },
-                }}
-                events={chartUtils.events({
-                  accessor: (data) => data.datum,
-                  tooltipGenerator: (data) =>
-                    `${data.datum.name} ${data.datum.value}`,
-                  strokeWidth: 2,
-                  handleArcOver: this.props.handleArcOver,
-                  showTooltip: this.props.showTooltip,
-                  data: this.props.data,
-                  deployment: this.props.deployment,
-                })}
-              />
+              <ChartStack horizontal>
+                {data.map((d, i) => (
+                  <ChartBar
+                    key={`stacked-bar-${i}`}
+                    horizontal
+                    data={[d]}
+                    style={{
+                      data: {
+                        stroke: ({ datum }) => datum.stroke,
+                        strokeWidth: 1,
+                        fill: ({ datum }) => datum.fill,
+                      },
+                    }}
+                    events={chartUtils.events({
+                      accessor: (data) => data.datum,
+                      tooltipGenerator: (data) =>
+                        `${data.datum.name} ${data.datum.value}`,
+                      strokeWidth: 2,
+                      handleArcOver: this.props.handleArcOver,
+                      showTooltip: this.props.showTooltip,
+                      data: [d], //this.props.data,
+                      deployment: this.props.deployment,
+                    })}
+                  />
+                ))}
+              </ChartStack>
             </Chart>
           )}
         </div>
