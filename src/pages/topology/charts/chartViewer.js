@@ -71,6 +71,7 @@ class ChartViewer extends Component {
         const childSize = utils.getSizes(child);
         childrenHeight += childSize[1];
       });
+      /*
       container.style(
         "overflow-y",
         container.style("display") === "block" &&
@@ -78,6 +79,7 @@ class ChartViewer extends Component {
           ? "auto"
           : "hidden"
       );
+      */
     }
   };
   doUpdate = (type) => {
@@ -214,14 +216,16 @@ class ChartViewer extends Component {
             />
           )}
         </div>
-        <div className="sk-chart-legend-parent">
-          <SkupperLegend
-            ref={(el) => (this.legendRef = el)}
-            {...this.props}
-            showTooltip={this.showTooltip}
-            comment="Stand-alone legend"
-          />
-        </div>
+        {(type === PIE_CHART || type === CHORD_CHART) && (
+          <div className="sk-chart-legend-parent">
+            <SkupperLegend
+              ref={(el) => (this.legendRef = el)}
+              {...this.props}
+              showTooltip={this.showTooltip}
+              comment="Stand-alone legend"
+            />
+          </div>
+        )}
         <div
           id="popover-div"
           className={
