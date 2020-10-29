@@ -116,6 +116,13 @@ class SubTable extends Component {
     return Object.keys(requests).length > 0;
   };
 
+  chordName = (data) => {
+    if (this.props.view === "deployment" && data.address) {
+      return `${utils.shortName(data.address)} (${data.cluster.site_name})`;
+    }
+    return utils.shortName(data.address);
+  };
+
   render() {
     const { options } = utils.viewFromHash();
     const data = this.data();
@@ -283,8 +290,8 @@ class SubTable extends Component {
                     id="skModalskAllCharts"
                     className="sk-subtable-chord-container"
                   >
-                    <div className="sk-chart-header">{`Site to site traffic for ${utils.shortName(
-                      data.address
+                    <div className="sk-chart-header">{`Site to site traffic for ${this.chordName(
+                      data
                     )}`}</div>
                     <FlexItem id="sk-subTable-chord">
                       <ChordViewer

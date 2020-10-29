@@ -1043,7 +1043,8 @@ class ChordViewer extends Component {
         if (this.props.data.address) {
           // site to site for a service
           return (
-            this.props.data.parentNode && (
+            this.props.data.parentNode &&
+            !this.props.site2site && (
               <div className="sk-chart-header">
                 {
                   <span>

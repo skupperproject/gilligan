@@ -94,6 +94,11 @@ class SiteModal extends Component {
     }
   };
 
+  chordName = (data) =>
+    this.props.view === "deployment"
+      ? `${utils.shortName(data.address)} (${data.cluster.site_name})`
+      : utils.shortName(data.address);
+
   render() {
     const { data } = this.props;
     const { isSiteModalOpen, deploymentLinks } = this.state;
@@ -120,8 +125,8 @@ class SiteModal extends Component {
           <Flex className="sk-site-form" direction={{ default: "column" }}>
             <FlexItem id="skModalChordContainer">
               <div id="skModalChordChart">
-                <div className="sk-title">{`Site to site traffic for ${utils.shortName(
-                  data.address
+                <div className="sk-title">{`Site to site traffic for ${this.chordName(
+                  data
                 )}`}</div>
                 <ChordViewer
                   ref={(el) => (this.chordRef = el)}
