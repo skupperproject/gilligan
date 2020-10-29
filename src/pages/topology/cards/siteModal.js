@@ -47,27 +47,21 @@ class SiteModal extends Component {
 
   // this modal was either dismissed/cancelled or confirmed
   handleSiteModalToggle = (e) => {
-    const { isSiteModalOpen } = this.state;
-    this.setState({ isSiteModalOpen: !isSiteModalOpen }, () => {
-      if (this.state.isSiteModalOpen && this.chordRef) {
-        this.chordRef.init();
-      }
-    });
+    this.setState({ isSiteModalOpen: false });
   };
 
   handleExpandModal = () => {
     const { isSiteModalExpanded } = this.state;
-    this.setState({ isSiteModalExpanded: !isSiteModalExpanded }, () => {
-      const modal = d3.select("#skSiteModal");
-      let width = "600px";
-      let height = "620px";
-      if (this.state.isSiteModalExpanded) {
-        width = "100%";
-        height = "100%";
+    this.setState(
+      { isSiteModalOpen: true, isSiteModalExpanded: !isSiteModalExpanded },
+      () => {
+        const modal = d3.select("#skSiteModal");
+        const width = "100%";
+        const height = "100%";
+        modal.style("width", width).style("height", height);
+        this.chordRef.init();
       }
-      modal.style("width", width).style("height", height);
-      this.chordRef.init();
-    });
+    );
   };
 
   showTooltip = (content, eventX, eventY) => {
@@ -102,17 +96,20 @@ class SiteModal extends Component {
 
   render() {
     const { data } = this.props;
-    const {
-      isSiteModalOpen,
-      isSiteModalExpanded,
-      deploymentLinks,
-    } = this.state;
+    const { isSiteModalOpen, deploymentLinks } = this.state;
 
     return (
       <React.Fragment>
-        <Button variant="secondary" onClick={this.handleSiteModalToggle}>
-          Show chord chart
-        </Button>
+        {!isSiteModalOpen && (
+          <Button
+            aria-expanded={this.props.expanded > 0}
+            onClick={this.handleExpandModal}
+            className={`sk-topology-expand-button sk-expand-page`}
+            title="Show full page"
+          >
+            <i className={`fas fa-expand sk-topology-show-charts`} />
+          </Button>
+        )}
         <Modal
           id="skSiteModal"
           width={"600px"}
@@ -120,21 +117,9 @@ class SiteModal extends Component {
           isOpen={isSiteModalOpen}
           onClose={this.handleSiteModalToggle}
         >
-          <Button
-            aria-expanded={true}
-            onClick={this.handleExpandModal}
-            className={`sk-topology-expand-button sk-modal-button`}
-          >
-            <i
-              className={`fas ${
-                isSiteModalExpanded ? "fa-compress" : "fa-expand"
-              }`}
-            />
-          </Button>
-
           <Flex className="sk-site-form" direction={{ default: "column" }}>
             <FlexItem id="skModalChordContainer">
-              <div id="skModalskAllCharts">
+              <div id="skModalChordChart">
                 <div className="sk-title">{`Site to site traffic for ${utils.shortName(
                   data.address
                 )}`}</div>
@@ -143,7 +128,7 @@ class SiteModal extends Component {
                   {...this.props}
                   site
                   deployment
-                  prefix="skModal"
+                  prefix="skFullPage"
                   containerId="skSiteModal"
                   noLegend
                   handleArcOver={() => {}}
@@ -151,6 +136,7 @@ class SiteModal extends Component {
                   showTooltip={this.showTooltip}
                   deploymentLinks={deploymentLinks}
                   site2site
+                  stat="bytes_out"
                 />
               </div>
               <div className="sk-chart-legend-parent">
@@ -160,7 +146,7 @@ class SiteModal extends Component {
                   site
                   deployment={false}
                   showTooltip={this.showTooltip}
-                  prefix="skModal"
+                  prefix="skFullPage"
                   handleArcOver={() => {}}
                   comment="Stand-alone legend"
                 />

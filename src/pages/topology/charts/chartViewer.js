@@ -75,7 +75,7 @@ class ChartViewer extends Component {
         "overflow-y",
         container.style("display") === "block" &&
           childrenHeight > containerSize[1]
-          ? "hidden" //"auto"
+          ? "auto"
           : "hidden"
       );
     }

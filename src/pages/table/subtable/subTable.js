@@ -32,6 +32,8 @@ import SubDetails from "./subDetails";
 import PopupCard from "../../../popupCard";
 import PieBar from "../../topology/charts/pieBar";
 import TimeSeries from "../../topology/charts/timeSeries";
+import ChordViewer from "../../topology/chord/chordViewer";
+import SiteModal from "../../topology/cards/siteModal";
 import QDRPopup from "../../../qdrPopup";
 import { viewsMap as VIEWS } from "../../topology/views/views";
 import { utils } from "../../../utilities";
@@ -47,6 +49,9 @@ class SubTable extends Component {
   componentDidMount = () => {
     const options = { item: this.props.info.value };
     this.viewObj.saveDetailOptions(options);
+    if (this.chordRef && this.chordRef.init) {
+      this.chordRef.init();
+    }
   };
 
   handleChangeLastUpdated = () => {
@@ -59,10 +64,15 @@ class SubTable extends Component {
     if (this.pieRef2) this.pieRef2.doUpdate();
     if (this.lineRef1) this.lineRef1.doUpdate();
     if (this.lineRef2) this.lineRef2.doUpdate();
+    if (this.chordRef) this.chordRef.doUpdate();
+    if (this.modalRef) this.modalRef.doUpdate(this.props);
   };
 
   returnToTable = () => {
     this.props.handleChangeViewMode("table");
+  };
+  returnToGraph = () => {
+    this.props.handleChangeViewMode("graph");
   };
 
   showTooltip = (content, eventX, eventY) => {
@@ -79,7 +89,13 @@ class SubTable extends Component {
       }
     });
   };
-  data = () => this.props.info.extraInfo.rowData.data.cardData;
+  handleExpandChord = () => {};
+
+  data = () =>
+    this.props.data
+      ? this.props.data
+      : this.props.info.extraInfo.rowData.data.cardData;
+
   anyRequests = (direction) => {
     const data = this.data();
     let address = data ? data.address : null;
@@ -99,22 +115,49 @@ class SubTable extends Component {
     });
     return Object.keys(requests).length > 0;
   };
+
   render() {
     const { options } = utils.viewFromHash();
+    const data = this.data();
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
+
+    const deploymentLinks = () =>
+      this.props.service.adapter
+        .getDeploymentLinks()
+        .filter(
+          (l) =>
+            l.source.service.address === this.props.data.address ||
+            l.target.service.address === this.props.data.address
+        );
+
+    const breadcrumb = () => {
+      if (this.props.data) {
+        return (
+          <Breadcrumb className="sk-breadcrumbList">
+            <BreadcrumbItem onClick={this.returnToGraph}>
+              {utils.Icap(this.props.view)}s
+            </BreadcrumbItem>
+            <BreadcrumbHeading>
+              {utils.shortName(data.address)}
+            </BreadcrumbHeading>
+          </Breadcrumb>
+        );
+      }
+      return (
+        <Breadcrumb className="sk-breadcrumbList">
+          <BreadcrumbItem onClick={this.returnToTable}>
+            {utils.Icap(this.props.view)}s
+          </BreadcrumbItem>
+          <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
+        </Breadcrumb>
+      );
+    };
     return (
       <React.Fragment>
         <StackItem className="sk-breadcrumbs">
           <Split gutter="md">
-            <SplitItem>
-              <Breadcrumb className="sk-breadcrumbList">
-                <BreadcrumbItem onClick={this.returnToTable}>
-                  {utils.Icap(this.props.view)}s
-                </BreadcrumbItem>
-                <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
-              </Breadcrumb>
-            </SplitItem>
+            <SplitItem>{breadcrumb()}</SplitItem>
             <SplitItem isFilled></SplitItem>
             <SplitItem>
               <TextContent>
@@ -136,18 +179,20 @@ class SubTable extends Component {
             <QDRPopup content={this.state.popupContent}></QDRPopup>
           </div>
 
-          {this.props.info.extraInfo && (
+          {data && (
             <Flex direction={{ default: "column", lg: "row" }}>
-              <FlexItem>
-                <PopupCard
-                  cardSize="expanded"
-                  cardService={this.data()}
-                  card={this.props.info.card}
-                  service={this.props.service}
-                  inline
-                  hideBody
-                />
-              </FlexItem>
+              {this.props.info.card && (
+                <FlexItem>
+                  <PopupCard
+                    cardSize="expanded"
+                    cardService={data}
+                    card={this.props.info.card}
+                    service={this.props.service}
+                    inline
+                    hideBody
+                  />
+                </FlexItem>
+              )}
               <Flex direction={{ default: "column", lg: "row" }}>
                 {hasIn && (
                   <FlexItem id="sk-subTable-line1">
@@ -164,7 +209,7 @@ class SubTable extends Component {
                       type="line"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-line1"
-                      data={this.data()}
+                      data={data}
                       showTooltip={this.showTooltip}
                       comment="LIne chart for incoming metric"
                     />
@@ -185,7 +230,7 @@ class SubTable extends Component {
                       type="line"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-line2"
-                      data={this.data()}
+                      data={data}
                       showTooltip={this.showTooltip}
                       comment="LIne chart for outgoing metric"
                     />
@@ -202,11 +247,11 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="in"
+                      direction="out"
                       type="bar"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-bar1"
-                      data={this.data()}
+                      data={data}
                       showTooltip={this.showTooltip}
                       comment="Pie or bar chart for incoming metric"
                     />
@@ -223,15 +268,48 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="out"
+                      direction="in"
                       type="bar"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-bar2"
-                      data={this.data()}
+                      data={data}
                       showTooltip={this.showTooltip}
                       comment="Pie or bar chart for incoming metric"
                     />
                   </FlexItem>
+                )}
+                {(hasIn || hasOut) && (
+                  <div
+                    id="skModalskAllCharts"
+                    className="sk-subtable-chord-container"
+                  >
+                    <div className="sk-chart-header">{`Site to site traffic for ${utils.shortName(
+                      data.address
+                    )}`}</div>
+                    <FlexItem id="sk-subTable-chord">
+                      <ChordViewer
+                        ref={(el) => (this.chordRef = el)}
+                        {...this.props}
+                        site
+                        deployment
+                        prefix="skModal"
+                        containerId="skModalskAllCharts"
+                        noLegend
+                        handleArcOver={() => {}}
+                        handleChordOver={() => {}}
+                        showTooltip={this.showTooltip}
+                        deploymentLinks={deploymentLinks()}
+                        site2site
+                        stat="bytes_out"
+                        initial
+                      />
+                    </FlexItem>
+                    <SiteModal
+                      ref={(el) => (this.modalRef = el)}
+                      {...this.props}
+                      data={data}
+                    />
+                  </div>
                 )}
               </Flex>
             </Flex>

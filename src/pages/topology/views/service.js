@@ -370,7 +370,10 @@ export class Service {
 
     if (handleEvents) {
       serviceTypesEnter
-        .on("mouseover", function(d) {
+        .on("mousedown", (d) => {
+          this.initial_mouse_down_position = d3.mouse(viewer.svg.node());
+        })
+        .on("_mouseover", function(d) {
           // highlight this service-type and it's connected service-types
           viewer.blurAll(true, d);
           self.selectServiceType(d);
@@ -379,19 +382,39 @@ export class Service {
         })
         .on("mouseout", function(d) {
           self.unSelectAll();
+          viewer.showChord(null, false);
+          viewer.clearPopups();
+          self.clearChosen();
           viewer.blurAll(false, d);
           viewer.restart();
           d3.event.stopPropagation();
         })
-        .on("click", (d) => {
+        .on("mouseover", (d) => {
           if (d3.event.defaultPrevented) return; // click suppressed
           viewer.showChord(d);
           viewer.showPopup(d, this.card);
+          /*
           this.clearChosen();
           d.chosen = true;
+          */
+          viewer.blurAll(true, d);
+          self.selectServiceType(d);
           viewer.restart();
           d3.event.stopPropagation();
           d3.event.preventDefault();
+        })
+        .on("click", (d) => {
+          const mouse_up_position = d3.mouse(viewer.svg.node());
+          if (
+            Math.abs(
+              this.initial_mouse_down_position[0] - mouse_up_position[0]
+            ) < 3 &&
+            Math.abs(
+              this.initial_mouse_down_position[1] - mouse_up_position[1]
+            ) < 3
+          ) {
+            viewer.handleViewDetails(d);
+          }
         });
     }
 
@@ -574,7 +597,6 @@ export class Service {
   };
   drawViewNodes(sankey) {
     this.servicesSelection.attr("transform", (d) => {
-      if (d.isExternal) console.log(`moving ${d.address} x0 to ${d.x}`);
       d.x0 = d.x;
       d.y0 = d.y;
       d.x1 = d.x0 + d.getWidth();
@@ -913,7 +935,7 @@ export class Service {
       (service) => service.address === name && service.isExternal
     );
 
-  allRequests = (VAN, direction, stat, showExternal = true) => {
+  allRequests = (VAN, direction, stat, showExternal = false) => {
     const requests = {};
     const which = direction === "in" ? "source" : "target";
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
@@ -939,7 +961,7 @@ export class Service {
     direction,
     stat,
     address,
-    showExternal = true,
+    showExternal = false,
   }) => {
     const requests = {};
     stat = "bytes_out";
@@ -978,7 +1000,7 @@ export class Service {
     direction,
     stat,
     duration = "min",
-    showExternal = true,
+    showExternal = false,
   }) => {
     const requests = {};
     const which = direction === "in" ? "source" : "target";
@@ -1013,7 +1035,7 @@ export class Service {
     stat,
     duration = "min",
     address,
-    showExternal = true,
+    showExternal = false,
   }) => {
     const requests = {};
     stat = "bytes_out";

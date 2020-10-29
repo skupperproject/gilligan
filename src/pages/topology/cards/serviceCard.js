@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import SiteModal from "./siteModal";
+//import SiteModal from "./siteModal";
 import { utils } from "../../../utilities";
 import { ServiceIcon } from "../../../assets/serviceIcon";
 
@@ -37,6 +37,7 @@ export class ServiceCard {
           title: this.getRequestTitle,
           getFn: this.getRequests,
         },
+        /*
         {
           title: () => "Show site to site traffic",
           getFn: (data, props) => (
@@ -54,7 +55,7 @@ export class ServiceCard {
               this.modalRef.doUpdate(props);
             }
           },
-        },
+        }, */
       ],
     };
   }

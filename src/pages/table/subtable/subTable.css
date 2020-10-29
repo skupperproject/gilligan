@@ -85,3 +85,34 @@
 #sk-subTable-line2 {
   width: 20em;
 }
+
+#skModalskAllCharts {
+  min-height: 20em;
+  max-width: 20em;
+}
+
+.sk-subtable-chord-container {
+  position: relative;
+}
+
+.sk-subtable-chord-container button.sk-topology-expand-button {
+  background-color: transparent !important;
+}
+.sk-expand-page {
+  position: absolute;
+  top: 0.5em;
+  right: 0;
+}
+
+#skModalchord {
+  text-align: center;
+}
+
+#skModalChordChart {
+  height: 100%;
+}
+
+#skSiteModal .pf-c-modal-box__body {
+  padding-top: 0;
+  padding-bottom: 0;
+}

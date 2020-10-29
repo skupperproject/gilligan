@@ -213,6 +213,10 @@ class TopologyViewer extends Component {
     this.viewObj.clearChosen();
   };
 
+  handleViewDetails = (d) => {
+    this.props.handleViewDetails("table", d, this.viewObj.card);
+  };
+
   // initialize the nodes and links array
   init = () => {
     let sizes = utils.getSizes(this.topologyRef);

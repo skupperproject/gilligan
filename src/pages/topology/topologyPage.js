@@ -91,8 +91,8 @@ class TopologyPage extends Component {
                 ref={(el) => (this.graphRef = el)}
                 service={this.props.service}
                 view={this.props.view}
-                handleChangeView={this.handleChangeView}
                 handleChangeLastUpdated={this.handleChangeLastUpdated}
+                handleViewDetails={this.props.handleViewDetails}
                 history={this.props.history}
                 setOptions={this.props.setOptions}
               />

@@ -42,10 +42,12 @@ class SubDetails extends Component {
   };
 
   render() {
-    if (!this.props.info.extraInfo) {
+    const data = this.props.data
+      ? this.props.data
+      : this.props.info.extraInfo.rowData.data.cardData;
+    if (!data) {
       return <div />;
     }
-    const data = this.props.info.extraInfo.rowData.data.cardData;
     return (
       <div className="sk-subdetails">
         {data.protocol && (

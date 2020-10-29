@@ -106,9 +106,6 @@ class PieBar extends Component {
         this.props.stat,
         this.props.showExternal
       );
-      if (this.props.deployment) {
-        //console.log(requests);
-      }
     } else {
       requests = this.props.viewObj.specificRequests({
         VAN: this.props.service.VAN,
@@ -178,16 +175,13 @@ class PieBar extends Component {
     toolbarHeight = toolbarSize[1];
     headerHeight = headerSize[1];
 
-    //console.log(`${containerId} w ${width} rh ${realHeight}`);
     let allChartsContainer = d3.select("#skAllCharts");
     if (!allChartsContainer.empty()) {
       if (width > realHeight && this.props.type === PIE_CHART) {
         // set container display to flex
-        //console.log("flex");
         allChartsContainer.style("display", "flex");
       } else {
         allChartsContainer.style("display", "block");
-        //console.log("block");
       }
     }
 
@@ -238,7 +232,6 @@ class PieBar extends Component {
         );
       }
       // over under
-      //console.log(`getting height for over/under pie ${this.state.realHeight}-${}`)
       return (
         (this.state.realHeight -
           this.state.toolbarHeight -
@@ -260,7 +253,6 @@ class PieBar extends Component {
       );
     }
     // over under
-    //console.log(`getting height for over/under pie ${this.state.realHeight}-${}`)
     return (
       (this.state.realHeight -
         this.state.legendHeight -
@@ -280,8 +272,6 @@ class PieBar extends Component {
   render() {
     const { width, headerText, tickLabel } = this.state;
     let { data } = this.state;
-    //console.log("charts data");
-    //console.log(data);
 
     // Padding left for bar chart is needed to allow room for the service names.
     // Service names are stored in the .x attribute of the data
@@ -300,14 +290,9 @@ class PieBar extends Component {
       JSON.stringify(data) !== JSON.stringify(defaultData);
 
     if (this.state.height === 0) {
+      console.log("*** height is 0 ***");
       return <React.Fragment />;
     }
-    /*
-
-                height={this.getHeight()}
-                width={width}
-
-            */
     return (
       showChart && (
         <div

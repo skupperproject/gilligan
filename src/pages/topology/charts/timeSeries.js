@@ -137,9 +137,13 @@ class TimeSeries extends Component {
       : "skAllCharts";
     const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
     const legendSize = utils.getSizes(
-      d3.select(".sk-chart-legend-container").node()
+      d3.select(".sk-chart-legend-container").node(),
+      [0, 0]
     );
-    const toolbarSize = utils.getSizes(d3.select(".sk-chart-toolbar").node());
+    const toolbarSize = utils.getSizes(d3.select(".sk-chart-toolbar").node(), [
+      0,
+      0,
+    ]);
     const headerSize = utils.getSizes(d3.select(".sk-chart-header").node(), [
       toolbarSize[0],
       56,
@@ -204,7 +208,7 @@ class TimeSeries extends Component {
 
       return ys(3);
     };
-    if (this.state.height === 0) {
+    if (this.getHeight() === 0) {
       return <React.Fragment />;
     }
     return (

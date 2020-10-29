@@ -148,7 +148,7 @@ class TableViewer extends React.Component {
   };
 
   detailClick = (value, extraInfo) => {
-    this.props.handleShowSubTable(true, {
+    this.props.handleShowSubTable("table", {
       value,
       extraInfo,
       card: this.dataSource.card,

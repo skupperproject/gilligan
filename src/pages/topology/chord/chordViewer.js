@@ -82,11 +82,20 @@ class ChordViewer extends Component {
 
   // called only once when the component is initialized
   componentDidMount() {
-    //this.init();
+    document.addEventListener("mousemove", this.handleMouseOutside);
   }
+
+  handleMouseOutside = (event) => {
+    if (this.chordRef && this.chordRef.contains(event.target)) {
+      return;
+    }
+    this.showToolTip();
+    this.showAllChords();
+  };
 
   componentWillUnmount() {
     this.unmounting = true;
+    document.removeEventListener("mousemove", this.handleMouseOutside);
     // stop updated the data
     // clean up memory associated with the svg
     //d3.select("#chord").remove();
@@ -135,9 +144,13 @@ class ChordViewer extends Component {
     // mouseover target for when the mouse leaves the diagram
     this.svg
       .append("circle")
-      .attr("r", this.innerRadius * 2)
-      .on("mouseover", this.showAllChords);
-
+      .attr("r", this.innerRadius)
+      .on("mouseover", () => {
+        d3.event.stopPropagation();
+        this.showToolTip();
+        this.showAllChords();
+      });
+    /*
     // background circle. will only get a mouseover event if the mouse is between chords
     this.svg
       .append("circle")
@@ -145,7 +158,7 @@ class ChordViewer extends Component {
       .on("mouseover", () => {
         d3.event.stopPropagation();
       });
-
+*/
     this.svg = this.svg.append("g").attr("class", "chart-container");
     window.addEventListener("resize", () => {
       this.windowResized();
@@ -246,15 +259,30 @@ class ChordViewer extends Component {
 
     const sizes = utils.getSizes(d3.select(`#${containerId}`).node());
     const legendSize = utils.getSizes(
-      d3.select(`.${this.prefix}sk-chart-legend-container`).node()
+      d3.select(`.${this.prefix}sk-chart-legend-container`).node(),
+      [0, 0]
+    );
+    const titleSize = utils.getSizes(
+      d3.select(`#${containerId} .sk-title`).node(),
+      [0, 0]
     );
     const toolbarSize = utils.getSizes(
       d3.select(`#${containerId} .sk-chart-toolbar`).node(),
-      [0, 30]
+      [0, 0]
     );
 
+    const modalHeaderSize = utils.getSizes(
+      d3.select(`#${containerId} .pf-c-modal-box__header`).node(),
+      [0, 0]
+    );
     const width = sizes[0];
-    const height = sizes[1] - legendSize[1] - toolbarSize[1] - 60;
+    const height =
+      sizes[1] -
+      legendSize[1] -
+      toolbarSize[1] -
+      titleSize[1] -
+      modalHeaderSize[1] -
+      10;
     const radius = Math.max(
       Math.floor(Math.min(width, height) / 2),
       MIN_RADIUS
@@ -1052,7 +1080,11 @@ class ChordViewer extends Component {
       );
     };
     return (
-      <div id="chordContainer" className={`qdrChord sk-chart-container`}>
+      <div
+        id="chordContainer"
+        ref={(el) => (this.chordRef = el)}
+        className={`qdrChord sk-chart-container`}
+      >
         {getTitle()}
         <div aria-label="chord-diagram" id={`${this.prefix}chord`}></div>
         {!this.props.noLegend && (

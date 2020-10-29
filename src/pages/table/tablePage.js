@@ -40,6 +40,7 @@ class TablePage extends Component {
     this.state = {
       isDropDownOpen: false,
       subPageInfo: {},
+      data: null,
     };
   }
 
@@ -52,15 +53,19 @@ class TablePage extends Component {
     this.handleChangeLastUpdated();
   };
 
-  handleShowSubTable = (show, subPageInfo) => {
+  handleShowSubTable = (origin = "table", subPageInfo, card) => {
     this.props.handleChangeViewMode("details");
     const options = {
       view: this.props.view,
       mode: "details",
-      item: subPageInfo.value,
+      item: origin === "table" ? subPageInfo.value : subPageInfo.address,
     };
     this.props.setOptions(options, true);
-    this.setState({ subPageInfo });
+    if (origin === "table") {
+      this.setState({ subPageInfo, data: null });
+    } else {
+      this.setState({ subPageInfo: { card }, data: subPageInfo });
+    }
   };
 
   render() {
@@ -101,6 +106,7 @@ class TablePage extends Component {
                   service={this.props.service}
                   view={this.props.view}
                   info={this.state.subPageInfo}
+                  data={this.state.data}
                   history={this.props.history}
                   handleChangeViewMode={this.props.handleChangeViewMode}
                   setOptions={this.props.setOptions}

@@ -125,6 +125,15 @@ class PageLayout extends React.Component {
     this.setState({ mode });
   };
 
+  handleViewDetails = (mode, d, card) => {
+    this.viewModes[this.state.view] = mode;
+    this.navSelect = "userChanged";
+    utils.setSaved(VIEW_MODES, this.viewModes);
+    this.setState({ mode }, () => {
+      this.pageRef.handleShowSubTable("graph", d, card);
+    });
+  };
+
   setOptions = (options, user) => {
     if (user) this.navSelect = "userChanged";
     if (!utils.isEmpty(options)) {
@@ -375,6 +384,7 @@ class PageLayout extends React.Component {
               service={this.service}
               {...this.props}
               handleChangeViewMode={this.handleChangeViewMode}
+              handleViewDetails={this.handleViewDetails}
               setOptions={this.setOptions}
               view={this.state.view}
               mode="graph"
