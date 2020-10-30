@@ -142,6 +142,7 @@ class ChordViewer extends Component {
       .attr("transform", `translate(${xtrans},${this.outerRadius}) scale(.95)`);
 
     // mouseover target for when the mouse leaves the diagram
+    /*
     this.svg
       .append("circle")
       .attr("r", this.innerRadius)
@@ -150,7 +151,7 @@ class ChordViewer extends Component {
         this.showToolTip();
         this.showAllChords();
       });
-    /*
+    
     // background circle. will only get a mouseover event if the mouse is between chords
     this.svg
       .append("circle")
@@ -176,7 +177,7 @@ class ChordViewer extends Component {
           this.chordData
             .getAllDeploymentMatrix(
               this.props.deploymentLinks,
-              this.props.onlyServices,
+              [],
               this.props.service,
               this.props.stat,
               separateAddresses
@@ -1059,11 +1060,13 @@ class ChordViewer extends Component {
           );
         }
         return (
-          <div className="sk-chart-header">
-            {`${utils.Icap(utils.statName(this.props.stat))} involving site ${
-              this.props.data.name
-            }`}
-          </div>
+          !this.props.site2site && (
+            <div className="sk-chart-header">
+              {`${utils.Icap(utils.statName(this.props.stat))} involving site ${
+                this.props.data.name
+              }`}
+            </div>
+          )
         );
       } else if (this.props.data === null) {
         return (

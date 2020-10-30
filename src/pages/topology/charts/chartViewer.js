@@ -47,7 +47,6 @@ class ChartViewer extends Component {
       type: this.savedTypes[this.props.view],
       duration: "min",
       popupContent: null,
-      filterServices: [],
     };
   }
 
@@ -55,10 +54,10 @@ class ChartViewer extends Component {
     if (this.props.handleMounted) {
       this.props.handleMounted();
     }
-    this.setOverflow();
+    //this.setOverflow();
   };
   componentDidUpdate = () => {
-    this.setOverflow();
+    //this.setOverflow();
   };
 
   setOverflow = () => {
@@ -71,7 +70,6 @@ class ChartViewer extends Component {
         const childSize = utils.getSizes(child);
         childrenHeight += childSize[1];
       });
-      /*
       container.style(
         "overflow-y",
         container.style("display") === "block" &&
@@ -79,9 +77,9 @@ class ChartViewer extends Component {
           ? "auto"
           : "hidden"
       );
-      */
     }
   };
+
   doUpdate = (type) => {
     if (this.chartRef1 && type !== CHORD_CHART) {
       this.chartRef1.doUpdate(type);
@@ -121,6 +119,9 @@ class ChartViewer extends Component {
   };
 
   showTooltip = (content, eventX, eventY) => {
+    if (!content && !this.state.popupContent) {
+      return;
+    }
     this.setState({ popupContent: content }, () => {
       if (content) {
         // after the content has rendered, position it
@@ -135,15 +136,6 @@ class ChartViewer extends Component {
     });
   };
 
-  // called by the service popup when a service was checked/uncheked
-  // we need to only include the services that are checked in the charts
-  selectChartService = (services) => {
-    const filterServices = this.props.service.VAN.services.filter(
-      (s) => services[s.address] && services[s.address].checked
-    );
-    this.setState({ filterServices }, () => this.doUpdate(this.state.type));
-  };
-
   render() {
     const { type } = this.state;
     return (
@@ -152,7 +144,6 @@ class ChartViewer extends Component {
           type={type}
           {...this.props}
           handleChangeChartType={this.handleChangeChartType}
-          selectChartService={this.selectChartService}
         />
         <div
           className={`sk-all-charts-container${
@@ -208,7 +199,6 @@ class ChartViewer extends Component {
             <ChordViewer
               ref={(el) => (this.chordRef = el)}
               {...this.props}
-              onlyServices={this.state.filterServices}
               showTooltip={this.showTooltip}
               noLegend
               type={type}
