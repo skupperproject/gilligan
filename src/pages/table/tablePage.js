@@ -54,7 +54,7 @@ class TablePage extends Component {
   };
 
   handleShowSubTable = (origin = "table", subPageInfo, card) => {
-    this.props.handleChangeViewMode("details");
+    this.props.handleChangeViewMode("details", origin === "table");
     const options = {
       view: this.props.view,
       mode: "details",
