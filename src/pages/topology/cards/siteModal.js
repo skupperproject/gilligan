@@ -65,6 +65,9 @@ class SiteModal extends Component {
   };
 
   showTooltip = (content, eventX, eventY) => {
+    if (!content && !this.state.popupContent) {
+      return;
+    }
     this.setState({ popupContent: content }, () => {
       if (content) {
         // after the content has rendered, position it
@@ -97,6 +100,8 @@ class SiteModal extends Component {
   chordName = (data) =>
     this.props.view === "deployment"
       ? `${utils.shortName(data.address)} (${data.cluster.site_name})`
+      : this.props.view === "site"
+      ? data.name
       : utils.shortName(data.address);
 
   render() {
