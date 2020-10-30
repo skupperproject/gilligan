@@ -393,10 +393,21 @@ export class Site {
     if (handleEvents) {
       enterCircle
         .on("mouseover", (d) => {
+          viewer.clearPopups();
+          viewer.showChord(d);
+          viewer.showPopup(d, this.card);
           viewer.viewObj.mouseoverCircle(d, viewer);
+          viewer.clearChosen();
+          //d.chosen = true;
           viewer.restart();
         })
         .on("mouseout", (d) => {
+          this.unSelectAll();
+          viewer.showChord(null, false);
+          viewer.clearPopups();
+          this.clearChosen();
+          viewer.blurAll(false, d);
+          d3.event.stopPropagation();
           viewer.viewObj.mouseoutCircle(d, viewer);
           viewer.restart();
         })
@@ -409,53 +420,28 @@ export class Site {
           }
           viewer.mousedown_node = d;
           // mouse position relative to svg
-          viewer.initial_mouse_down_position = d3
-            .mouse(viewer.topologyRef.parentNode.parentNode.parentNode)
-            .slice();
+          this.initial_mouse_down_position = d3.mouse(viewer.svg.node());
         })
         .on("mouseup", (d) => {
           // mouse up for circle
           if (!viewer.mousedown_node) return;
 
-          // check for drag
           viewer.mouseup_node = d;
-
-          // if we dragged the node, make it fixed
-          let cur_mouse = d3.mouse(viewer.svg.node());
-          if (
-            cur_mouse[0] !== viewer.initial_mouse_down_position[0] ||
-            cur_mouse[1] !== viewer.initial_mouse_down_position[1]
-          ) {
-            d3.event.preventDefault();
-
-            this.siteNodes.setFixed(d, true);
-            viewer.resetMouseVars();
-            viewer.restart();
-            viewer.mousedown_node = null;
-            return;
-          }
           viewer.clearAllHighlights();
           viewer.mousedown_node = null;
           // apply any data changes to the interface
           viewer.restart();
         })
-        .on("dblclick", (d) => {
-          // circle
-          d3.event.preventDefault();
-          if (d.fixed) {
-            this.siteNodes.setFixed(d, false);
-            viewer.restart(); // redraw the node without a dashed line
-            viewer.force.start(); // let the nodes move to a new position
-          }
-        })
         .on("click", (d) => {
           // circle
-          if (d3.event.defaultPrevented) return; // click suppressed
-          viewer.clearPopups();
-          viewer.showChord(d);
-          viewer.showPopup(d, this.card);
-          viewer.clearChosen();
-          d.chosen = true;
+          // if we dragged the node, make it fixed
+          let cur_mouse = d3.mouse(viewer.svg.node());
+          if (
+            Math.abs(this.initial_mouse_down_position[0] - cur_mouse[0]) < 3 &&
+            Math.abs(this.initial_mouse_down_position[1] - cur_mouse[1]) < 3
+          ) {
+            viewer.handleViewDetails(d);
+          }
           viewer.restart();
           d3.event.stopPropagation();
         });
