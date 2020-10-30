@@ -290,7 +290,6 @@ class PieBar extends Component {
       JSON.stringify(data) !== JSON.stringify(defaultData);
 
     if (this.state.height === 0) {
-      console.log("*** height is 0 ***");
       return <React.Fragment />;
     }
     return (
