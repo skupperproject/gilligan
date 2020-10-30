@@ -64,6 +64,8 @@ class PageLayout extends React.Component {
     if (this.viewModes[view] === "details") {
       this.viewModes[view] = "table";
     }
+    // setup the last mode the user picked
+    this.savedMode = null;
     this.state = {
       connected: false,
       connectPath: "",
@@ -118,19 +120,44 @@ class PageLayout extends React.Component {
     this.navSelect = undefined;
   };
 
-  handleChangeViewMode = (mode) => {
+  handleChangeViewMode = (mode, save = true) => {
     this.viewModes[this.state.view] = mode;
     this.navSelect = "userChanged";
-    utils.setSaved(VIEW_MODES, this.viewModes);
+    if (save) {
+      utils.setSaved(VIEW_MODES, this.viewModes);
+    }
     this.setState({ mode });
   };
 
+  // called internally when clicking on a service/site/deployment to view the details page
   handleViewDetails = (mode, d, card) => {
+    this.savedMode = this.viewModes[this.state.view];
     this.viewModes[this.state.view] = mode;
     this.navSelect = "userChanged";
-    utils.setSaved(VIEW_MODES, this.viewModes);
     this.setState({ mode }, () => {
       this.pageRef.handleShowSubTable("graph", d, card);
+    });
+  };
+
+  // user clicked on a nav item to go to a view
+  onNavSelect = (result) => {
+    this.navSelect = "userChanged";
+    utils.setSaved(LAST_VIEW, result.itemId);
+
+    // restore the last mode the user selected
+    if (this.savedMode) {
+      this.viewModes[this.state.view] = this.savedMode;
+      utils.setSaved(VIEW_MODES, this.viewModes);
+      this.savedMode = null;
+    }
+
+    // when clicking on a nav item, go to the table view instead of the details view
+    if (this.viewModes[result.itemId] === "details") {
+      this.viewModes[result.itemId] = "table";
+    }
+    this.setState({
+      view: result.itemId,
+      connectPath: "",
     });
   };
 
@@ -232,19 +259,6 @@ class PageLayout extends React.Component {
         connected: true,
       });
     }
-  };
-
-  onNavSelect = (result) => {
-    this.navSelect = "userChanged";
-    utils.setSaved(LAST_VIEW, result.itemId);
-    // when clicking on a nav item, go to the table view instead of the details view
-    if (this.viewModes[result.itemId] === "details") {
-      this.viewModes[result.itemId] = "table";
-    }
-    this.setState({
-      view: result.itemId,
-      connectPath: "",
-    });
   };
 
   toL = (s) => s[0].toLowerCase() + s.slice(1);
