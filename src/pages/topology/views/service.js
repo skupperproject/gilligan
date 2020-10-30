@@ -373,13 +373,6 @@ export class Service {
         .on("mousedown", (d) => {
           this.initial_mouse_down_position = d3.mouse(viewer.svg.node());
         })
-        .on("_mouseover", function(d) {
-          // highlight this service-type and it's connected service-types
-          viewer.blurAll(true, d);
-          self.selectServiceType(d);
-          viewer.restart();
-          d3.event.stopPropagation();
-        })
         .on("mouseout", function(d) {
           self.unSelectAll();
           viewer.showChord(null, false);
@@ -390,13 +383,8 @@ export class Service {
           d3.event.stopPropagation();
         })
         .on("mouseover", (d) => {
-          if (d3.event.defaultPrevented) return; // click suppressed
           viewer.showChord(d);
           viewer.showPopup(d, this.card);
-          /*
-          this.clearChosen();
-          d.chosen = true;
-          */
           viewer.blurAll(true, d);
           self.selectServiceType(d);
           viewer.restart();
