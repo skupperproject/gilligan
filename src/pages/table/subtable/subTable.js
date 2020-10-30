@@ -76,6 +76,9 @@ class SubTable extends Component {
   };
 
   showTooltip = (content, eventX, eventY) => {
+    if (!content && !this.state.popupContent) {
+      return;
+    }
     this.setState({ popupContent: content }, () => {
       if (content) {
         // after the content has rendered, position it
@@ -120,7 +123,9 @@ class SubTable extends Component {
     if (this.props.view === "deployment" && data.address) {
       return `${utils.shortName(data.address)} (${data.cluster.site_name})`;
     }
-    return utils.shortName(data.address);
+    return data.nodeType === "cluster"
+      ? data.name
+      : utils.shortName(data.address);
   };
 
   render() {
@@ -130,13 +135,15 @@ class SubTable extends Component {
     const hasOut = this.anyRequests("out");
 
     const deploymentLinks = () =>
-      this.props.service.adapter
-        .getDeploymentLinks()
-        .filter(
-          (l) =>
-            l.source.service.address === this.props.data.address ||
-            l.target.service.address === this.props.data.address
-        );
+      data.nodeType === "cluster"
+        ? []
+        : this.props.service.adapter
+            .getDeploymentLinks()
+            .filter(
+              (l) =>
+                l.source.service.address === data.address ||
+                l.target.service.address === data.address
+            );
 
     const breadcrumb = () => {
       if (this.props.data) {
@@ -146,7 +153,9 @@ class SubTable extends Component {
               {utils.Icap(this.props.view)}s
             </BreadcrumbItem>
             <BreadcrumbHeading>
-              {utils.shortName(data.address)}
+              {data.nodeType === "cluster"
+                ? data.name
+                : utils.shortName(data.address)}
             </BreadcrumbHeading>
           </Breadcrumb>
         );
@@ -298,7 +307,7 @@ class SubTable extends Component {
                         ref={(el) => (this.chordRef = el)}
                         {...this.props}
                         site
-                        deployment
+                        deployment={this.props.view === "deployment"}
                         prefix="skModal"
                         containerId="skModalskAllCharts"
                         noLegend
@@ -306,6 +315,7 @@ class SubTable extends Component {
                         handleChordOver={() => {}}
                         showTooltip={this.showTooltip}
                         deploymentLinks={deploymentLinks()}
+                        data={data}
                         site2site
                         stat="bytes_out"
                         initial
