@@ -41,43 +41,36 @@ class ConnectionsOut extends Component {
     </StackItem>
   );
 
-  requests = (data) => (
+  connList = (reqs) => (
     <DataList aria-label="Expandable data list" isCompact>
       <DataListItem
         key={`connout`}
         aria-labelledby={`connections out`}
         isExpanded={false}
       >
-        {this.request(data)}
+        {reqs}
       </DataListItem>
     </DataList>
   );
 
-  request = (data) => {
-    const ingresses = [];
-    data.targetServices.forEach((target, i) => {
-      if (target.protocol === "tcp") {
-        target.connections_ingress.forEach((ingress) => {
-          for (let connectionId in ingress.connections) {
-            const connection = ingress.connections[connectionId];
-            if (
-              utils.shortName(connection.client) ===
-              utils.shortName(data.address)
-            ) {
-              ingresses.push(connection);
-            }
+  requests = (data) => {
+    let ingresses = [];
+    if (data.nodeType === "cluster") {
+      const VANData = this.props.service.adapter.data;
+      const bySite = {};
+      VANData.getDeploymentLinks(false).forEach((l) => {
+        if (l.target.site.site_id === data.site_id && l.request.id) {
+          const siteName = l.source.site.site_name;
+          if (!(siteName in bySite)) {
+            bySite[siteName] = l.request;
+            bySite[siteName].from_address = siteName;
+          } else {
+            utils.aggregateAttributes(l.request, bySite[siteName]);
           }
-        });
-      }
-    });
-    return ingresses.map((ingress, i) => {
-      return this.client(ingress, utils.shortName(data.address), i);
-    });
-  };
-
-  hasRequest = (data) => {
-    let has = false;
-    if (data.targetServices) {
+        }
+      });
+      ingresses = Object.keys(bySite).map((s) => bySite[s]);
+    } else {
       data.targetServices.forEach((target, i) => {
         if (target.protocol === "tcp") {
           target.connections_ingress.forEach((ingress) => {
@@ -87,38 +80,34 @@ class ConnectionsOut extends Component {
                 utils.shortName(connection.client) ===
                 utils.shortName(data.address)
               ) {
-                has = true;
+                connection.from_address = utils.shortName(target.address);
+                ingresses.push(connection);
               }
             }
           });
         }
       });
     }
-    return has;
-  };
-
-  client = (connection, name, ikey) => {
-    return (
+    return ingresses.map((connection, i) => (
       <ClientConnection
-        key={`request-${ikey}`}
+        key={`sent-${i}`}
         connection={connection}
-        name={name}
-        ikey={ikey}
+        name={utils.shortName(connection.from_address)}
+        ikey={`conn-${i}`}
         expanded={this.props.expanded}
         toggle={this.props.toggle}
       />
-    );
+    ));
   };
 
   render() {
     const { data } = this.props;
+    const requests = this.requests(data);
     return (
-      this.hasRequest(data) && (
-        <React.Fragment>
-          {this.heading()}
-          {this.requests(data)}
-        </React.Fragment>
-      )
+      <React.Fragment>
+        {requests.length > 0 && this.heading()}
+        {requests.length > 0 && this.connList(requests)}
+      </React.Fragment>
     );
   }
 }

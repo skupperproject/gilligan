@@ -1009,7 +1009,14 @@ const utils = {
   },
 
   // add the source values to the target values for each attribute in the source.
-  aggregateAttributes: (source, target) => {
+  aggregateAttributes: (source, target, combine) => {
+    if (!combine)
+      combine = (a, b, attr) => {
+        if (attr === "start_time") return Math.min(a, b);
+        if (attr === "last_in" || attr === "last_out" || attr === "latency_max")
+          return Math.max(a, b);
+        return a + b;
+      };
     for (const attribute in source) {
       if (target[attribute] === undefined) {
         target[attribute] = source[attribute];
@@ -1017,7 +1024,11 @@ const utils = {
         if (typeof source[attribute] === "object") {
           utils.aggregateAttributes(source[attribute], target[attribute]);
         } else if (!isNaN(source[attribute])) {
-          target[attribute] += source[attribute];
+          target[attribute] = combine(
+            source[attribute],
+            target[attribute],
+            attribute
+          );
         }
       }
     }

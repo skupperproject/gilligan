@@ -54,17 +54,22 @@ class RequestSent extends Component {
   );
 
   requests = (data) => {
-    const sent = [];
+    let sent = [];
     if (data.nodeType === "cluster") {
-      /*
-      const requests = this.props.service.adapter.specificSite(
-        data.site_id,
-        "in",
-        "requests"
-      );
-      //sent = siteData.data.map((site) => {});
-      console.log(requests);
-      */
+      const VANData = this.props.service.adapter.data;
+      const bySite = {};
+      VANData.getDeploymentLinks(false).forEach((l) => {
+        if (l.source.site.site_id === data.site_id && l.request.details) {
+          const siteName = l.target.site.site_name;
+          if (!(siteName in bySite)) {
+            bySite[siteName] = l.request;
+            bySite[siteName].from_address = siteName;
+          } else {
+            utils.aggregateAttributes(l.request, bySite[siteName]);
+          }
+        }
+      });
+      sent = Object.keys(bySite).map((s) => bySite[s]);
     } else {
       const VANData = this.props.service.adapter.findService(data.address);
       VANData.targetServices.forEach((target, i) => {
