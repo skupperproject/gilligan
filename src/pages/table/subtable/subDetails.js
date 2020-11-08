@@ -55,7 +55,7 @@ class SubDetails extends Component {
             <span className="detail-prompt">Protocol</span> {data.protocol}
           </div>
         )}
-        {data.protocol === "http" && (
+        {(data.protocol === "http" || data.nodeType === "cluster") && (
           <RequestReceived
             data={data}
             service={this.props.service}

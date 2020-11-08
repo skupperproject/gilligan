@@ -26,15 +26,16 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import ClientRequest from "./clientRequest";
+import { utils } from "../../../utilities";
 class RequestReceived extends Component {
   constructor(props) {
     super(props);
     this.state = {};
   }
 
-  heading = (data) => {
+  heading = (requests) => {
     return (
-      data.requests_received.length > 0 && (
+      requests.length > 0 && (
         <StackItem>
           <TextContent>
             <Text component={TextVariants.h3}>HTTP requests received from</Text>
@@ -44,25 +45,53 @@ class RequestReceived extends Component {
     );
   };
 
-  requests = (data) => (
+  dataList = (requests) => (
     <DataList aria-label="Expandable data list" isCompact>
-      {data.requests_received.map((r, i) => (
+      {requests.map((r, i) => (
         <DataListItem
           key={`rr-${i}`}
           aria-labelledby={`item-${i}`}
           isExpanded={this.props.expanded.includes(`request-${i}`)}
         >
-          {this.request(data, r, i)}
+          {this.request(r, i)}
         </DataListItem>
       ))}
     </DataList>
   );
 
-  request = (data, r, ikey) => {
-    const clients = Object.keys(r.by_client);
-    return clients.map((client, i) => {
-      return this.client(r.by_client[client], client, `${ikey}-${i}`);
-    });
+  requests = (data) => {
+    let received = [];
+    if (data.nodeType === "cluster") {
+      const fromSite = {};
+      this.props.service.adapter.getDeploymentLinks(false).forEach((l) => {
+        if (l.target.site.site_name === data.site_name && l.request.details) {
+          const sourceSite = l.source.site.site_name;
+          if (!(sourceSite in fromSite)) {
+            fromSite[sourceSite] = l.request;
+          } else {
+            utils.aggregateAttributes(l.request, fromSite[sourceSite]);
+          }
+        }
+      });
+      received = Object.keys(fromSite).map((site_name) => ({
+        clientRequest: fromSite[site_name],
+        name: site_name,
+      }));
+    } else {
+      received = data.requests_received;
+    }
+    return received;
+  };
+
+  request = (r, ikey) => {
+    if (r.by_client) {
+      const clients = Object.keys(r.by_client);
+      return clients.map((client, i) => {
+        return this.client(r.by_client[client], client, `${ikey}-${i}`);
+      });
+    } else {
+      return this.client(r.clientRequest, r.name, `${ikey}-${0}`);
+    }
   };
 
   client = (clientRequest, name, ikey) => {
@@ -80,10 +109,11 @@ class RequestReceived extends Component {
 
   render() {
     const { data } = this.props;
+    const requests = this.requests(data);
     return (
       <React.Fragment>
-        {this.heading(data)}
-        {this.requests(data)}
+        {this.heading(requests)}
+        {this.dataList(requests)}
       </React.Fragment>
     );
   }
