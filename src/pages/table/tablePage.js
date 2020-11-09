@@ -70,10 +70,7 @@ class TablePage extends Component {
 
   render() {
     return (
-      <PageSection
-        variant={PageSectionVariants.light}
-        className="topology-page"
-      >
+      <PageSection variant={PageSectionVariants.light} className="table-page">
         <Stack>
           <React.Fragment>
             <StackItem className="overview-header">

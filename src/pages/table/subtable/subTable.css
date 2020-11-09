@@ -10,7 +10,7 @@
   position: absolute;
   top: 68px;
   background-color: white;
-  width: 100%;
+  width: auto;
   padding-top: 1em;
 }
 
@@ -115,4 +115,9 @@
 #skSiteModal .pf-c-modal-box__body {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.table-page .overview-header {
+  background-color: white;
+  border-bottom: 0px;
 }

@@ -193,19 +193,21 @@ class SubTable extends Component {
           </div>
 
           {data && (
-            <Flex direction={{ default: "column", lg: "row" }}>
-              {this.props.info.card && (
-                <FlexItem>
-                  <PopupCard
-                    cardSize="expanded"
-                    cardService={data}
-                    card={this.props.info.card}
-                    service={this.props.service}
-                    inline
-                    hideBody
-                  />
-                </FlexItem>
-              )}
+            <React.Fragment>
+              <Flex direction={{ default: "column", lg: "row" }}>
+                {this.props.info.card && (
+                  <FlexItem>
+                    <PopupCard
+                      cardSize="expanded"
+                      cardService={data}
+                      card={this.props.info.card}
+                      service={this.props.service}
+                      inline
+                      hideBody
+                    />
+                  </FlexItem>
+                )}
+              </Flex>
               <Flex direction={{ default: "column", lg: "row" }}>
                 {hasIn && (
                   <FlexItem id="sk-subTable-line1">
@@ -327,7 +329,7 @@ class SubTable extends Component {
                   </div>
                 )}
               </Flex>
-            </Flex>
+            </React.Fragment>
           )}
           <SubDetails {...this.props} />
         </StackItem>

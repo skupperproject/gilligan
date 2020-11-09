@@ -1320,6 +1320,7 @@ path.external {
 }
 
 .topology-page.pf-c-page__main-section,
+.table-page.pf-c-page__main-section,
 .list-page.pf-c-page__main-section {
   padding: 0;
 }
