@@ -20,7 +20,7 @@ under the License.
 import { utils } from "../../../utilities";
 
 const chartUtils = {
-  init: (site, data, deployment, direction, stat) => {
+  init: (site, data, deployment, direction, stat, type = "bar") => {
     let all = false;
     let headerText = "headerText not set";
     let address = data ? data.address : null;
@@ -57,12 +57,18 @@ const chartUtils = {
           site_info = data.cluster.site_name;
         } else {
           // for specific site
+          const d = direction === "in" ? "out" : "in";
           headerText = utils.Icap(
-            `${utils.statName(stat)} sent ${
-              direction === "in" ? "from" : "to"
-            } ${data.site_name}`
+            `${utils.statName(stat)} sent ${d === "in" ? "from" : "to"} ${
+              data.site_name
+            }`
           );
-          site_info = data.site_id;
+          if (type === "bar") {
+            site_info = data.site_id;
+          } else {
+            site_info = null; //data.site_id;
+            address = data.site_id;
+          }
         }
       }
     } else {

@@ -68,11 +68,8 @@ class SubTable extends Component {
     if (this.modalRef) this.modalRef.doUpdate(this.props);
   };
 
-  returnToTable = () => {
-    this.props.handleChangeViewMode("table");
-  };
-  returnToGraph = () => {
-    this.props.handleChangeViewMode("graph");
+  returnToView = (mode) => {
+    this.props.handleChangeViewMode(mode);
   };
 
   showTooltip = (content, eventX, eventY) => {
@@ -149,7 +146,7 @@ class SubTable extends Component {
       if (this.props.data) {
         return (
           <Breadcrumb className="sk-breadcrumbList">
-            <BreadcrumbItem onClick={this.returnToGraph}>
+            <BreadcrumbItem onClick={() => this.returnToView("graph")}>
               {utils.Icap(this.props.view)}s
             </BreadcrumbItem>
             <BreadcrumbHeading>
@@ -162,7 +159,7 @@ class SubTable extends Component {
       }
       return (
         <Breadcrumb className="sk-breadcrumbList">
-          <BreadcrumbItem onClick={this.returnToTable}>
+          <BreadcrumbItem onClick={() => this.returnToView("table")}>
             {utils.Icap(this.props.view)}s
           </BreadcrumbItem>
           <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
@@ -221,13 +218,13 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="in"
+                      direction="out"
                       type="line"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-line1"
                       data={data}
                       showTooltip={this.showTooltip}
-                      comment="LIne chart for incoming metric"
+                      comment="Line chart for incoming metric"
                     />
                   </FlexItem>
                 )}
@@ -242,7 +239,7 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="out"
+                      direction="in"
                       type="line"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-line2"
@@ -263,7 +260,7 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="out"
+                      direction="in"
                       type="bar"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-bar1"
@@ -284,7 +281,7 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="in"
+                      direction="out"
                       type="bar"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-bar2"
@@ -325,6 +322,7 @@ class SubTable extends Component {
                       ref={(el) => (this.modalRef = el)}
                       {...this.props}
                       data={data}
+                      comment="Full page chord chart"
                     />
                   </div>
                 )}

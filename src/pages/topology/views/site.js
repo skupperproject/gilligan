@@ -1167,7 +1167,7 @@ export class Site {
   };
 
   // get requests for all sites
-  allRequests = (VAN, direction, stat, showExternal = true) => {
+  allRequests = (VAN, direction, stat, showExternal = false) => {
     const requests = {};
     stat = "bytes_out";
     const to = direction === "in" ? "source" : "target";
@@ -1199,7 +1199,7 @@ export class Site {
     direction,
     stat,
     site_info,
-    showExternal = true,
+    showExternal = false,
   }) => {
     const requests = {};
     stat = "bytes_out";
@@ -1219,7 +1219,7 @@ export class Site {
 
       if (testSiteId !== otherSiteId && testSiteId === site_info) {
         if (deploymentLink.request[stat] !== undefined) {
-          if (!requests.hasOwnProperty(testSiteId)) requests[testSiteId] = {};
+          if (!requests.hasOwnProperty(otherSiteId)) requests[otherSiteId] = {};
           utils.aggregateAttributes(
             {
               key: otherSiteName,
@@ -1228,7 +1228,7 @@ export class Site {
               requests: deploymentLink.request[stat],
               color: utils.siteColors[otherSiteId].color,
             },
-            requests[testSiteId]
+            requests[otherSiteId]
           );
         }
       }
@@ -1241,7 +1241,7 @@ export class Site {
     direction,
     stat,
     duration = "min",
-    showExternal = true,
+    showExternal = false,
   }) => {
     const requests = {};
     stat = "bytes_out";
@@ -1282,7 +1282,7 @@ export class Site {
     stat,
     duration = "min",
     address,
-    showExternal = true,
+    showExternal = false,
   }) => {
     const requests = {};
     stat = "bytes_out";

@@ -73,7 +73,8 @@ class TimeSeries extends Component {
       this.props.data,
       this.props.deployment,
       dir,
-      this.props.stat
+      this.props.stat,
+      type
     );
     let requests;
     // line charts
@@ -219,7 +220,7 @@ class TimeSeries extends Component {
             this.props.direction === "out" ? "sk-chart-separated" : ""
           }`}
         >
-          <div className="sk-chart-header">{headerText}</div>
+          <div className="sk-chart-header">{`${headerText} for the past minute`}</div>
           <div
             style={{
               height: `${this.getHeight()}px`,
