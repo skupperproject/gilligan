@@ -202,6 +202,7 @@ class ChartViewer extends Component {
               showTooltip={this.showTooltip}
               noLegend
               type={type}
+              site2site={this.props.view === "site"}
               comment="Chord chart that shows both incoming and outgoing"
             />
           )}

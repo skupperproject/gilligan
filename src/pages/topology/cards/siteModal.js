@@ -146,6 +146,7 @@ class SiteModal extends Component {
                   showTooltip={this.showTooltip}
                   deploymentLinks={deploymentLinks}
                   site2site
+                  noHeader
                   stat="bytes_out"
                 />
               </div>

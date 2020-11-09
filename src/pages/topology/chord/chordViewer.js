@@ -1045,7 +1045,7 @@ class ChordViewer extends Component {
           // site to site for a service
           return (
             this.props.data.parentNode &&
-            !this.props.site2site && (
+            !this.props.noHeader && (
               <div className="sk-chart-header">
                 {
                   <span>
@@ -1060,9 +1060,9 @@ class ChordViewer extends Component {
           );
         }
         return (
-          !this.props.site2site && (
+          !this.props.noHeader && (
             <div className="sk-chart-header">
-              {`${utils.Icap(utils.statName(this.props.stat))} involving site ${
+              {`${utils.Icap(utils.statName(this.props.stat))} involving ${
                 this.props.data.name
               }`}
             </div>

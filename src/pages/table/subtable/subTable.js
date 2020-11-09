@@ -316,6 +316,7 @@ class SubTable extends Component {
                         deploymentLinks={deploymentLinks()}
                         data={data}
                         site2site
+                        noHeader
                         stat="bytes_out"
                         initial
                       />
