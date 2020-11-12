@@ -570,6 +570,9 @@ path.deployment.highlighted:not(.traffic) {
 path.hittarget.selected {
   opacity: 1;
 }
+path.siteTrafficLink.selected {
+  opacity: 0.5;
+}
 path.service,
 path.deployment {
   cursor: default;
