@@ -115,14 +115,6 @@ class PieBar extends Component {
         site_info,
         showExternal: this.props.showExternal,
       });
-      if (this.props.type === BAR_CHART && this.props.direction === "out") {
-        console.log(
-          `specific requests ${
-            Object.keys(requests).length
-          } address ${address} site_info ${site_info}`
-        );
-        console.log(requests);
-      }
     }
     data = Object.keys(requests).map((key) => {
       const request = requests[key];
@@ -280,10 +272,6 @@ class PieBar extends Component {
   render() {
     const { width, headerText, tickLabel } = this.state;
     let { data } = this.state;
-    if (this.props.type === BAR_CHART && this.props.direction === "out") {
-      console.log(`pieBar::render data`);
-      console.log(data);
-    }
 
     // Padding left for bar chart is needed to allow room for the service names.
     // Service names are stored in the .x attribute of the data
