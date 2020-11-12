@@ -89,7 +89,6 @@ class SubTable extends Component {
       }
     });
   };
-  handleExpandChord = () => {};
 
   data = () =>
     this.props.data
@@ -130,6 +129,7 @@ class SubTable extends Component {
     const data = this.data();
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
+    const { popupContent } = this.state;
 
     const deploymentLinks = () =>
       data.nodeType === "cluster"
@@ -183,13 +183,11 @@ class SubTable extends Component {
           <div
             id="popover-div"
             className={
-              this.state.popupContent
-                ? "sk-popover-div"
-                : "sk-popover-div hidden"
+              popupContent ? "sk-popover-div" : "sk-popover-div hidden"
             }
             ref={(el) => (this.popupRef = el)}
           >
-            <QDRPopup content={this.state.popupContent}></QDRPopup>
+            <QDRPopup content={popupContent}></QDRPopup>
           </div>
 
           {data && (
