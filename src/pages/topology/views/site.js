@@ -233,17 +233,8 @@ export class Site {
 
     // move the sankey starting points to the site location
     nodes.nodes.forEach((n) => {
-      const pos = utils.getSaved(`${SITE_POSITION}-${n.site_id}`);
-      if (pos) {
-        n.x = pos.x;
-        n.y = pos.y;
-        n.x0 = pos.x0;
-        n.y = pos.y0;
-        n.fixed = true;
-      } else {
-        n.x0 = n.x;
-        n.y0 = n.y;
-      }
+      n.x0 = n.x;
+      n.y0 = n.y;
       n.x1 = n.x + n.getWidth();
       n.y1 = n.y + n.getHeight();
     });
@@ -255,9 +246,29 @@ export class Site {
       width: vsize.width,
       height: vsize.height,
     });
+
+    // move sites to their saved position
+    nodes.nodes.forEach((n) => {
+      const pos = utils.getSaved(`${SITE_POSITION}-${n.site_id}`);
+      if (pos) {
+        n.x = pos.x;
+        n.y = pos.y;
+        n.x0 = pos.x0;
+        n.y = pos.y0;
+        n.fixed = true;
+        n.x1 = n.x + n.getWidth();
+        n.y1 = n.y + n.getHeight();
+      }
+    });
+
     vsize = { width: finalSize.width, height: finalSize.height };
 
     if (links.links.length > 0) {
+      utils.updateSankey({
+        nodes: this.siteNodes.nodes,
+        links: this.trafficLinks.links,
+      });
+
       // update the links
       //utils.updateSankey({ nodes: nodes.nodes, links: links.links });
     }
@@ -495,7 +506,7 @@ export class Site {
       .attr("class", "siteTrafficDir")
       .attr("stroke", "black")
       .attr("stroke-width", 1);
-    //.attr("marker-end", "url(#end--15)");
+    //.attr("marker-end", "url(#end--15)"); // site markers are manually moved
 
     const eventPath = enter.append("path").attr("class", "hittarget");
     if (handleEvents) {
@@ -636,18 +647,24 @@ export class Site {
     });
   };
 
-  genTraffic = (d, sankey) => genPath({ link: d, sankey: true, site: sankey });
+  genTraffic = (d, sankey) =>
+    genPath({
+      link: d,
+      sankey: true,
+      width: sankey ? undefined : 6,
+      site: sankey,
+    });
   genTrafficDir = (d, sankey) =>
-    genPath({ link: d, width: d.width, site: sankey });
+    genPath({ link: d, sankey: true, width: 1, site: true });
   genMask = (d, selection, sankey) =>
     genPath({ link: d.link, mask: d.mask, selection, site: sankey });
-  genStatPath = (d, sankey) =>
+  genStatPath = (d) =>
     genPath({
       link: d,
       reverse: d.circular,
       offsetY: 4,
-      width: d.width,
-      site: sankey,
+      width: 1,
+      site: true,
     });
 
   drawViewPaths = (sankey) => {
@@ -657,33 +674,44 @@ export class Site {
       links: this.trafficLinks.links,
     });
 
-    this.routerLinksSelection
-      .selectAll("path") // this includes the .site and .hittarget
-      .attr("d", (d) => pathBetween(d.source, d.target));
-
+    // for the non-sankey mode, path.service is hidden
     this.trafficLinksSelection
       .selectAll("path.siteTrafficLink")
-      .attr("d", (d) => this.genTraffic(d, sankey));
+      .attr("d", (d) =>
+        genPath({
+          link: d,
+          sankey: true,
+          width: sankey ? undefined : 6,
+          site: true,
+        })
+      );
 
     this.trafficLinksSelection
       .selectAll("path.siteTrafficDir")
-      .attr("d", (d) => this.genTrafficDir(d, sankey));
+      .attr("d", (d) => {
+        return genPath({ link: d, sankey: true, width: 1, site: true });
+      });
+    d3.select(this.SVG_ID)
+      .select("defs.statPaths")
+      .selectAll("path")
+      .attr("d", (d) => this.genStatPath(d));
 
     this.trafficLinksSelection
       .selectAll("path.hittarget")
       .attr("stroke-width", (d) => (sankey ? Math.max(d.width, 6) : 6))
-      .attr("d", (d) => this.genTrafficDir(d, sankey));
+      .attr("d", (d) => genPath({ link: d }));
 
+    this.routerLinksSelection
+      .selectAll("path") // this includes the .site and .hittarget
+      .attr("d", (d) => pathBetween(d.source, d.target));
+
+    // the arrows on the trafficDir lines.
+    // not using markers since the arrows are not at the end of the lines
     d3.select(this.SVG_ID)
       .selectAll("path.mask")
       .attr("d", function(d) {
         return self.genMask(d, this, sankey);
       });
-
-    d3.select(this.SVG_ID)
-      .select("defs.statPaths")
-      .selectAll("path")
-      .attr("d", (d) => this.genStatPath(d, sankey));
   };
 
   setLinkStat = (show, stat) => {
@@ -780,7 +808,7 @@ export class Site {
       nodes: this.siteNodes.nodes,
       links: this.trafficLinks.links,
     });
-
+    this.drawViewPaths(sankey);
     const duration = initial ? 0 : utils.VIEW_DURATION;
     if (sankey) {
       return this.toSiteSankey(duration);
@@ -868,7 +896,7 @@ export class Site {
         .duration(duration)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
-          const current = self.genStatPath(d, false);
+          const current = self.genStatPath(d);
           return interpolatePath(previous, current);
         });
 
@@ -927,7 +955,7 @@ export class Site {
     });
   };
 
-  // no traffic view
+  // show site connections only as dashed line
   toSite = (duration) => {
     return new Promise((resolve) => {
       const self = this;
@@ -1056,7 +1084,7 @@ export class Site {
         .duration(duration)
         .attrTween("d", function(d) {
           const previous = d3.select(this).attr("d");
-          const current = self.genStatPath(d, true);
+          const current = self.genStatPath(d);
           return interpolatePath(previous, current);
         });
 
@@ -1178,16 +1206,16 @@ export class Site {
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;
       if (fromId !== toId) {
-        if (!requests.hasOwnProperty(toId)) requests[toId] = {};
+        if (!requests.hasOwnProperty(fromId)) requests[fromId] = {};
         utils.aggregateAttributes(
           {
             key: toName,
             shortName: toName,
             baseName: toName,
             requests: deploymentLink.request[stat] || 0,
-            color: utils.siteColors[toId].color,
+            color: utils.siteColors[fromId].color,
           },
-          requests[toId]
+          requests[fromId]
         );
       }
     });

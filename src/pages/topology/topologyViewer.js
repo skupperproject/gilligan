@@ -331,6 +331,7 @@ class TopologyViewer extends Component {
     }
     // create svg elements
     this.restart();
+    this.drawNodesAndPaths();
   };
 
   doUpdate = () => {

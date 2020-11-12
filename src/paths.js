@@ -40,7 +40,6 @@ const distance = (pt1, pt2) => {
 
 export const genPath = ({
   link,
-  key,
   mask,
   sankey,
   width,
@@ -59,9 +58,9 @@ export const genPath = ({
   if (mask) {
     path = genMask(link, selection, site);
   } else if (link.circular) {
-    path = circular(link, key, sankey, width, reverse, offsetY, site);
+    path = circular(link, sankey, width, reverse, offsetY, site);
   } else {
-    path = bezierPath(link, key, sankey, width, reverse, offsetY);
+    path = bezierPath(link, sankey, width, reverse, offsetY);
   }
   if (path.includes("NaN")) {
     console.log(
@@ -71,8 +70,6 @@ export const genPath = ({
   }
   return path;
 };
-
-const get = (obj, attr, key) => (key ? obj[key][attr] : obj[attr]);
 
 // construct an arrow on the surface of the target circle
 // oriented along the path connecting the source and target circles
@@ -121,8 +118,8 @@ const genMask = (link, selection, site) => {
 };
 
 // create a bezier path between link.source and link.target
-const bezierPath = (link, key, sankey, width, reverse, offset) => {
-  let x0 = get(link.source, "x1", key); // right side of source
+const bezierPath = (link, sankey, width, reverse, offset) => {
+  let x0 = link.source.x1; // right side of source
   if (link.source.expanded && link.source.nodeType === "cluster") {
     x0 -= link.source.getWidth() / 2;
   }
@@ -130,8 +127,8 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
   let y0 =
     link.source.expanded && !isNaN(link.y0)
       ? link.y0 - offsetY
-      : get(link.source, "y0", key) + link.source.getHeight() / 2 - offsetY;
-  let x1 = get(link.target, "x0", key); // left side of target
+      : link.source.y0 + link.source.getHeight() / 2 - offsetY;
+  let x1 = link.target.x0; // left side of target
   if (link.source.expanded && link.target.nodeType === "cluster") {
     x1 += link.target.getWidth() / 2;
   }
@@ -140,7 +137,7 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
   let y1 =
     link.target.expanded && !isNaN(link.y1)
       ? link.y1 - offsetY
-      : get(link.target, "y0", key) + link.target.getHeight() / 2 - offsetY;
+      : link.target.y0 + link.target.getHeight() / 2 - offsetY;
   let mid = (x0 + x1) / 2;
   //if (isNaN(mid)) debugger;
   let halfWidth = width / 2;
@@ -174,7 +171,8 @@ const bezierPath = (link, key, sankey, width, reverse, offset) => {
 
 // create a complex path exiting source on the right
 // and curving around to enter the target on the left
-const circular = (link, key, sankey, width, reverse, off, site) => {
+const circular = (link, sankey, width, reverse, off, site) => {
+  const rWidth = sankey || reverse ? link.width : width;
   const minR = 10;
   const maxR = 80;
   const { offsetX, offsetY } = calcOffsets(link, off);
@@ -183,25 +181,25 @@ const circular = (link, key, sankey, width, reverse, off, site) => {
   // straight line entering target
   const gapTarget = site ? link.target.r : 8;
   // radius of the turns
-  const r = width ? Math.max(Math.min(maxR, width), minR) : minR;
+  const r = Math.max(Math.min(maxR, rWidth), minR);
   // right side of source
-  let sourceX = get(link.source, "x1", key);
+  let sourceX = link.source.x1;
   if (link.source.expanded && link.source.nodeType === "cluster") {
     sourceX -= link.source.getWidth() / 2;
   }
   // left side of target
-  let targetX = get(link.target, "x0", key);
+  let targetX = link.target.x0;
   if (link.target.expanded && link.target.nodeType === "cluster") {
     targetX += link.target.getWidth() / 2;
   }
   const sourceY =
     link.source.expanded && !isNaN(link.y0)
       ? link.y0
-      : get(link.source, "y0", key) + link.source.getHeight() / 2;
+      : link.source.y0 + link.source.getHeight() / 2;
   const targetY =
     link.target.expanded && !isNaN(link.y1)
       ? link.y1
-      : get(link.target, "y0", key) + link.target.getHeight() / 2;
+      : link.target.y0 + link.target.getHeight() / 2;
 
   sourceX += offsetX;
   targetX += offsetX;
