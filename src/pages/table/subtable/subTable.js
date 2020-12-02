@@ -179,7 +179,15 @@ class SubTable extends Component {
             </SplitItem>
           </Split>
         </StackItem>
-        <StackItem className="sk-subtable-content" id="skSubtableCharts">
+        <StackItem
+          className="sk-subtable-content"
+          id="skSubtableCharts"
+          data-testid={`data-testid_${this.props.view}_${
+            data.nodeType === "cluster"
+              ? data.name
+              : utils.shortName(data.address)
+          }`}
+        >
           <div
             id="popover-div"
             className={

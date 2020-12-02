@@ -29,20 +29,23 @@ export class QDRService {
     this.history = {};
   }
 
-  connect() {
+  connect(to) {
     return new Promise((resolve, reject) => {
       if (!this.rest) this.rest = new RESTService();
-      this.rest.getData().then(
-        (data) => {
-          if (this.adapter) delete this.adapter;
-          this.adapter = new Adapter(data);
-          this.VAN = data;
-          this.saveTimeSeries(data);
-          this.initColors(data);
-          resolve(data);
-        },
-        (error) => reject(error)
-      );
+      this.rest
+        .getData(to)
+        .then(
+          (data) => {
+            if (this.adapter) delete this.adapter;
+            this.adapter = new Adapter(data);
+            this.VAN = data;
+            this.saveTimeSeries(data);
+            this.initColors(data);
+            resolve(data);
+          },
+          (error) => reject(error)
+        )
+        .catch(() => {});
     });
   }
   update() {

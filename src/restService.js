@@ -6,27 +6,27 @@ class RESTService {
 
   getData = (alt) =>
     new Promise((resolve, reject) => {
-      // try from the window url
-      this.fetchFrom(`${this.url}/DATA`)
-        .then(resolve)
-        .catch((error) => {
-          //reject(error);
-          //console.log("failed to get from window url");
-          //console.log(error);
-          // TODO: remove this for production
-          // this was only used to get the data when the console
-          // was served by yarn start
-
-          if (!alt) {
-            alt = "DATA";
-          }
-          this.fetchFrom(`/data/${alt}.json`)
-            .then(resolve)
-            .catch((error) => {
-              console.log(error);
-              reject(error);
-            });
-        });
+      if (process.env.NODE_ENV === "test") {
+        const data = require("../public/data/DATA.json");
+        resolve(data);
+      } else {
+        // try from the window url
+        this.fetchFrom(`${this.url}/DATA`)
+          .then(resolve)
+          .catch((error) => {
+            //console.log("failed to get from window url");
+            // This is used to get the data when the console
+            // is served by yarn start
+            if (!alt) {
+              alt = `/data/DATA.json`;
+            }
+            this.fetchFrom(alt)
+              .then(resolve)
+              .catch((error) => {
+                reject(error);
+              });
+          });
+      }
     });
 
   fetchFrom = (url) =>

@@ -237,6 +237,7 @@ class TopologyViewer extends Component {
         .select("#topology")
         .append("svg")
         .attr("id", "SVG_ID")
+        .attr("data-testid", "SVG_ID")
         .attr("width", this.width)
         .attr("height", this.height)
         .on("click", () => {

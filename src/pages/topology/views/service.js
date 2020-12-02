@@ -317,6 +317,12 @@ export class Service {
       .attr("class", "service-type")
       .text(function(d) {
         this.innerHTML = d.shortName;
+        if (!this.getBBox) {
+          this.getBBox = () => ({
+            width: 100,
+            height: 40,
+          });
+        }
         let width = this.getBBox().width + 20;
         let contentWidth = Math.max(Math.min(utils.ServiceWidth, width), 80);
         let ellipseName = d.shortName;

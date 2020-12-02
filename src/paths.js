@@ -74,6 +74,10 @@ export const genPath = ({
 // construct an arrow on the surface of the target circle
 // oriented along the path connecting the source and target circles
 const genMask = (link, selection, site) => {
+  if (!selection.getTotalLength) {
+    selection.getTotalLength = () => 100;
+    selection.getPointAtLength = (p) => ({ x: p, y: p / 100 });
+  }
   let away = 5; // 1/2 the arrows base width
   let r = link.target.getWidth() / 2; // target circle radius
   let tc = {

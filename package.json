@@ -10,7 +10,7 @@
     "@patternfly/react-icons": "^4.7.6",
     "@patternfly/react-styles": "^4.7.5",
     "@patternfly/react-table": "^4.16.20",
-    "@patternfly/react-topology": "^4.5.14",
+    "@patternfly/react-topology": "^4.6.69",
     "@plotly/d3-sankey-circular": "^0.33.1",
     "@svgr/webpack": "5.4.0",
     "@typescript-eslint/eslint-plugin": "3.6.1",
@@ -67,7 +67,7 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js",
+    "test": "node scripts/test.js --silent",
     "gzip": "tar -czvf master.tar.gz --exclude='./node_modules' --exclude='./.history' --exclude='./.git' --exclude='./build' --exclude='./public/data' --exclude='./master.tar.gz' ."
   },
   "eslintConfig": {
@@ -93,7 +93,9 @@
     "setupFiles": [
       "react-app-polyfill/jsdom"
     ],
-    "setupFilesAfterEnv": [],
+    "setupFilesAfterEnv": [
+      "<rootDir>/__tests__/setup.js"
+    ],
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
@@ -136,6 +138,8 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.11.6",
+    "@testing-library/react": "^11.2.2",
     "eslint": "^7.10.0",
     "eslint-config-react-app": "^5.2.1",
     "eslint-loader": "4.0.2",
@@ -149,6 +153,7 @@
     "jest-resolve": "26.1.0",
     "jest-watch-typeahead": "0.6.0",
     "prettier": "^1.18.2",
+    "react-test-renderer": "^17.0.1",
     "webpack": "4.44.2",
     "webpack-dev-server": "3.11.0",
     "webpack-manifest-plugin": "2.2.0",

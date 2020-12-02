@@ -140,6 +140,7 @@ class TableViewer extends React.Component {
     return (
       <Button
         className="link-button"
+        data-testid={value}
         onClick={(event) => this.detailClick(value, extraInfo)}
       >
         {value}
@@ -322,6 +323,7 @@ class TableViewer extends React.Component {
           sortBy={this.state.sortBy}
           onSort={this.onSort}
           variant={TableVariant.compact}
+          data-testid={`data-testid_${this.props.view}`}
         >
           <TableHeader />
           <TableBody />

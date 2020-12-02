@@ -253,11 +253,13 @@ class PageLayout extends React.Component {
       connectPath = "/";
       clearInterval(this.timer);
       this.timer = setInterval(this.update, UPDATE_INTERVAL);
-      this.setState({
-        username: "Bob Denver",
-        connectPath,
-        connected: true,
-      });
+      if (!this.unmounted) {
+        this.setState({
+          username: "Bob Denver",
+          connectPath,
+          connected: true,
+        });
+      }
     }
   };
 

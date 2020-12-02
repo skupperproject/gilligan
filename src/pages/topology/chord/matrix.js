@@ -16,7 +16,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-/* global d3 */
+import * as d3 from "d3";
 
 const MIN_CHORD_THRESHOLD = 0.01;
 
