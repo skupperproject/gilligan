@@ -2,3 +2,5 @@ node_modules
 build
 .history
 public/data
+
+!*/public/data/DATA.json
