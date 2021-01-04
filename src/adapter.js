@@ -66,7 +66,7 @@ class Adapter {
             this.addTarget(service.targets, service.address, request.site_id);
           }
         });
-      } else {
+      } else if (service.connections_egress) {
         // tcp service without targets
         if (service.connections_egress.length > 0) {
           service.connections_egress.forEach((egress) => {
@@ -195,7 +195,7 @@ class Adapter {
             }
           }
         });
-      } else {
+      } else if (service.connections_ingress) {
         service.connections_ingress.forEach((ingress) => {
           for (let connectionID in ingress.connections) {
             const client = ingress.connections[connectionID].client;
@@ -305,7 +305,7 @@ class Adapter {
             }
           }
         }
-      } else {
+      } else if (to.connections_egress) {
         for (let e = 0; e < to.connections_egress.length; e++) {
           const egress = to.connections_egress[e];
           if (egress.site_id === toSite) {
@@ -503,8 +503,8 @@ class Adapter {
   getServiceSites = (service) => {
     const sites = [];
     // for tcp services
-    if (service.connections_egress) {
-      if (service.connections_egress.length > 0) {
+    if (service.protocol === "tcp") {
+      if (service.connections_egress && service.connections_egress.length > 0) {
         service.connections_egress.forEach((connection) => {
           sites.push(this.findSite(connection.site_id));
         });
@@ -516,16 +516,23 @@ class Adapter {
       }
     } else {
       // for http services
-      if (service.requests_handled.length === 0) {
-        // service that only sends requests
+      if (service.requests_handled) {
+        if (service.requests_handled.length === 0) {
+          // service that only sends requests
+          const target = this.findInTargets(service);
+          if (target) {
+            sites.push(this.findSite(target.site_id));
+          }
+        }
+        service.requests_handled.forEach((request) => {
+          sites.push(this.findSite(request.site_id));
+        });
+      } else {
         const target = this.findInTargets(service);
         if (target) {
           sites.push(this.findSite(target.site_id));
         }
       }
-      service.requests_handled.forEach((request) => {
-        sites.push(this.findSite(request.site_id));
-      });
     }
     return sites;
   };
@@ -700,7 +707,7 @@ class Adapter {
             }
           }
         }
-      } else {
+      } else if (toService.connections_egress) {
         // tcp service
         for (let e = 0; e < toService.connections_egress.length; e++) {
           const egress = toService.connections_egress[e];

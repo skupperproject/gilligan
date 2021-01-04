@@ -1125,7 +1125,11 @@ export class Service {
     options.mode === "graph"
       ? utils.setOptions(SERVICE_OPTIONS, options, DEFAULT_OPTIONS)
       : utils.setOptions(SERVICE_TABLE_OPTIONS, options, DEFAULT_TABLE_OPTIONS);
-  getGraphOptions = () => utils.getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS);
+  getGraphOptions = () => {
+    const options = utils.getOptions(SERVICE_OPTIONS, DEFAULT_OPTIONS);
+    if (options.color !== undefined) delete options.color;
+    return options;
+  };
   saveGraphOptions = (options) => utils.setOptions(SERVICE_OPTIONS, options);
   getTableOptions = () =>
     utils.getOptions(SERVICE_TABLE_OPTIONS, DEFAULT_TABLE_OPTIONS);

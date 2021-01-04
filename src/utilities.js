@@ -944,7 +944,7 @@ const utils = {
       saved.tcp = saved.stat.tcp;
       delete saved.stat;
     }
-    if (saved.color !== undefined) delete saved.color;
+    //if (saved.color !== undefined) delete saved.color;
     return saved;
   },
 

@@ -55,11 +55,13 @@ class ConnectionsIn extends Component {
 
   conns = (data) => {
     const connections = [];
-    data.connections_ingress.forEach((conn) => {
-      for (let connId in conn.connections) {
-        connections.push(conn.connections[connId]);
-      }
-    });
+    if (data.connections_ingress) {
+      data.connections_ingress.forEach((conn) => {
+        for (let connId in conn.connections) {
+          connections.push(conn.connections[connId]);
+        }
+      });
+    }
     return connections.map((conn, i) => (
       <ClientConnection
         key={`connin-${i}`}

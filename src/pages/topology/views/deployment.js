@@ -861,6 +861,10 @@ export class Deployment extends Service {
           options,
           DEFAULT_TABLE_OPTIONS
         );
-  getGraphOptions = () => utils.getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS);
+  getGraphOptions = () => {
+    const options = utils.getOptions(DEPLOYMENT_OPTIONS, DEFAULT_OPTIONS);
+    if (options.color !== undefined) delete options.color;
+    return options;
+  };
   saveGraphOptions = (options) => utils.setOptions(DEPLOYMENT_OPTIONS, options);
 }
