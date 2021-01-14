@@ -22,7 +22,7 @@
       "connected": ["7hZ9GQzD6u"],
       "namespace": "default",
       "url": "10.107.63.213",
-      "edge": false
+      "edge": true
     }
   ],
   "services": [
