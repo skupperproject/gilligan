@@ -62,6 +62,7 @@ export class Site {
     this.fields = [
       { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
+      { title: "Edge", field: "edge" },
     ];
     this.card = new SiteCard();
     this.linkCard = new LinkCard();
@@ -150,6 +151,7 @@ export class Site {
       clusterNode.normalR = radius;
       clusterNode.sankeyR = radius;
       clusterNode.expanded = viewer.state.options.traffic;
+      clusterNode.edge = cluster.edge;
     });
   };
 
@@ -385,6 +387,7 @@ export class Site {
     rects
       .append("svg:circle")
       .attr("class", "network")
+      .classed("edge", (d) => d.edge)
       .attr("r", (d) => d.r)
       .attr("cx", (d) => d.r)
       .attr("cy", (d) => d.r)
@@ -1183,6 +1186,7 @@ export class Site {
       cardData: n,
       site_name: n.site_name,
       namespace: n.namespace,
+      edge: n.edge ? "true" : "false",
       servers: [
         ...new Set(
           n.servers.map((s) => this.data.adapter.serviceNameFromClientId(s))

@@ -127,3 +127,8 @@ a.sk-custom-icon svg {
   text-align: center;
   padding-top: 1em;
 }
+
+circle.edge {
+  stroke-width: 2;
+  stroke-dasharray: 4;
+}

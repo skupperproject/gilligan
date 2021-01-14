@@ -110,7 +110,23 @@ class LegendComponent extends Component {
       .attr("x", 50)
       .attr("y", 15)
       .text("Site");
-    const service = objs.append("g").attr("transform", "translate(0, 30)");
+
+    const edgeSite = objs.append("g").attr("transform", "translate(0, 30)");
+    edgeSite
+      .append("circle")
+      .attr("class", "network edge")
+      .attr("r", 10)
+      .attr("cx", 10)
+      .attr("cy", 12)
+      .attr("fill", "#eaeaea")
+      .attr("stroke", "black");
+    edgeSite
+      .append("text")
+      .attr("x", 50)
+      .attr("y", 15)
+      .text("Edge site");
+
+    const service = objs.append("g").attr("transform", "translate(0, 60)");
     service
       .append("rect")
       .attr("rx", 2)
