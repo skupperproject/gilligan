@@ -285,8 +285,12 @@ const utils = {
       colNodes.forEach((p) => {
         nodes.forEach((n) => {
           if (p.targetNodes.includes(n) && n !== p) {
-            if (align === "left" || n.col === undefined) {
+            if (
+              (align === "left" && n.moved === undefined) ||
+              n.col === undefined
+            ) {
               n.col = p.col + 1;
+              n.moved = true; // prevent infinite loop when nodes call each other
               foundNodes.push(n);
             }
           }
@@ -294,6 +298,9 @@ const utils = {
       });
       colNodes = foundNodes;
     }
+    nodes.forEach((n) => {
+      if (n.moved) delete n.moved;
+    });
     // in case we have stranded nodes, i.e. nodes that are not descendants
     // of any of the nodes in the leftmost column
     const stranded = nodes.filter((n) => n.col === undefined);
