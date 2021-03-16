@@ -7,7 +7,7 @@ class RESTService {
   getData = () =>
     new Promise((resolve, reject) => {
       if (process.env.NODE_ENV === "test") {
-        const data = require("../public/data/DATA.json");
+        const data = require("../public/data/testing.json");
         resolve(data);
       } else if (process.env.NODE_ENV === "development") {
         // This is used to get the data when the console
@@ -54,7 +54,7 @@ class RESTService {
 
   uploadToken = (data) =>
     new Promise((resolve, reject) => {
-      fetch(`${this.url}/TOKEN`, {
+      fetch(`${this.url}/USETOKEN`, {
         method: "POST",
         body: data,
       })
@@ -69,6 +69,8 @@ class RESTService {
           reject(error);
         });
     });
+
+  getSkupperTokenURL = () => `/GETTOKEN`;
 
   fetchFrom = (url) =>
     new Promise((resolve, reject) => {

@@ -22,6 +22,7 @@ class Adapter {
     }
     data.getDeploymentLinks = (showExternal) =>
       this.getDeploymentLinks(showExternal);
+    this.siteInfo = { name: this.data.sites[0].site_name };
   }
 
   // if multiple sites have the same name,

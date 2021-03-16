@@ -27,6 +27,10 @@ export class QDRService {
   constructor(hooks) {
     this.hooks = hooks;
     this.history = {};
+    this.VAN = null;
+    this.rest = null;
+    this.adapter = null;
+    this.siteInfo = null;
   }
 
   connect(to) {
@@ -41,6 +45,9 @@ export class QDRService {
             this.VAN = data;
             this.saveTimeSeries(data);
             this.initColors(data);
+            if (!this.siteInfo) {
+              this.rest.getSiteInfo().then((info) => (this.siteInfo = info));
+            }
             resolve(data);
           },
           (error) => reject(error)
@@ -48,6 +55,20 @@ export class QDRService {
         .catch(() => {});
     });
   }
+
+  getSiteInfo = () =>
+    this.siteInfo
+      ? new Promise((resolve) => resolve(this.siteInfo))
+      : this.rest.getSiteInfo();
+
+  uploadToken = (data) => {
+    return this.rest.uploadToken(data);
+  };
+
+  getSkupperTokenURL = () => {
+    return this.rest.getSkupperTokenURL();
+  };
+
   update() {
     return this.connect();
   }

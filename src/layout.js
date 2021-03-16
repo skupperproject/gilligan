@@ -41,6 +41,7 @@ import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
+import SiteInfo from "./pages/siteInfo/siteInfoPage";
 import ErrorPage from "./pages/connect/errorPage";
 import { QDRService, UPDATE_INTERVAL } from "./qdrService";
 import { utils } from "./utilities";
@@ -55,11 +56,17 @@ class PageLayout extends React.Component {
   constructor(props) {
     super(props);
     const view = utils.getSaved(LAST_VIEW, "service");
+    // view modes are "graph", "table", "details", and "info"
     this.viewModes = utils.getSaved(VIEW_MODES, {
+      thissite: "info",
       service: "graph",
       site: "graph",
       deployment: "graph",
     });
+    // added in version 1.5 so it won't be in the data that was saved before that
+    if (!this.viewModes.thissite) {
+      this.viewModes.thissite = "info";
+    }
     // never start with the details view
     if (this.viewModes[view] === "details") {
       this.viewModes[view] = "table";
@@ -78,12 +85,12 @@ class PageLayout extends React.Component {
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
 
-    this.views = [
-      { description: "Services", name: "service" },
-      { description: "Sites", name: "site" },
-      { description: "Deployments", name: "deployment" },
-      //{ name: "Processes", view: "process" },
-    ];
+    this.views = {
+      thissite: "Site",
+      site: "Network",
+      service: "Services",
+      deployment: "Deployments",
+    };
   }
   componentDidMount = () => {
     this.doConnect();
@@ -147,9 +154,9 @@ class PageLayout extends React.Component {
     // restore the last mode the user selected
     if (this.savedMode) {
       this.viewModes[this.state.view] = this.savedMode;
-      utils.setSaved(VIEW_MODES, this.viewModes);
       this.savedMode = null;
     }
+    utils.setSaved(VIEW_MODES, this.viewModes);
 
     // when clicking on a nav item, go to the table view instead of the details view
     if (this.viewModes[result.itemId] === "details") {
@@ -265,10 +272,7 @@ class PageLayout extends React.Component {
 
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
-  getMode = () => {
-    let mode = this.viewModes[this.state.view];
-    return mode;
-  };
+  getMode = () => this.viewModes[this.state.view];
 
   render() {
     const { view } = this.state;
@@ -277,16 +281,15 @@ class PageLayout extends React.Component {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
           <NavList>
-            {this.views.map((viewInfo) => {
-              const { description, name } = viewInfo;
+            {Object.keys(this.views).map((viewKey) => {
               return (
                 <NavItem
-                  id={`${name}NavItem`}
-                  itemId={name}
-                  isActive={name === view}
-                  key={name}
+                  id={`${viewKey}NavItem`}
+                  itemId={viewKey}
+                  isActive={viewKey === view}
+                  key={viewKey}
                 >
-                  <div className="nav-item-link">{description}</div>
+                  <div className="nav-item-link">{this.views[viewKey]}</div>
                 </NavItem>
               );
             })}
@@ -403,6 +406,7 @@ class PageLayout extends React.Component {
               handleViewDetails={this.handleViewDetails}
               setOptions={this.setOptions}
               view={this.state.view}
+              views={this.views}
               mode="graph"
             />
           )}
@@ -414,7 +418,15 @@ class PageLayout extends React.Component {
               handleChangeViewMode={this.handleChangeViewMode}
               setOptions={this.setOptions}
               view={this.state.view}
+              views={this.views}
               mode={mode}
+            />
+          )}
+          {this.state.connected && mode === "info" && (
+            <SiteInfo
+              ref={(el) => (this.pageRef = el)}
+              service={this.service}
+              {...this.props}
             />
           )}
         </Page>

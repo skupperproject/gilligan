@@ -875,13 +875,34 @@ const utils = {
     return { interval: 0, epoch: "second" };
   },
 
+  convertDate: (strMSec, tense) => {
+    let date = new Date(parseInt(strMSec, 10));
+    if (tense === "past") {
+      return utils.timeAgo(date);
+    } else if (tense === "future") {
+      return utils.timeTill(date);
+    } else {
+      return date.toDateString();
+    }
+  },
+  timeTill: (date) => {
+    const timeTillInSeconds = Math.floor((date - new Date()) / 1000);
+    if (timeTillInSeconds < 0) {
+      return null; // indicate that the supplied date is past
+    }
+    const { interval, epoch } = utils.getDuration(timeTillInSeconds);
+    const suffix = interval === 1 ? "" : "s";
+
+    return `${interval} ${epoch}${suffix} from now`;
+  },
   // Calculate
   timeAgo: (date) => {
     const timeAgoInSeconds = Math.floor((new Date() - date) / 1000);
     const { interval, epoch } = utils.getDuration(timeAgoInSeconds);
     const suffix = interval === 1 ? "" : "s";
+    const prefix = epoch === "year" ? "Over " : "";
 
-    return `${interval} ${epoch}${suffix} ago`;
+    return `${prefix}${interval} ${epoch}${suffix} ago`;
   },
 
   humanize: (str) => {
@@ -1109,6 +1130,12 @@ const utils = {
     }
     return rates;
   },
+
+  // used to create a few hex characters in file names
+  randomHex: (numCharacters) =>
+    [...Array(numCharacters)]
+      .map(() => Math.floor(Math.random() * 16).toString(16))
+      .join(""),
 };
 
 export { utils };

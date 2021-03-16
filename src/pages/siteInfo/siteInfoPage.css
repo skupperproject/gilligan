@@ -1,0 +1,137 @@
+.sk-thissite-tabs,
+.sk-siteinfo-page-wrapper {
+  margin-left: 2em;
+}
+
+.sk-siteinfo-page-wrapper {
+  text-align: left;
+  margin-top: 2em;
+}
+
+.sk-siteinfo-page-wrapper h1 {
+  font-weight: bold;
+  padding-bottom: 0.5em;
+}
+
+.sk-siteinfo-page-wrapper h2 {
+  font-weight: bold;
+  padding-bottom: 0.5em;
+  padding-top: 1em;
+}
+
+.sk-siteinfo-page-wrapper button {
+  display: block;
+  margin-top: 0.5em;
+}
+
+.sk-siteinfo-prompt {
+  color: #999999;
+  padding-right: 0.25em;
+  padding-left: 0.5em;
+}
+
+.sk-upload-status.error {
+  color: red;
+}
+
+.sk-upload-status.success {
+  color: green;
+}
+
+.sk-upload-status {
+  position: relative;
+  top: 1em;
+  left: 1em;
+}
+.container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.sk-siteinfo-actions .container {
+  display: inline-block;
+  position: absolute;
+  top: -0.5em;
+  margin-left: 1em;
+}
+
+.sk-siteinfo-actions .sk-upload-status {
+  position: absolute;
+  top: 2.5em;
+  right: 0;
+  left: auto;
+}
+
+input[type="file"] {
+  position: absolute;
+  z-index: -1;
+  top: 10px;
+  left: 8px;
+  font-size: 17px;
+  color: #fff;
+}
+
+.button-wrap {
+  position: relative;
+}
+
+.button {
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  background-color: #06c;
+  font-size: 16px;
+  font-weight: normal;
+  color: #fff;
+  margin-top: 0.5em;
+}
+
+.button:hover {
+  background-color: #004080;
+}
+
+.sk-siteinfo-actions {
+  width: 22em;
+  position: relative;
+}
+
+.sk-block-button {
+  display: table; /* new line and only as wide as content */
+}
+
+.sk-sub-text {
+  margin-left: 1.3em;
+}
+
+.sk-command-line-example {
+  padding: 1em;
+  background-color: #eaeaea;
+  display: table;
+}
+
+.sk-compact {
+  max-width: 13em;
+}
+
+.sk-siteinfo-tab:focus {
+  outline: -webkit-focus-ring-color auto 0px;
+}
+
+.sk-siteinfo-tab {
+  overflow-y: auto;
+}
+
+section.sk-siteinfo-tab {
+  height: calc(100% - 30px);
+}
+.sk-site-info-table {
+  height: calc(100% - 60px);
+}
+
+.sk-command-line {
+  color: red;
+  font-style: italic;
+}
