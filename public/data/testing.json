@@ -1,0 +1,779 @@
+{
+  "sites": [
+    {
+      "site_name": "site-a",
+      "site_id": "7hZ9GQzD6u",
+      "connected": [],
+      "namespace": "pub1",
+      "url": "grs-test-1.devcluster.openshift.com",
+      "edge": false
+    },
+    {
+      "site_name": "site-b",
+      "site_id": "m32q5a0vtb",
+      "connected": ["7hZ9GQzD6u"],
+      "namespace": "pub2",
+      "url": "grs-test-2.devcluster.openshift.com",
+      "edge": false
+    },
+    {
+      "site_name": "mini1",
+      "site_id": "aArHqpCWpc",
+      "connected": ["7hZ9GQzD6u"],
+      "namespace": "default",
+      "url": "10.107.63.213",
+      "edge": false
+    }
+  ],
+  "services": [
+    {
+      "address": "currencyservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "currencyservice-6c7c479d45-j4zm9",
+          "target": "currencyservice",
+          "site_id": "m32q5a0vtb"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_client": {
+            "frontend-5d68fd5b7d-6kgx5": {
+              "requests": 35,
+              "bytes_in": 697,
+              "bytes_out": 1712,
+              "details": {
+                "POST:200": 35
+              },
+              "latency_max": 25,
+              "by_handling_site": {
+                "m32q5a0vtb": {
+                  "requests": 35,
+                  "bytes_in": 697,
+                  "bytes_out": 1712,
+                  "details": {
+                    "POST:200": 35
+                  },
+                  "latency_max": 25
+                }
+              }
+            }
+          }
+        },
+        {
+          "site_id": "m32q5a0vtb",
+          "by_client": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 3,
+              "bytes_in": 69,
+              "bytes_out": 55,
+              "details": {
+                "POST:200": 3
+              },
+              "latency_max": 7,
+              "by_handling_site": {
+                "m32q5a0vtb": {
+                  "requests": 3,
+                  "bytes_in": 69,
+                  "bytes_out": 55,
+                  "details": {
+                    "POST:200": 3
+                  },
+                  "latency_max": 7
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "m32q5a0vtb",
+          "by_server": {
+            "currencyservice-6c7c479d45-j4zm9": {
+              "requests": 38,
+              "bytes_in": 766,
+              "bytes_out": 1767,
+              "details": {
+                "POST:200": 38
+              },
+              "latency_max": 6
+            }
+          },
+          "by_originating_site": {
+            "7hZ9GQzD6u": {
+              "requests": 35,
+              "bytes_in": 697,
+              "bytes_out": 1712,
+              "details": {
+                "POST:200": 35
+              },
+              "latency_max": 6
+            },
+            "m32q5a0vtb": {
+              "requests": 3,
+              "bytes_in": 69,
+              "bytes_out": 55,
+              "details": {
+                "POST:200": 3
+              },
+              "latency_max": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "shippingservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "shippingservice-6dc47b7f85-pctvp",
+          "target": "shippingservice",
+          "site_id": "aArHqpCWpc"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_client": {
+            "frontend-5d68fd5b7d-6kgx5": {
+              "requests": 3,
+              "bytes_in": 95,
+              "bytes_out": 60,
+              "details": {
+                "POST:200": 3
+              },
+              "latency_max": 201,
+              "by_handling_site": {
+                "aArHqpCWpc": {
+                  "requests": 3,
+                  "bytes_in": 95,
+                  "bytes_out": 60,
+                  "details": {
+                    "POST:200": 3
+                  },
+                  "latency_max": 201
+                }
+              }
+            }
+          }
+        },
+        {
+          "site_id": "m32q5a0vtb",
+          "by_client": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 2,
+              "bytes_in": 208,
+              "bytes_out": 45,
+              "details": {
+                "POST:200": 2
+              },
+              "latency_max": 196,
+              "by_handling_site": {
+                "aArHqpCWpc": {
+                  "requests": 2,
+                  "bytes_in": 208,
+                  "bytes_out": 45,
+                  "details": {
+                    "POST:200": 2
+                  },
+                  "latency_max": 196
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "aArHqpCWpc",
+          "by_server": {
+            "shippingservice-6dc47b7f85-pctvp": {
+              "requests": 5,
+              "bytes_in": 303,
+              "bytes_out": 105,
+              "details": {
+                "POST:200": 5
+              },
+              "latency_max": 13
+            }
+          },
+          "by_originating_site": {
+            "7hZ9GQzD6u": {
+              "requests": 3,
+              "bytes_in": 95,
+              "bytes_out": 60,
+              "details": {
+                "POST:200": 3
+              },
+              "latency_max": 13
+            },
+            "m32q5a0vtb": {
+              "requests": 2,
+              "bytes_in": 208,
+              "bytes_out": 45,
+              "details": {
+                "POST:200": 2
+              },
+              "latency_max": 10
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "checkoutservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "checkoutservice-6fcc84467f-5wwjl",
+          "target": "checkoutservice",
+          "site_id": "m32q5a0vtb"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_client": {
+            "frontend-5d68fd5b7d-6kgx5": {
+              "requests": 1,
+              "bytes_in": 167,
+              "bytes_out": 215,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 992,
+              "by_handling_site": {
+                "m32q5a0vtb": {
+                  "requests": 1,
+                  "bytes_in": 167,
+                  "bytes_out": 215,
+                  "details": {
+                    "POST:200": 1
+                  },
+                  "latency_max": 992
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "m32q5a0vtb",
+          "by_server": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 1,
+              "bytes_in": 167,
+              "bytes_out": 215,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 977
+            }
+          },
+          "by_originating_site": {
+            "7hZ9GQzD6u": {
+              "requests": 1,
+              "bytes_in": 167,
+              "bytes_out": 215,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 977
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "cartservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "cartservice-684bb46b44-ht84q",
+          "target": "cartservice",
+          "site_id": "m32q5a0vtb"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_client": {
+            "frontend-5d68fd5b7d-6kgx5": {
+              "requests": 9,
+              "bytes_in": 419,
+              "bytes_out": 293,
+              "details": {
+                "POST:200": 9
+              },
+              "latency_max": 42,
+              "by_handling_site": {
+                "m32q5a0vtb": {
+                  "requests": 9,
+                  "bytes_in": 419,
+                  "bytes_out": 293,
+                  "details": {
+                    "POST:200": 9
+                  },
+                  "latency_max": 42
+                }
+              }
+            }
+          }
+        },
+        {
+          "site_id": "m32q5a0vtb",
+          "by_client": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 2,
+              "bytes_in": 86,
+              "bytes_out": 80,
+              "details": {
+                "POST:200": 2
+              },
+              "latency_max": 23,
+              "by_handling_site": {
+                "m32q5a0vtb": {
+                  "requests": 2,
+                  "bytes_in": 86,
+                  "bytes_out": 80,
+                  "details": {
+                    "POST:200": 2
+                  },
+                  "latency_max": 23
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "m32q5a0vtb",
+          "by_server": {
+            "cartservice-684bb46b44-ht84q": {
+              "requests": 11,
+              "bytes_in": 505,
+              "bytes_out": 373,
+              "details": {
+                "POST:200": 11
+              },
+              "latency_max": 36
+            }
+          },
+          "by_originating_site": {
+            "7hZ9GQzD6u": {
+              "requests": 9,
+              "bytes_in": 419,
+              "bytes_out": 293,
+              "details": {
+                "POST:200": 9
+              },
+              "latency_max": 36
+            },
+            "m32q5a0vtb": {
+              "requests": 2,
+              "bytes_in": 86,
+              "bytes_out": 80,
+              "details": {
+                "POST:200": 2
+              },
+              "latency_max": 20
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "adservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "adservice-55f9757757-9998f",
+          "target": "adservice",
+          "site_id": "m32q5a0vtb"
+        }
+      ],
+      "requests_received": [],
+      "requests_handled": []
+    },
+    {
+      "address": "emailservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "emailservice-574f4b546c-2vhsc",
+          "site_id": "aArHqpCWpc"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "m32q5a0vtb",
+          "by_client": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 1,
+              "bytes_in": 236,
+              "bytes_out": 5,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 208,
+              "by_handling_site": {
+                "aArHqpCWpc": {
+                  "requests": 1,
+                  "bytes_in": 236,
+                  "bytes_out": 5,
+                  "details": {
+                    "POST:200": 1
+                  },
+                  "latency_max": 208
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "aArHqpCWpc",
+          "by_server": {
+            "emailservice-574f4b546c-2vhsc": {
+              "requests": 1,
+              "bytes_in": 236,
+              "bytes_out": 5,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 8
+            }
+          },
+          "by_originating_site": {
+            "m32q5a0vtb": {
+              "requests": 1,
+              "bytes_in": 236,
+              "bytes_out": 5,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 8
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "redis-cart",
+      "protocol": "tcp",
+      "targets": [
+        {
+          "name": "redis-cart-5f59546cdd-x8765",
+          "target": "redis-cart",
+          "site_id": "m32q5a0vtb"
+        }
+      ],
+      "connections_ingress": [
+        {
+          "site_id": "m32q5a0vtb",
+          "connections": {
+            "10.128.2.12:35793@m32q5a0vtb": {
+              "id": "10.128.2.12:35793@m32q5a0vtb",
+              "start_time": 1586195414773,
+              "bytes_in": 2128,
+              "bytes_out": 5453,
+              "client": "cartservice-684bb46b44-ht84q",
+              "last_in": 1586195635166,
+              "last_out": 1586195635169
+            },
+            "10.128.2.12:42713@m32q5a0vtb": {
+              "id": "10.128.2.12:42713@m32q5a0vtb",
+              "start_time": 1586195414781,
+              "bytes_in": 167,
+              "bytes_out": 104,
+              "client": "cartservice-684bb46b44-ht84q",
+              "last_in": 1586195595750,
+              "last_out": 1586195595754
+            }
+          }
+        }
+      ],
+      "connections_egress": [
+        {
+          "site_id": "m32q5a0vtb",
+          "connections": {
+            "10.128.2.12:35793@m32q5a0vtb": {
+              "id": "10.128.2.12:35793@m32q5a0vtb",
+              "start_time": 1586195414807,
+              "bytes_in": 5453,
+              "bytes_out": 2128,
+              "server": "redis-cart-5f59546cdd-x8765",
+              "last_out": 1586195635167,
+              "last_in": 1586195635168
+            },
+            "10.128.2.12:42713@m32q5a0vtb": {
+              "id": "10.128.2.12:42713@m32q5a0vtb",
+              "start_time": 1586195414813,
+              "bytes_in": 104,
+              "bytes_out": 167,
+              "server": "redis-cart-5f59546cdd-x8765",
+              "last_out": 1586195595752,
+              "last_in": 1586195595753
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "paymentservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "paymentservice-8495dfc549-4ztnc",
+          "target": "paymentservice",
+          "site_id": "aArHqpCWpc"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "m32q5a0vtb",
+          "by_client": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 1,
+              "bytes_in": 52,
+              "bytes_out": 43,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 219,
+              "by_handling_site": {
+                "aArHqpCWpc": {
+                  "requests": 1,
+                  "bytes_in": 52,
+                  "bytes_out": 43,
+                  "details": {
+                    "POST:200": 1
+                  },
+                  "latency_max": 219
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "aArHqpCWpc",
+          "by_server": {
+            "paymentservice-8495dfc549-4ztnc": {
+              "requests": 1,
+              "bytes_in": 52,
+              "bytes_out": 43,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 19
+            }
+          },
+          "by_originating_site": {
+            "m32q5a0vtb": {
+              "requests": 1,
+              "bytes_in": 52,
+              "bytes_out": 43,
+              "details": {
+                "POST:200": 1
+              },
+              "latency_max": 19
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "productcatalogservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "productcatalogservice-d564bdf4c-ldr9d",
+          "target": "productcatalogservice",
+          "site_id": "7hZ9GQzD6u"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_client": {
+            "frontend-5d68fd5b7d-6kgx5": {
+              "requests": 41,
+              "bytes_in": 673,
+              "bytes_out": 9242,
+              "details": {
+                "POST:200": 41
+              },
+              "latency_max": 14,
+              "by_handling_site": {
+                "7hZ9GQzD6u": {
+                  "requests": 41,
+                  "bytes_in": 673,
+                  "bytes_out": 9242,
+                  "details": {
+                    "POST:200": 41
+                  },
+                  "latency_max": 14
+                }
+              }
+            },
+            "recommendationservice-76598d5889-tzw5f": {
+              "requests": 6,
+              "bytes_in": 30,
+              "bytes_out": 8634,
+              "details": {
+                "POST:200": 6
+              },
+              "latency_max": 6,
+              "by_handling_site": {
+                "7hZ9GQzD6u": {
+                  "requests": 6,
+                  "bytes_in": 30,
+                  "bytes_out": 8634,
+                  "details": {
+                    "POST:200": 6
+                  },
+                  "latency_max": 6
+                }
+              }
+            }
+          }
+        },
+        {
+          "site_id": "m32q5a0vtb",
+          "by_client": {
+            "checkoutservice-6fcc84467f-5wwjl": {
+              "requests": 2,
+              "bytes_in": 34,
+              "bytes_out": 342,
+              "details": {
+                "POST:200": 2
+              },
+              "latency_max": 14,
+              "by_handling_site": {
+                "7hZ9GQzD6u": {
+                  "requests": 2,
+                  "bytes_in": 34,
+                  "bytes_out": 342,
+                  "details": {
+                    "POST:200": 2
+                  },
+                  "latency_max": 14
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_server": {
+            "productcatalogservice-d564bdf4c-ldr9d": {
+              "requests": 49,
+              "bytes_in": 737,
+              "bytes_out": 18218,
+              "details": {
+                "POST:200": 49
+              },
+              "latency_max": 3
+            }
+          },
+          "by_originating_site": {
+            "7hZ9GQzD6u": {
+              "requests": 47,
+              "bytes_in": 703,
+              "bytes_out": 17876,
+              "details": {
+                "POST:200": 47
+              },
+              "latency_max": 3
+            },
+            "m32q5a0vtb": {
+              "requests": 2,
+              "bytes_in": 34,
+              "bytes_out": 342,
+              "details": {
+                "POST:200": 2
+              },
+              "latency_max": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "address": "recommendationservice",
+      "protocol": "http",
+      "targets": [
+        {
+          "name": "recommendationservice-76598d5889-tzw5f",
+          "target": "recommendationservice",
+          "site_id": "7hZ9GQzD6u"
+        }
+      ],
+      "requests_received": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_client": {
+            "frontend-5d68fd5b7d-6kgx5": {
+              "requests": 6,
+              "bytes_in": 342,
+              "bytes_out": 390,
+              "details": {
+                "POST:200": 6
+              },
+              "latency_max": 66,
+              "by_handling_site": {
+                "7hZ9GQzD6u": {
+                  "requests": 6,
+                  "bytes_in": 342,
+                  "bytes_out": 390,
+                  "details": {
+                    "POST:200": 6
+                  },
+                  "latency_max": 66
+                }
+              }
+            }
+          }
+        }
+      ],
+      "requests_handled": [
+        {
+          "site_id": "7hZ9GQzD6u",
+          "by_server": {
+            "recommendationservice-76598d5889-tzw5f": {
+              "requests": 6,
+              "bytes_in": 342,
+              "bytes_out": 390,
+              "details": {
+                "POST:200": 6
+              },
+              "latency_max": 13
+            }
+          },
+          "by_originating_site": {
+            "7hZ9GQzD6u": {
+              "requests": 6,
+              "bytes_in": 342,
+              "bytes_out": 390,
+              "details": {
+                "POST:200": 6
+              },
+              "latency_max": 13
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
