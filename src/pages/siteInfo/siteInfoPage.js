@@ -18,6 +18,7 @@ under the License.
 */
 
 import React, { Component } from "react";
+import "./siteInfoPage.css";
 import {
   PageSection,
   PageSectionVariants,
@@ -30,7 +31,7 @@ import {
 import { Split, SplitItem } from "@patternfly/react-core";
 import SiteInfoViewer from "./siteInfoViewer";
 import DownloadModal from "./downloadModal";
-import "./siteInfoPage.css";
+import UploadButton from "./uploadButton";
 
 import LastUpdated from "../../lastUpdated";
 
@@ -102,20 +103,8 @@ class SiteInfoPage extends Component {
                 </SplitItem>
                 <SplitItem isFilled></SplitItem>
                 <SplitItem className="sk-siteinfo-actions">
-                  <DownloadModal {...this.props} cls="sk-none" />
-                  <div className="container">
-                    <div className="button-wrap">
-                      <label className="button" htmlFor="upload">
-                        Upload a link token
-                      </label>
-                      <input
-                        onChange={this.onFileChange}
-                        id="upload"
-                        type="file"
-                      />
-                    </div>
-                  </div>
-
+                  <DownloadModal {...this.props} cls="sk-none" variant="secondary" />
+                  <UploadButton {...this.props} variant="secondary" />
                   <TextContent>
                     <span
                       className={`sk-upload-status ${

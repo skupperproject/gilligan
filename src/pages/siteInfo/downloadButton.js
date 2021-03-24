@@ -19,7 +19,6 @@ under the License.
 
 import React from "react";
 import { Button } from "@patternfly/react-core";
-
 class DownloadButton extends React.Component {
   constructor(props) {
     super(props);

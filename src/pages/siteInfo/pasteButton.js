@@ -19,6 +19,7 @@ under the License.
 
 import React from "react";
 import { Button } from "@patternfly/react-core";
+import CopyIcon from '@patternfly/react-icons/dist/js/icons/copy-icon';
 
 class PasteButton extends React.Component {
   constructor(props) {
@@ -33,6 +34,7 @@ class PasteButton extends React.Component {
       <Button
         className={this.props.cls ? this.props.cls : "sk-block-button"}
         variant="primary"
+        icon={<CopyIcon />}
         onClick={this.props.handlePasteClicked}
       >
         {`${this.props.text ? this.props.text : "Paste token to create link"}`}

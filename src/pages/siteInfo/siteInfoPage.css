@@ -94,7 +94,7 @@ input[type="file"] {
 }
 
 .sk-siteinfo-actions {
-  width: 22em;
+  width: 25.25em;
   position: relative;
 }
 
@@ -149,4 +149,22 @@ h2.sk-inline-h2 {
 
 .sk-inline-status-text {
   display: inline;
+}
+
+.sk-secondary-button {
+  background-color: white;
+}
+
+#skUploadIcon {
+  position: relative;
+  top: -30px;
+  left: 14px;
+}
+
+.sk-icon-button {
+  padding-left: 2.1em;
+}
+
+#skUploadButton {
+  color: #06c;
 }

@@ -2,6 +2,8 @@ import React from "react";
 import { Modal, Button } from "@patternfly/react-core";
 import { Form, FormGroup, TextInput } from "@patternfly/react-core";
 import DownloadButton from "./downloadButton";
+import DownloadIcon from '@patternfly/react-icons/dist/js/icons/file-download-icon';
+
 import { utils } from "../../utilities";
 
 class DownloadModal extends React.Component {
@@ -29,7 +31,7 @@ class DownloadModal extends React.Component {
 
     return (
       <React.Fragment>
-        <Button variant="primary" onClick={this.handleModalToggle}>
+        <Button variant={this.props.variant ? this.props.variant : "primary"} onClick={this.handleModalToggle} icon={<DownloadIcon />}> 
           Download a link token
         </Button>
         <Modal

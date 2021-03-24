@@ -28,6 +28,7 @@ import {
 
 import ServiceTable from "./serviceTable";
 import DownloadModal from "./downloadModal";
+import UploadButton from "./uploadButton"
 import CopyButton from "./copyButton";
 import PasteButton from "./pasteButton";
 
@@ -119,8 +120,8 @@ class OverviewPage extends React.Component {
               <CopyButton
                 {...this.props}
                 handleDownloadClicked={this.handleCopy}
-                text="Request a site linking token be copied to the clipboard"
-              />
+                text="Copy a token to the clipboard"
+              /> or <DownloadModal {...this.props} text="Download a site linking token to a file" variant="secondary" />
             </React.Fragment>
           </ListItem>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
@@ -141,10 +142,10 @@ class OverviewPage extends React.Component {
           <ListItem component={ListComponent.ol} type={OrderType.number}>
             {clipboardSupported && (
               <React.Fragment>
-                <span>Send the token on the clipboard to create the link.</span>
+                <span>Use the token on the clipboard to create the link.</span>
                 <PasteButton
                   handlePasteClicked={this.handlePaste}
-                  text="Send the token on the clipboard"
+                  text="Use the token on the clipboard"
                 />
               </React.Fragment>
             )}
@@ -160,7 +161,7 @@ class OverviewPage extends React.Component {
                   onPaste={() => this.handlePaste(this.pasteRef)}
                 />
               </React.Fragment>
-            )}
+            )} or <UploadButton {...this.props} variant="secondary" />
           </ListItem>
         </List>
         <h2>Linking sites using the command line</h2>

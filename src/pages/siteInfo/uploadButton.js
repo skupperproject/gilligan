@@ -18,6 +18,8 @@ under the License.
 */
 
 import React from "react";
+import { ReactComponent as UploadFileIcon } from  "./upload-file-icon.svg"
+
 
 class UploadButton extends React.Component {
   constructor(props) {
@@ -54,10 +56,13 @@ class UploadButton extends React.Component {
     return (
       <div className="container">
         <div className="button-wrap">
-          <label className="button" htmlFor="upload">
+          <label className={`button ${this.props.variant === "secondary" ? "pf-c-button pf-m-secondary sk-icon-button" : ""}`} htmlFor="skUploadButton">
             Upload a link token
           </label>
-          <input onChange={this.onFileChange} id="upload" type="file" />
+          <div id="skUploadButton">
+          <UploadFileIcon id="skUploadIcon" />
+          <input onChange={this.onFileChange} type="file" />
+          </div>
         </div>
         <span
           className={`sk-upload-status ${
