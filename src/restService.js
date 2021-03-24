@@ -9,7 +9,7 @@ class RESTService {
       if (process.env.NODE_ENV === "test") {
         const data = require("../public/data/testing.json");
         resolve(data);
-      } else if (process.env.NODE_ENV === "development") {
+      } else if (true || process.env.NODE_ENV === "development") {
         // This is used to get the data when the console
         // is served by yarn start or npm start
         this.fetchFrom("/data/DATA.json")
@@ -59,18 +59,51 @@ class RESTService {
         body: data,
       })
         .then((response) => {
-          console.log(
-            `uploadToken response is ${JSON.stringify(response, null, 2)}`
-          );
-          resolve(response);
+          if (!response.ok) {
+            // make the promise be rejected if we didn't get a 2xx response
+            console.log(`got non 200 response from server`);
+            console.log(response);
+            reject(`not implemented yet`);
+          } else {
+            console.log(
+              `uploadToken response is ${JSON.stringify(response, null, 2)}`
+            );
+            resolve(response);
+          }
         })
         .catch((error) => {
+          // connection down or refused
           console.log(`uploadToken error is ${JSON.stringify(error, null, 2)}`);
           reject(error);
         });
     });
 
   getSkupperTokenURL = () => `/GETTOKEN`;
+  getTokenData = () =>
+    new Promise((resolve, reject) => {
+      if (process.env.NODE_ENV === "test") {
+        console.log("getTokenData test");
+        const data = require("../public/data/TOKEN.json");
+        resolve(data);
+      } else if (process.env.NODE_ENV === "development") {
+        // This is used to get the data when the console
+        // is served by yarn start or npm start
+        this.fetchFrom("/data/TOKEN.json")
+          .then(resolve)
+          .catch((error) => {
+            reject(error);
+          });
+      } else {
+        this.fetchFrom(`${this.url}/GETTOKEN`)
+          .then(resolve)
+          .catch((error) => {
+            console.log(
+              `getTokenData error from ${this.url}/GETTOKEN: ${error}`
+            );
+            reject(error);
+          });
+      }
+    });
 
   fetchFrom = (url) =>
     new Promise((resolve, reject) => {

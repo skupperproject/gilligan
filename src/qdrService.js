@@ -61,13 +61,12 @@ export class QDRService {
       ? new Promise((resolve) => resolve(this.siteInfo))
       : this.rest.getSiteInfo();
 
-  uploadToken = (data) => {
-    return this.rest.uploadToken(data);
-  };
+  uploadToken = (data) => this.rest.uploadToken(data);
 
   getSkupperTokenURL = () => {
     return this.rest.getSkupperTokenURL();
   };
+  getTokenData = () => this.rest.getTokenData();
 
   update() {
     return this.connect();

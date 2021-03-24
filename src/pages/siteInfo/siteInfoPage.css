@@ -135,3 +135,18 @@ section.sk-siteinfo-tab {
   color: red;
   font-style: italic;
 }
+
+#skPastedInput {
+  margin-left: 1em;
+  padding-left: 0.25em;
+  width: 20em;
+  border-color: #06c;
+}
+
+h2.sk-inline-h2 {
+  display: inline-block;
+}
+
+.sk-inline-status-text {
+  display: inline;
+}

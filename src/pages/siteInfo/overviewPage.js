@@ -28,6 +28,8 @@ import {
 
 import ServiceTable from "./serviceTable";
 import DownloadModal from "./downloadModal";
+import CopyButton from "./copyButton";
+import PasteButton from "./pasteButton";
 
 class OverviewPage extends React.Component {
   constructor(props) {
@@ -48,34 +50,58 @@ class OverviewPage extends React.Component {
     this.mounted = false;
   };
 
-  componentDidUpdate = () => {};
-
-  onFileChange = (event) => {
-    const file = event.target.files[0];
-    let data = new FormData();
-    data.append("file", file);
-    console.log(file);
-    console.log(data);
-    this.props.service.uploadToken(data).then(
-      (response) => {
-        if (!this.mounted) return;
-        if (response.status < 200 || response.status > 299) {
-          this.setState({
-            uploadMsg: `${response.url} returned ${response.statusText}`,
-            uploadStatus: response.status,
-          });
-        }
-        console.log("normal response");
-        console.log(response);
+  update = () => {};
+  handleCopy = () => {
+    this.props.service.getTokenData().then(
+      (results) => {
+        const token = JSON.stringify(results, null, 2);
+        navigator.clipboard.writeText(token).then(
+          (s) => {
+            console.log("Copy to clipboard worked");
+            this.setState({ uploadMsg: "Token copied to clipboard" });
+          },
+          (e) => {
+            console.log("Copy to clipboard failed");
+            console.log(e);
+          }
+        );
       },
-      (error) => console.log(`error response ${error}`)
+      (error) => {
+        console.log(`fetch clipboard data error`);
+        console.log(error);
+      }
     );
   };
 
-  update = () => {};
+  handlePaste = (element) => {
+    let sendToServer = (token) => this.props.service.uploadToken(token);
+    if (navigator.clipboard.readText) {
+      navigator.clipboard.readText().then((clipText) => {
+        sendToServer(clipText).then(
+          () => {},
+          (error) => {
+            console.log(error);
+          }
+        );
+      });
+    } else {
+      setTimeout(() => {
+        const token = element.value;
+        sendToServer(token).then(
+          () => {
+            element.value = `Site linking requested.`;
+          },
+          (error) => {
+            element.value = error;
+          }
+        );
+      }, 0);
+    }
+  };
 
   render() {
-    const { uploadStatus, uploadMsg } = this.state;
+    const { uploadMsg } = this.state;
+    const clipboardSupported = navigator.clipboard.readText;
     return (
       <div className="sk-siteinfo-page-wrapper">
         <h1>Contents</h1>
@@ -89,37 +115,52 @@ class OverviewPage extends React.Component {
         <h2>Linking a remote site to this site</h2>
         <List>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
-            Download and save a token that is used to link remote sites to this
-            site.
-            <DownloadModal {...this.props} />
+            <React.Fragment>
+              <CopyButton
+                {...this.props}
+                handleDownloadClicked={this.handleCopy}
+                text="Request a site linking token be copied to the clipboard"
+              />
+            </React.Fragment>
           </ListItem>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
-            Navigate to the remote site's Skupper console and upload the saved
-            token to create the link.
+            Navigate to the remote site's Skupper console and use the{" "}
+            <h2 className="sk-inline-h2">Linking this site to a remote site</h2>{" "}
+            section below to{" "}
+            {clipboardSupported
+              ? "send the token to create the link."
+              : "paste the copied token to create the link."}
           </ListItem>
         </List>
         <h2>Linking this site to a remote site</h2>
         <List>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
-            Navigate to the remote site's Skupper console and download a token.
+            Navigate to the remote site's Skupper console and copy a token to
+            the clipboard.
           </ListItem>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
-            Upload the saved token from the remote site to create a link.
-            <div className="container">
-              <div className="button-wrap">
-                <label className="button" htmlFor="upload">
-                  Upload a link token
-                </label>
-                <input onChange={this.onFileChange} id="upload" type="file" />
-              </div>
-              <span
-                className={`sk-upload-status ${
-                  uploadStatus !== 200 ? "error" : "success"
-                }`}
-              >
-                {uploadMsg}
-              </span>
-            </div>
+            {clipboardSupported && (
+              <React.Fragment>
+                <span>Send the token on the clipboard to create the link.</span>
+                <PasteButton
+                  handlePasteClicked={this.handlePaste}
+                  text="Send the token on the clipboard"
+                />
+              </React.Fragment>
+            )}
+            {!clipboardSupported && (
+              <React.Fragment>
+                <span>
+                  Paste the token from the remote site to create a link.
+                </span>
+                <input
+                  ref={(el) => (this.pasteRef = el)}
+                  id="skPastedInput"
+                  placeholder="Paste copied token from another site here"
+                  onPaste={() => this.handlePaste(this.pasteRef)}
+                />
+              </React.Fragment>
+            )}
           </ListItem>
         </List>
         <h2>Linking sites using the command line</h2>
