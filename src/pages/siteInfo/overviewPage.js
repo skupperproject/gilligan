@@ -105,15 +105,7 @@ class OverviewPage extends React.Component {
     const clipboardSupported = navigator.clipboard.readText;
     return (
       <div className="sk-siteinfo-page-wrapper">
-        <h1>Contents</h1>
-        <List>
-          <ListItem>Linking a remote site to this site</ListItem>
-          <ListItem>Linking this site to a remote site</ListItem>
-          <ListItem>Linking sites using the command line</ListItem>
-          <ListItem>Exposing services on the network</ListItem>
-          <ListItem>Connecting to services on the network</ListItem>
-        </List>
-        <h2>Linking a remote site to this site</h2>
+        <h1>Linking a remote site to this site</h1>
         <List>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
             <React.Fragment>
@@ -133,7 +125,7 @@ class OverviewPage extends React.Component {
               : "paste the copied token to create the link."}
           </ListItem>
         </List>
-        <h2>Linking this site to a remote site</h2>
+        <h1>Linking this site to a remote site</h1>
         <List>
           <ListItem component={ListComponent.ol} type={OrderType.number}>
             Navigate to the remote site's Skupper console and copy a token to
@@ -164,7 +156,7 @@ class OverviewPage extends React.Component {
             )} or <UploadButton {...this.props} variant="secondary" />
           </ListItem>
         </List>
-        <h2>Linking sites using the command line</h2>
+        <h1>Linking sites using the command line</h1>
         <div className="sk-sub-text">
           Paul will supply some reasonable text describing this action.
           <Button
@@ -177,20 +169,7 @@ class OverviewPage extends React.Component {
             Download the command-line tool
           </Button>
         </div>
-        <h2>Exposing services on the network</h2>
-        <div className="sk-sub-text">
-          Paul will do his stuff here.
-          <div className="sk-command-line-example">
-            $ skupper expose deployment/
-            <span className="sk-command-line">{"<deployment-name>"}</span>
-          </div>
         </div>
-        <h2>Connecting to services on the network</h2>
-        <div className="sk-sub-text">
-          Paul will supply some reasonable text describing this action.
-          <ServiceTable />
-        </div>
-      </div>
     );
   }
 }

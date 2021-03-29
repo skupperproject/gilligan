@@ -18,24 +18,12 @@ under the License.
 */
 
 import React from "react";
-import { Tabs, Tab } from "@patternfly/react-core";
-import Overview from "./overviewPage";
-import Expose from "./exposePage";
-import Tokens from "./tokensPage";
-import LinkedSites from "./linkedSitesPage";
+import ServiceTable from "./serviceTable"
 
-class SiteInfoViewer extends React.Component {
+class ExposePage extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      tab: "Link sites",
-    };
-    this.tabs = {
-      "Link sites": <Overview {...this.props} />,
-      "Expose services": <Expose {...this.props} />,
-      "Show link tokens": <Tokens {...this.props} />,
-      "Show linked sites": <LinkedSites {...this.props} />,
-    };
+    this.state = {};
   }
 
   componentDidMount = () => {
@@ -50,29 +38,25 @@ class SiteInfoViewer extends React.Component {
 
   update = () => {};
 
-  handleTabClick = (event, tabIndex) => {
-    this.setState({
-      tab: tabIndex,
-    });
-  };
   render() {
-    const { tab } = this.state;
-
     return (
-      <Tabs
-        activeKey={tab}
-        isSecondary
-        onSelect={this.handleTabClick}
-        className="sk-thissite-tabs"
-      >
-        {Object.keys(this.tabs).map((t) => (
-          <Tab eventKey={t} title={t} key={t} className="sk-siteinfo-tab">
-            {this.tabs[t]}
-          </Tab>
-        ))}
-      </Tabs>
-    );
-  }
+      <div className="sk-siteinfo-page-wrapper">
+    <h2>Exposing services on the network</h2>
+    <div className="sk-sub-text">
+      Paul will do his stuff here.
+      <div className="sk-command-line-example">
+        $ skupper expose deployment/
+        <span className="sk-command-line">{"<deployment-name>"}</span>
+      </div>
+    </div>
+    <h2>Connecting to services on the network</h2>
+    <div className="sk-sub-text">
+      Paul will supply some reasonable text describing this action.
+      <ServiceTable />
+    </div>
+      </div>
+    )
+}
 }
 
-export default SiteInfoViewer;
+export default ExposePage;

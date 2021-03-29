@@ -1,8 +1,8 @@
 {
-  "site_name": "Google",
-  "site_id": "GoogleID",
+  "site_name": "My company frontend",
+  "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
   "connected": [],
-  "namespace": "private1",
+  "namespace": "skupper",
   "edge": false,
   "tokens": [
     {
