@@ -78,6 +78,39 @@ class RESTService {
         });
     });
 
+  unlinkSite = (index) => {
+    
+  }
+  
+  revokeToken = (index) => {
+    return new Promise((resolve, reject) => {
+      this.getSiteInfo().then((siteInfo) => {
+        fetch(`${this.url}/REVOKE`, {
+          method: "POST",
+          body: JSON.stringify(siteInfo[index])
+        })
+          .then((response) => {
+            if (!response.ok) {
+              console.log("got non 200 response from server");
+              console.log(response);
+              reject(Error("not implemented yet"));
+            } else {
+              console.log(`revoke token response is ${JSON.stringify(response, null, 2)}`);
+              resolve(response);
+            }
+          })
+          .catch((error) => {
+            // server error
+            console.log(`Unable to send REVOKE request ${JSON.stringify(error, null, 2)} `);
+            reject(error);
+          });
+        }, (error) => {
+          console.log(`Unable to get siteInfo before REVOKE`);
+          reject(error);
+      })
+    })
+  }
+
   getSkupperTokenURL = () => `/GETTOKEN`;
   getTokenData = () =>
     new Promise((resolve, reject) => {

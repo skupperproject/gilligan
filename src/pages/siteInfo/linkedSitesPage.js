@@ -18,18 +18,18 @@ under the License.
 */
 
 import React from "react";
+import { Alert, AlertActionCloseButton  } from '@patternfly/react-core';
 import SiteInfoTable from "./siteInfoTable";
 
+const MESSAGE_TIMEOUT = 6000;
 class LinkedSitesPage extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {revokeStatus: null, revokeMessage: null};
     this.actions = [
       {
-        title: "Revoke",
-        onClick: (event, rowId, rowData, extra) =>
-          console.log("clicked on revoke on row: ", rowId),
-      },
+        title: "Unlink",
+        onClick: (event, rowId, rowData, extra) => this.unlink(rowId)      },
     ];
     this.columns = [
       "Name",
@@ -50,16 +50,35 @@ class LinkedSitesPage extends React.Component {
 
   componentDidUpdate = () => {};
 
+  resetStatus = () => {
+    const self = this;
+    setTimeout(() => {self.setState({ revokeStatus: null})}, MESSAGE_TIMEOUT)
+  }
+
+  unlink = (index) => {
+    this.props.service.unlinkSite(index).then((results) => {
+      console.log("Token revoked successfully");
+      this.setState({revokeStatus: 200, revokeMessage: "Token successfully revoked"}, this.resetStatus);
+    }, (error) => {
+      console.log(`error revoking token ${error.message}`);
+      this.setState({revokeStatus: 400, revokeMessage: error.message});
+    })
+  };
+
   update = () => {};
 
   render() {
+    const { revokeMessage, revokeStatus } = this.state;
     return (
+      <React.Fragment>
+        {revokeStatus && <Alert isLiveRegion variant={revokeStatus === 200 ? "info" : "danger"} title={revokeStatus === 200 ? "Token revoked" : "Error revoking token"} actionClose={<AlertActionCloseButton onClose={() => alert('Clicked the close button')} />} timeout={MESSAGE_TIMEOUT}>{revokeMessage}</Alert>}
       <SiteInfoTable
         {...this.props}
         actions={this.actions}
         dataKey="linked_sites"
         columns={this.columns}
       />
+      </React.Fragment>
     );
   }
 }

@@ -33,7 +33,7 @@ export class QDRService {
     this.siteInfo = null;
   }
 
-  connect(to) {
+  connect = (to) => {
     return new Promise((resolve, reject) => {
       if (!this.rest) this.rest = new RESTService();
       this.rest
@@ -54,19 +54,25 @@ export class QDRService {
         )
         .catch(() => {});
     });
-  }
+  };
 
-  getSiteInfo = () =>
-    this.siteInfo
-      ? new Promise((resolve) => resolve(this.siteInfo))
-      : this.rest.getSiteInfo();
+  // SITE
+  getSiteInfo = () => this.rest.getSiteInfo();
 
+  // USETOKEN
   uploadToken = (data) => this.rest.uploadToken(data);
 
   getSkupperTokenURL = () => {
     return this.rest.getSkupperTokenURL();
   };
+
   getTokenData = () => this.rest.getTokenData();
+
+  // REVOKE
+  revokeToken = (index) => this.rest.revokeToken(index);
+
+  // UNLINK
+  unlinkSite = (index) => this.rest.unlinkSite(id);
 
   update() {
     return this.connect();

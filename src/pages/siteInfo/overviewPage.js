@@ -26,7 +26,6 @@ import {
   Button,
 } from "@patternfly/react-core";
 
-import ServiceTable from "./serviceTable";
 import DownloadModal from "./downloadModal";
 import UploadButton from "./uploadButton"
 import CopyButton from "./copyButton";

@@ -32,9 +32,9 @@ class SiteInfoViewer extends React.Component {
     };
     this.tabs = {
       "Link sites": <Overview {...this.props} />,
-      "Expose services": <Expose {...this.props} />,
-      "Show link tokens": <Tokens {...this.props} />,
-      "Show linked sites": <LinkedSites {...this.props} />,
+      "Expose/connect services": <Expose {...this.props} />,
+      "Manage link tokens": <Tokens {...this.props} />,
+      "Manage linked sites": <LinkedSites {...this.props} />,
     };
   }
 
