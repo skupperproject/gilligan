@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, Button } from "@patternfly/react-core";
 import { Form, FormGroup, TextInput } from "@patternfly/react-core";
 import DownloadButton from "./downloadButton";
-import DownloadIcon from '@patternfly/react-icons/dist/js/icons/file-download-icon';
+import DownloadIcon from "@patternfly/react-icons/dist/js/icons/file-download-icon";
 
 import { utils } from "../../utilities";
 
@@ -10,40 +10,63 @@ class DownloadModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isModalOpen: false,
+      isModalOpen: this.props.showOpen ? true : false,
+      fileName: this.generateFileName(),
     };
     this.handleModalToggle = () => {
-      this.setState(({ isModalOpen }) => ({
-        isModalOpen: !isModalOpen,
-        value1: `site-token-${
-          this.props.service.siteInfo.site_name
-        }-${utils.randomHex(4)}.token`,
-      }));
+      this.setState(
+        ({ isModalOpen }) => ({
+          isModalOpen: !isModalOpen,
+          fileName: this.generateFileName(),
+        }),
+        () => {
+          if (!this.state.isModalOpen && this.props.handleModalClose) {
+            this.props.handleModalClose();
+          }
+        }
+      );
     };
   }
 
-  handleTextInputChange1 = (value1) => {
-    this.setState({ value1 });
+  generateFileName = () => {
+    return `site-token-${
+      this.props.defaultSiteName
+        ? this.props.defaultSiteName
+        : this.props.service.siteInfo.site_name
+    }-${utils.randomHex(4)}.token`;
   };
+
+  handleTextInputChange1 = (fileName) => {
+    this.setState({ fileName });
+  };
+
   render() {
     const { isModalOpen } = this.state;
-    const { value1 } = this.state;
+    const { fileName } = this.state;
 
     return (
       <React.Fragment>
-        <Button variant={this.props.variant ? this.props.variant : "primary"} onClick={this.handleModalToggle} icon={<DownloadIcon />}> 
-          Download a link token
-        </Button>
+        {!this.props.hideButton && (
+          <Button
+            variant={this.props.variant ? this.props.variant : "primary"}
+            onClick={this.handleModalToggle}
+            icon={<DownloadIcon />}
+          >
+            Download a link token
+          </Button>
+        )}
         <Modal
           width={"50%"}
+          key="download-modal"
           title="Download a link token"
           isOpen={isModalOpen}
           onClose={this.handleModalToggle}
           actions={[
             <DownloadButton
+              key="download"
               text="Download"
               {...this.props}
-              downloadFileName={value1}
+              downloadFileName={fileName}
               handleDownloadClicked={this.handleModalToggle}
             />,
             <Button
@@ -71,7 +94,7 @@ class DownloadModal extends React.Component {
                 id="simple-form-name"
                 name="simple-form-name"
                 aria-describedby="simple-form-name-helper"
-                value={value1}
+                value={fileName}
                 onChange={this.handleTextInputChange1}
               />
             </FormGroup>

@@ -30,8 +30,7 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import SiteInfoViewer from "./siteInfoViewer";
-import DownloadModal from "./downloadModal";
-import UploadButton from "./uploadButton";
+import LinkSitesModal from "./linkSitesModal";
 
 import LastUpdated from "../../lastUpdated";
 
@@ -103,8 +102,7 @@ class SiteInfoPage extends Component {
                 </SplitItem>
                 <SplitItem isFilled></SplitItem>
                 <SplitItem className="sk-siteinfo-actions">
-                  <DownloadModal {...this.props} cls="sk-none" variant="secondary" />
-                  <UploadButton {...this.props} variant="secondary" />
+                  <LinkSitesModal {...this.props} />
                   <TextContent>
                     <span
                       className={`sk-upload-status ${

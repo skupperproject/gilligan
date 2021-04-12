@@ -5,55 +5,53 @@ import {
   TableBody,
   TableVariant,
 } from "@patternfly/react-table";
+
 import { utils } from "../../utilities";
 
 class SiteInfoTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      columns: [
-        { title: "Name" },
-        { title: "Status" },
-        { title: "Use count" },
-        { title: "Use limit" },
-        { title: "Expires" },
-        { title: "Created" },
-      ],
-      rows: [
-        ["company-co-497c", "Active", "0", "1", "Never", "3 minutes ago"],
-        ["company-co-497c", "Active", "-", "-", "In 6 hours", "2 days ago"],
-        ["company-co-497c", "Revoked", "-", "-", "-", "2 days ago"],
-      ],
-      actions: [
-        {
-          title: "Download",
-          onClick: (event, rowId, rowData, extra) =>
-            console.log("clicked on download on row: ", rowId),
-        },
-        {
-          title: "Revoke",
-          onClick: (event, rowId, rowData, extra) =>
-            console.log("clicked on revoke on row: ", rowId),
-        },
-      ],
+      rows: [],
+      columns: [],
+      empty: false,
     };
   }
 
+  getColumnNames = (columns) =>
+    columns.map((column) =>
+      typeof column === "object" ? column.name : column
+    );
+
+  updateColumns = () => {
+    this.setState({ columns: this.getColumnNames(this.props.columns) });
+  };
+
+  componentDidUpdate = (prevProps) => {
+    // if the passed in columns array has changed, update the state
+    let needToUpdate = false;
+    const currColumns = this.getColumnNames(this.props.columns);
+    const prevColumns = this.getColumnNames(prevProps.columns);
+    if (currColumns.length !== prevColumns.length) {
+      needToUpdate = true;
+    } else {
+      const combinedColumns = [...new Set([...currColumns, ...prevColumns])];
+      if (combinedColumns.length !== prevColumns.length) {
+        needToUpdate = true;
+      }
+    }
+    if (needToUpdate) {
+      this.updateColumns();
+    }
+  };
+
   componentDidMount = () => {
-    let columns = [];
     let rows = [];
-    let cols = [];
 
     this.props.service.getSiteInfo().then((siteInfo) => {
-      columns = this.props.columns;
+      let columns = this.props.columns;
       // get all possible column headings based on what is in the data
       const data = siteInfo[this.props.dataKey];
-      /*
-      data.forEach((datum) => {
-        columns = [].concat(columns, Object.keys(datum));
-      });
-      columns = [...new Set(columns)];
-      */
 
       // populate each row. if the token is missing the data, use "-"
       data.forEach((datum, i) => {
@@ -87,16 +85,18 @@ class SiteInfoTable extends React.Component {
           } else {
             rows[i].push("-");
           }
-          cols.push(name);
         });
       });
-      cols = [...new Set(cols)];
-      this.setState({ rows, columns: cols });
+      this.setState({
+        rows: rows.length > 0 ? rows : this.props.emptyRows,
+        columns: this.getColumnNames(this.props.columns),
+        empty: rows.length === 0,
+      });
     });
   };
 
   render() {
-    const { columns, rows } = this.state;
+    const { columns, rows, empty } = this.state;
     const { actions } = this.props;
 
     return (
@@ -106,7 +106,7 @@ class SiteInfoTable extends React.Component {
         borders={false}
         cells={columns}
         rows={rows}
-        actions={actions}
+        actions={empty ? [] : actions}
         className="sk-compact-2"
       >
         <TableHeader />

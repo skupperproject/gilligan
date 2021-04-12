@@ -9,7 +9,7 @@ class RESTService {
       if (process.env.NODE_ENV === "test") {
         const data = require("../public/data/testing.json");
         resolve(data);
-      } else if (true || process.env.NODE_ENV === "development") {
+      } else if (process.env.NODE_ENV === "development") {
         // This is used to get the data when the console
         // is served by yarn start or npm start
         this.fetchFrom("/data/DATA.json")
@@ -30,19 +30,14 @@ class RESTService {
   getSiteInfo = () =>
     new Promise((resolve, reject) => {
       if (process.env.NODE_ENV === "test") {
-        console.log("getSiteInfo test");
         const data = require("../public/data/SITE.json");
         resolve(data);
       } else {
         this.fetchFrom(`${this.url}/SITE`)
           .then(resolve)
           .catch((error) => {
-            console.log(`getSiteInfo error from ${this.url}/SITE: ${error}`);
             this.fetchFrom("/data/SITE.json")
               .then((results) => {
-                console.log(
-                  `getSiteInfo results ${JSON.stringify(results, null, 2)}`
-                );
                 resolve(results);
               })
               .catch((error) => {
@@ -54,68 +49,63 @@ class RESTService {
 
   uploadToken = (data) =>
     new Promise((resolve, reject) => {
-      fetch(`${this.url}/USETOKEN`, {
+      fetch(`${this.url}/LINK`, {
         method: "POST",
         body: data,
       })
         .then((response) => {
           if (!response.ok) {
             // make the promise be rejected if we didn't get a 2xx response
-            console.log(`got non 200 response from server`);
-            console.log(response);
             reject(`not implemented yet`);
           } else {
-            console.log(
-              `uploadToken response is ${JSON.stringify(response, null, 2)}`
-            );
             resolve(response);
           }
         })
         .catch((error) => {
           // connection down or refused
-          console.log(`uploadToken error is ${JSON.stringify(error, null, 2)}`);
           reject(error);
         });
     });
 
-  unlinkSite = (index) => {
-    
-  }
-  
-  revokeToken = (index) => {
-    return new Promise((resolve, reject) => {
-      this.getSiteInfo().then((siteInfo) => {
-        fetch(`${this.url}/REVOKE`, {
-          method: "POST",
-          body: JSON.stringify(siteInfo[index])
-        })
-          .then((response) => {
-            if (!response.ok) {
-              console.log("got non 200 response from server");
-              console.log(response);
-              reject(Error("not implemented yet"));
-            } else {
-              console.log(`revoke token response is ${JSON.stringify(response, null, 2)}`);
-              resolve(response);
-            }
-          })
-          .catch((error) => {
-            // server error
-            console.log(`Unable to send REVOKE request ${JSON.stringify(error, null, 2)} `);
-            reject(error);
-          });
-        }, (error) => {
-          console.log(`Unable to get siteInfo before REVOKE`);
-          reject(error);
-      })
-    })
-  }
+  unlinkSite = (data) => this.postSiteInfoMethod(data, "UNLINK");
 
-  getSkupperTokenURL = () => `/GETTOKEN`;
+  deleteToken = (data) => this.postSiteInfoMethod(data, "DELETE_TOKEN");
+
+  updateToken = (data) => this.postSiteInfoMethod(data, "UPDATE_TOKEN");
+
+  // POST the data using method
+  postSiteInfoMethod = (data, method) => {
+    return new Promise((resolve, reject) => {
+      fetch(`${this.url}/${method}`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            const e = new Error(
+              `/${method} ${response.statusText} (${response.status})`
+            );
+            reject(e);
+          } else {
+            resolve(response);
+          }
+        })
+        .catch((error) => {
+          // server error
+          const e = new Error(`Failed with error ${error.status}`);
+          reject(e);
+        });
+    });
+  };
+
+  // needed when the token is saved directly to a file
+  getSkupperTokenURL = () => `/GENERATE_TOKEN`;
+
+  // called when the token is copied to the clipboard
   getTokenData = () =>
     new Promise((resolve, reject) => {
       if (process.env.NODE_ENV === "test") {
-        console.log("getTokenData test");
+        // This is used when testing the console from 'npm run test'
         const data = require("../public/data/TOKEN.json");
         resolve(data);
       } else if (process.env.NODE_ENV === "development") {
@@ -127,12 +117,9 @@ class RESTService {
             reject(error);
           });
       } else {
-        this.fetchFrom(`${this.url}/GETTOKEN`)
+        this.fetchFrom(`${this.url}${this.getSkupperTokenURL()}`)
           .then(resolve)
           .catch((error) => {
-            console.log(
-              `getTokenData error from ${this.url}/GETTOKEN: ${error}`
-            );
             reject(error);
           });
       }

@@ -21,6 +21,7 @@ import RESTService from "./restService";
 import Adapter from "./adapter";
 import { utils } from "./utilities";
 export const UPDATE_INTERVAL = 2000;
+export const ALERT_TIMEOUT = 6000;
 
 // number of milliseconds between topology updates
 export class QDRService {
@@ -46,9 +47,13 @@ export class QDRService {
             this.saveTimeSeries(data);
             this.initColors(data);
             if (!this.siteInfo) {
-              this.rest.getSiteInfo().then((info) => (this.siteInfo = info));
+              this.rest.getSiteInfo().then((info) => {
+                this.siteInfo = info;
+                resolve(data);
+              });
+            } else {
+              resolve(data);
             }
-            resolve(data);
           },
           (error) => reject(error)
         )
@@ -68,11 +73,14 @@ export class QDRService {
 
   getTokenData = () => this.rest.getTokenData();
 
-  // REVOKE
-  revokeToken = (index) => this.rest.revokeToken(index);
+  // DELETE_TOKEN
+  deleteToken = (data) => this.rest.deleteToken(data);
+
+  // UPDATE_TOKEN
+  updateToken = (data) => this.rest.updateToken(data);
 
   // UNLINK
-  unlinkSite = (index) => this.rest.unlinkSite(id);
+  unlinkSite = (data) => this.rest.unlinkSite(data);
 
   update() {
     return this.connect();
@@ -101,8 +109,8 @@ export class QDRService {
   };
 }
 
-(function() {
-  console.dump = function(o) {
+(function () {
+  console.dump = function (o) {
     if (window.JSON && window.JSON.stringify)
       console.log(JSON.stringify(o, undefined, 2));
     else console.log(o);

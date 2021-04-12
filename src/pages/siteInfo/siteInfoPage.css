@@ -93,11 +93,6 @@ input[type="file"] {
   background-color: #004080;
 }
 
-.sk-siteinfo-actions {
-  width: 25.25em;
-  position: relative;
-}
-
 .sk-block-button {
   display: table; /* new line and only as wide as content */
 }
@@ -167,4 +162,13 @@ h2.sk-inline-h2 {
 
 #skUploadButton {
   color: #06c;
+}
+
+.sk-alert {
+  text-align: left;
+  margin: 1em;
+}
+
+.sk-input-numeric-small {
+  width: 4em;
 }
