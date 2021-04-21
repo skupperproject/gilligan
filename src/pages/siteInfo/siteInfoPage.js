@@ -30,7 +30,8 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import SiteInfoViewer from "./siteInfoViewer";
-import LinkSitesModal from "./linkSitesModal";
+import GetTokenModal from "./getTokenModal";
+import UseTokenModal from "./useTokenModal";
 
 import LastUpdated from "../../lastUpdated";
 
@@ -102,7 +103,12 @@ class SiteInfoPage extends Component {
                 </SplitItem>
                 <SplitItem isFilled></SplitItem>
                 <SplitItem className="sk-siteinfo-actions">
-                  <LinkSitesModal {...this.props} />
+                  <GetTokenModal {...this.props} title="Get a token" />
+                  <UseTokenModal
+                    {...this.props}
+                    title="Use a token"
+                    direction="up"
+                  />
                   <TextContent>
                     <span
                       className={`sk-upload-status ${
@@ -120,10 +126,8 @@ class SiteInfoPage extends Component {
             <StackItem className="sk-site-info-table">
               <SiteInfoViewer
                 ref={(el) => (this.siteInfoRef = el)}
-                service={this.props.service}
-                view={this.props.view}
+                {...this.props}
                 handleAddNotification={() => {}}
-                history={this.props.history}
                 siteInfo={siteInfo}
               />
             </StackItem>

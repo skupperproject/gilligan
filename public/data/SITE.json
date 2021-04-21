@@ -27,14 +27,14 @@
   ],
   "linked_sites": [
     {
-      "Name": "na-west",
+      "Name": "private1",
       "Status": "OK",
       "Site type": "Podman",
       "Cost": 1,
       "Linked": 1583793999616
     },
     {
-      "Name": "headquarters",
+      "Name": "public2",
       "Status": "Error: Unreashable",
       "Site type": "OpenShift",
       "Cost": 1,

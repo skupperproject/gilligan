@@ -42,8 +42,8 @@ class SubTable extends Component {
   constructor(props) {
     super(props);
     this.state = { popupContent: null };
-    this.viewObj = new VIEWS[this.props.view](this.props.service);
-    this.view = this.props.view;
+    this.view = this.props.view === "thissite" ? "site" : this.props.view;
+    this.viewObj = new VIEWS[this.view](this.props.service);
   }
 
   componentDidMount = () => {
@@ -69,7 +69,7 @@ class SubTable extends Component {
   };
 
   returnToView = (mode) => {
-    this.props.handleChangeViewMode(mode);
+    this.props.handleChangeViewMode(mode, true, this.props.origin);
   };
 
   showTooltip = (content, eventX, eventY) => {
@@ -93,10 +93,13 @@ class SubTable extends Component {
   data = () =>
     this.props.data
       ? this.props.data
-      : this.props.info.extraInfo.rowData.data.cardData;
+      : this.props.info.extraInfo
+      ? this.props.info.extraInfo.rowData.data.cardData
+      : null;
 
   anyRequests = (direction) => {
     const data = this.data();
+    if (!data) return false;
     let address = data ? data.address : null;
     let site_info = null;
     if (this.props.view === "deployment" && data.address) {
@@ -127,6 +130,7 @@ class SubTable extends Component {
   render() {
     const { options } = utils.viewFromHash();
     const data = this.data();
+    if (!data) return null;
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
     const { popupContent } = this.state;
@@ -160,7 +164,9 @@ class SubTable extends Component {
       return (
         <Breadcrumb className="sk-breadcrumbList">
           <BreadcrumbItem onClick={() => this.returnToView("table")}>
-            {utils.Icap(this.props.view)}s
+            {utils.Icap(
+              this.props.view === "site" ? "network" : `${this.props.view}s`
+            )}
           </BreadcrumbItem>
           <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
         </Breadcrumb>

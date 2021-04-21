@@ -71,6 +71,7 @@ export class QDRService {
     return this.rest.getSkupperTokenURL();
   };
 
+  // GENERATE_TOKEN
   getTokenData = () => this.rest.getTokenData();
 
   // DELETE_TOKEN

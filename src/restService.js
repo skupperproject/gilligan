@@ -118,7 +118,18 @@ class RESTService {
           });
       } else {
         this.fetchFrom(`${this.url}${this.getSkupperTokenURL()}`)
-          .then(resolve)
+          .then((response) => {
+            if (!response.ok) {
+              const e = new Error(
+                `/${this.getSkupperTokenURL()} ${response.statusText} (${
+                  response.status
+                })`
+              );
+              reject(e);
+            } else {
+              resolve(response);
+            }
+          })
           .catch((error) => {
             reject(error);
           });

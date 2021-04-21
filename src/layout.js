@@ -67,9 +67,12 @@ class PageLayout extends React.Component {
     if (!this.viewModes.thissite) {
       this.viewModes.thissite = "info";
     }
+    console.log(
+      `layout:: view ${view} viewModes[view] ${this.viewModes[view]}`
+    );
     // never start with the details view
     if (this.viewModes[view] === "details") {
-      this.viewModes[view] = "table";
+      this.viewModes[view] = view === "thissite" ? "info" : "table";
     }
     // setup the last mode the user picked
     this.savedMode = null;
@@ -127,22 +130,28 @@ class PageLayout extends React.Component {
     this.navSelect = undefined;
   };
 
-  handleChangeViewMode = (mode, save = true) => {
+  handleChangeViewMode = (mode, save = true, origin) => {
     this.viewModes[this.state.view] = mode;
     this.navSelect = "userChanged";
     if (save) {
       utils.setSaved(VIEW_MODES, this.viewModes);
     }
+    //const view = origin === "overview" ? "thissite" : this.state.view;
     this.setState({ mode });
   };
 
   // called internally when clicking on a service/site/deployment to view the details page
-  handleViewDetails = (mode, d, card) => {
-    this.savedMode = this.viewModes[this.state.view];
-    this.viewModes[this.state.view] = mode;
+  handleViewDetails = (mode, d, card, origin = "graph") => {
+    let view = this.state.view;
+    // if we are on the overview page and want to see the details table, switch to the site view, details mode
+    if (origin === "overview") {
+      view = "site";
+    }
+    this.savedMode = this.viewModes[view];
+    this.viewModes[view] = mode;
     this.navSelect = "userChanged";
-    this.setState({ mode }, () => {
-      this.pageRef.handleShowSubTable("graph", d, card);
+    this.setState({ view, mode }, () => {
+      this.pageRef.handleShowSubTable(origin, d, card);
     });
   };
 
@@ -197,8 +206,9 @@ class PageLayout extends React.Component {
   update = () => {
     if (this.updating) {
       console.log(
-        `updating took longer than ${UPDATE_INTERVAL /
-          1000} seconds. Skipping this update`
+        `updating took longer than ${
+          UPDATE_INTERVAL / 1000
+        } seconds. Skipping this update`
       );
       return;
     }
@@ -420,6 +430,7 @@ class PageLayout extends React.Component {
               view={this.state.view}
               views={this.views}
               mode={mode}
+              origin={this.state.origin}
             />
           )}
           {this.state.connected && mode === "info" && (
@@ -427,6 +438,8 @@ class PageLayout extends React.Component {
               ref={(el) => (this.pageRef = el)}
               service={this.service}
               {...this.props}
+              handleViewDetails={this.handleViewDetails}
+              setOptions={this.setOptions}
             />
           )}
         </Page>

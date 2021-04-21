@@ -106,14 +106,14 @@ class TokensPage extends React.Component {
   };
 
   handleModalClose = (fields, target) => {
-    console.log("handleModalClose called with");
-    console.log(fields);
-    console.log(target);
     this.setState({ showDownload: false, showUpdate: false });
   };
 
   updateToken = (index) => {
     const tokenInfo = this.props.service.siteInfo.tokens[index];
+    if (tokenInfo["Use limit"] === undefined) {
+      tokenInfo["Use limit"] = 1;
+    }
     this.setState({ showUpdate: true, updateData: tokenInfo });
   };
 

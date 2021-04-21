@@ -41,6 +41,7 @@ class TablePage extends Component {
       isDropDownOpen: false,
       subPageInfo: {},
       data: null,
+      origin: "table",
     };
   }
 
@@ -54,21 +55,23 @@ class TablePage extends Component {
   };
 
   handleShowSubTable = (origin = "table", subPageInfo, card) => {
-    this.props.handleChangeViewMode("details", origin === "table");
+    const useTableOrigin = origin === "table" || origin === "overview";
+    this.props.handleChangeViewMode("details", useTableOrigin, origin);
     const options = {
       view: this.props.view,
       mode: "details",
-      item: origin === "table" ? subPageInfo.value : subPageInfo.address,
+      item: useTableOrigin ? subPageInfo.value : subPageInfo.address,
     };
     this.props.setOptions(options, true);
-    if (origin === "table") {
-      this.setState({ subPageInfo, data: null });
+    if (useTableOrigin) {
+      this.setState({ subPageInfo, data: null, origin });
     } else {
-      this.setState({ subPageInfo: { card }, data: subPageInfo });
+      this.setState({ subPageInfo: { card }, data: subPageInfo, origin: null });
     }
   };
 
   render() {
+    const { origin } = this.state;
     return (
       <PageSection variant={PageSectionVariants.light} className="table-page">
         <Stack>
@@ -107,6 +110,7 @@ class TablePage extends Component {
                   history={this.props.history}
                   handleChangeViewMode={this.props.handleChangeViewMode}
                   setOptions={this.props.setOptions}
+                  origin={origin}
                 />
               </StackItem>
             )}

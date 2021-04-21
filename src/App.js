@@ -21,10 +21,6 @@ import React, { Component } from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import "@patternfly/patternfly/patternfly.css";
 import "@patternfly/patternfly/patternfly-addons.css";
-/*
-import "patternfly/dist/css/patternfly.css";
-import "patternfly/dist/css/patternfly-additions.css";
-*/
 import "@patternfly/patternfly/components/Nav/nav.css";
 import "./App.css";
 import PageLayout from "./layout";

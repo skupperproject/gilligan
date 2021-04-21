@@ -6,13 +6,19 @@ import { Radio } from "@patternfly/react-core";
 class UpdateModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { ...this.props.updateData, r1h: true, r1d: false, rn: false }; // work with a copy in case they cancel the modal
+    const never = this.props.updateData.Expires === 0;
+    this.state = {
+      ...this.props.updateData,
+      r1h: !never,
+      r1d: false,
+      rn: never,
+    }; // work with a copy in case they cancel the modal
   }
 
   handleModalToggle = (event) => {
     if (this.props.handleModalClose) {
       // notify the containing component that the modal should be closed
-      this.props.handleModalClose(this.state, event.currentTarget);
+      this.props.handleModalClose(this.state);
     }
   };
 
@@ -23,12 +29,7 @@ class UpdateModal extends React.Component {
   };
 
   handleChangeExpires = (_, event) => {
-    console.log("handleChangeExpires");
     const name = event.currentTarget.name;
-    console.log(name);
-    console.log(
-      `r1h ${this.state.r1h} r1d ${this.state.r1d} rn ${this.state.rn}`
-    );
     this.setState({ r1h: false, r1d: false, rn: false }, () => {
       this.setState({ [name]: true });
     });
@@ -101,7 +102,7 @@ class UpdateModal extends React.Component {
               />
             </FormGroup>
             <FormGroup
-              label="Token expiry"
+              label="Expires"
               key="expiry-formGroup"
               fieldId="form-expiry"
             >

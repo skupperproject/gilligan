@@ -18,6 +18,21 @@ under the License.
 */
 
 import React from "react";
+import {
+  Title,
+  EmptyState,
+  EmptyStateIcon,
+  EmptyStateVariant,
+  EmptyStateBody,
+  EmptyStateSecondaryActions,
+} from "@patternfly/react-core";
+import { Flex, FlexItem } from "@patternfly/react-core";
+import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
+
+import PieBar from "../topology/charts/pieBar";
+import { viewsMap as VIEWS } from "../topology/views/views";
+import GetTokenModal from "./getTokenModal";
+import TableViewer from "../table/tableViewer";
 
 import ServiceTable from "./serviceTable";
 
@@ -30,6 +45,7 @@ class OverviewPage extends React.Component {
       getSkupperStatus: null,
       getSkupperMsg: null,
     };
+    this.viewObj = new VIEWS["site"](this.props.service);
   }
 
   componentDidMount = () => {
@@ -41,59 +57,146 @@ class OverviewPage extends React.Component {
   };
 
   update = () => {};
-  handleCopy = () => {
-    this.props.service.getTokenData().then(
-      (results) => {
-        const token = JSON.stringify(results, null, 2);
-        navigator.clipboard.writeText(token).then(
-          (s) => {
-            console.log("Copy to clipboard worked");
-            this.setState({ uploadMsg: "Token copied to clipboard" });
-          },
-          (e) => {
-            console.log("Copy to clipboard failed");
-            console.log(e);
-          }
-        );
-      },
-      (error) => {
-        console.log(`fetch clipboard data error`);
-        console.log(error);
-      }
+
+  handleShowSubTable = (_, subPageInfo) => {
+    this.props.handleViewDetails(
+      "details",
+      subPageInfo,
+      subPageInfo.card,
+      "overview"
     );
+    const options = {
+      view: this.props.view,
+      mode: "details",
+      item: subPageInfo.value,
+    };
+    this.props.setOptions(options, true);
   };
 
-  handlePaste = (element) => {
-    let sendToServer = (token) => this.props.service.uploadToken(token);
-    if (navigator.clipboard.readText) {
-      navigator.clipboard.readText().then((clipText) => {
-        sendToServer(clipText).then(
-          () => {},
-          (error) => {
-            console.log(error);
-          }
-        );
-      });
-    } else {
-      setTimeout(() => {
-        const token = element.value;
-        sendToServer(token).then(
-          () => {
-            element.value = `Site linking requested.`;
-          },
-          (error) => {
-            element.value = error;
-          }
-        );
-      }, 0);
+  data = () => {
+    const siteInfo = this.props.service.siteInfo;
+    return {
+      site_name: siteInfo.site_name,
+      site_id: siteInfo.site_id,
+      nodeType: "cluster",
+    };
+  };
+
+  anyRequests = (direction) => {
+    const data = this.data();
+    let address = data ? data.address : null;
+    let site_info = null;
+    if (this.props.view === "deployment" && data.address) {
+      site_info = data.cluster.site_name;
+    } else if (this.props.view === "site" && !data.address) {
+      address = data.site_id;
     }
+    const requests = this.viewObj.specificTimeSeries({
+      VAN: this.props.service.VAN,
+      direction,
+      stat: "bytes_out",
+      duration: "min",
+      address,
+      site_name: site_info,
+    });
+    return Object.keys(requests).length > 0;
   };
 
   render() {
+    const linkedCount = this.props.service.siteInfo.linked_sites.length;
+    const data = this.data();
+    const hasIn = this.anyRequests("in");
+    const hasOut = this.anyRequests("out");
+
     return (
       <div className="sk-siteinfo-page-wrapper">
-        <h1>Services</h1>
-        <ServiceTable />
+        {linkedCount === 0 && (
+          <EmptyState
+            variant={EmptyStateVariant.xs}
+            className="sk-empty-container"
+          >
+            <EmptyStateIcon icon={SearchIcon} />
+
+            <Title headingLevel="h4" size="md">
+              No linked sites
+            </Title>
+            <EmptyStateBody>
+              There are no sites linked to this site
+            </EmptyStateBody>
+            <EmptyStateSecondaryActions>
+              <GetTokenModal {...this.props} noIcon />
+            </EmptyStateSecondaryActions>
+          </EmptyState>
+        )}
+        {linkedCount > 0 && data && (
+          <React.Fragment>
+            <h1>Linked sites</h1>
+            <Flex
+              className="sk-siteinfo-table"
+              direction={{ default: "column", lg: "row" }}
+            >
+              <FlexItem id="sk-subTable-bar0">
+                <div className="sk-site-table-wrapper">
+                  <TableViewer
+                    ref={(el) => (this.tableRef = el)}
+                    {...this.props}
+                    view="site"
+                    noToolbar
+                    excludeCurrent={false}
+                    handleAddNotification={() => {}}
+                    handleShowSubTable={this.handleShowSubTable}
+                  />
+                </div>
+              </FlexItem>
+              {hasIn && (
+                <FlexItem id="sk-subTable-bar1">
+                  <PieBar
+                    ref={(el) => (this.pieRef1 = el)}
+                    service={this.props.service}
+                    site={
+                      this.props.view === "site" ||
+                      this.props.view === "deployment"
+                    }
+                    deployment={this.props.view === "deployment"}
+                    stat="bytes_out"
+                    direction="in"
+                    type="bar"
+                    viewObj={this.viewObj}
+                    containerId="sk-subTable-bar1"
+                    data={data}
+                    showTooltip={this.showTooltip}
+                    comment="Pie or bar chart for incoming metric"
+                  />
+                </FlexItem>
+              )}
+              {hasOut && (
+                <FlexItem id="sk-subTable-bar2">
+                  <PieBar
+                    ref={(el) => (this.pieRef2 = el)}
+                    service={this.props.service}
+                    site={
+                      this.props.view === "site" ||
+                      this.props.view === "deployment"
+                    }
+                    deployment={this.props.view === "deployment"}
+                    stat="bytes_out"
+                    direction="out"
+                    type="bar"
+                    viewObj={this.viewObj}
+                    containerId="sk-subTable-bar2"
+                    data={data}
+                    showTooltip={this.showTooltip}
+                    comment="Pie or bar chart for incoming metric"
+                  />
+                </FlexItem>
+              )}
+            </Flex>
+          </React.Fragment>
+        )}
+        <div className="sk-section">
+          <h1>Services</h1>
+          <ServiceTable {...this.props} />
+        </div>
       </div>
     );
   }

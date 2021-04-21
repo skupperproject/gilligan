@@ -26,9 +26,11 @@ import {
   Bullseye,
   Title,
   EmptyStateIcon,
+  EmptyStateSecondaryActions,
 } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 import SiteInfoTable from "./siteInfoTable";
+import GetTokenModal from "./getTokenModal";
 
 import { ALERT_TIMEOUT } from "../../qdrService";
 class LinkedSitesPage extends React.Component {
@@ -64,6 +66,9 @@ class LinkedSitesPage extends React.Component {
                   <EmptyStateBody>
                     No sites have been linked to this site.
                   </EmptyStateBody>
+                  <EmptyStateSecondaryActions>
+                    <GetTokenModal {...this.props} />
+                  </EmptyStateSecondaryActions>
                 </EmptyState>
               </Bullseye>
             ),

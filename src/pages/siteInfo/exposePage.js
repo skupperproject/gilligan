@@ -18,7 +18,7 @@ under the License.
 */
 
 import React from "react";
-import ServiceTable from "./serviceTable"
+import ServiceTable from "./serviceTable";
 
 class ExposePage extends React.Component {
   constructor(props) {
@@ -41,22 +41,22 @@ class ExposePage extends React.Component {
   render() {
     return (
       <div className="sk-siteinfo-page-wrapper">
-    <h2>Exposing services on the network</h2>
-    <div className="sk-sub-text">
-      Paul will do his stuff here.
-      <div className="sk-command-line-example">
-        $ skupper expose deployment/
-        <span className="sk-command-line">{"<deployment-name>"}</span>
+        <h2>Exposing services on the network</h2>
+        <div className="sk-sub-text">
+          Paul will do his stuff here.
+          <div className="sk-command-line-example">
+            $ skupper expose deployment/
+            <span className="sk-command-line">{"<deployment-name>"}</span>
+          </div>
+        </div>
+        <h2>Connecting to services on the network</h2>
+        <div className="sk-sub-text">
+          Paul will supply some reasonable text describing this table.
+          <ServiceTable {...this.props} />
+        </div>
       </div>
-    </div>
-    <h2>Connecting to services on the network</h2>
-    <div className="sk-sub-text">
-      Paul will supply some reasonable text describing this table.
-      <ServiceTable />
-    </div>
-      </div>
-    )
-}
+    );
+  }
 }
 
 export default ExposePage;

@@ -12,17 +12,11 @@ class ServiceTable extends React.Component {
     super(props);
     this.state = {
       columns: [
-        { title: "Service", transforms: [cellWidth(10)] },
-        { title: "Connection URL", transforms: [cellWidth(20)] },
+        { title: "Service", transforms: [cellWidth(40)] },
+        { title: "Protocol", transforms: [cellWidth(20)] },
         { title: "", transforms: [cellWidth("max")] },
       ],
-      rows: [
-        ["frontend", "http://frontend:8080", ""],
-        ["inventory", "http://inventory:8080", ""],
-        ["orders", "http://orders:8080", ""],
-        ["database", "jdbc://database:5432", ""],
-        ["reviews", "http://reviews:8080", ""],
-      ],
+      rows: this.props.service.VAN.services.map((s) => [s.address, s.protocol]),
     };
   }
 
