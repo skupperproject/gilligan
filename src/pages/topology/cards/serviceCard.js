@@ -26,6 +26,7 @@ export class ServiceCard {
   constructor(data) {
     this.data = data;
     this.icon = <ServiceIcon />;
+    this.cardType = "service";
 
     this.popupInfo = {
       compact: [

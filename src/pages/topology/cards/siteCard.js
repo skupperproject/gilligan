@@ -23,6 +23,7 @@ import { utils } from "../../../utilities";
 export class SiteCard {
   constructor() {
     this.icon = "cluster";
+    this.cardType = "site";
     this.popupInfo = {
       compact: ["namespace"],
       expanded: [

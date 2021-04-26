@@ -1,40 +1,40 @@
 import React from "react";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableVariant,
-  cellWidth,
-} from "@patternfly/react-table";
+import TableViewer from "../table/tableViewer";
 
 class ServiceTable extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      columns: [
-        { title: "Service", transforms: [cellWidth(40)] },
-        { title: "Protocol", transforms: [cellWidth(20)] },
-        { title: "", transforms: [cellWidth("max")] },
-      ],
-      rows: this.props.service.VAN.services.map((s) => [s.address, s.protocol]),
-    };
+    this.state = {};
   }
 
-  render() {
-    const { columns, rows } = this.state;
+  handleShowSubTable = (_, subPageInfo) => {
+    this.props.handleViewDetails(
+      "details",
+      subPageInfo,
+      subPageInfo.card,
+      "overview"
+    );
+    const options = {
+      view: this.props.view,
+      mode: "details",
+      item: subPageInfo.value,
+    };
+    this.props.setOptions(options, true);
+  };
 
+  render() {
     return (
-      <Table
-        aria-label="Compact Table with borderless rows"
-        variant={TableVariant.compact}
-        borders={false}
-        cells={columns}
-        rows={rows}
-        className="sk-compact"
-      >
-        <TableHeader />
-        <TableBody />
-      </Table>
+      <div className="sk-site-table-wrapper">
+        <TableViewer
+          ref={(el) => (this.tableRef = el)}
+          {...this.props}
+          view="service"
+          noToolbar
+          excludeCurrent={false}
+          handleAddNotification={() => {}}
+          handleShowSubTable={this.handleShowSubTable}
+        />
+      </div>
     );
   }
 }

@@ -22,6 +22,7 @@ import { utils } from "../../../utilities";
 
 export class LinkCard {
   constructor() {
+    this.cardType = "link";
     this.icon = (
       <svg xmlns="http://www.w3.org/2000/svg" width="34" height="18">
         <g transform="scale(0.75)">

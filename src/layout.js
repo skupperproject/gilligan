@@ -143,9 +143,13 @@ class PageLayout extends React.Component {
   // called internally when clicking on a service/site/deployment to view the details page
   handleViewDetails = (mode, d, card, origin = "graph") => {
     let view = this.state.view;
-    // if we are on the overview page and want to see the details table, switch to the site view, details mode
+    // if we are on the overview page and want to see the details table, switch to the appropriate view, details mode
     if (origin === "overview") {
-      view = "site";
+      if (card.cardType === "service") {
+        view = "service";
+      } else {
+        view = "site";
+      }
     }
     this.savedMode = this.viewModes[view];
     this.viewModes[view] = mode;

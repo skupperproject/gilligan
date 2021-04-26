@@ -191,7 +191,8 @@ h1:not(:first-of-type) {
 
 .sk-site-table-wrapper {
   min-width: 40em;
-  margin-top: 3em;
+  /* margin-top: 3em; */
+  display: inline-block;
 }
 
 .sk-siteinfo-page-wrapper .sk-chart-container.sk-chart-separated {
@@ -238,7 +239,7 @@ h1:not(:first-of-type) {
 
 .disabled {
   pointer-events: none;
-  opacity: 0.25;
+  opacity: 0.5;
 }
 
 .sk-status-message {
