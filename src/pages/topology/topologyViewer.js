@@ -99,7 +99,7 @@ class TopologyViewer extends Component {
   updateComponent = () => {
     this.init();
     this.callTransitions(true);
-    if (this.state.options.isExpanded > 0) {
+    if (this.state.options.isExpanded > 0 && this.chordRef) {
       this.chordRef.init();
     }
   };
@@ -189,7 +189,7 @@ class TopologyViewer extends Component {
 
   setSelected = (item, data) => {
     // remove the selected attr from each node
-    this.siteSelection.each(function(d) {
+    this.siteSelection.each(function (d) {
       d.selected = false;
     });
     // set the selected attr for this node
@@ -349,7 +349,7 @@ class TopologyViewer extends Component {
       );
       this.props.handleChangeLastUpdated();
       this.setState({ initial: false }, () => {
-        if (this.state.options.isExpanded > 0) {
+        if (this.state.options.isExpanded > 0 && this.chordRef) {
           this.chordRef.doUpdate();
         }
         if (this.state.cardInfo) {
@@ -417,7 +417,7 @@ class TopologyViewer extends Component {
         (d1) =>
           d1.source.address === d.address || d1.target.address === d.address
       )
-      .each(function(d1) {
+      .each(function (d1) {
         self.highlightLink(highlight, d3.select(this), d1);
       });
   };
@@ -451,7 +451,7 @@ class TopologyViewer extends Component {
   showChord = (chordData, initial) => {
     if (!this.unmounting) {
       this.setState({ chordData, initial }, () => {
-        if (this.state.options.isExpanded > 0) {
+        if (this.state.options.isExpanded > 0 && this.chordRef) {
           this.chordRef.doUpdate();
         }
       });
@@ -776,7 +776,7 @@ class TopologyViewer extends Component {
       this.props.history,
       this.view
     );
-    if (this.state.options.isExpanded > 0) {
+    if (this.state.options.isExpanded > 0 && this.chordRef) {
       this.chordRef.handleChangeChartType(type);
       this.chordRef.doUpdate();
       this.chordRef.resize();
