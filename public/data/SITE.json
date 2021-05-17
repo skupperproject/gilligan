@@ -2,27 +2,31 @@
   "site_name": "My company frontend",
   "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
   "connected": [],
+  "Site type": "OpenShift",
   "namespace": "skupper",
   "edge": false,
   "tokens": [
     {
-      "Name": "company-co-497c",
+      "Name": "public2",
       "Status": "Active",
       "Use count": 0,
       "Use limit": 1,
       "Expires": 0,
-      "Created": 1583793999616
+      "Created": 1583793999616,
+      "ID": "this-is-a-unique-string"
     },
     {
-      "Name": "company-co-af89",
+      "Name": "private1",
       "Status": "Active",
       "Expires": 0,
-      "Created": 1583793999616
+      "Created": 1583793999616,
+      "ID": "this-is-another-unique-string"
     },
     {
-      "Name": "company-co-fafa",
+      "Name": "private1",
       "Status": "Deleted",
-      "Created": 1599999999999
+      "Created": 1599999999999,
+      "ID": "this-is-a-totally-unique-string"
     }
   ],
   "linked_sites": [
@@ -31,14 +35,16 @@
       "Status": "OK",
       "Site type": "Podman",
       "Cost": 1,
-      "Linked": 1583793999616
+      "Linked": 1583793999616,
+      "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b"
     },
     {
       "Name": "public2",
       "Status": "Error: Unreashable",
       "Site type": "OpenShift",
       "Cost": 1,
-      "Linked": 1583793999616
+      "Linked": 1583793999616,
+      "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5"
     }
   ]
 }
