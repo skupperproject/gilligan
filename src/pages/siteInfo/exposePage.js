@@ -52,8 +52,8 @@ class ExposePage extends React.Component {
         <h2>Connecting to services on the network</h2>
         <div className="sk-sub-text">
           Paul will supply some reasonable text describing this table.
-          <ServiceTable {...this.props} />
         </div>
+        <ServiceTable {...this.props} />
       </div>
     );
   }

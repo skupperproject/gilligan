@@ -30,11 +30,27 @@ class SiteInfoViewer extends React.Component {
     this.state = {
       tab: "Overview",
     };
+    this.tabRefs = {};
     this.tabs = {
-      Overview: <Overview {...this.props} view="site" />,
-      Services: <Expose {...this.props} />,
-      Tokens: <Tokens {...this.props} />,
-      "Linked sites": <LinkedSites {...this.props} />,
+      Overview: (
+        <Overview
+          {...this.props}
+          view="site"
+          ref={(el) => (this.tabRefs["Overview"] = el)}
+        />
+      ),
+      Services: (
+        <Expose {...this.props} ref={(el) => (this.tabRefs["Services"] = el)} />
+      ),
+      Tokens: (
+        <Tokens {...this.props} ref={(el) => (this.tabRefs["Tokens"] = el)} />
+      ),
+      Links: (
+        <LinkedSites
+          {...this.props}
+          ref={(el) => (this.tabRefs["Links"] = el)}
+        />
+      ),
     };
   }
 
@@ -48,7 +64,12 @@ class SiteInfoViewer extends React.Component {
 
   componentDidUpdate = () => {};
 
-  update = () => {};
+  update = () => {
+    const currentTabRef = this.tabRefs[this.state.tab];
+    if (currentTabRef && currentTabRef.update) {
+      currentTabRef.update();
+    }
+  };
 
   handleTabClick = (event, tabIndex) => {
     this.setState({

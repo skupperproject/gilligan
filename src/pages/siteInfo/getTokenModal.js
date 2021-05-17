@@ -122,7 +122,7 @@ class GetTokenModal extends React.Component {
                 variant="link"
                 onClick={this.handleModalToggle}
               >
-                Cancel
+                Close
               </Button>,
             ]}
             isfooterleftaligned={"true"}
@@ -135,8 +135,9 @@ class GetTokenModal extends React.Component {
                 <ListItem component={ListComponent.ol}>
                   The token allows a remote site to connect to this site. This
                   site needs to allow an incoming connection request. If this
-                  site does not allow incoming connections, navigate to the site
-                  that does allow incoming connections and get a token.
+                  site does not allow incoming connections, navigate to the
+                  skupper console for the site that does allow incoming
+                  connections and get a token.
                 </ListItem>
                 <ListItem component={ListComponent.ol}>
                   <CopyButton
@@ -170,8 +171,7 @@ class GetTokenModal extends React.Component {
                     ref={(el) => (this.arrowRef = el)}
                     targetId="SKUSETOKEN"
                   />{" "}
-                  button at the top of the page to link the remote site to this
-                  site.
+                  button to link the remote site to this site.
                 </ListItem>
               </List>
             </Form>

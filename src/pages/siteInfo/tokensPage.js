@@ -31,6 +31,7 @@ import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 import SiteInfoTable from "./siteInfoTable";
 import DownloadModal from "./downloadModal";
 import UpdateModal from "./updateModal";
+import DeleteModal from "./deleteModal";
 import { ALERT_TIMEOUT } from "../../qdrService";
 
 class TokensPage extends React.Component {
@@ -42,6 +43,8 @@ class TokensPage extends React.Component {
       defaultSiteName: null,
       showUpdate: false,
       updateData: null,
+      showDeleteModal: false,
+      deleteInfo: null,
     };
     this.actions = [
       {
@@ -50,7 +53,8 @@ class TokensPage extends React.Component {
       },
       {
         title: "Delete",
-        onClick: (event, rowId, rowData, extra) => this.delete(rowId),
+        onClick: (event, rowId, rowData, extra) =>
+          this.showDeleteModal(rowData),
       },
       {
         title: "Download",
@@ -105,8 +109,12 @@ class TokensPage extends React.Component {
     this.setState({ alerts: [...this.state.alerts, alertProps] });
   };
 
-  handleModalClose = (fields, target) => {
-    this.setState({ showDownload: false, showUpdate: false });
+  handleModalClose = () => {
+    this.setState({
+      showDownload: false,
+      showUpdate: false,
+      showDeleteModal: false,
+    });
   };
 
   updateToken = (index) => {
@@ -117,17 +125,27 @@ class TokensPage extends React.Component {
     this.setState({ showUpdate: true, updateData: tokenInfo });
   };
 
-  download = (index) => {
-    const tokenInfo = this.props.service.siteInfo.tokens[index];
-    this.setState({ showDownload: true, defaultSiteName: tokenInfo.Name });
-  };
-
-  delete = (index) => {
-    const siteInfo = this.props.service.siteInfo;
-    const tokenInfo = siteInfo.tokens[index];
-    this.props.service.deleteToken(tokenInfo).then(
-      (results) => {
-        const msg = `Token for ${tokenInfo.Name} successfully deleted`;
+  doUpdate = (updateData) => {
+    let expires = 0; // default to never
+    if (updateData.r1d) {
+      // they requested expires 1 day from now
+      expires = new Date();
+      expires.setDate(expires.getDate() + 1);
+    } else if (updateData.r1h) {
+      // they requested expires 1 hour from now
+      expires = new Date();
+      expires.setData(expires.getTime() + 1 * 60 * 60 * 1000);
+    }
+    const data = {
+      ID: updateData.ID,
+      Expires: expires,
+      Name: updateData.Name,
+      "Use limit": updateData["Use limit"],
+    };
+    const name = updateData.Name;
+    this.props.service.updateToken(data).then(
+      () => {
+        const msg = `Token for ${name} successfully updated`;
         console.log(msg);
         this.addAlert({
           title: msg,
@@ -136,7 +154,44 @@ class TokensPage extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error revoking token for ${tokenInfo.Name} ${error.message}`;
+        const msg = `Error updating token for ${name} ${error.message}`;
+        console.error(msg);
+        this.addAlert({
+          title: msg,
+          variant: "danger",
+          ariaLive: "assertive",
+          ariaRelevant: "additions text",
+          ariaAtomic: "false",
+        });
+      }
+    );
+    this.handleModalClose();
+  };
+
+  download = (index) => {
+    const tokenInfo = this.props.service.siteInfo.tokens[index];
+    this.setState({ showDownload: true, defaultSiteName: tokenInfo.Name });
+  };
+
+  showDeleteModal = (tokenInfo) => {
+    this.setState({ showDeleteModal: true, deleteInfo: tokenInfo });
+  };
+
+  doDelete = (deleteInfo) => {
+    const data = { ID: deleteInfo.actionProps.data.site_id };
+    const name = deleteInfo.actionProps.data.site_name;
+    this.props.service.deleteToken(data).then(
+      () => {
+        const msg = `Token for ${name} successfully deleted`;
+        console.log(msg);
+        this.addAlert({
+          title: msg,
+          variant: "success",
+          isLiveRegion: true,
+        });
+      },
+      (error) => {
+        const msg = `Error deleting token for ${name} ${error.message}`;
         console.error(msg);
         this.addAlert({
           title: msg,
@@ -158,6 +213,8 @@ class TokensPage extends React.Component {
       defaultSiteName,
       showUpdate,
       updateData,
+      showDeleteModal,
+      deleteInfo,
     } = this.state;
 
     return (
@@ -207,6 +264,15 @@ class TokensPage extends React.Component {
             updateData={updateData}
             handleModalClose={this.handleModalClose}
             isModalOpen={showUpdate}
+            doUpdate={this.doUpdate}
+          />
+        )}
+        {showDeleteModal && (
+          <DeleteModal
+            {...this.props}
+            deleteInfo={deleteInfo}
+            handleModalClose={this.handleModalClose}
+            doDelete={this.doDelete}
           />
         )}
       </React.Fragment>

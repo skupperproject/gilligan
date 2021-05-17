@@ -50,12 +50,31 @@ class SiteInfoTable extends React.Component {
 
     this.props.service.getSiteInfo().then((siteInfo) => {
       let columns = this.props.columns;
-      // get all possible column headings based on what is in the data
-      const data = siteInfo[this.props.dataKey];
+      let data = siteInfo[this.props.dataKey];
+      if (this.props.includeCurrent) {
+        data = [
+          {
+            Name: siteInfo.site_name,
+            site_id: siteInfo.site_id,
+            Status: "OK",
+            "Site type": siteInfo["Site type"],
+            Cost: "",
+          },
+          ...data,
+        ];
+      }
 
       // populate each row. if the token is missing the data, use "-"
       data.forEach((datum, i) => {
-        rows[i] = [];
+        rows[i] = {
+          cells: [],
+          actionProps: {
+            data: {
+              site_name: datum.Name,
+              site_id: datum.site_id ? datum.site_id : datum.ID,
+            },
+          },
+        };
         columns.forEach((column) => {
           let name = column;
           let d = datum[name];
@@ -81,9 +100,9 @@ class SiteInfoTable extends React.Component {
             }
           }
           if (d !== undefined) {
-            rows[i].push(String([d]));
+            rows[i].cells.push(String([d]));
           } else {
-            rows[i].push("-");
+            rows[i].cells.push("-");
           }
         });
       });
@@ -108,6 +127,7 @@ class SiteInfoTable extends React.Component {
         rows={rows}
         actions={empty ? [] : actions}
         className="sk-compact-2"
+        actionResolver={this.props.actionResolver}
       >
         <TableHeader />
         <TableBody />

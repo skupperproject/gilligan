@@ -39,11 +39,14 @@ class TableViewer extends React.Component {
   }
 
   componentDidMount = () => {
-    this.mounted = true;
     if (!this.dataSource) return;
+    this.mounted = true;
     this.dataSource.initNodesAndLinks(this);
     // initialize the columns and get the data
-    this.dataSource.fields.forEach((f) => {
+    this.dataSourceFields = this.props.fields
+      ? this.props.fields
+      : this.dataSource.fields;
+    this.dataSourceFields.forEach((f) => {
       f.transforms = [];
       f.cellFormatters = [];
       if (!f.noSort) f.transforms.push(sortable);
@@ -61,10 +64,10 @@ class TableViewer extends React.Component {
     });
     // if the dataSource did not provide its own cell formatter for details
     if (!this.dataSource.detailFormatter && !this.props.noFormat) {
-      this.dataSource.fields[0].cellFormatters.push(this.detailLink);
+      this.dataSourceFields[0].cellFormatters.push(this.detailLink);
     }
 
-    this.setState({ columns: this.dataSource.fields }, () => {
+    this.setState({ columns: this.dataSourceFields }, () => {
       this.update();
     });
 
@@ -79,8 +82,6 @@ class TableViewer extends React.Component {
 
   componentDidUpdate = () => {
     if (this.view !== this.props.view) {
-      this.view = this.props.view;
-      this.dataSource = new VIEWS[this.view](this.props.service);
       this.setState(this.init(), () => {
         this.componentDidMount();
       });
@@ -118,14 +119,21 @@ class TableViewer extends React.Component {
   };
 
   fetch = (page, perPage) => {
+    const doFetch = this.props.doFetch
+      ? this.props.doFetch
+      : this.dataSource.doFetch;
     // get the data. Note: The current page number might change if
     // the number of rows is less than before
-    this.dataSource.doFetch(page, perPage).then((results) => {
+    doFetch(page, perPage).then((results) => {
+      console.log("fetched data");
+      console.log(results.data);
       const sliced = this.slice(results.data, results.page, results.perPage);
       // if fetch was called and the component was unmounted before
       // the results arrived, don't call setState
       if (!this.mounted) return;
       const { rows, page, total, allRows } = sliced;
+      console.log("sliced data");
+      console.log(rows);
       if (this.mounted)
         this.setState({
           rows,
@@ -216,12 +224,12 @@ class TableViewer extends React.Component {
   };
 
   field2Row = (field) => ({
-    cells: this.dataSource.fields.map((f) => field[f.field]),
+    cells: this.dataSourceFields.map((f) => field[f.field]),
     data: field,
   });
 
   cellIndex = (field) => {
-    return this.dataSource.fields.findIndex((f) => {
+    return this.dataSourceFields.findIndex((f) => {
       return f.title === field;
     });
   };
@@ -298,6 +306,8 @@ class TableViewer extends React.Component {
         />
       );
     }
+    console.log(`rendering table with state`);
+    console.log(this.state);
     return (
       <React.Fragment>
         {!this.props.noToolbar && (
@@ -307,7 +317,11 @@ class TableViewer extends React.Component {
             perPage={this.state.perPage}
             onSetPage={this.onSetPage}
             onPerPageSelect={this.onPerPageSelect}
-            fields={this.dataSource.fields}
+            fields={
+              this.dataSourceFields
+                ? this.dataSourceFields
+                : this.dataSource.fields
+            }
             handleChangeFilterValue={this.handleChangeFilterValue}
           />
         )}
@@ -319,6 +333,10 @@ class TableViewer extends React.Component {
           onSort={this.onSort}
           variant={TableVariant.compact}
           data-testid={`data-testid_${this.props.view}`}
+          actions={this.props.actions ? this.props.actions : null}
+          actionResolver={
+            this.props.actionResolver ? this.props.actionResolver : null
+          }
         >
           <TableHeader />
           <TableBody />

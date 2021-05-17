@@ -94,13 +94,6 @@ class ArrowTo extends React.Component {
               fill: "transparent",
             });
         }
-        console.log(
-          `targetRect ${JSON.stringify(
-            targetRect,
-            null,
-            2
-          )}  sourceRect ${JSON.stringify(sourceRect, null, 2)}`
-        );
         this.setState({
           initialized: true,
         });

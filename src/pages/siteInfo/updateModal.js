@@ -22,6 +22,10 @@ class UpdateModal extends React.Component {
     }
   };
 
+  handleModalConfirm = () => {
+    this.props.doUpdate(this.state);
+  };
+
   handleTextInputChange = (val, event) => {
     const field = {};
     field[event.target.name] = val;
@@ -50,7 +54,7 @@ class UpdateModal extends React.Component {
             <Button
               key="confirm"
               variant="primary"
-              onClick={this.handleModalToggle}
+              onClick={this.handleModalConfirm}
             >
               Update
             </Button>,

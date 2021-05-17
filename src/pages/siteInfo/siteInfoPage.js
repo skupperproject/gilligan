@@ -30,8 +30,6 @@ import {
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import SiteInfoViewer from "./siteInfoViewer";
-import GetTokenModal from "./getTokenModal";
-import UseTokenModal from "./useTokenModal";
 
 import LastUpdated from "../../lastUpdated";
 
@@ -61,6 +59,9 @@ class SiteInfoPage extends Component {
 
   update = () => {
     this.handleChangeLastUpdated();
+    if (this.siteInfoRef) {
+      this.siteInfoRef.update();
+    }
   };
 
   onFileChange = (event) => {
@@ -103,12 +104,6 @@ class SiteInfoPage extends Component {
                 </SplitItem>
                 <SplitItem isFilled></SplitItem>
                 <SplitItem className="sk-siteinfo-actions">
-                  <GetTokenModal {...this.props} title="Get a token" />
-                  <UseTokenModal
-                    {...this.props}
-                    title="Use a token"
-                    direction="up"
-                  />
                   <TextContent>
                     <span
                       className={`sk-upload-status ${

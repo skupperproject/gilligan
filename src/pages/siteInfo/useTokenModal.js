@@ -122,7 +122,7 @@ class UseTokenModal extends React.Component {
                   Use the{" "}
                   <GetTokenModal
                     {...this.props}
-                    title="Get a token"
+                    title="Link another site"
                     justButton
                     cls="sk-button-placeholder"
                   />
@@ -131,7 +131,7 @@ class UseTokenModal extends React.Component {
                     targetId="SKGETTOKEN"
                   />
                   {"  "}
-                  button at the top of the page to get a link token.
+                  button to get a link token.
                 </ListItem>
               </List>
               <h1>Step 2: Use the token to link the sites</h1>

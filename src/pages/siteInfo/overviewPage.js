@@ -27,14 +27,18 @@ import {
   EmptyStateSecondaryActions,
 } from "@patternfly/react-core";
 import { Flex, FlexItem } from "@patternfly/react-core";
+import { Alert } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 
 import PieBar from "../topology/charts/pieBar";
 import { viewsMap as VIEWS } from "../topology/views/views";
 import GetTokenModal from "./getTokenModal";
+import UseTokenModal from "./useTokenModal";
 import TableViewer from "../table/tableViewer";
-
 import ServiceTable from "./serviceTable";
+import { SiteInfoRows, linkedSitesFields } from "./siteInfoRows";
+import UnlinkModal from "./unlinkModal";
+import { ALERT_TIMEOUT } from "../../qdrService";
 
 class OverviewPage extends React.Component {
   constructor(props) {
@@ -44,8 +48,17 @@ class OverviewPage extends React.Component {
       uploadMsg: null,
       getSkupperStatus: null,
       getSkupperMsg: null,
+      showUnlinkModal: false,
+      unlinkInfo: null,
+      alerts: [],
     };
     this.viewObj = new VIEWS["site"](this.props.service);
+    this.actions = [
+      {
+        title: "Unlink",
+        onClick: (event, rowId, rowData, extra) => this.showUnlink(rowData),
+      },
+    ];
   }
 
   componentDidMount = () => {
@@ -56,7 +69,74 @@ class OverviewPage extends React.Component {
     this.mounted = false;
   };
 
-  update = () => {};
+  update = () => {
+    this.forceUpdate();
+  };
+
+  getUniqueId = () => new Date().getTime();
+
+  fetchLinkSites = (page, perPage) => {
+    return new Promise((resolve) => {
+      SiteInfoRows(this.emptyState(), this.props.service, true).then((data) => {
+        console.log("get siteinforows");
+        console.log(data);
+        resolve({ data, page, perPage });
+      });
+    });
+  };
+
+  addAlert = (alertProps) => {
+    alertProps.key = this.getUniqueId();
+    this.setState({ alerts: [...this.state.alerts, alertProps] });
+  };
+
+  actionResolver = (rowData) => {
+    const site_id = rowData.data.cardData.site_id;
+    const isCurrent = site_id === this.props.siteInfo.site_id;
+    if (isCurrent) return null;
+    return this.actions;
+  };
+
+  showUnlink = (rowData) => {
+    const site_name = rowData.data.cardData.site_name;
+    const site_id = rowData.data.cardData.site_id;
+    this.setState({
+      showUnlinkModal: true,
+      unlinkInfo: {
+        Name: site_name,
+        site_id: site_id,
+      },
+    });
+  };
+
+  handleUnlinkClose = () => {
+    this.setState({ showUnlinkModal: false, unlinkInfo: null });
+  };
+
+  doUnlink = (unlinkInfo) => {
+    this.props.service.unlinkSite(unlinkInfo).then(
+      (results) => {
+        const msg = `Site ${unlinkInfo.Name} unlinked successfully`;
+        console.log(msg);
+        this.addAlert({
+          title: msg,
+          variant: "success",
+          isLiveRegion: true,
+        });
+      },
+      (error) => {
+        const msg = `Error unlinking site ${unlinkInfo.Name} - ${error.message}`;
+        console.error(msg);
+        this.addAlert({
+          title: msg,
+          variant: "danger",
+          ariaLive: "assertive",
+          ariaRelevant: "additions text",
+          ariaAtomic: "false",
+        });
+      }
+    );
+  };
 
   handleShowSubTable = (_, subPageInfo) => {
     this.props.handleViewDetails(
@@ -82,6 +162,20 @@ class OverviewPage extends React.Component {
     };
   };
 
+  emptyState = () => (
+    <EmptyState variant={EmptyStateVariant.xs} className="sk-empty-container">
+      <EmptyStateIcon icon={SearchIcon} />
+
+      <Title headingLevel="h4" size="md">
+        No linked sites
+      </Title>
+      <EmptyStateBody>There are no sites linked to this site</EmptyStateBody>
+      <EmptyStateSecondaryActions>
+        <GetTokenModal {...this.props} noIcon />
+      </EmptyStateSecondaryActions>
+    </EmptyState>
+  );
+
   anyRequests = (direction) => {
     const data = this.data();
     let address = data ? data.address : null;
@@ -103,6 +197,7 @@ class OverviewPage extends React.Component {
   };
 
   render() {
+    const { showUnlinkModal, unlinkInfo, alerts } = this.state;
     const linkedCount = this.props.service.siteInfo.linked_sites.length;
     const data = this.data();
     const hasIn = this.anyRequests("in");
@@ -110,24 +205,38 @@ class OverviewPage extends React.Component {
 
     return (
       <div className="sk-siteinfo-page-wrapper">
-        {linkedCount === 0 && (
-          <EmptyState
-            variant={EmptyStateVariant.xs}
-            className="sk-empty-container"
-          >
-            <EmptyStateIcon icon={SearchIcon} />
-
-            <Title headingLevel="h4" size="md">
-              No linked sites
-            </Title>
-            <EmptyStateBody>
-              There are no sites linked to this site
-            </EmptyStateBody>
-            <EmptyStateSecondaryActions>
-              <GetTokenModal {...this.props} noIcon />
-            </EmptyStateSecondaryActions>
-          </EmptyState>
+        {alerts.map(
+          ({
+            title,
+            variant,
+            isLiveRegion,
+            ariaLive,
+            ariaRelevant,
+            ariaAtomic,
+            key,
+          }) => (
+            <Alert
+              className="sk-alert"
+              variant={variant}
+              title={title}
+              timeout={ALERT_TIMEOUT}
+              isLiveRegion={isLiveRegion}
+              aria-live={ariaLive}
+              aria-relevant={ariaRelevant}
+              aria-atomic={ariaAtomic}
+              key={key}
+            />
+          )
         )}
+        {showUnlinkModal && (
+          <UnlinkModal
+            {...this.props}
+            unlinkInfo={unlinkInfo}
+            handleModalClose={this.handleUnlinkClose}
+            doUnlink={this.doUnlink}
+          />
+        )}
+        {linkedCount === 0 && this.emptyState()}
         {linkedCount > 0 && data && (
           <React.Fragment>
             <h1>Linked sites</h1>
@@ -141,10 +250,19 @@ class OverviewPage extends React.Component {
                     ref={(el) => (this.tableRef = el)}
                     {...this.props}
                     view="site"
+                    fields={linkedSitesFields}
+                    doFetch={this.fetchLinkSites}
                     noToolbar
                     excludeCurrent={false}
                     handleAddNotification={() => {}}
                     handleShowSubTable={this.handleShowSubTable}
+                    actionResolver={this.actionResolver}
+                  />
+                  <GetTokenModal {...this.props} title="Link another site" />
+                  <UseTokenModal
+                    {...this.props}
+                    title="Use a token"
+                    direction="up"
                   />
                 </div>
               </FlexItem>
