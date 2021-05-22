@@ -385,9 +385,7 @@ class ChordViewer extends Component {
   chordKey = (d, matrix) => {
     // sort so that if the soure and target are flipped, the chord doesn't
     // get destroyed and recreated
-    return this.getRouterNames(d, matrix)
-      .sort()
-      .join("-");
+    return this.getRouterNames(d, matrix).sort().join("-");
   };
 
   chordInfo = (d, matrix) => {
@@ -656,10 +654,8 @@ class ChordViewer extends Component {
       .transition()
       .duration(duration / 2)
       .attrTween("d", this.arcTweenExit)
-      .each("end", function() {
-        d3.select(this)
-          .node()
-          .parentNode.remove();
+      .each("end", function () {
+        d3.select(this).node().parentNode.remove();
       });
 
     // decorate the chord layout's .chord() data with key, color, and orgIndex
@@ -669,10 +665,7 @@ class ChordViewer extends Component {
       .data(rechord.chordData, (d) => d.key);
 
     // new chords are paths
-    chordPaths
-      .enter()
-      .append("path")
-      .attr("class", "chord");
+    chordPaths.enter().append("path").attr("class", "chord");
 
     if (!this.switchedByAddress) {
       // do multiple concurrent tweens on the chords
@@ -832,7 +825,7 @@ class ChordViewer extends Component {
       });
     }
     let self = this;
-    chords.each(function(d) {
+    chords.each(function (d) {
       let chord = d3.select(this);
       // This version of d3 doesn't support multiple concurrent transitions on the same selection.
       // Since we want to animate the chord's path as well as its color, we create a dummy selection
@@ -885,12 +878,12 @@ class ChordViewer extends Component {
         oldChords[d.key] = d;
       });
     }
-    chords.each(function(d) {
+    chords.each(function (d) {
       let chord = d3.select(this);
       d3.select({})
         .transition()
         .duration(duration)
-        .tween("style:" + style, function() {
+        .tween("style:" + style, function () {
           let old = oldChords[d.key],
             interpolate;
           let oldColor = "#CCCCCC",
@@ -943,8 +936,9 @@ class ChordViewer extends Component {
         let rot = same ? start : tween(t);
         if (isNaN(rot)) rot = 0;
         let tra = tsame ? this.textRadius + 10 : transTween(t);
-        return `rotate(${(rot * 180) / Math.PI -
-          90}) translate(${tra},0) ${orient}`;
+        return `rotate(${
+          (rot * 180) / Math.PI - 90
+        }) translate(${tra},0) ${orient}`;
       };
     };
   };
@@ -965,7 +959,9 @@ class ChordViewer extends Component {
   };
 
   showAllChords = () => {
-    this.svg.selectAll("path.chord").classed("fade", false);
+    if (this.svg) {
+      this.svg.selectAll("path.chord").classed("fade", false);
+    }
   };
 
   // called periodically to refresh the data
