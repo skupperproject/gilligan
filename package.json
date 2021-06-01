@@ -1,6 +1,6 @@
 {
   "name": "skupper-console",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.14.2",
@@ -32,7 +32,7 @@
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --silent",
     "gzip": "tar -czvf master.tar.gz --exclude='./node_modules' --exclude='./.history' --exclude='./.git' --exclude='./build' --exclude='./public/data' --exclude='./master.tar.gz' --exclude='./console.tgz' .",
-    "release": "node scripts/build.js && cd build/ && tar -zcvf ../console.tgz . && cd -"
+    "release": "node scripts/build.js && cd build/ && tar -zcvf ../console.tgz --exclude='./data' . && cd -"
   },
   "eslintConfig": {
     "extends": "react-app"
