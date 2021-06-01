@@ -29,7 +29,11 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
+import { Alert } from "@patternfly/react-core";
+import { ALERT_TIMEOUT } from "../../qdrService";
 import SiteInfoViewer from "./siteInfoViewer";
+import MenuToggle from "./menuToggle";
+import InlineEdit from "./inlineEdit";
 
 import LastUpdated from "../../lastUpdated";
 
@@ -40,6 +44,7 @@ class SiteInfoPage extends Component {
       siteInfo: null,
       uploadStatus: null,
       uploadMsg: null,
+      alerts: [],
     };
   }
 
@@ -53,8 +58,74 @@ class SiteInfoPage extends Component {
       }
     );
   };
+
   handleChangeLastUpdated = () => {
     if (this.updatedRef) this.updatedRef.update();
+  };
+
+  handleSiteNameChange = (name) => {
+    if (name !== this.state.siteInfo.site_name) {
+      this.props.service.renameSite(name).then(
+        () => {
+          const msg = `Site name changed successfully`;
+          console.log(msg);
+          this.addAlert({
+            title: msg,
+            variant: "success",
+            isLiveRegion: true,
+          });
+        },
+        (error) => {
+          const msg = `Error renaming site - ${error.message}`;
+          console.error(msg);
+          this.addAlert({
+            title: msg,
+            variant: "danger",
+            ariaLive: "assertive",
+            ariaRelevant: "additions text",
+            ariaAtomic: "false",
+          });
+        }
+      );
+    }
+  };
+
+  getUniqueId = () => new Date().getTime();
+
+  addAlert = (alertProps) => {
+    alertProps.key = this.getUniqueId();
+    this.setState({ alerts: [...this.state.alerts, alertProps] });
+  };
+
+  handleStartEdit = () => {
+    if (this.editRef) {
+      this.editRef.triggerEdit();
+    }
+  };
+
+  handleRegenCA = () => {
+    this.props.service.regenCA().then(
+      () => {
+        const msg = `Request to regenerate Certificate Authority submitted`;
+        console.log(msg);
+        this.addAlert({
+          title: msg,
+          variant: "success",
+          isLiveRegion: true,
+        });
+      },
+      (error) => {
+        const msg = `Error regerating Certificate Authority - ${error.message}`;
+        console.error(msg);
+        this.addAlert({
+          title: msg,
+          variant: "danger",
+          ariaLive: "assertive",
+          ariaRelevant: "additions text",
+          ariaAtomic: "false",
+        });
+      }
+    );
   };
 
   update = () => {
@@ -86,7 +157,7 @@ class SiteInfoPage extends Component {
   };
 
   render() {
-    const { siteInfo, uploadStatus, uploadMsg } = this.state;
+    const { siteInfo, uploadStatus, uploadMsg, alerts } = this.state;
     if (!siteInfo) return <div>Please wait...</div>;
     return (
       <PageSection variant={PageSectionVariants.light} className="table-page">
@@ -98,12 +169,22 @@ class SiteInfoPage extends Component {
                   <TextContent>
                     <Text className="overview-title" component={TextVariants.p}>
                       <span className="sk-siteinfo-prompt">Site</span>
-                      {siteInfo.site_name}
+                      <InlineEdit
+                        ref={(el) => {
+                          this.editRef = el;
+                        }}
+                        name={siteInfo.site_name}
+                        handleSiteNameChange={this.handleSiteNameChange}
+                      />
                     </Text>
                   </TextContent>
                 </SplitItem>
                 <SplitItem isFilled></SplitItem>
                 <SplitItem className="sk-siteinfo-actions">
+                  <MenuToggle
+                    handleStartEdit={this.handleStartEdit}
+                    handleRegenCA={this.handleRegenCA}
+                  />
                   <TextContent>
                     <span
                       className={`sk-upload-status ${
@@ -119,10 +200,35 @@ class SiteInfoPage extends Component {
               </Split>
             </StackItem>
             <StackItem className="sk-site-info-table">
+              {alerts.map(
+                ({
+                  title,
+                  variant,
+                  isLiveRegion,
+                  ariaLive,
+                  ariaRelevant,
+                  ariaAtomic,
+                  key,
+                }) => (
+                  <Alert
+                    className="sk-alert"
+                    variant={variant}
+                    title={title}
+                    timeout={ALERT_TIMEOUT}
+                    isLiveRegion={isLiveRegion}
+                    aria-live={ariaLive}
+                    aria-relevant={ariaRelevant}
+                    aria-atomic={ariaAtomic}
+                    key={key}
+                  />
+                )
+              )}
+
               <SiteInfoViewer
                 ref={(el) => (this.siteInfoRef = el)}
                 {...this.props}
                 handleAddNotification={() => {}}
+                addAlert={this.addAlert}
                 siteInfo={siteInfo}
               />
             </StackItem>

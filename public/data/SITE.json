@@ -31,20 +31,12 @@
   ],
   "linked_sites": [
     {
-      "Name": "private1",
+      "Name": "My private backend",
       "Status": "OK",
       "Site type": "Podman",
       "Cost": 1,
       "Linked": 1583793999616,
       "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b"
-    },
-    {
-      "Name": "public2",
-      "Status": "Error: Unreashable",
-      "Site type": "OpenShift",
-      "Cost": 1,
-      "Linked": 1583793999616,
-      "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5"
     }
   ]
 }

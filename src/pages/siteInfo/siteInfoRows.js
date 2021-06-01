@@ -42,7 +42,6 @@ export const SiteInfoRows = (emptyRows, service, includeCurrent = true) => {
             row.Linked = "Never";
           } else {
             row.Linked = utils.convertDate(row.Linked, "present");
-            console.log(`row.Linked is ${row.Linked}`);
           }
         }
       });

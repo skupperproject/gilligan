@@ -57,12 +57,20 @@ export class QDRService {
           },
           (error) => reject(error)
         )
-        .catch(() => {});
+        .catch((e) => {
+          console.log(`communication error ${e.message}`);
+        });
     });
   };
 
   // SITE
   getSiteInfo = () => this.rest.getSiteInfo();
+
+  // RENAME_SITE
+  renameSite = (data) => this.rest.renameSite(data);
+
+  // REGENERATE_CA
+  regenCA = () => this.rest.regenCA();
 
   // USETOKEN
   uploadToken = (data) => this.rest.uploadToken(data);

@@ -22,7 +22,7 @@ class UseTokenModal extends React.Component {
       () => {
         if (this.state.isModalOpen) {
           if (this.arrowRef) {
-            this.arrowRef.animateIn();
+            //this.arrowRef.animateIn();
           }
         }
       }
@@ -122,7 +122,7 @@ class UseTokenModal extends React.Component {
                   Use the{" "}
                   <GetTokenModal
                     {...this.props}
-                    title="Link another site"
+                    title="Link remote site"
                     justButton
                     cls="sk-button-placeholder"
                   />
@@ -135,30 +135,26 @@ class UseTokenModal extends React.Component {
                 </ListItem>
               </List>
               <h1>Step 2: Use the token to link the sites</h1>
-              <List>
-                <ListItem component={ListComponent.ol}>
-                  {clipboardSupported && (
-                    <PasteButton
-                      handlePasteClicked={this.handlePaste}
-                      text="Use the token on the clipboard"
-                    />
-                  )}
-                  {!clipboardSupported && (
-                    <React.Fragment>
-                      <span>
-                        Paste the token from the remote site to create a link.
-                      </span>
-                      <input
-                        ref={(el) => (this.pasteRef = el)}
-                        id="skPastedInput"
-                        placeholder="Paste token copied from another site here"
-                        onPaste={() => this.handlePaste(this.pasteRef)}
-                      />
-                    </React.Fragment>
-                  )}
-                  {uploadMsg}
-                </ListItem>
-              </List>
+              {clipboardSupported && (
+                <PasteButton
+                  handlePasteClicked={this.handlePaste}
+                  text="Use the token on the clipboard"
+                />
+              )}
+              {!clipboardSupported && (
+                <React.Fragment>
+                  <span>
+                    Paste the token from the remote site to create a link.
+                  </span>
+                  <input
+                    ref={(el) => (this.pasteRef = el)}
+                    id="skPastedInput"
+                    placeholder="Paste token copied from another site here"
+                    onPaste={() => this.handlePaste(this.pasteRef)}
+                  />
+                </React.Fragment>
+              )}
+              {uploadMsg}
             </Form>
           </Modal>
         )}

@@ -73,6 +73,10 @@ class RESTService {
 
   updateToken = (data) => this.postSiteInfoMethod(data, "UPDATE_TOKEN");
 
+  renameSite = (data) => this.postSiteInfoMethod(data, "RENAME_SITE");
+
+  regenCA = () => this.postSiteInfoMethod("", "REGEN_CA");
+
   // POST the data using method
   postSiteInfoMethod = (data, method) => {
     return new Promise((resolve, reject) => {
@@ -82,9 +86,12 @@ class RESTService {
       })
         .then((response) => {
           if (!response.ok) {
-            const e = new Error(
-              `/${method} ${response.statusText} (${response.status})`
-            );
+            const e =
+              response.status === 404
+                ? new Error(`/${method} not implemented`)
+                : new Error(
+                    `/${method} ${response.statusText} (${response.status})`
+                  );
             reject(e);
           } else {
             resolve(response);

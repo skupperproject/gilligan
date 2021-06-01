@@ -18,14 +18,12 @@ under the License.
 */
 
 import React from "react";
-import { Alert } from "@patternfly/react-core";
 import LinkedSitesTable from "./linkedSitesTable";
 
-import { ALERT_TIMEOUT } from "../../qdrService";
 class LinkedSitesPage extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { alerts: [] };
+    this.state = {};
   }
 
   componentDidMount = () => {
@@ -38,45 +36,10 @@ class LinkedSitesPage extends React.Component {
 
   getUniqueId = () => new Date().getTime();
 
-  addAlert = (alertProps) => {
-    if (!this.mounted) return;
-    alertProps.key = this.getUniqueId();
-    this.setState({ alerts: [...this.state.alerts, alertProps] });
-  };
-
   update = () => {};
 
   render() {
-    const { alerts } = this.state;
-
-    return (
-      <React.Fragment>
-        {alerts.map(
-          ({
-            title,
-            variant,
-            isLiveRegion,
-            ariaLive,
-            ariaRelevant,
-            ariaAtomic,
-            key,
-          }) => (
-            <Alert
-              className="sk-alert"
-              variant={variant}
-              title={title}
-              timeout={ALERT_TIMEOUT}
-              isLiveRegion={isLiveRegion}
-              aria-live={ariaLive}
-              aria-relevant={ariaRelevant}
-              aria-atomic={ariaAtomic}
-              key={key}
-            />
-          )
-        )}
-        <LinkedSitesTable {...this.props} addAlert={this.addAlert} />{" "}
-      </React.Fragment>
-    );
+    return <LinkedSitesTable {...this.props} />;
   }
 }
 

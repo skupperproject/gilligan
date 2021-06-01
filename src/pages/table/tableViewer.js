@@ -125,15 +125,11 @@ class TableViewer extends React.Component {
     // get the data. Note: The current page number might change if
     // the number of rows is less than before
     doFetch(page, perPage).then((results) => {
-      console.log("fetched data");
-      console.log(results.data);
       const sliced = this.slice(results.data, results.page, results.perPage);
       // if fetch was called and the component was unmounted before
       // the results arrived, don't call setState
       if (!this.mounted) return;
       const { rows, page, total, allRows } = sliced;
-      console.log("sliced data");
-      console.log(rows);
       if (this.mounted)
         this.setState({
           rows,
@@ -306,8 +302,6 @@ class TableViewer extends React.Component {
         />
       );
     }
-    console.log(`rendering table with state`);
-    console.log(this.state);
     return (
       <React.Fragment>
         {!this.props.noToolbar && (

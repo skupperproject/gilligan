@@ -6,6 +6,7 @@
 .sk-siteinfo-page-wrapper {
   text-align: left;
   margin-top: 2em;
+  margin-right: 2em;
 }
 
 .sk-siteinfo-page-wrapper h1 {
@@ -97,7 +98,7 @@ input[type="file"] {
 }
 
 .sk-block-button {
-  display: table; /* new line and only as wide as content */
+  width: 18em;
 }
 
 .sk-sub-text {
@@ -265,4 +266,30 @@ h1:not(:first-of-type) {
   margin-right: -1.2em;
   margin-top: -1em !important;
   pointer-events: none;
+}
+
+.sk-site-actions {
+  float: right;
+  top: -1em;
+  position: relative;
+}
+
+.sk-popup-menu {
+  position: absolute;
+  right: 2em;
+  z-index: 254;
+}
+
+.sk-action-button {
+  background: transparent;
+  border: 0;
+  font-size: medium;
+}
+
+.sk-action-button * {
+  cursor: pointer;
+}
+
+.sk-inline-edit {
+  padding: 1px;
 }

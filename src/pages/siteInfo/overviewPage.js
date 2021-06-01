@@ -27,10 +27,9 @@ import {
   EmptyStateSecondaryActions,
 } from "@patternfly/react-core";
 import { Flex, FlexItem } from "@patternfly/react-core";
-import { Alert } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 
-import PieBar from "../topology/charts/pieBar";
+import TimeSeries from "../topology/charts/timeSeries";
 import { viewsMap as VIEWS } from "../topology/views/views";
 import GetTokenModal from "./getTokenModal";
 import UseTokenModal from "./useTokenModal";
@@ -38,7 +37,6 @@ import TableViewer from "../table/tableViewer";
 import ServiceTable from "./serviceTable";
 import { SiteInfoRows, linkedSitesFields } from "./siteInfoRows";
 import UnlinkModal from "./unlinkModal";
-import { ALERT_TIMEOUT } from "../../qdrService";
 
 class OverviewPage extends React.Component {
   constructor(props) {
@@ -50,7 +48,6 @@ class OverviewPage extends React.Component {
       getSkupperMsg: null,
       showUnlinkModal: false,
       unlinkInfo: null,
-      alerts: [],
     };
     this.viewObj = new VIEWS["site"](this.props.service);
     this.actions = [
@@ -70,7 +67,16 @@ class OverviewPage extends React.Component {
   };
 
   update = () => {
-    this.forceUpdate();
+    //this.forceUpdate();
+    if (this.tableRef && this.tableRef.update) {
+      this.tableRef.update();
+    }
+    if (this.chartRef1 && this.chartRef1.update) {
+      this.chartRef1.update();
+    }
+    if (this.chartRef2 && this.chartRef2.update) {
+      this.chartRef2.update();
+    }
   };
 
   getUniqueId = () => new Date().getTime();
@@ -78,16 +84,15 @@ class OverviewPage extends React.Component {
   fetchLinkSites = (page, perPage) => {
     return new Promise((resolve) => {
       SiteInfoRows(this.emptyState(), this.props.service, true).then((data) => {
-        console.log("get siteinforows");
-        console.log(data);
         resolve({ data, page, perPage });
       });
     });
   };
 
   addAlert = (alertProps) => {
-    alertProps.key = this.getUniqueId();
-    this.setState({ alerts: [...this.state.alerts, alertProps] });
+    if (this.props.addAlert) {
+      this.props.addAlert(alertProps);
+    }
   };
 
   actionResolver = (rowData) => {
@@ -115,7 +120,7 @@ class OverviewPage extends React.Component {
 
   doUnlink = (unlinkInfo) => {
     this.props.service.unlinkSite(unlinkInfo).then(
-      (results) => {
+      () => {
         const msg = `Site ${unlinkInfo.Name} unlinked successfully`;
         console.log(msg);
         this.addAlert({
@@ -171,7 +176,8 @@ class OverviewPage extends React.Component {
       </Title>
       <EmptyStateBody>There are no sites linked to this site</EmptyStateBody>
       <EmptyStateSecondaryActions>
-        <GetTokenModal {...this.props} noIcon />
+        <GetTokenModal {...this.props} />
+        <UseTokenModal {...this.props} title="Use a token" direction="up" />
       </EmptyStateSecondaryActions>
     </EmptyState>
   );
@@ -197,7 +203,7 @@ class OverviewPage extends React.Component {
   };
 
   render() {
-    const { showUnlinkModal, unlinkInfo, alerts } = this.state;
+    const { showUnlinkModal, unlinkInfo } = this.state;
     const linkedCount = this.props.service.siteInfo.linked_sites.length;
     const data = this.data();
     const hasIn = this.anyRequests("in");
@@ -205,29 +211,6 @@ class OverviewPage extends React.Component {
 
     return (
       <div className="sk-siteinfo-page-wrapper">
-        {alerts.map(
-          ({
-            title,
-            variant,
-            isLiveRegion,
-            ariaLive,
-            ariaRelevant,
-            ariaAtomic,
-            key,
-          }) => (
-            <Alert
-              className="sk-alert"
-              variant={variant}
-              title={title}
-              timeout={ALERT_TIMEOUT}
-              isLiveRegion={isLiveRegion}
-              aria-live={ariaLive}
-              aria-relevant={ariaRelevant}
-              aria-atomic={ariaAtomic}
-              key={key}
-            />
-          )
-        )}
         {showUnlinkModal && (
           <UnlinkModal
             {...this.props}
@@ -239,69 +222,65 @@ class OverviewPage extends React.Component {
         {linkedCount === 0 && this.emptyState()}
         {linkedCount > 0 && data && (
           <React.Fragment>
+            <div className="sk-site-actions">
+              <GetTokenModal {...this.props} />
+              <UseTokenModal
+                {...this.props}
+                title="Use a token"
+                direction="up"
+              />
+            </div>
             <h1>Linked sites</h1>
+            <div className="skk-site-table-wrapper">
+              <TableViewer
+                ref={(el) => (this.tableRef = el)}
+                {...this.props}
+                view="site"
+                fields={linkedSitesFields.filter((f) => f.field !== "Status")}
+                doFetch={this.fetchLinkSites}
+                noToolbar
+                excludeCurrent={false}
+                handleAddNotification={() => {}}
+                handleShowSubTable={this.handleShowSubTable}
+                actionResolver={this.actionResolver}
+              />
+            </div>
+            <h1>Site traffic</h1>
             <Flex
               className="sk-siteinfo-table"
-              direction={{ default: "column", lg: "row" }}
+              direction={{ default: "row", lg: "row" }}
             >
-              <FlexItem id="sk-subTable-bar0">
-                <div className="sk-site-table-wrapper">
-                  <TableViewer
-                    ref={(el) => (this.tableRef = el)}
-                    {...this.props}
-                    view="site"
-                    fields={linkedSitesFields}
-                    doFetch={this.fetchLinkSites}
-                    noToolbar
-                    excludeCurrent={false}
-                    handleAddNotification={() => {}}
-                    handleShowSubTable={this.handleShowSubTable}
-                    actionResolver={this.actionResolver}
-                  />
-                  <GetTokenModal {...this.props} title="Link another site" />
-                  <UseTokenModal
-                    {...this.props}
-                    title="Use a token"
-                    direction="up"
-                  />
-                </div>
-              </FlexItem>
               {hasIn && (
-                <FlexItem id="sk-subTable-bar1">
-                  <PieBar
-                    ref={(el) => (this.pieRef1 = el)}
+                <FlexItem
+                  id="sk-subTable-line-in"
+                  className="sk-this-is-a-class"
+                >
+                  <TimeSeries
+                    ref={(el) => (this.chartRef1 = el)}
                     service={this.props.service}
-                    site={
-                      this.props.view === "site" ||
-                      this.props.view === "deployment"
-                    }
-                    deployment={this.props.view === "deployment"}
+                    site
                     stat="bytes_out"
                     direction="in"
-                    type="bar"
+                    type="line"
                     viewObj={this.viewObj}
-                    containerId="sk-subTable-bar1"
+                    containerId="sk-subTable-line-in"
                     data={data}
                     showTooltip={this.showTooltip}
-                    comment="Pie or bar chart for incoming metric"
+                    comment="Line chart for incoming metric"
                   />
                 </FlexItem>
               )}
               {hasOut && (
-                <FlexItem id="sk-subTable-bar2">
-                  <PieBar
-                    ref={(el) => (this.pieRef2 = el)}
+                <FlexItem id="sk-subTable-line-out">
+                  <TimeSeries
+                    ref={(el) => (this.chartRef2 = el)}
                     service={this.props.service}
-                    site={
-                      this.props.view === "site" ||
-                      this.props.view === "deployment"
-                    }
-                    deployment={this.props.view === "deployment"}
+                    site
                     stat="bytes_out"
                     direction="out"
-                    type="bar"
+                    type="line"
                     viewObj={this.viewObj}
-                    containerId="sk-subTable-bar2"
+                    containerId="sk-subTable-line-out"
                     data={data}
                     showTooltip={this.showTooltip}
                     comment="Pie or bar chart for incoming metric"

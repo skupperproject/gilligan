@@ -18,7 +18,6 @@ under the License.
 */
 
 import React from "react";
-import { Alert } from "@patternfly/react-core";
 import {
   EmptyState,
   EmptyStateBody,
@@ -32,13 +31,11 @@ import SiteInfoTable from "./siteInfoTable";
 import DownloadModal from "./downloadModal";
 import UpdateModal from "./updateModal";
 import DeleteModal from "./deleteModal";
-import { ALERT_TIMEOUT } from "../../qdrService";
 
 class TokensPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      alerts: [],
       showDownload: false,
       defaultSiteName: null,
       showUpdate: false,
@@ -105,8 +102,9 @@ class TokensPage extends React.Component {
   componentDidUpdate = () => {};
 
   addAlert = (alertProps) => {
-    alertProps.key = new Date().getTime();
-    this.setState({ alerts: [...this.state.alerts, alertProps] });
+    if (this.props.addAlert) {
+      this.props.addAlert(alertProps);
+    }
   };
 
   handleModalClose = () => {
@@ -208,7 +206,6 @@ class TokensPage extends React.Component {
 
   render() {
     const {
-      alerts,
       showDownload,
       defaultSiteName,
       showUpdate,
@@ -219,29 +216,6 @@ class TokensPage extends React.Component {
 
     return (
       <React.Fragment>
-        {alerts.map(
-          ({
-            title,
-            variant,
-            isLiveRegion,
-            ariaLive,
-            ariaRelevant,
-            ariaAtomic,
-            key,
-          }) => (
-            <Alert
-              className="sk-alert"
-              variant={variant}
-              title={title}
-              timeout={ALERT_TIMEOUT}
-              isLiveRegion={isLiveRegion}
-              aria-live={ariaLive}
-              aria-relevant={ariaRelevant}
-              aria-atomic={ariaAtomic}
-              key={key}
-            />
-          )
-        )}{" "}
         <SiteInfoTable
           {...this.props}
           actions={this.actions}
