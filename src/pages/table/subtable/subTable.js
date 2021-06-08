@@ -55,7 +55,9 @@ class SubTable extends Component {
   };
 
   handleChangeLastUpdated = () => {
-    this.updatedRef.update();
+    if (this.updatedRef) {
+      this.updatedRef.update();
+    }
   };
 
   update = () => {
@@ -220,7 +222,10 @@ class SubTable extends Component {
                   </FlexItem>
                 )}
               </Flex>
-              <Flex direction={{ default: "column", lg: "row" }}>
+              <Flex
+                className="sk-charts-sections"
+                direction={{ default: "column", lg: "row" }}
+              >
                 {hasIn && (
                   <FlexItem id="sk-subTable-line1">
                     <TimeSeries
