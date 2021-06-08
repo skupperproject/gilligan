@@ -353,7 +353,8 @@ class TableViewer extends React.Component {
           <TableHeader />
           <TableBody />
         </Table>
-        {!this.props.noToolbar && this.renderPagination("bottom")}
+        {(!this.props.noToolbar || this.props.bottomToolbar) &&
+          this.renderPagination("bottom")}
       </React.Fragment>
     );
   }

@@ -31,7 +31,8 @@ import {
 import { Split, SplitItem } from "@patternfly/react-core";
 import SiteInfoViewer from "./siteInfoViewer";
 import MenuToggle from "./menuToggle";
-import InlineEdit from "./inlineEdit";
+import EditSiteNameModal from "./editSiteNameModal";
+import { STATIC_ID } from "./editSiteNameModal";
 import RegenCAModal from "./regenCAModal";
 
 import LastUpdated from "../../lastUpdated";
@@ -73,6 +74,7 @@ class SiteInfoPage extends Component {
             variant: "success",
             isLiveRegion: true,
           });
+          this.setState({ showEditNameModal: false });
         },
         (error) => {
           const msg = `Error renaming site - ${error.message}`;
@@ -84,6 +86,7 @@ class SiteInfoPage extends Component {
             ariaRelevant: "additions text",
             ariaAtomic: "false",
           });
+          this.setState({ showEditNameModal: false });
         }
       );
     }
@@ -96,9 +99,7 @@ class SiteInfoPage extends Component {
   };
 
   handleStartEdit = () => {
-    if (this.editRef) {
-      this.editRef.triggerEdit();
-    }
+    this.setState({ showEditNameModal: true });
   };
 
   handleShowRegenCA = () => {
@@ -107,6 +108,10 @@ class SiteInfoPage extends Component {
 
   handleCloseRegenCA = () => {
     this.setState({ showRegenCAModal: false });
+  };
+
+  handleEditModalClose = () => {
+    this.setState({ showEditNameModal: false });
   };
 
   doRegenCA = () => {
@@ -163,7 +168,13 @@ class SiteInfoPage extends Component {
   };
 
   render() {
-    const { siteInfo, uploadStatus, uploadMsg, showRegenCAModal } = this.state;
+    const {
+      siteInfo,
+      uploadStatus,
+      uploadMsg,
+      showRegenCAModal,
+      showEditNameModal,
+    } = this.state;
     if (!siteInfo) return <div>Please wait...</div>;
     return (
       <PageSection variant={PageSectionVariants.light} className="table-page">
@@ -175,6 +186,14 @@ class SiteInfoPage extends Component {
             siteName={siteInfo.site_name}
           />
         )}
+        {showEditNameModal && (
+          <EditSiteNameModal
+            {...this.props}
+            name={siteInfo.site_name}
+            handleSiteNameChange={this.handleSiteNameChange}
+            handleModalClose={this.handleEditModalClose}
+          />
+        )}
         <Stack>
           <React.Fragment>
             <StackItem className="overview-header">
@@ -183,13 +202,9 @@ class SiteInfoPage extends Component {
                   <TextContent>
                     <Text className="overview-title" component={TextVariants.p}>
                       <span className="sk-siteinfo-prompt">Site</span>
-                      <InlineEdit
-                        ref={(el) => {
-                          this.editRef = el;
-                        }}
-                        name={siteInfo.site_name}
-                        handleSiteNameChange={this.handleSiteNameChange}
-                      />
+                      <span className="sk-site-name" id={STATIC_ID}>
+                        {siteInfo.site_name}
+                      </span>
                     </Text>
                   </TextContent>
                 </SplitItem>

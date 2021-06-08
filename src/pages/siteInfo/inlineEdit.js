@@ -20,7 +20,7 @@ under the License.
 import React from "react";
 import EditIcon from "@patternfly/react-icons/dist/js/icons/edit-alt-icon";
 
-const STATIC_ID = "SK_STATIC_TEXT";
+export const STATIC_ID = "SK_STATIC_TEXT";
 const MIN_STATIC_WIDTH = 40;
 const MAX_STATIC_WIDTH = 500;
 

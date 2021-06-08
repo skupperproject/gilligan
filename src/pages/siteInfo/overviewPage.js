@@ -35,7 +35,6 @@ import { viewsMap as VIEWS } from "../topology/views/views";
 import GetTokenModal from "./getTokenModal";
 import UseTokenModal from "./useTokenModal";
 import TableViewer from "../table/tableViewer";
-import ServiceTable from "./serviceTable";
 import { SiteInfoRows, linkedSitesFields } from "./siteInfoRows";
 import UnlinkModal from "./unlinkModal";
 
@@ -303,17 +302,6 @@ class OverviewPage extends React.Component {
             </Flex>
           </React.Fragment>
         )}
-        <div className="sk-section">
-          <h1>Services</h1>
-          <ServiceTable
-            ref={(el) => {
-              this.deploymentsRef = el;
-            }}
-            {...this.props}
-            addAlert={this.addAlert}
-            siteName={this.props.service.siteInfo.site_name}
-          />
-        </div>
       </div>
     );
   }

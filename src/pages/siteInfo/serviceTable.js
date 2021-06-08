@@ -80,7 +80,10 @@ class ServiceTable extends React.Component {
   };
 
   fetchDeployments = (page, perPage) => {
-    const formatterData = { expose: this.showExpose, details: this.showDetail };
+    const formatterData = {
+      expose: this.showExpose,
+      unExpose: this.showUnexpose,
+    };
     return new Promise((resolve) => {
       this.deploymentData
         .fetch(this.emptyState(), this.props.service, formatterData)
@@ -110,7 +113,7 @@ class ServiceTable extends React.Component {
   doUnexpose = (unexposeInfo) => {
     this.props.service.unexposeService(unexposeInfo).then(
       () => {
-        const msg = `Site ${unexposeInfo.Name} unexposed successfully`;
+        const msg = `Deployment ${unexposeInfo.Name} unexposed successfully`;
         console.log(msg);
         this.props.addAlert({
           title: msg,
@@ -119,7 +122,7 @@ class ServiceTable extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error unlinking site ${unexposeInfo.Name} - ${error.message}`;
+        const msg = `Error unexposing deployment ${unexposeInfo.Name} - ${error.message}`;
         console.error(msg);
         this.props.addAlert({
           title: msg,
@@ -161,7 +164,7 @@ class ServiceTable extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error exposing service ${exposeInfo.Name} - ${error.message}`;
+        const msg = `Error exposing deployment ${exposeInfo.Name} - ${error.message}`;
         console.error(msg);
         this.props.addAlert({
           title: msg,

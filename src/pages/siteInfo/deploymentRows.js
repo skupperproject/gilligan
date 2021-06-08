@@ -1,27 +1,34 @@
 import React from "react";
-import { Button } from "@patternfly/react-core";
+import { Switch } from "@patternfly/react-core";
+
 import { utils } from "../../utilities";
 
 export class DeploymentRows {
   // called when the expose button is clicked
   expose = (value, extraInfo) => {
-    this.showExpose(extraInfo.rowData);
+    if (value === "No") {
+      this.showExpose(extraInfo.rowData);
+    } else {
+      this.showUnExpose(extraInfo.rowData);
+    }
   };
 
   // returns the cell value for the exposed column
-  ExposeButton = (value, extraInfo) => {
-    if (value === "No") {
-      return (
-        <Button
-          data-testid={value}
-          variant="primary"
-          onClick={(event) => this.expose(value, extraInfo)}
-        >
-          Expose
-        </Button>
-      );
-    } else {
+  ExposeButton = (value, extraInfo) => (
+    <Switch
+      data-testid={value}
+      label="Exposed"
+      labelOff="Not Exposed"
+      isChecked={value !== "No"}
+      onChange={(event) => this.expose(value, extraInfo)}
+    />
+  );
+
+  age = (value, extraInfo) => {
+    if (value !== "No") {
       return <span>{value}</span>;
+    } else {
+      return <span></span>;
     }
   };
 
@@ -42,6 +49,11 @@ export class DeploymentRows {
       field: "Exposed",
       formatter: this.ExposeButton,
     },
+    {
+      title: "Age",
+      field: "Exposed",
+      formatter: this.age,
+    },
     { title: "Port", field: "Port" },
     { title: "Protocol", field: "Protocol" },
   ];
@@ -49,6 +61,7 @@ export class DeploymentRows {
   fetch = (emptyRows, VANservice, formatterData) => {
     const dataKey = "deployments";
     this.showExpose = formatterData.expose;
+    this.showUnExpose = formatterData.unExpose;
 
     return new Promise((resolve) => {
       VANservice.getSiteInfo().then((siteInfo) => {

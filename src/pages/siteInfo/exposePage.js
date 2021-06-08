@@ -41,12 +41,12 @@ class ExposePage extends React.Component {
   render() {
     return (
       <div className="sk-siteinfo-page-wrapper">
-        <h2>Exposing services on the network</h2>
+        <h2>Exposing deployments on the network</h2>
         <div className="sk-sub-text">
-          Before a service can be called from another site, it must be exposed
-          to the skupper network.
+          Before a deployment can be called from another site, it must be
+          exposed to the skupper network.
         </div>
-        <h2>Services running on this site</h2>
+        <h2>Deployments running on this site</h2>
         <ServiceTable {...this.props} />
       </div>
     );

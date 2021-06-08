@@ -36,7 +36,7 @@ class ExposeModal extends React.Component {
         <Modal
           width={"50%"}
           key="expose-modal"
-          title="Expose a service"
+          title="Expose a deployment"
           isOpen={true}
           onClose={this.handleModalToggle}
           actions={[
