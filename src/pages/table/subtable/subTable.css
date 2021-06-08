@@ -117,7 +117,13 @@
   padding-bottom: 0;
 }
 
+/*
 .table-page .overview-header {
   background-color: white;
   border-bottom: 0px;
+}
+*/
+
+.sk-charts-sections {
+  margin-left: 2em;
 }
