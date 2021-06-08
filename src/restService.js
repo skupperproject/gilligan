@@ -69,6 +69,10 @@ class RESTService {
 
   unlinkSite = (data) => this.postSiteInfoMethod(data, "UNLINK");
 
+  unexposeService = (data) => this.postSiteInfoMethod(data, "UNEXPOSE");
+
+  exposeService = (data) => this.postSiteInfoMethod(data, "EXPOSE");
+
   deleteToken = (data) => this.postSiteInfoMethod(data, "DELETE_TOKEN");
 
   updateToken = (data) => this.postSiteInfoMethod(data, "UPDATE_TOKEN");

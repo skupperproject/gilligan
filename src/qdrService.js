@@ -91,6 +91,12 @@ export class QDRService {
   // UNLINK
   unlinkSite = (data) => this.rest.unlinkSite(data);
 
+  // UNEXPOSE
+  unexposeService = (data) => this.rest.unexposeService(data);
+
+  // EXPOSE
+  exposeService = (data) => this.rest.exposeService(data);
+
   update() {
     return this.connect();
   }
