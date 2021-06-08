@@ -23,12 +23,15 @@ import Overview from "./overviewPage";
 import Expose from "./exposePage";
 import Tokens from "./tokensPage";
 import LinkedSites from "./linkedSitesPage";
+import { Alert, AlertActionCloseButton } from "@patternfly/react-core";
+import { ALERT_TIMEOUT } from "../../qdrService";
 
 class SiteInfoViewer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       tab: "Overview",
+      alerts: [],
     };
     this.tabRefs = {};
     this.tabs = {
@@ -76,8 +79,19 @@ class SiteInfoViewer extends React.Component {
       tab: tabIndex,
     });
   };
+
+  doAddAlert = (alertProps) => {
+    alertProps.key = new Date().getTime();
+    this.setState({ alerts: [...this.state.alerts, alertProps] });
+  };
+
+  closeAlert = (event, alertKey) => {
+    const { alerts } = this.state;
+    this.setState({ alerts: alerts.filter((a) => a.key !== alertKey) });
+  };
+
   render() {
-    const { tab } = this.state;
+    const { tab, alerts } = this.state;
 
     return (
       <Tabs
@@ -88,6 +102,36 @@ class SiteInfoViewer extends React.Component {
       >
         {Object.keys(this.tabs).map((t) => (
           <Tab eventKey={t} title={t} key={t} className="sk-siteinfo-tab">
+            {alerts.map(
+              ({
+                title,
+                variant,
+                isLiveRegion,
+                ariaLive,
+                ariaRelevant,
+                ariaAtomic,
+                key,
+              }) => (
+                <Alert
+                  className="sk-alert"
+                  variant={variant}
+                  title={title}
+                  timeout={ALERT_TIMEOUT}
+                  isLiveRegion={isLiveRegion}
+                  isInline
+                  aria-live={ariaLive}
+                  aria-relevant={ariaRelevant}
+                  aria-atomic={ariaAtomic}
+                  key={key}
+                  actionClose={
+                    <AlertActionCloseButton
+                      onClose={(event) => this.closeAlert(event, key)}
+                    />
+                  }
+                />
+              )
+            )}
+
             {this.tabs[t]}
           </Tab>
         ))}
