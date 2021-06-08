@@ -27,6 +27,7 @@ import {
   EmptyStateSecondaryActions,
 } from "@patternfly/react-core";
 import { Flex, FlexItem } from "@patternfly/react-core";
+import { Split, SplitItem } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 
 import TimeSeries from "../topology/charts/timeSeries";
@@ -71,6 +72,9 @@ class OverviewPage extends React.Component {
     if (this.tableRef && this.tableRef.update) {
       this.tableRef.update();
     }
+    if (this.deploymentsRef && this.deploymentsRef.update) {
+      this.deploymentsRef.update();
+    }
     if (this.chartRef1 && this.chartRef1.update) {
       this.chartRef1.update();
     }
@@ -78,8 +82,6 @@ class OverviewPage extends React.Component {
       this.chartRef2.update();
     }
   };
-
-  getUniqueId = () => new Date().getTime();
 
   fetchLinkSites = (page, perPage) => {
     return new Promise((resolve) => {
@@ -176,8 +178,13 @@ class OverviewPage extends React.Component {
       </Title>
       <EmptyStateBody>There are no sites linked to this site</EmptyStateBody>
       <EmptyStateSecondaryActions>
-        <GetTokenModal {...this.props} />
-        <UseTokenModal {...this.props} title="Use a token" direction="up" />
+        <GetTokenModal {...this.props} addAlert={this.addAlert} />
+        <UseTokenModal
+          {...this.props}
+          title="Use a token"
+          direction="up"
+          addAlert={this.addAlert}
+        />
       </EmptyStateSecondaryActions>
     </EmptyState>
   );
@@ -222,16 +229,25 @@ class OverviewPage extends React.Component {
         {linkedCount === 0 && this.emptyState()}
         {linkedCount > 0 && data && (
           <React.Fragment>
-            <div className="sk-site-actions">
-              <GetTokenModal {...this.props} />
-              <UseTokenModal
-                {...this.props}
-                title="Use a token"
-                direction="up"
-              />
-            </div>
-            <h1>Linked sites</h1>
-            <div className="skk-site-table-wrapper">
+            <Split gutter="md">
+              <SplitItem>
+                <h1>Linked sites</h1>
+              </SplitItem>
+              <SplitItem isFilled></SplitItem>
+
+              <SplitItem>
+                <div className="sk-site-actions">
+                  <GetTokenModal {...this.props} addAlert={this.addAlert} />
+                  <UseTokenModal
+                    {...this.props}
+                    title="Use a token"
+                    direction="up"
+                    addAlert={this.addAlert}
+                  />
+                </div>
+              </SplitItem>
+            </Split>
+            <div className="sk-site-table-wrapper">
               <TableViewer
                 ref={(el) => (this.tableRef = el)}
                 {...this.props}
@@ -251,10 +267,7 @@ class OverviewPage extends React.Component {
               direction={{ default: "row", lg: "row" }}
             >
               {hasIn && (
-                <FlexItem
-                  id="sk-subTable-line-in"
-                  className="sk-this-is-a-class"
-                >
+                <FlexItem id="sk-subTable-line-in">
                   <TimeSeries
                     ref={(el) => (this.chartRef1 = el)}
                     service={this.props.service}
@@ -292,7 +305,14 @@ class OverviewPage extends React.Component {
         )}
         <div className="sk-section">
           <h1>Services</h1>
-          <ServiceTable {...this.props} />
+          <ServiceTable
+            ref={(el) => {
+              this.deploymentsRef = el;
+            }}
+            {...this.props}
+            addAlert={this.addAlert}
+            siteName={this.props.service.siteInfo.site_name}
+          />
         </div>
       </div>
     );
