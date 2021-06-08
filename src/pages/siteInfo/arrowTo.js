@@ -121,7 +121,7 @@ class ArrowTo extends React.Component {
       path
         .attr("stroke-dasharray", totalLength + " " + totalLength)
         .attr("stroke-dashoffset", totalLength)
-        // not transition the dash to the full length of the path
+        // now transition the dash to the full length of the path
         .transition()
         .duration(100)
         .attr("stroke-dashoffset", 0);
