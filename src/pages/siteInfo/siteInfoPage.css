@@ -20,6 +20,10 @@
   padding-top: 1em;
 }
 
+.sk-siteinfo-page-wrapper h2:first-of-type {
+  padding-top: 0;
+}
+
 .sk-siteinfo-page-wrapper button {
   margin-top: 0.5em;
 }
@@ -29,9 +33,9 @@
 }
 
 .sk-siteinfo-prompt {
-  color: #999999;
-  padding-right: 0.25em;
-  padding-left: 0.5em;
+  /* color: #999999; */
+  padding-right: 0.5em;
+  /*padding-left: 0.25em;*/
 }
 
 .sk-upload-status.error {
@@ -125,10 +129,10 @@ input[type="file"] {
 }
 
 section.sk-siteinfo-tab {
-  height: calc(100% - 30px);
+  min-height: calc(100% - 30px);
 }
 .sk-site-info-table {
-  height: calc(100% - 60px);
+  min-height: calc(100% - 64px);
 }
 
 .sk-command-line {
@@ -178,6 +182,10 @@ h2.sk-inline-h2 {
   width: 4em;
 }
 
+.sk-input-numeric-medium {
+  width: 6em;
+}
+
 .sk-form {
   --pf-c-form--GridGap: 0;
 }
@@ -192,8 +200,9 @@ h1:not(:first-of-type) {
 
 .sk-site-table-wrapper {
   min-width: 40em;
+  padding-bottom: 2em;
   /* margin-top: 3em; */
-  display: inline-block;
+  /* display: inline-block; */
 }
 
 .sk-siteinfo-page-wrapper .sk-chart-container.sk-chart-separated {
@@ -269,9 +278,8 @@ h1:not(:first-of-type) {
 }
 
 .sk-site-actions {
-  float: right;
-  top: -1em;
   position: relative;
+  top: -1em;
 }
 
 .sk-popup-menu {
@@ -292,4 +300,22 @@ h1:not(:first-of-type) {
 
 .sk-inline-edit {
   padding: 1px;
+  height: 1.2em;
+}
+
+.sk-highlight-text {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.sk-site-name {
+  font-weight: bold;
+}
+
+.sk-block-button {
+  display: block;
+}
+
+.sk-secondary-section {
+  margin-top: 2em;
 }
