@@ -58,8 +58,19 @@ class TableViewer extends React.Component {
       }
       if (f.formatter) {
         f.cellFormatters.push((value, extraInfo) =>
-          this.formatter(f.formatter, value, extraInfo)
+          this.customFormatter(value, extraInfo, f.formatter)
         );
+      }
+      if (f.isDetailLink) {
+        if (typeof f.isDetailLink === "function") {
+          // if isDetailLink is a function, let it decide if the field gets a details link
+          f.cellFormatters.push((value, extraInfo) =>
+            f.isDetailLink(value, extraInfo, this.detailLink)
+          );
+        } else {
+          // isDetailLink was a boolean (true). Always add a details link
+          f.cellFormatters.push(this.detailLink);
+        }
       }
     });
     // if the dataSource did not provide its own cell formatter for details
@@ -152,6 +163,10 @@ class TableViewer extends React.Component {
         {value}
       </Button>
     );
+  };
+
+  customFormatter = (value, extraInfo, formatter) => {
+    return formatter(value, extraInfo);
   };
 
   detailClick = (value, extraInfo) => {
@@ -248,6 +263,9 @@ class TableViewer extends React.Component {
       rows = rows.filter(
         (r) => r.cells[cellIndex] !== this.props.service.siteInfo.site_name
       );
+    }
+    if (this.props.rowFilter) {
+      rows = this.props.rowFilter(rows);
     }
     return rows;
   };
