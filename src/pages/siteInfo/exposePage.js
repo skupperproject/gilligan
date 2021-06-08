@@ -43,16 +43,10 @@ class ExposePage extends React.Component {
       <div className="sk-siteinfo-page-wrapper">
         <h2>Exposing services on the network</h2>
         <div className="sk-sub-text">
-          Paul will do his stuff here.
-          <div className="sk-command-line-example">
-            $ skupper expose deployment/
-            <span className="sk-command-line">{"<deployment-name>"}</span>
-          </div>
+          Before a service can be called from another site, it must be exposed
+          to the skupper network.
         </div>
-        <h2>Connecting to services on the network</h2>
-        <div className="sk-sub-text">
-          Paul will supply some reasonable text describing this table.
-        </div>
+        <h2>Services running on this site</h2>
         <ServiceTable {...this.props} />
       </div>
     );
