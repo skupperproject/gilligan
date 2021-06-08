@@ -26,11 +26,14 @@ import {
   Title,
   EmptyStateIcon,
 } from "@patternfly/react-core";
+import { Split, SplitItem } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 import SiteInfoTable from "./siteInfoTable";
 import DownloadModal from "./downloadModal";
 import UpdateModal from "./updateModal";
 import DeleteModal from "./deleteModal";
+import GetTokenModal from "./getTokenModal";
+import UseTokenModal from "./useTokenModal";
 
 class TokensPage extends React.Component {
   constructor(props) {
@@ -215,7 +218,31 @@ class TokensPage extends React.Component {
     } = this.state;
 
     return (
-      <React.Fragment>
+      <div className="sk-siteinfo-page-wrapper">
+        <Split gutter="md">
+          <SplitItem>
+            <h1>Link tokens</h1>
+          </SplitItem>
+          <SplitItem isFilled></SplitItem>
+
+          <SplitItem>
+            <div className="sk-site-actions">
+              <GetTokenModal {...this.props} targetId="SKUSETOKEN1" />
+              <UseTokenModal
+                {...this.props}
+                title="Use a token"
+                direction="up"
+                targetId="SKUSETOKEN1"
+              />
+            </div>
+          </SplitItem>
+        </Split>
+        <div className="sk-sub-text">
+          Sites must be linked before they can communicate. Link tokens issued
+          from this site allow other sites to establish a connection to this
+          site.
+        </div>
+        <h1 className="sk-secondary-section">Tokens issued from this site</h1>
         <SiteInfoTable
           {...this.props}
           actions={this.actions}
@@ -249,7 +276,7 @@ class TokensPage extends React.Component {
             doDelete={this.doDelete}
           />
         )}
-      </React.Fragment>
+      </div>
     );
   }
 }
