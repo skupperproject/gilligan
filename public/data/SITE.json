@@ -1,10 +1,8 @@
 {
   "site_name": "My company frontend",
   "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
-  "connected": [],
   "Site type": "OpenShift",
   "namespace": "skupper",
-  "edge": false,
   "tokens": [
     {
       "Name": "public2",
@@ -37,6 +35,22 @@
       "Cost": 1,
       "Linked": 1583793999616,
       "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b"
+    }
+  ],
+  "deployments": [
+    {
+      "Name": "mongo-b",
+      "ID": "this-is-a-generated-deployment-id-for-mongo-b",
+      "Exposed": 1622566923561,
+      "Port": 8080,
+      "Protocol": "TCP"
+    },
+    {
+      "Name": "resident service",
+      "ID": "this-is-a-generated-deployment-id-for-resident-service",
+      "Exposed": false,
+      "Port": 8081,
+      "Protocol": "TCP"
     }
   ]
 }
