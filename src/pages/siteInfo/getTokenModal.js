@@ -141,7 +141,7 @@ class GetTokenModal extends React.Component {
                   {...this.props}
                   handleDownloadClicked={this.handleCopy}
                   text="Copy a token to the clipboard"
-                  cls={"inline"}
+                  cls={"sk-block-button"}
                 />
                 <span className={`sk-status-message ${uploadStatus}`}>
                   {uploadMsg}
@@ -165,7 +165,9 @@ class GetTokenModal extends React.Component {
                   />{" "}
                   <ArrowTo
                     ref={(el) => (this.arrowRef = el)}
-                    targetId="SKUSETOKEN"
+                    targetId={
+                      this.props.targetId ? this.props.targetId : "SKUSETOKEN"
+                    }
                   />{" "}
                   button to link the remote site to this site.
                 </ListItem>
