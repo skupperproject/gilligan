@@ -18,7 +18,10 @@ under the License.
 */
 
 import React from "react";
+import { Split, SplitItem } from "@patternfly/react-core";
 import LinkedSitesTable from "./linkedSitesTable";
+import GetTokenModal from "./getTokenModal";
+import UseTokenModal from "./useTokenModal";
 
 class LinkedSitesPage extends React.Component {
   constructor(props) {
@@ -39,7 +42,30 @@ class LinkedSitesPage extends React.Component {
   update = () => {};
 
   render() {
-    return <LinkedSitesTable {...this.props} />;
+    return (
+      <div className="sk-siteinfo-page-wrapper">
+        <Split gutter="md">
+          <SplitItem>
+            <h1>Sites linked to this site</h1>
+          </SplitItem>
+          <SplitItem isFilled></SplitItem>
+
+          <SplitItem>
+            <div className="sk-site-actions">
+              <GetTokenModal {...this.props} targetId="SKUSETOKEN2" />
+              <UseTokenModal
+                {...this.props}
+                title="Use a token"
+                direction="up"
+                targetId="SKUSETOKEN2"
+              />
+            </div>
+          </SplitItem>
+        </Split>
+
+        <LinkedSitesTable {...this.props} />
+      </div>
+    );
   }
 }
 
