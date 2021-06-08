@@ -3,7 +3,6 @@ import { Modal, Button } from "@patternfly/react-core";
 import { Form } from "@patternfly/react-core";
 import { ArrowUpIcon } from "@patternfly/react-icons";
 import { List, ListItem, ListComponent } from "@patternfly/react-core";
-import ArrowTo from "./arrowTo";
 import PasteButton from "./pasteButton";
 import GetTokenModal from "./getTokenModal";
 
@@ -29,51 +28,48 @@ class UseTokenModal extends React.Component {
     );
   };
 
+  addAlert = (alertProps) => {
+    if (this.props.addAlert) {
+      this.props.addAlert(alertProps);
+    }
+  };
+
   handlePaste = (element) => {
     let sendToServer = (token) => this.props.service.uploadToken(token);
+    const success = () => {
+      const msg = `Site linking request submitted. The request may take a little while.`;
+      console.log(msg);
+      this.addAlert({
+        title: msg,
+        variant: "success",
+        isLiveRegion: true,
+      });
+      this.setState({ isModalOpen: false });
+    };
+    const failure = (error) => {
+      const msg = `Site linking request failed ${JSON.stringify(
+        error,
+        null,
+        2
+      )}`;
+      console.error(msg);
+      this.addAlert({
+        title: msg,
+        variant: "danger",
+        ariaLive: "assertive",
+        ariaRelevant: "additions text",
+        ariaAtomic: "false",
+      });
+      this.setState({ isModalOpen: false });
+    };
     if (navigator.clipboard.readText) {
       navigator.clipboard.readText().then((clipText) => {
-        sendToServer(clipText).then(
-          (response) => {
-            this.setState({
-              uploadMsg:
-                "Site linking request submitted. The request may take a little while.",
-            });
-          },
-          (error) => {
-            this.setState({
-              uploadMsg: `Site linking request failed. ${JSON.stringify(
-                error,
-                null,
-                2
-              )}`,
-            });
-            console.log(error);
-          }
-        );
+        sendToServer(clipText).then(success, failure);
       });
     } else {
       setTimeout(() => {
         const token = element.value;
-        sendToServer(token).then(
-          () => {
-            element.value = `Site linking requested.`;
-            this.setState({
-              uploadMsg:
-                "Site linking request submitted. The request may take a little while.",
-            });
-          },
-          (error) => {
-            element.value = `Site linking is ${error}`;
-            this.setState({
-              uploadMsg: `Site linking request failed. ${JSON.stringify(
-                error,
-                null,
-                2
-              )}`,
-            });
-          }
-        );
+        sendToServer(token).then(success, failure);
       }, 0);
     }
   };
@@ -89,7 +85,13 @@ class UseTokenModal extends React.Component {
           variant={"primary"}
           onClick={this.handleModalToggle}
           icon={<ArrowUpIcon />}
-          id={`${!this.props.justButton ? "SKUSETOKEN" : ""}`}
+          id={`${
+            !this.props.justButton
+              ? this.props.targetId
+                ? this.props.targetId
+                : "SKUSETOKEN"
+              : ""
+          }`}
         >
           {this.props.title ? this.props.title : "Use token"}
         </Button>
@@ -126,11 +128,6 @@ class UseTokenModal extends React.Component {
                     justButton
                     cls="sk-button-placeholder"
                   />
-                  <ArrowTo
-                    ref={(el) => (this.arrowRef = el)}
-                    targetId="SKGETTOKEN"
-                  />
-                  {"  "}
                   button to get a link token.
                 </ListItem>
               </List>
