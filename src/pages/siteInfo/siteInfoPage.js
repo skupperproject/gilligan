@@ -29,11 +29,10 @@ import {
   TextVariants,
 } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
-import { Alert } from "@patternfly/react-core";
-import { ALERT_TIMEOUT } from "../../qdrService";
 import SiteInfoViewer from "./siteInfoViewer";
 import MenuToggle from "./menuToggle";
 import InlineEdit from "./inlineEdit";
+import RegenCAModal from "./regenCAModal";
 
 import LastUpdated from "../../lastUpdated";
 
@@ -44,7 +43,7 @@ class SiteInfoPage extends Component {
       siteInfo: null,
       uploadStatus: null,
       uploadMsg: null,
-      alerts: [],
+      showRegenCAModal: false,
     };
   }
 
@@ -90,11 +89,10 @@ class SiteInfoPage extends Component {
     }
   };
 
-  getUniqueId = () => new Date().getTime();
-
   addAlert = (alertProps) => {
-    alertProps.key = this.getUniqueId();
-    this.setState({ alerts: [...this.state.alerts, alertProps] });
+    if (this.siteInfoRef && this.siteInfoRef.doAddAlert) {
+      this.siteInfoRef.doAddAlert(alertProps);
+    }
   };
 
   handleStartEdit = () => {
@@ -103,7 +101,15 @@ class SiteInfoPage extends Component {
     }
   };
 
-  handleRegenCA = () => {
+  handleShowRegenCA = () => {
+    this.setState({ showRegenCAModal: true });
+  };
+
+  handleCloseRegenCA = () => {
+    this.setState({ showRegenCAModal: false });
+  };
+
+  doRegenCA = () => {
     this.props.service.regenCA().then(
       () => {
         const msg = `Request to regenerate Certificate Authority submitted`;
@@ -157,10 +163,18 @@ class SiteInfoPage extends Component {
   };
 
   render() {
-    const { siteInfo, uploadStatus, uploadMsg, alerts } = this.state;
+    const { siteInfo, uploadStatus, uploadMsg, showRegenCAModal } = this.state;
     if (!siteInfo) return <div>Please wait...</div>;
     return (
       <PageSection variant={PageSectionVariants.light} className="table-page">
+        {showRegenCAModal && (
+          <RegenCAModal
+            {...this.props}
+            doRegenCA={this.doRegenCA}
+            handleModalClose={this.handleCloseRegenCA}
+            siteName={siteInfo.site_name}
+          />
+        )}
         <Stack>
           <React.Fragment>
             <StackItem className="overview-header">
@@ -183,7 +197,7 @@ class SiteInfoPage extends Component {
                 <SplitItem className="sk-siteinfo-actions">
                   <MenuToggle
                     handleStartEdit={this.handleStartEdit}
-                    handleRegenCA={this.handleRegenCA}
+                    handleRegenCA={this.handleShowRegenCA}
                   />
                   <TextContent>
                     <span
@@ -200,30 +214,6 @@ class SiteInfoPage extends Component {
               </Split>
             </StackItem>
             <StackItem className="sk-site-info-table">
-              {alerts.map(
-                ({
-                  title,
-                  variant,
-                  isLiveRegion,
-                  ariaLive,
-                  ariaRelevant,
-                  ariaAtomic,
-                  key,
-                }) => (
-                  <Alert
-                    className="sk-alert"
-                    variant={variant}
-                    title={title}
-                    timeout={ALERT_TIMEOUT}
-                    isLiveRegion={isLiveRegion}
-                    aria-live={ariaLive}
-                    aria-relevant={ariaRelevant}
-                    aria-atomic={ariaAtomic}
-                    key={key}
-                  />
-                )
-              )}
-
               <SiteInfoViewer
                 ref={(el) => (this.siteInfoRef = el)}
                 {...this.props}
