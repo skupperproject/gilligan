@@ -74,14 +74,23 @@ export class DeploymentRows {
 
         const rows = data.map((row) => {
           // add cardData so the sub table viewer has the correct info
-          // find the service for this row
-          const service = VANservice.VAN.services.filter(
+          const deployment = VANservice.VAN.deployments.find(
+            (d) =>
+              d.service.address === row.Name &&
+              d.site.site_id === siteInfo.site_id
+          );
+          const service = VANservice.VAN.services.find(
             (s) => s.address === row.Name
           );
-          row.cardData = { ...service[0] };
-          row.cardData.name = row.Name;
-          row.cardData.shortName = row.Name;
-          row.cardData.nodeType = "service";
+          if (deployment && service) {
+            row.cardData = { ...service };
+            row.cardData.name = row.Name;
+            row.cardData.shortName = row.Name;
+            row.cardData.nodeType = "deployment";
+            row.cardData.cluster = VANservice.VAN.sites.find(
+              (s) => s.site_id === siteInfo.site_id
+            );
+          }
           if (row.Exposed === 0) {
             row.Exposed = "unknown";
           } else if (row.Exposed === false || row.Exposed === undefined) {

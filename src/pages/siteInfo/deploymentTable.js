@@ -50,6 +50,7 @@ class DeploymentTable extends React.Component {
 
   // called after a deployment name is clicked in the deployments table
   handleShowSubTable = (_, subPageInfo) => {
+    subPageInfo.card.cardType = "deployment";
     this.props.handleViewDetails(
       "details",
       subPageInfo,
@@ -221,7 +222,7 @@ class DeploymentTable extends React.Component {
           <TableViewer
             ref={(el) => (this.tableRef = el)}
             {...this.props}
-            view="service"
+            view="deployment"
             fields={this.deploymentData.DeploymentFields}
             doFetch={this.fetchDeployments}
             noToolbar
