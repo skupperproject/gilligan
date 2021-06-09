@@ -67,9 +67,6 @@ class PageLayout extends React.Component {
     if (!this.viewModes.thissite) {
       this.viewModes.thissite = "info";
     }
-    console.log(
-      `layout:: view ${view} viewModes[view] ${this.viewModes[view]}`
-    );
     // never start with the details view
     if (this.viewModes[view] === "details") {
       this.viewModes[view] = view === "thissite" ? "info" : "table";
@@ -147,6 +144,8 @@ class PageLayout extends React.Component {
     if (origin === "overview") {
       if (card.cardType === "service") {
         view = "service";
+      } else if (card.cardType === "deployment") {
+        view = "deployment";
       } else {
         view = "site";
       }
