@@ -14,7 +14,7 @@ import UnexposeModal from "./unexposeModal";
 import ExposeModal from "./exposeModal";
 import { DeploymentRows } from "./deploymentRows";
 
-class ServiceTable extends React.Component {
+class DeploymentTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -23,6 +23,9 @@ class ServiceTable extends React.Component {
       exposeInfo: null,
       showExposeModal: false,
     };
+
+    // list of all possible actions to be displayed in each table row's kebob menu
+    // this is filtered by this.actionResolver for each row
     this.actions = [
       {
         title: "Unexpose",
@@ -33,15 +36,19 @@ class ServiceTable extends React.Component {
         onClick: (event, rowId, rowData, extra) => this.showExpose(rowData),
       },
     ];
+
+    // helper that fetches the table data and defines the table columns
     this.deploymentData = new DeploymentRows();
   }
 
+  // called periodically by the parent component
   update = () => {
     if (this.tableRef && this.tableRef.update) {
       this.tableRef.update();
     }
   };
 
+  // called after a deployment name is clicked in the deployments table
   handleShowSubTable = (_, subPageInfo) => {
     this.props.handleViewDetails(
       "details",
@@ -57,28 +64,22 @@ class ServiceTable extends React.Component {
     this.props.setOptions(options, true);
   };
 
+  // this is displayed if there are no deployments in the site specific information
   emptyState = () => (
     <EmptyState variant={EmptyStateVariant.xs} className="sk-empty-container">
       <EmptyStateIcon icon={SearchIcon} />
 
       <Title headingLevel="h4" size="md">
-        No services
+        No deployments
       </Title>
       <EmptyStateBody>
-        There are no services running at this site.
+        There are no deployments running at this site.
       </EmptyStateBody>
       <EmptyStateSecondaryActions></EmptyStateSecondaryActions>
     </EmptyState>
   );
 
-  showDetail = (rowData) => {
-    this.handleShowSubTable(null, {
-      ...rowData,
-      value: rowData.data.Name,
-      card: rowData.data.cardData,
-    });
-  };
-
+  // called by tableViewer to get the rows to display
   fetchDeployments = (page, perPage) => {
     const formatterData = {
       expose: this.showExpose,
@@ -93,6 +94,7 @@ class ServiceTable extends React.Component {
     });
   };
 
+  // called to display the unexpose modal
   showUnexpose = (rowData) => {
     const service_name = rowData.data.Name;
     const service_id = rowData.data.ID;
@@ -106,10 +108,12 @@ class ServiceTable extends React.Component {
     });
   };
 
+  // called to hide the unexpose modal
   handleUnexposeClose = () => {
     this.setState({ showUnexposeModal: false, unexposeInfo: null });
   };
 
+  // called after the unexpose modal is submitted
   doUnexpose = (unexposeInfo) => {
     this.props.service.unexposeService(unexposeInfo).then(
       () => {
@@ -135,6 +139,7 @@ class ServiceTable extends React.Component {
     );
   };
 
+  // called to display the expose modal
   showExpose = (rowData) => {
     const service_name = rowData.data.Name;
     const service_id = rowData.data.ID;
@@ -148,10 +153,12 @@ class ServiceTable extends React.Component {
     });
   };
 
+  // called to hide the expose modal
   handleExposeClose = () => {
     this.setState({ showExposeModal: false, exposeInfo: null });
   };
 
+  // this is called after the expose modal is submitted
   doExpose = (exposeInfo) => {
     this.props.service.exposeService(exposeInfo).then(
       () => {
@@ -177,9 +184,10 @@ class ServiceTable extends React.Component {
     );
   };
 
+  // called by patternfly's table component
   // only put the menu to unexpose a deployment on table rows that are exposed
   actionResolver = (rowData) => {
-    if (rowData.data.Exposed !== "No") {
+    if (rowData.data.Exposed !== this.deploymentData.unexposedValue) {
       return this.actions.filter((a) => a.title === "Unexpose");
     }
     return this.actions.filter((a) => a.title === "Expose");
@@ -229,4 +237,4 @@ class ServiceTable extends React.Component {
   }
 }
 
-export default ServiceTable;
+export default DeploymentTable;

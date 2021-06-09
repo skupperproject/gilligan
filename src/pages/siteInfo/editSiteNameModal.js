@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Button, Tooltip } from "@patternfly/react-core";
+import { Modal, Button } from "@patternfly/react-core";
 export const STATIC_ID = "SK_STATIC_TEXT";
 const MIN_STATIC_WIDTH = 40;
 const MAX_STATIC_WIDTH = 500;

@@ -22,15 +22,14 @@ import {
   EmptyState,
   EmptyStateBody,
   EmptyStateVariant,
-  Bullseye,
   Title,
   EmptyStateIcon,
   EmptyStateSecondaryActions,
 } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
-import SiteInfoTable from "./siteInfoTable";
-import GetTokenModal from "./getTokenModal";
 import UnlinkModal from "./unlinkModal";
+import TableViewer from "../table/tableViewer";
+import { LinksRows } from "./linksRows";
 
 class LinkedSitesTable extends React.Component {
   constructor(props) {
@@ -42,39 +41,9 @@ class LinkedSitesTable extends React.Component {
         onClick: (event, rowId, rowData, extra) => this.showUnlink(rowData),
       },
     ];
-    this.columns = [
-      "Name",
-      "Status",
-      "Site type",
-      "Cost",
-      { name: "Linked", dateType: "present" },
-    ];
-    this.emptyRows = [
-      {
-        heightAuto: true,
-        cells: [
-          {
-            props: { colSpan: 5 },
-            title: (
-              <Bullseye>
-                <EmptyState variant={EmptyStateVariant.small}>
-                  <EmptyStateIcon icon={SearchIcon} />
-                  <Title headingLevel="h2" size="lg">
-                    No linked sites found
-                  </Title>
-                  <EmptyStateBody>
-                    No sites have been linked to this site.
-                  </EmptyStateBody>
-                  <EmptyStateSecondaryActions>
-                    <GetTokenModal {...this.props} />
-                  </EmptyStateSecondaryActions>
-                </EmptyState>
-              </Bullseye>
-            ),
-          },
-        ],
-      },
-    ];
+
+    // helper that fetches the table data and defines the table columns
+    this.linksData = new LinksRows();
   }
 
   componentDidMount = () => {
@@ -85,6 +54,63 @@ class LinkedSitesTable extends React.Component {
     this.mounted = false;
   };
 
+  // this is displayed if there are no links in the site specific information
+  emptyState = () => (
+    <EmptyState variant={EmptyStateVariant.xs} className="sk-empty-container">
+      <EmptyStateIcon icon={SearchIcon} />
+
+      <Title headingLevel="h4" size="md">
+        No links
+      </Title>
+      <EmptyStateBody>There are no links for this site.</EmptyStateBody>
+      <EmptyStateSecondaryActions></EmptyStateSecondaryActions>
+    </EmptyState>
+  );
+
+  // called periodically by the parent component
+  update = () => {
+    if (this.tableRef && this.tableRef.update) {
+      this.tableRef.update();
+    }
+  };
+
+  // called after a link name is clicked in the links table
+  handleShowSubTable = (_, subPageInfo) => {
+    this.props.handleViewDetails(
+      "details",
+      subPageInfo,
+      subPageInfo.card,
+      "overview"
+    );
+    const options = {
+      view: this.props.view,
+      mode: "details",
+      item: subPageInfo.value,
+    };
+    this.props.setOptions(options, true);
+  };
+
+  // called by tableViewer to get the rows to display
+  fetchLinks = (page, perPage) => {
+    const formatterData = {
+      unLink: this.showUnLink,
+    };
+    return new Promise((resolve) => {
+      this.linksData
+        .fetch(this.emptyState(), this.props.service, formatterData)
+        .then((data) => {
+          if (this.props.dataFilter) {
+            data = this.props.dataFilter(data);
+          }
+          resolve({
+            data,
+            page,
+            perPage,
+          });
+        });
+    });
+  };
+
   addAlert = (alertProps) => {
     if (this.props.addAlert) {
       this.props.addAlert(alertProps);
@@ -92,14 +118,10 @@ class LinkedSitesTable extends React.Component {
   };
 
   showUnlink = (rowData) => {
-    const data = rowData.data
-      ? rowData.data.cardData
-      : rowData.actionProps.data;
     this.setState({
       showUnlinkModal: true,
       unlinkInfo: {
-        Name: data.site_name,
-        site_id: data.site_id,
+        Name: rowData.data.Name,
       },
     });
   };
@@ -135,13 +157,24 @@ class LinkedSitesTable extends React.Component {
     );
   };
 
-  update = () => {};
+  linkFields = () => {
+    if (this.props.fieldsFilter) {
+      return this.props.fieldsFilter(this.linksData.LinkFields);
+    }
+    return this.linksData.LinkFields;
+  };
+
+  // called by patternfly's table component
+  // only put the menu item to unlink on table rows that have a status of connected
+  actionResolver = (rowData) => {
+    return this.actions;
+  };
 
   render() {
     const { showUnlinkModal, unlinkInfo } = this.state;
-
+    const linkCount = this.props.service.siteInfo.links.length;
     return (
-      <React.Fragment>
+      <div>
         {showUnlinkModal && (
           <UnlinkModal
             {...this.props}
@@ -150,15 +183,23 @@ class LinkedSitesTable extends React.Component {
             doUnlink={this.doUnlink}
           />
         )}
-
-        <SiteInfoTable
-          {...this.props}
-          actions={this.actions}
-          dataKey="linked_sites"
-          columns={this.props.columns ? this.props.columns : this.columns}
-          emptyRows={this.emptyRows}
-        />
-      </React.Fragment>
+        {linkCount === 0 && this.emptyState()}
+        {linkCount > 0 && (
+          <TableViewer
+            ref={(el) => (this.tableRef = el)}
+            {...this.props}
+            view="site"
+            fields={this.linkFields()}
+            doFetch={this.fetchLinks}
+            noToolbar
+            noFormat
+            excludeCurrent={false}
+            handleAddNotification={() => {}}
+            handleShowSubTable={this.handleShowSubTable}
+            actionResolver={this.actionResolver}
+          />
+        )}
+      </div>
     );
   }
 }

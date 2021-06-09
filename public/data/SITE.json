@@ -27,14 +27,18 @@
       "ID": "this-is-a-totally-unique-string"
     }
   ],
-  "linked_sites": [
+  "links": [
     {
-      "Name": "My private backend",
-      "Status": "OK",
+      "Name": "link-asf2",
+      "Status": "connected",
       "Site type": "Podman",
       "Cost": 1,
       "Linked": 1583793999616,
       "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b"
+    },
+    {
+      "Name": "link-347d",
+      "Status": "disconnected"
     }
   ],
   "deployments": [
@@ -46,8 +50,8 @@
       "Protocol": "TCP"
     },
     {
-      "Name": "resident service",
-      "ID": "this-is-a-generated-deployment-id-for-resident-service",
+      "Name": "tax calculator",
+      "ID": "this-is-a-generated-deployment-id-for-tax-calculator",
       "Exposed": false,
       "Port": 8081,
       "Protocol": "TCP"

@@ -18,25 +18,13 @@ under the License.
 */
 
 import React from "react";
-import ServiceTable from "./serviceTable";
+import DeploymentTable from "./deploymentTable";
 
 class ExposePage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
   }
-
-  componentDidMount = () => {
-    this.mounted = true;
-  };
-
-  componentWillUnmount = () => {
-    this.mounted = false;
-  };
-
-  componentDidUpdate = () => {};
-
-  update = () => {};
 
   render() {
     return (
@@ -47,7 +35,7 @@ class ExposePage extends React.Component {
           exposed to the skupper network.
         </div>
         <h2>Deployments running on this site</h2>
-        <ServiceTable {...this.props} />
+        <DeploymentTable {...this.props} />
       </div>
     );
   }

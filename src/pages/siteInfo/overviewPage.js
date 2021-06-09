@@ -34,9 +34,11 @@ import TimeSeries from "../topology/charts/timeSeries";
 import { viewsMap as VIEWS } from "../topology/views/views";
 import GetTokenModal from "./getTokenModal";
 import UseTokenModal from "./useTokenModal";
-import TableViewer from "../table/tableViewer";
-import { SiteInfoRows, linkedSitesFields } from "./siteInfoRows";
+import LinkedSitesTable from "./linkedSitesTable";
+import { LINKDOWN_VALUE } from "./linksRows";
 import UnlinkModal from "./unlinkModal";
+
+import { utils } from "../../utilities";
 
 class OverviewPage extends React.Component {
   constructor(props) {
@@ -80,14 +82,6 @@ class OverviewPage extends React.Component {
     if (this.chartRef2 && this.chartRef2.update) {
       this.chartRef2.update();
     }
-  };
-
-  fetchLinkSites = (page, perPage) => {
-    return new Promise((resolve) => {
-      SiteInfoRows(this.emptyState(), this.props.service, true).then((data) => {
-        resolve({ data, page, perPage });
-      });
-    });
   };
 
   addAlert = (alertProps) => {
@@ -144,21 +138,6 @@ class OverviewPage extends React.Component {
     );
   };
 
-  handleShowSubTable = (_, subPageInfo) => {
-    this.props.handleViewDetails(
-      "details",
-      subPageInfo,
-      subPageInfo.card,
-      "overview"
-    );
-    const options = {
-      view: this.props.view,
-      mode: "details",
-      item: subPageInfo.value,
-    };
-    this.props.setOptions(options, true);
-  };
-
   data = () => {
     const siteInfo = this.props.service.siteInfo;
     return {
@@ -188,6 +167,44 @@ class OverviewPage extends React.Component {
     </EmptyState>
   );
 
+  // called after the data for the linedSitesTable is fetched
+  // used to add/remove rows
+  filterLinkData = (data) => {
+    // remove any disconnected links
+    data = data.filter((d) => d.Status !== LINKDOWN_VALUE);
+
+    // change the name to the linked site's name
+    data.forEach((d) => {
+      const site = this.props.service.VAN.sites.find(
+        (s) => s.site_id === d.site_id
+      );
+      if (site) {
+        d.Name = site.site_name;
+      }
+    });
+
+    // add the current site to the linked sites rows
+    const siteInfo = this.props.service.siteInfo;
+    const site = this.props.service.VAN.sites.find(
+      (s) => s.site_id === siteInfo.site_id
+    );
+    const current = {
+      Name: siteInfo.site_name,
+      "Site type": siteInfo["Site type"],
+      site_id: siteInfo.site_id,
+      cardData: { ...site },
+    };
+    current.cardData.name = current.Name;
+    current.cardData.shortName = utils.shortName(current.Name);
+    current.cardData.nodeType = "cluster";
+
+    return [current, ...data];
+  };
+
+  filterLinkFields = (fields) => {
+    return fields.filter((f) => f.title !== "Status");
+  };
+
   anyRequests = (direction) => {
     const data = this.data();
     let address = data ? data.address : null;
@@ -210,7 +227,7 @@ class OverviewPage extends React.Component {
 
   render() {
     const { showUnlinkModal, unlinkInfo } = this.state;
-    const linkedCount = this.props.service.siteInfo.linked_sites.length;
+    const linkedCount = this.props.service.siteInfo.links.length;
     const data = this.data();
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
@@ -247,17 +264,11 @@ class OverviewPage extends React.Component {
               </SplitItem>
             </Split>
             <div className="sk-site-table-wrapper">
-              <TableViewer
+              <LinkedSitesTable
                 ref={(el) => (this.tableRef = el)}
                 {...this.props}
-                view="site"
-                fields={linkedSitesFields.filter((f) => f.field !== "Status")}
-                doFetch={this.fetchLinkSites}
-                noToolbar
-                excludeCurrent={false}
-                handleAddNotification={() => {}}
-                handleShowSubTable={this.handleShowSubTable}
-                actionResolver={this.actionResolver}
+                dataFilter={this.filterLinkData}
+                fieldsFilter={this.filterLinkFields}
               />
             </div>
             <h1>Site traffic</h1>

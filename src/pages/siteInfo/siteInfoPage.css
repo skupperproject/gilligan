@@ -217,8 +217,9 @@ h1:not(:first-of-type) {
   margin: auto;
 }
 
-.sk-siteinfo-page-wrapper .link-button {
+.sk-siteinfo-page-wrapper .pf-c-button.pf-m-primary.link-button {
   padding: 0;
+  font-weight: normal;
 }
 
 .sk-section {
@@ -318,4 +319,8 @@ h1:not(:first-of-type) {
 
 .sk-secondary-section {
   margin-top: 2em;
+}
+
+table.pf-c-table.pf-m-grid-md.pf-m-compact * {
+  font-size: 14px;
 }

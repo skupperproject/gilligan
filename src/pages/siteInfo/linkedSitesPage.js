@@ -46,10 +46,9 @@ class LinkedSitesPage extends React.Component {
       <div className="sk-siteinfo-page-wrapper">
         <Split gutter="md">
           <SplitItem>
-            <h1>Sites linked to this site</h1>
+            <h1>Links for this site</h1>
           </SplitItem>
           <SplitItem isFilled></SplitItem>
-
           <SplitItem>
             <div className="sk-site-actions">
               <GetTokenModal {...this.props} targetId="SKUSETOKEN2" />

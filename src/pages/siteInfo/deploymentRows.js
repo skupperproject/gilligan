@@ -2,11 +2,12 @@ import React from "react";
 import { Switch } from "@patternfly/react-core";
 
 import { utils } from "../../utilities";
+const UNEXPOSED_VALUE = "No";
 
 export class DeploymentRows {
   // called when the expose button is clicked
   expose = (value, extraInfo) => {
-    if (value === "No") {
+    if (value === this.unexposedValue) {
       this.showExpose(extraInfo.rowData);
     } else {
       this.showUnExpose(extraInfo.rowData);
@@ -19,22 +20,26 @@ export class DeploymentRows {
       data-testid={value}
       label="Exposed"
       labelOff="Not Exposed"
-      isChecked={value !== "No"}
+      isChecked={value !== this.unexposedValue}
       onChange={(event) => this.expose(value, extraInfo)}
     />
   );
 
+  // make the magic value accessible
+  unexposedValue = UNEXPOSED_VALUE;
+
+  // what to display in the Age column
   age = (value, extraInfo) => {
-    if (value !== "No") {
+    if (value !== this.unexposedValue) {
       return <span>{value}</span>;
     } else {
       return <span></span>;
     }
   };
 
-  // determine if the Name column should be link to the details page
+  // determine if the Name column should be a link to the details page
   isDetailLink = (value, extraInfo, detailsLink) => {
-    if (extraInfo.rowData.data.Exposed !== "No") {
+    if (extraInfo.rowData.data.Exposed !== this.unexposedValue) {
       return detailsLink(value, extraInfo);
     }
     return <span>{value}</span>;
@@ -80,7 +85,7 @@ export class DeploymentRows {
           if (row.Exposed === 0) {
             row.Exposed = "unknown";
           } else if (row.Exposed === false || row.Exposed === undefined) {
-            row.Exposed = "No";
+            row.Exposed = this.unexposedValue;
           } else {
             row.Exposed = utils.convertDate(row.Exposed, "past");
           }

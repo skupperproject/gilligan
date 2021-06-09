@@ -41,7 +41,7 @@ class UnlinkModal extends React.Component {
           ]}
           isfooterleftaligned={"true"}
         >
-          Are you sure you want to unlink site {this.props.unlinkInfo.Name}
+          Are you sure you want to unlink {this.props.unlinkInfo.Name}
         </Modal>
       </React.Fragment>
     );

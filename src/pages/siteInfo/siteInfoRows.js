@@ -9,7 +9,7 @@ export const linkedSitesFields = [
 ];
 
 export const SiteInfoRows = (emptyRows, service, includeCurrent = true) => {
-  const dataKey = "linked_sites";
+  const dataKey = "links";
   return new Promise((resolve) => {
     service.getSiteInfo().then((siteInfo) => {
       let data = siteInfo[dataKey];
