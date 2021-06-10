@@ -7,7 +7,7 @@
 
 .sk-subtable {
   text-align: left;
-  position: absolute;
+  /* position: absolute; */
   top: 68px;
   background-color: white;
   width: auto;
