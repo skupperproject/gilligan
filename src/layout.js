@@ -71,6 +71,7 @@ class PageLayout extends React.Component {
     if (this.viewModes[view] === "details") {
       this.viewModes[view] = view === "thissite" ? "info" : "table";
     }
+    this.setCorrectMode(view, this.viewModes[view]);
     // setup the last mode the user picked
     this.savedMode = null;
     this.state = {
@@ -158,16 +159,29 @@ class PageLayout extends React.Component {
     });
   };
 
+  setCorrectMode = (view, mode) => {
+    if (view !== "thissite" && mode === "info") {
+      if (this.viewModes[view] === "info") {
+        this.viewModes[view] = "graph";
+      }
+      mode = this.viewModes[view];
+    }
+    return mode;
+  };
   // user clicked on a nav item to go to a view
   onNavSelect = (result) => {
+    let { mode } = this.state;
+    const { view } = this.state;
+
     this.navSelect = "userChanged";
     utils.setSaved(LAST_VIEW, result.itemId);
 
     // restore the last mode the user selected
     if (this.savedMode) {
-      this.viewModes[this.state.view] = this.savedMode;
+      this.viewModes[view] = this.savedMode;
       this.savedMode = null;
     }
+    mode = this.setCorrectMode(view, mode);
     utils.setSaved(VIEW_MODES, this.viewModes);
 
     // when clicking on a nav item, go to the table view instead of the details view
@@ -176,6 +190,7 @@ class PageLayout extends React.Component {
     }
     this.setState({
       view: result.itemId,
+      mode,
       connectPath: "",
     });
   };
