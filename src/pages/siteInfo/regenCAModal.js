@@ -24,11 +24,6 @@ class RegenCAModal extends React.Component {
 
   render() {
     const { confirmName } = this.state;
-    console.log(
-      `regenCAModal::render confirmName is ${confirmName} siteName is ${
-        this.props.siteName
-      } they are ${confirmName === this.props.siteName ? "" : "NOT"} equal`
-    );
     return (
       <React.Fragment>
         <Modal
@@ -38,7 +33,10 @@ class RegenCAModal extends React.Component {
           isOpen={true}
           onClose={this.handleModalToggle}
           actions={[
-            <Tooltip content="Regerating the certificate authority for this site will unlink all linked sites.">
+            <Tooltip
+              content="Regerating the certificate authority for this site will unlink all sites."
+              key="tooltip"
+            >
               <Button
                 key="regen"
                 onClick={this.regen}
@@ -61,13 +59,16 @@ class RegenCAModal extends React.Component {
             The current site name is{" "}
             <span className="sk-highlight-text">{this.props.siteName}</span>
           </div>
-          Confirm you want to regenerate the certificate authority for this site
-          by entering the current site name.
+          <p>
+            Confirm you want to regenerate the certificate authority for this
+            site by entering the current site name.
+          </p>
           <br />
           <input
             type="text"
             value={confirmName}
             onChange={this.handleValueChange}
+            key="input"
           />
         </Modal>
       </React.Fragment>
