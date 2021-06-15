@@ -29,8 +29,12 @@ import { ALERT_TIMEOUT } from "../../qdrService";
 class SiteInfoViewer extends React.Component {
   constructor(props) {
     super(props);
+    let mode = this.props.mode || "Overview";
+    if (mode === "info") {
+      mode = "Overview";
+    }
     this.state = {
-      tab: "Overview",
+      tab: mode,
       alerts: [],
     };
     this.tabRefs = {};
@@ -59,6 +63,12 @@ class SiteInfoViewer extends React.Component {
 
   componentDidMount = () => {
     this.mounted = true;
+    const options = {
+      view: "thissite",
+      mode: this.state.tab,
+    };
+    // change the browser's url to reflect the current view/mode
+    this.props.setOptions(options, true);
   };
 
   componentWillUnmount = () => {
@@ -75,9 +85,23 @@ class SiteInfoViewer extends React.Component {
   };
 
   handleTabClick = (event, tabIndex) => {
-    this.setState({
-      tab: tabIndex,
-    });
+    this.setState(
+      {
+        tab: tabIndex,
+      },
+      () => {
+        if (this.props.handleChangeViewMode) {
+          // remember that the user clicked on this tab
+          this.props.handleChangeViewMode(tabIndex, true);
+          const options = {
+            view: "thissite",
+            mode: tabIndex,
+          };
+          // change the url in the browser
+          this.props.setOptions(options, true);
+        }
+      }
+    );
   };
 
   doAddAlert = (alertProps) => {

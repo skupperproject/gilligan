@@ -70,11 +70,6 @@ export class Deployment extends Service {
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
-    this.Site.siteNodes.nodes.forEach((n) => {
-      if (isNaN(n.x)) {
-        console.log(`(${n.address}).x was NaN`);
-      }
-    });
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
@@ -547,7 +542,7 @@ export class Deployment extends Service {
       .transition()
       .duration(duration)
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
-      .each("end", function() {
+      .each("end", function () {
         d3.select(this)
           .style("display", "block")
           .attr("opacity", 1)
@@ -796,7 +791,7 @@ export class Deployment extends Service {
     if (!chord.info) return;
     d3.select(this.SVG_ID)
       .selectAll("path.service")
-      .each(function(p) {
+      .each(function (p) {
         if (
           chord.info.source.site_name === p.source.parentNode.site_name &&
           chord.info.target.site_name === p.target.parentNode.site_name &&
@@ -814,7 +809,7 @@ export class Deployment extends Service {
     super.setClass(address, cls, viewer);
     d3.select(this.SVG_ID)
       .selectAll("g.cluster-rects")
-      .each(function(d) {
+      .each(function (d) {
         const match = d.site_name.includes(address) && address.length > 0;
         d3.select(this).classed(cls, match);
         d[cls] = match;
@@ -829,7 +824,7 @@ export class Deployment extends Service {
     } else {
       d3.select(this.SVG_ID)
         .selectAll("rect.service-type")
-        .each(function(d) {
+        .each(function (d) {
           let match = `${d.address} (${d.parentNode.site_name})`;
           if (arc.all) {
             match = d.address;

@@ -17,8 +17,10 @@ class Adapter {
     this.addSourcesTargets();
     this.createDeployments();
     if (this.instance === 1) {
-      console.log("finished parsing data");
-      console.log(this.data);
+      if (process.env.NODE_ENV !== "test") {
+        console.log("finished parsing data");
+        console.log(this.data);
+      }
     }
     data.getDeploymentLinks = (showExternal) =>
       this.getDeploymentLinks(showExternal);

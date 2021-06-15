@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-import React, { Component } from "react";
+import React from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import "@patternfly/patternfly/patternfly.css";
 import "@patternfly/patternfly/patternfly-addons.css";
@@ -25,18 +25,14 @@ import "@patternfly/patternfly/components/Nav/nav.css";
 import "./App.css";
 import PageLayout from "./layout";
 
-class App extends Component {
-  state = {};
-
-  render() {
-    return (
-      <Router>
-        <div className="App">
-          <Route path="/" render={(props) => <PageLayout {...props} />} />
-        </div>
-      </Router>
-    );
-  }
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Route path="/" render={(props) => <PageLayout {...props} />} />
+      </div>
+    </Router>
+  );
 }
 
 export default App;

@@ -41,7 +41,7 @@ import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
-import SiteInfo from "./pages/siteInfo/siteInfoPage";
+import SiteInfoPage from "./pages/siteInfo/siteInfoPage";
 import ErrorPage from "./pages/connect/errorPage";
 import { QDRService, UPDATE_INTERVAL } from "./qdrService";
 import { utils } from "./utilities";
@@ -56,20 +56,20 @@ class PageLayout extends React.Component {
   constructor(props) {
     super(props);
     const view = utils.getSaved(LAST_VIEW, "service");
-    // view modes are "graph", "table", "details", and "info"
+    // view modes are "graph", "table", "details", and "Overview"
     this.viewModes = utils.getSaved(VIEW_MODES, {
-      thissite: "info",
+      thissite: "Overview",
       service: "graph",
       site: "graph",
       deployment: "graph",
     });
     // added in version 1.5 so it won't be in the data that was saved before that
     if (!this.viewModes.thissite) {
-      this.viewModes.thissite = "info";
+      this.viewModes.thissite = "Overview";
     }
     // never start with the details view
     if (this.viewModes[view] === "details") {
-      this.viewModes[view] = view === "thissite" ? "info" : "table";
+      this.viewModes[view] = view === "thissite" ? "Overview" : "table";
     }
     this.setCorrectMode(view, this.viewModes[view]);
     // setup the last mode the user picked
@@ -113,8 +113,8 @@ class PageLayout extends React.Component {
     // a new URL was pasted into the browser's address bar.
     // go to the new view and use its parameters
     if (this.navSelect !== "userChanged" && !utils.isEmpty(options)) {
-      const view = options.view || "service";
-      const mode = options.mode || "graph";
+      const view = options.view || "thissite";
+      const mode = options.mode || view === "thissite" ? "Overview" : "graph";
       // save the new options for the new view
       utils.overrideOptions(view, options);
       this.viewModes[view] = mode;
@@ -128,13 +128,12 @@ class PageLayout extends React.Component {
     this.navSelect = undefined;
   };
 
-  handleChangeViewMode = (mode, save = true, origin) => {
+  handleChangeViewMode = (mode, save = true) => {
     this.viewModes[this.state.view] = mode;
     this.navSelect = "userChanged";
     if (save) {
       utils.setSaved(VIEW_MODES, this.viewModes);
     }
-    //const view = origin === "overview" ? "thissite" : this.state.view;
     this.setState({ mode });
   };
 
@@ -160,10 +159,8 @@ class PageLayout extends React.Component {
   };
 
   setCorrectMode = (view, mode) => {
-    if (view !== "thissite" && mode === "info") {
-      if (this.viewModes[view] === "info") {
-        this.viewModes[view] = "graph";
-      }
+    if (view !== "thissite" && mode !== "table" && mode !== "graph") {
+      this.viewModes[view] = "graph";
       mode = this.viewModes[view];
     }
     return mode;
@@ -305,6 +302,7 @@ class PageLayout extends React.Component {
   render() {
     const { view } = this.state;
     const mode = this.getMode();
+    //console.log(`layout::render view ${view} mode ${mode}`);
     const PageNav = () => {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
@@ -451,12 +449,14 @@ class PageLayout extends React.Component {
               origin={this.state.origin}
             />
           )}
-          {this.state.connected && mode === "info" && (
-            <SiteInfo
+          {this.state.connected && view === "thissite" && (
+            <SiteInfoPage
               ref={(el) => (this.pageRef = el)}
               service={this.service}
               {...this.props}
+              mode={mode}
               handleViewDetails={this.handleViewDetails}
+              handleChangeViewMode={this.handleChangeViewMode}
               setOptions={this.setOptions}
             />
           )}
