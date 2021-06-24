@@ -26,6 +26,8 @@ import LinkedSites from "./linkedSitesPage";
 import { Alert, AlertActionCloseButton } from "@patternfly/react-core";
 import { ALERT_TIMEOUT } from "../../qdrService";
 
+const SHOW_DEPLOYMENTS = true;
+
 class SiteInfoViewer extends React.Component {
   constructor(props) {
     super(props);
@@ -59,6 +61,9 @@ class SiteInfoViewer extends React.Component {
         />
       ),
     };
+    if (!SHOW_DEPLOYMENTS) {
+      delete this.tabs.Deployments;
+    }
   }
 
   componentDidMount = () => {
