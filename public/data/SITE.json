@@ -52,9 +52,7 @@
     {
       "Name": "tax calculator",
       "ID": "this-is-a-generated-deployment-id-for-tax-calculator",
-      "Exposed": false,
-      "Port": 8081,
-      "Protocol": "TCP"
+      "Exposed": false
     }
   ]
 }

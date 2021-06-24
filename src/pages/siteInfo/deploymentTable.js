@@ -149,7 +149,8 @@ class DeploymentTable extends React.Component {
       exposeInfo: {
         Name: service_name,
         service_id: service_id,
-        Port: rowData.data.Port,
+        Port: rowData.data.Port || "8080", // might be undefined
+        Protocol: rowData.data.Protocol || "TCP", // might be undefined
       },
     });
   };
