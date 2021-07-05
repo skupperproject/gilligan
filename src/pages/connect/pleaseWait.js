@@ -55,7 +55,7 @@ class PleaseWait extends React.Component {
           </TextContent>
           <TextContent>
             <Text className="creating-message" component={TextVariants.p}>
-              The data for the VAN is being retrieved. One moment please...
+              The data for the service network is being retrieved. One moment please...
             </Text>
           </TextContent>
         </div>
