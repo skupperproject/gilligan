@@ -57,7 +57,7 @@ class GetTokenModal extends React.Component {
       (error) => {
         console.log(`fetch clipboard data error`);
         console.log(error);
-        this.setState({ uploadMsg: error, uploadStatus: "error" });
+        this.setState({ uploadMsg: error.message, uploadStatus: "error" });
       }
     );
   };

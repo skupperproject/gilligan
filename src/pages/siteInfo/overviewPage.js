@@ -91,7 +91,7 @@ class OverviewPage extends React.Component {
   };
 
   actionResolver = (rowData) => {
-    const site_id = rowData.data.cardData.site_id;
+    const site_id = rowData.data.cardData?.site_id;
     const isCurrent = site_id === this.props.siteInfo.site_id;
     if (isCurrent) return null;
     return this.actions;
@@ -269,6 +269,7 @@ class OverviewPage extends React.Component {
                 {...this.props}
                 dataFilter={this.filterLinkData}
                 fieldsFilter={this.filterLinkFields}
+                actionResolver={this.actionResolver}
               />
             </div>
             <h1>Site traffic</h1>

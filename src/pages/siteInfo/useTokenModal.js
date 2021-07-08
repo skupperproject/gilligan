@@ -47,11 +47,7 @@ class UseTokenModal extends React.Component {
       this.setState({ isModalOpen: false });
     };
     const failure = (error) => {
-      const msg = `Site linking request failed ${JSON.stringify(
-        error,
-        null,
-        2
-      )}`;
+      const msg = `Site linking request failed ${error.message}`;
       console.error(msg);
       this.addAlert({
         title: msg,
@@ -66,6 +62,7 @@ class UseTokenModal extends React.Component {
       navigator.clipboard.readText().then((clipText) => {
         sendToServer(clipText).then(success, failure);
       });
+      // this is clipboard text
     } else {
       setTimeout(() => {
         const token = element.value;

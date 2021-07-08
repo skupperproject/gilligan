@@ -87,7 +87,7 @@ class UpdateModal extends React.Component {
               />
             </FormGroup>
             <FormGroup
-              label="Use limit"
+              label="Claims remaining"
               key="use-formGroup"
               isRequired
               fieldId="form-use"
@@ -98,7 +98,7 @@ class UpdateModal extends React.Component {
                 type="number"
                 id="form-use"
                 min={0}
-                name="Use limit"
+                name="claimsRemaining"
                 aria-describedby="simple-form-name-helper"
                 value={useLimit}
                 onChange={this.handleTextInputChange}

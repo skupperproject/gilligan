@@ -20,7 +20,11 @@ class SiteInfoTable extends React.Component {
 
   getColumnNames = (columns) =>
     columns.map((column) =>
-      typeof column === "object" ? column.name : column
+      typeof column === "object"
+        ? column.title
+          ? column.title
+          : column.name
+        : column
     );
 
   updateColumns = () => {
@@ -80,23 +84,27 @@ class SiteInfoTable extends React.Component {
           let d = datum[name];
           let dateType = null;
           if (typeof column === "object") {
-            name = column.name;
-            dateType = column.dateType;
-            if (datum[name] !== undefined && datum[name] !== "") {
-              if (datum[name] === 0) {
-                d = "Never";
-              } else {
-                d = utils.convertDate(datum[name], dateType);
-                // if the date is past, but it should expire in the future
-                if (!d && dateType === "future" && name === "Expires") {
-                  const d1 = utils
-                    .convertDate(datum[name], "past")
-                    .toLowerCase();
-                  d = `Expired ${d1}`;
+            if (column.dateType) {
+              name = column.name;
+              dateType = column.dateType;
+              if (datum[name] !== undefined && datum[name] !== "") {
+                if (datum[name] === 0) {
+                  d = "Never";
+                } else {
+                  d = utils.convertDate(datum[name], dateType);
+                  // if the date is past, but it should expire in the future
+                  if (!d && dateType === "future" && name === "Expires") {
+                    const d1 = utils
+                      .convertDate(datum[name], "past")
+                      .toLowerCase();
+                    d = `Expired ${d1}`;
+                  }
                 }
+              } else {
+                d = undefined;
               }
             } else {
-              d = undefined;
+              d = datum[column.name];
             }
           }
           if (d !== undefined) {

@@ -10,7 +10,7 @@ class Adapter {
     this.fixTargets();
     this.removeEmptyServices();
     this.addSendersServices();
-    this.sortSites();
+    //this.sortSites();
     this.sortServices();
     this.addServicesToClusters();
     this.addServersToSites();

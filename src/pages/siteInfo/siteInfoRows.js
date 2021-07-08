@@ -2,7 +2,8 @@ import { utils } from "../../utilities";
 
 export const linkedSitesFields = [
   { title: "Name", field: "Name" },
-  { title: "Status", field: "Status" },
+  { title: "Connected", field: "connected" },
+  { title: "Configured", field: "configured" },
   { title: "Type", field: "Site type" },
   { title: "Cost", field: "Cost" },
   { title: "Linked", field: "Linked" },
@@ -18,7 +19,8 @@ export const SiteInfoRows = (emptyRows, service, includeCurrent = true) => {
           {
             Name: siteInfo.site_name,
             site_id: siteInfo.site_id,
-            Status: "OK",
+            connected: true,
+            configured: true,
             "Site type": siteInfo["Site type"],
             Cost: "",
           },
@@ -45,7 +47,7 @@ export const SiteInfoRows = (emptyRows, service, includeCurrent = true) => {
           }
         }
       });
-
+      debugger;
       resolve(siteInfo[dataKey].length > 0 ? rows : emptyRows);
     });
   });

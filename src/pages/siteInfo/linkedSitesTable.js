@@ -196,7 +196,11 @@ class LinkedSitesTable extends React.Component {
             excludeCurrent={false}
             handleAddNotification={() => {}}
             handleShowSubTable={this.handleShowSubTable}
-            actionResolver={this.actionResolver}
+            actionResolver={
+              this.props.actionResolver
+                ? this.props.actionResolver
+                : this.actionResolver
+            }
           />
         )}
       </div>

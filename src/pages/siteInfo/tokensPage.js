@@ -63,11 +63,13 @@ class TokensPage extends React.Component {
     ];
     this.columns = [
       "Name",
-      "Status",
-      "Use count",
-      "Use limit",
-      { name: "Expires", dateType: "future" },
-      { name: "Created", dateType: "past" },
+      { name: "claimsMade", title: "Claims made" },
+      { name: "claimsRemaining", title: "Claims remaining" },
+      {
+        name: "claimsExpiration",
+        title: "Claim expiration",
+        dateType: "future",
+      },
     ];
     this.emptyRows = [
       {
@@ -120,8 +122,8 @@ class TokensPage extends React.Component {
 
   updateToken = (index) => {
     const tokenInfo = this.props.service.siteInfo.tokens[index];
-    if (tokenInfo["Use limit"] === undefined) {
-      tokenInfo["Use limit"] = 1;
+    if (tokenInfo["claimsRemaining"] === undefined) {
+      tokenInfo["claimsRemaining"] = 1;
     }
     this.setState({ showUpdate: true, updateData: tokenInfo });
   };
@@ -139,9 +141,9 @@ class TokensPage extends React.Component {
     }
     const data = {
       ID: updateData.ID,
-      Expires: expires,
+      claimsExpiration: expires,
       Name: updateData.Name,
-      "Use limit": updateData["Use limit"],
+      claimsRemaining: updateData["claimsRemaining"],
     };
     const name = updateData.Name;
     this.props.service.updateToken(data).then(

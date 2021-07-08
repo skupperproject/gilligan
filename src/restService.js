@@ -27,75 +27,98 @@ class RESTService {
       }
     });
 
-  getSiteInfo = () =>
+  getSiteInfo = (VAN) =>
     new Promise((resolve, reject) => {
-      if (process.env.NODE_ENV === "test") {
-        const data = require("../public/data/SITE.json");
-        resolve(data);
-      } else {
-        this.fetchFrom(`${this.url}/SITE`)
-          .then(resolve)
-          .catch((error) => {
-            this.fetchFrom("/data/SITE.json")
-              .then((results) => {
-                resolve(results);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-          });
+      let url = `${this.url}/`;
+      if (process.env.NODE_ENV === "development") {
+        url = "/data/";
+      } else if (process.env.NODE_ENV === "test") {
+        url = "../public/data/";
       }
+      let promises = [
+        this.fetchFrom(`${url}tokens.json`),
+        this.fetchFrom(`${url}links.json`),
+        this.fetchFrom(`${url}deployments.json`),
+      ];
+      Promise.allSettled(promises).then((allResults) => {
+        const results = {};
+        results.tokens =
+          allResults[0].status === "fulfilled" ? allResults[0].value : [];
+        results.links =
+          allResults[1].status === "fulfilled" ? allResults[1].value : [];
+        results.deployments =
+          allResults[2].status === "fulfilled"
+            ? allResults[2].value
+            : undefined;
+        results["site_name"] = VAN.sites[0].site_name;
+        results["site_id"] = VAN.sites[0].site_id;
+        results["Site type"] = VAN.sites[0]["Site type"];
+        results["namespace"] = VAN.sites[0].namespace;
+        resolve(results);
+      });
     });
 
-  uploadToken = (data) =>
-    new Promise((resolve, reject) => {
-      fetch(`${this.url}/LINK`, {
-        method: "POST",
-        body: data,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            // make the promise be rejected if we didn't get a 2xx response
-            reject(`not implemented yet`);
-          } else {
-            resolve(response);
-          }
-        })
-        .catch((error) => {
-          // connection down or refused
-          reject(error);
-        });
-    });
+  // create a link
+  uploadToken = (data) => this.postSiteInfoMethod(data, "POST", "links");
 
-  unlinkSite = (data) => this.postSiteInfoMethod(data, "UNLINK");
+  // delete a link
+  unlinkSite = (data) =>
+    this.postSiteInfoMethod(data, "DELETE", "links", data.Name);
 
-  unexposeService = (data) => this.postSiteInfoMethod(data, "UNEXPOSE");
+  // create a token
+  getTokenData = () => this.postSiteInfoMethod({}, "POST", "tokens");
 
-  exposeService = (data) => this.postSiteInfoMethod(data, "EXPOSE");
+  // delete a token
+  deleteToken = (data) =>
+    this.postSiteInfoMethod(data, "DELETE", "tokens", data.Name);
 
-  deleteToken = (data) => this.postSiteInfoMethod(data, "DELETE_TOKEN");
+  // update a token
+  updateToken = (data) =>
+    this.postSiteInfoMethod(data, "UPDATE", "tokens", data.Name);
 
-  updateToken = (data) => this.postSiteInfoMethod(data, "UPDATE_TOKEN");
+  // create a deployment
+  exposeService = (data) =>
+    this.postSiteInfoMethod(data, "POST", "deployments");
 
-  renameSite = (data) => this.postSiteInfoMethod(data, "RENAME_SITE");
+  // delete a deployment
+  unexposeService = (data) =>
+    this.postSiteInfoMethod(data, "DELETE", "deployments", data.Name);
 
-  regenCA = () => this.postSiteInfoMethod("", "REGEN_CA");
+  // update a site's name
+  renameSite = (data) =>
+    this.postSiteInfoMethod(data, "UPDATE", "sites", data.site_id);
+
+  // revoke site's certificate authority
+  regenCA = () => this.postSiteInfoMethod({}, "DELETE", "certificateAuthority");
 
   // POST the data using method
-  postSiteInfoMethod = (data, method) => {
+  postSiteInfoMethod = (data, method, type, name) => {
     return new Promise((resolve, reject) => {
-      fetch(`${this.url}/${method}`, {
-        method: "POST",
+      let url = `${this.url}/${type}`;
+      if (name) {
+        url = `${url}/${name}`;
+      }
+      fetch(url, {
+        method,
         body: JSON.stringify(data),
       })
         .then((response) => {
           if (!response.ok) {
+            console.log(
+              `${method} to ${type} for ${name} with data ${JSON.stringify(
+                data,
+                null,
+                2
+              )} returned with a status of ${response.status}`
+            );
             const e =
               response.status === 404
-                ? new Error(`/${method} not implemented`)
+                ? new Error(`${method}::${type} not implemented`)
                 : new Error(
-                    `/${method} ${response.statusText} (${response.status})`
+                    `${method} ${type} ${response.statusText} (${response.status})`
                   );
+            console.log("rejecting with error");
+            console.log(e);
             reject(e);
           } else {
             resolve(response);
@@ -110,10 +133,10 @@ class RESTService {
   };
 
   // needed when the token is saved directly to a file
-  getSkupperTokenURL = () => `/GENERATE_TOKEN`;
+  getSkupperTokenURL = () => `/tokens`;
 
-  // called when the token is copied to the clipboard
-  getTokenData = () =>
+  // called when the user requests that a token be copied to the clipboard
+  _getTokenData = () =>
     new Promise((resolve, reject) => {
       if (process.env.NODE_ENV === "test") {
         // This is used when testing the console from 'npm run test'
@@ -128,7 +151,7 @@ class RESTService {
             reject(error);
           });
       } else {
-        this.fetchFrom(`${this.url}${this.getSkupperTokenURL()}`)
+        this.postSiteInfoMethod({}, "POST", "tokens")
           .then((response) => {
             if (!response.ok) {
               const e = new Error(
