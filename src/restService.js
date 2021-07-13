@@ -30,15 +30,18 @@ class RESTService {
   getSiteInfo = (VAN) =>
     new Promise((resolve, reject) => {
       let url = `${this.url}/`;
+      let suffix = ".json";
       if (process.env.NODE_ENV === "development") {
         url = "/data/";
       } else if (process.env.NODE_ENV === "test") {
         url = "../public/data/";
+      } else {
+        suffix = "";
       }
       let promises = [
-        this.fetchFrom(`${url}tokens.json`),
-        this.fetchFrom(`${url}links.json`),
-        this.fetchFrom(`${url}deployments.json`),
+        this.fetchFrom(`${url}tokens${suffix}`),
+        this.fetchFrom(`${url}links${suffix}`),
+        this.fetchFrom(`${url}deployments${suffix}`),
       ];
       Promise.allSettled(promises).then((allResults) => {
         const results = {};
@@ -66,7 +69,27 @@ class RESTService {
     this.postSiteInfoMethod(data, "DELETE", "links", data.Name);
 
   // create a token
-  getTokenData = () => this.postSiteInfoMethod({}, "POST", "tokens");
+  // called when the user requests that a token be copied to the clipboard
+  getTokenData = () => {
+    return new Promise((resolve, reject) => {
+      this.postSiteInfoMethod({}, "POST", "tokens").then(
+        (results) => {
+          resolve(results);
+        },
+        (e) => {
+          console.log(`got ${e.message} from POST to /tokens`);
+          this.fetchFrom(`/data/token.json`).then(
+            (token) => {
+              resolve(token);
+            },
+            (error) => {
+              reject(e);
+            }
+          );
+        }
+      );
+    });
+  };
 
   // delete a token
   deleteToken = (data) =>
@@ -104,8 +127,9 @@ class RESTService {
       })
         .then((response) => {
           if (!response.ok) {
+            const forname = name ? ` for ${name}` : "";
             console.log(
-              `${method} to ${type} for ${name} with data ${JSON.stringify(
+              `${method} to ${type}${forname} with data ${JSON.stringify(
                 data,
                 null,
                 2
@@ -134,41 +158,6 @@ class RESTService {
 
   // needed when the token is saved directly to a file
   getSkupperTokenURL = () => `/tokens`;
-
-  // called when the user requests that a token be copied to the clipboard
-  _getTokenData = () =>
-    new Promise((resolve, reject) => {
-      if (process.env.NODE_ENV === "test") {
-        // This is used when testing the console from 'npm run test'
-        const data = require("../public/data/TOKEN.json");
-        resolve(data);
-      } else if (process.env.NODE_ENV === "development") {
-        // This is used to get the data when the console
-        // is served by yarn start or npm start
-        this.fetchFrom("/data/TOKEN.json")
-          .then(resolve)
-          .catch((error) => {
-            reject(error);
-          });
-      } else {
-        this.postSiteInfoMethod({}, "POST", "tokens")
-          .then((response) => {
-            if (!response.ok) {
-              const e = new Error(
-                `/${this.getSkupperTokenURL()} ${response.statusText} (${
-                  response.status
-                })`
-              );
-              reject(e);
-            } else {
-              resolve(response);
-            }
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      }
-    });
 
   fetchFrom = (url) =>
     new Promise((resolve, reject) => {

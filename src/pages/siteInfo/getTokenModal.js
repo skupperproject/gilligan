@@ -37,7 +37,8 @@ class GetTokenModal extends React.Component {
         const token = JSON.stringify(results, null, 2);
         navigator.clipboard.writeText(token).then(
           (s) => {
-            console.log("Copy to clipboard worked");
+            console.log("Copy to clipboard worked. Received token");
+            console.log(token);
             this.setState(
               {
                 uploadMsg: "Token copied to clipboard",
