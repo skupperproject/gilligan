@@ -46,14 +46,14 @@ export class QDRService {
             this.VAN = data;
             this.saveTimeSeries(data);
             this.initColors(data);
-            if (!this.siteInfo) {
-              this.rest.getSiteInfo(this.VAN).then((info) => {
-                this.siteInfo = info;
-                resolve(data);
-              });
-            } else {
+            //if (!this.siteInfo) {
+            this.rest.getSiteInfo(this.VAN).then((info) => {
+              this.siteInfo = info;
               resolve(data);
-            }
+            });
+            //} else {
+            //  resolve(data);
+            //}
           },
           (error) => reject(error)
         )
