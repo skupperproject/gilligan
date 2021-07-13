@@ -43,7 +43,7 @@ const fillColor = (v) => {
 
 export class QDRLogger {
   constructor(log, source) {
-    this.log = function(msg) {
+    this.log = function (msg) {
       log.log(
         " % c % s % s % s",
         "color: yellow; background - color: black;",
@@ -736,10 +736,10 @@ const utils = {
     }
     var n = 0;
     transition
-      .each(function() {
+      .each(function () {
         ++n;
       })
-      .each("end", function() {
+      .each("end", function () {
         if (!--n) callback.apply(this, arguments);
       });
   },
@@ -876,7 +876,12 @@ const utils = {
   },
 
   convertDate: (strMSec, tense) => {
-    let date = new Date(parseInt(strMSec, 10));
+    let date;
+    if (typeof strMSec === "string") {
+      date = new Date(parseInt(strMSec, 10));
+    } else {
+      date = strMSec;
+    }
     if (tense === "past") {
       return utils.timeAgo(date);
     } else if (tense === "future") {
