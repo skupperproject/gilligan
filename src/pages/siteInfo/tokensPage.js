@@ -62,11 +62,12 @@ class TokensPage extends React.Component {
       },
     ];
     this.columns = [
-      "Name",
+      { name: "name", title: "Name" },
       { name: "claimsMade", title: "Claims made" },
       { name: "claimsRemaining", title: "Claims remaining" },
+      { name: "created", title: "Created", dateType: "past" },
       {
-        name: "claimsExpiration",
+        name: "claimExpiration",
         title: "Claim expiration",
         dateType: "future",
       },

@@ -20,11 +20,11 @@ export class LinksRows {
     { title: "Name", field: "Name", isDetailLink: this.isDetailLink },
     {
       title: "Connected",
-      field: "connected",
+      field: "Connected",
     },
     {
       title: "Configured",
-      field: "configured",
+      field: "Configured",
     },
     {
       title: "Type",
@@ -34,7 +34,7 @@ export class LinksRows {
       title: "Cost",
       field: "Cost",
     },
-    { title: "Linked", field: "Linked" },
+    { title: "Created", field: "Created", dateType: "past" },
   ];
 
   // called by tableViewer to get the rows
@@ -65,8 +65,12 @@ export class LinksRows {
           if (row.Linked) {
             row.Linked = utils.convertDate(row.Linked, "date");
           }
-          row.connected = row.connected ? "True" : "";
-          row.configured = row.configured ? "True" : "";
+          row.Connected = row.Connected ? "True" : "";
+          row.Configured = row.Configured ? "True" : "";
+          if (row.Created) {
+            const date = new Date(row.Created);
+            row.Created = utils.convertDate(date, "past");
+          }
           return row;
         });
         resolve(siteInfo[dataKey].length > 0 ? rows : emptyRows);

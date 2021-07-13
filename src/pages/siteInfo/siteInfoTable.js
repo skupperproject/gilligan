@@ -58,7 +58,7 @@ class SiteInfoTable extends React.Component {
       if (this.props.includeCurrent) {
         data = [
           {
-            Name: siteInfo.site_name,
+            name: siteInfo.site_name,
             site_id: siteInfo.site_id,
             Status: "OK",
             "Site type": siteInfo["Site type"],
@@ -69,51 +69,56 @@ class SiteInfoTable extends React.Component {
       }
 
       // populate each row. if the token is missing the data, use "-"
-      data.forEach((datum, i) => {
-        rows[i] = {
-          cells: [],
-          actionProps: {
-            data: {
-              site_name: datum.Name,
-              site_id: datum.site_id ? datum.site_id : datum.ID,
+      if (data) {
+        data.forEach((datum, i) => {
+          rows[i] = {
+            cells: [],
+            actionProps: {
+              data: {
+                site_name: datum.name,
+                site_id: datum.site_id ? datum.site_id : datum.ID,
+              },
             },
-          },
-        };
-        columns.forEach((column) => {
-          let name = column;
-          let d = datum[name];
-          let dateType = null;
-          if (typeof column === "object") {
-            if (column.dateType) {
-              name = column.name;
-              dateType = column.dateType;
-              if (datum[name] !== undefined && datum[name] !== "") {
-                if (datum[name] === 0) {
-                  d = "Never";
-                } else {
-                  d = utils.convertDate(datum[name], dateType);
-                  // if the date is past, but it should expire in the future
-                  if (!d && dateType === "future" && name === "Expires") {
-                    const d1 = utils
-                      .convertDate(datum[name], "past")
-                      .toLowerCase();
-                    d = `Expired ${d1}`;
+          };
+          columns.forEach((column) => {
+            let name = column;
+            let d = datum[name];
+            let dateType = null;
+            if (typeof column === "object") {
+              if (column.dateType) {
+                name = column.name;
+                dateType = column.dateType;
+                const date = new Date(datum[name]);
+                if (datum[name] !== undefined && datum[name] !== "") {
+                  if (datum[name] === 0) {
+                    d = "Never";
+                  } else {
+                    d = utils.convertDate(date, dateType);
+                    // if the date is past, but it should expire in the future
+                    if (
+                      !d &&
+                      dateType === "future" &&
+                      name === "claimExpiration"
+                    ) {
+                      const d1 = utils.convertDate(date, "past").toLowerCase();
+                      d = `Expired ${d1}`;
+                    }
                   }
+                } else {
+                  d = undefined;
                 }
               } else {
-                d = undefined;
+                d = datum[column.name];
               }
-            } else {
-              d = datum[column.name];
             }
-          }
-          if (d !== undefined) {
-            rows[i].cells.push(String([d]));
-          } else {
-            rows[i].cells.push("-");
-          }
+            if (d !== undefined) {
+              rows[i].cells.push(String([d]));
+            } else {
+              rows[i].cells.push("-");
+            }
+          });
         });
-      });
+      }
       this.setState({
         rows: rows.length > 0 ? rows : this.props.emptyRows,
         columns: this.getColumnNames(this.props.columns),
