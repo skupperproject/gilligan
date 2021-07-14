@@ -182,11 +182,10 @@ class TokensPage extends React.Component {
   };
 
   doDelete = (deleteInfo) => {
-    const data = { ID: deleteInfo.actionProps.data.site_id };
-    const name = deleteInfo.actionProps.data.site_name;
-    this.props.service.deleteToken(data).then(
+    const Name = deleteInfo.actionProps.data.site_name;
+    this.props.service.deleteToken({ Name }).then(
       () => {
-        const msg = `Token for ${name} successfully deleted`;
+        const msg = `Token for ${Name} successfully deleted`;
         console.log(msg);
         this.addAlert({
           title: msg,
@@ -195,7 +194,7 @@ class TokensPage extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error deleting token for ${name} ${error.message}`;
+        const msg = `Error deleting token for ${Name} ${error.message}`;
         console.error(msg);
         this.addAlert({
           title: msg,
