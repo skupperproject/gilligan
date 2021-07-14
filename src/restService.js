@@ -136,29 +136,36 @@ class RESTService {
         method,
         body: JSON.stringify(data),
       })
-        .then((response) => {
-          if (!response.ok) {
-            const forname = name ? ` for ${name}` : "";
-            console.log(
-              `${method} to ${type}${forname} with data ${JSON.stringify(
-                data,
-                null,
-                2
-              )} returned with a status of ${response.status}`
-            );
-            const e =
-              response.status === 404
-                ? new Error(`${method}::${type} not implemented`)
-                : new Error(
-                    `${method} ${type} ${response.statusText} (${response.status})`
-                  );
-            console.log("rejecting with error");
-            console.log(e);
-            reject(e);
-          } else {
-            resolve(response);
+        .then(
+          (response) => {
+            if (!response.ok) {
+              const forname = name ? ` for ${name}` : "";
+              console.log(
+                `${method} to ${type}${forname} with data ${JSON.stringify(
+                  data,
+                  null,
+                  2
+                )} returned with a status of ${response.status}`
+              );
+              const e =
+                response.status === 404
+                  ? new Error(`${method}::${type} not implemented`)
+                  : new Error(
+                      `${method} ${type} ${response.statusText} (${response.status})`
+                    );
+              console.log("rejecting with error");
+              console.log(e);
+              reject(e);
+            } else {
+              resolve(response);
+            }
+          },
+          (error) => {
+            console.log(`error ${method}::${type} `);
+            console.log(error);
+            reject(error);
           }
-        })
+        )
         .catch((error) => {
           // server error
           const e = new Error(`Failed with error ${error.status}`);
