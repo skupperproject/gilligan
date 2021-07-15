@@ -37,8 +37,6 @@ class GetTokenModal extends React.Component {
         const token = results; //JSON.stringify(results, null, 2);
         navigator.clipboard.writeText(token).then(
           (s) => {
-            console.log("Copy to clipboard worked. Received token");
-            console.log(token);
             this.setState(
               {
                 uploadMsg: "Token copied to clipboard",
@@ -49,8 +47,6 @@ class GetTokenModal extends React.Component {
             );
           },
           (e) => {
-            console.log("Copy to clipboard failed");
-            console.log(e);
             this.setState({ uploadMsg: e, uploadStatus: "error" });
           }
         );

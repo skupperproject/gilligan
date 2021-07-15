@@ -85,7 +85,6 @@ class RESTService {
         .then(
           (results) => results.text(),
           (e) => {
-            console.log(`got ${e.message} from POST to /tokens`);
             this.fetchFrom(`/data/token.json`).then(
               (token) => {
                 resolve(token);

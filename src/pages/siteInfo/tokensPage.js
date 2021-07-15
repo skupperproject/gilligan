@@ -207,7 +207,11 @@ class TokensPage extends React.Component {
     );
   };
 
-  update = () => {};
+  update = () => {
+    if (this.tableRef?.update) {
+      this.tableRef.update();
+    }
+  };
 
   render() {
     const {
@@ -246,6 +250,7 @@ class TokensPage extends React.Component {
         </div>
         <h1 className="sk-secondary-section">Tokens issued from this site</h1>
         <SiteInfoTable
+          ref={(el) => (this.tableRef = el)}
           {...this.props}
           actions={this.actions}
           dataKey="tokens"

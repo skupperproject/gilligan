@@ -69,7 +69,7 @@ class LinkedSitesTable extends React.Component {
 
   // called periodically by the parent component
   update = () => {
-    if (this.tableRef && this.tableRef.update) {
+    if (this.tableRef?.update) {
       this.tableRef.update();
     }
   };

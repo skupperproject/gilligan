@@ -50,6 +50,10 @@ class SiteInfoTable extends React.Component {
   };
 
   componentDidMount = () => {
+    this.update();
+  };
+
+  update = () => {
     let rows = [];
 
     this.props.service.getSiteInfo().then((siteInfo) => {

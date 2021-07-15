@@ -47,7 +47,10 @@ class SiteInfoViewer extends React.Component {
         />
       ),
       Deployments: (
-        <Expose {...this.props} ref={(el) => (this.tabRefs["Services"] = el)} />
+        <Expose
+          {...this.props}
+          ref={(el) => (this.tabRefs["Deployments"] = el)}
+        />
       ),
       Tokens: (
         <Tokens {...this.props} ref={(el) => (this.tabRefs["Tokens"] = el)} />

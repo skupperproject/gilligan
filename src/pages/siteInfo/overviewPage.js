@@ -69,17 +69,13 @@ class OverviewPage extends React.Component {
   };
 
   update = () => {
-    //this.forceUpdate();
-    if (this.tableRef && this.tableRef.update) {
+    if (this.tableRef?.update) {
       this.tableRef.update();
     }
-    if (this.deploymentsRef && this.deploymentsRef.update) {
-      this.deploymentsRef.update();
-    }
-    if (this.chartRef1 && this.chartRef1.update) {
+    if (this.chartRef1?.update) {
       this.chartRef1.update();
     }
-    if (this.chartRef2 && this.chartRef2.update) {
+    if (this.chartRef2?.update) {
       this.chartRef2.update();
     }
   };

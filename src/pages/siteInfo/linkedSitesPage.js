@@ -39,7 +39,11 @@ class LinkedSitesPage extends React.Component {
 
   getUniqueId = () => new Date().getTime();
 
-  update = () => {};
+  update = () => {
+    if (this.tableRef?.update) {
+      this.tableRef.update();
+    }
+  };
 
   render() {
     return (
@@ -62,7 +66,7 @@ class LinkedSitesPage extends React.Component {
           </SplitItem>
         </Split>
 
-        <LinkedSitesTable {...this.props} />
+        <LinkedSitesTable ref={(el) => (this.tableRef = el)} {...this.props} />
       </div>
     );
   }
