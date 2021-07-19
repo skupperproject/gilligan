@@ -17,7 +17,6 @@ class DownloadModal extends React.Component {
       this.setState(
         ({ isModalOpen }) => ({
           isModalOpen: !isModalOpen,
-          fileName: this.generateFileName(),
         }),
         () => {
           if (!this.state.isModalOpen && this.props.handleModalClose) {
@@ -38,6 +37,15 @@ class DownloadModal extends React.Component {
 
   handleTextInputChange1 = (fileName) => {
     this.setState({ fileName });
+  };
+
+  handleDownloadClicked = () => {
+    const { fileName } = this.state;
+    this.setState({ isModalOpen: false }, () => {
+      if (this.props.doDownload) {
+        this.props.doDownload(fileName);
+      }
+    });
   };
 
   render() {
@@ -67,7 +75,7 @@ class DownloadModal extends React.Component {
               text="Download"
               {...this.props}
               downloadFileName={fileName}
-              handleDownloadClicked={this.handleModalToggle}
+              handleDownloadClicked={this.handleDownloadClicked}
             />,
             <Button
               key="cancel"
