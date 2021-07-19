@@ -28,7 +28,9 @@ class DownloadButton extends React.Component {
   update = () => {};
 
   render() {
-    const tokenLink = this.props.service.getSkupperTokenURL();
+    const tokenLink = `${this.props.service.getSkupperTokenURL()}/${
+      this.props.defaultSiteName
+    }`;
     const { downloadFileName } = this.props;
     return (
       <Button
