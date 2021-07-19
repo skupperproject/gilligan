@@ -8,11 +8,11 @@ class UpdateModal extends React.Component {
     super(props);
     const never = this.props.updateData.Expires === 0;
     this.state = {
-      ...this.props.updateData,
+      ...this.props.updateData, // work with a copy in case they cancel the modal
       r1h: !never,
       r1d: false,
       rn: never,
-    }; // work with a copy in case they cancel the modal
+    };
   }
 
   handleModalToggle = (event) => {
@@ -40,8 +40,7 @@ class UpdateModal extends React.Component {
   };
 
   render() {
-    const { Name, r1h, r1d, rn } = this.state;
-    const useLimit = this.state["Use limit"];
+    const { name, claimsRemaining, r1h, r1d, rn } = this.state;
     return (
       <React.Fragment>
         <Modal
@@ -80,9 +79,9 @@ class UpdateModal extends React.Component {
                 key="update-name"
                 type="text"
                 id="simple-form-name"
-                name="Name"
+                name="name"
                 aria-describedby="simple-form-name-helper"
-                value={Name}
+                value={name}
                 onChange={this.handleTextInputChange}
               />
             </FormGroup>
@@ -100,7 +99,7 @@ class UpdateModal extends React.Component {
                 min={0}
                 name="claimsRemaining"
                 aria-describedby="simple-form-name-helper"
-                value={useLimit}
+                value={claimsRemaining}
                 onChange={this.handleTextInputChange}
                 className="sk-input-numeric-small"
               />
