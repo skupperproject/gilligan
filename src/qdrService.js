@@ -46,14 +46,10 @@ export class QDRService {
             this.VAN = data;
             this.saveTimeSeries(data);
             this.initColors(data);
-            //if (!this.siteInfo) {
             this.rest.getSiteInfo(this.VAN).then((info) => {
               this.siteInfo = info;
               resolve(data);
             });
-            //} else {
-            //  resolve(data);
-            //}
           },
           (error) => reject(error)
         )
@@ -64,7 +60,7 @@ export class QDRService {
   };
 
   // SITE
-  getSiteInfo = () => this.rest.getSiteInfo(this.VAN);
+  getSiteInfo = () => new Promise((resolve) => resolve(this.siteInfo));
 
   // RENAME_SITE
   renameSite = (data) => this.rest.renameSite(data);
