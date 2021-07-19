@@ -94,13 +94,10 @@ class OverviewPage extends React.Component {
   };
 
   showUnlink = (rowData) => {
-    const site_name = rowData.data.cardData.site_name;
-    const site_id = rowData.data.cardData.site_id;
     this.setState({
       showUnlinkModal: true,
       unlinkInfo: {
-        Name: site_name,
-        site_id: site_id,
+        Name: rowData.data.Name,
       },
     });
   };
@@ -166,35 +163,40 @@ class OverviewPage extends React.Component {
   // called after the data for the linedSitesTable is fetched
   // used to add/remove rows
   filterLinkData = (data) => {
-    // remove any disconnected links
-    data = data.filter((d) => d.Status !== LINKDOWN_VALUE);
+    if (data) {
+      // remove any disconnected links
+      //data = data.filter((d) => d.Status !== LINKDOWN_VALUE);
 
-    // change the name to the linked site's name
-    data.forEach((d) => {
+      // change the name to the linked site's name
+      data.forEach((d) => {
+        const site = this.props.service.VAN.sites.find(
+          (s) => s.site_id === d.site_id
+        );
+        if (site) {
+          d.Name = site.site_name;
+        }
+      });
+
+      // add the current site to the linked sites rows
+      const siteInfo = this.props.service.siteInfo;
       const site = this.props.service.VAN.sites.find(
-        (s) => s.site_id === d.site_id
+        (s) => s.site_id === siteInfo.site_id
       );
-      if (site) {
-        d.Name = site.site_name;
-      }
-    });
 
-    // add the current site to the linked sites rows
-    const siteInfo = this.props.service.siteInfo;
-    const site = this.props.service.VAN.sites.find(
-      (s) => s.site_id === siteInfo.site_id
-    );
-    const current = {
-      Name: siteInfo.site_name,
-      "Site type": siteInfo["Site type"],
-      site_id: siteInfo.site_id,
-      cardData: { ...site },
-    };
-    current.cardData.name = current.Name;
-    current.cardData.shortName = utils.shortName(current.Name);
-    current.cardData.nodeType = "cluster";
+      const current = {
+        Name: siteInfo.site_name,
+        "Site type": siteInfo["Site type"],
+        site_id: siteInfo.site_id,
+        cardData: { ...site },
+      };
+      current.cardData.name = current.Name;
+      current.cardData.shortName = utils.shortName(current.Name);
+      current.cardData.nodeType = "cluster";
 
-    return [current, ...data];
+      return [current, ...data];
+    } else {
+      return data;
+    }
   };
 
   filterLinkFields = (fields) => {
@@ -268,7 +270,7 @@ class OverviewPage extends React.Component {
                 actionResolver={this.actionResolver}
               />
             </div>
-            <h1>Site traffic</h1>
+            {(hasIn || hasOut) && <h1>Site traffic</h1>}
             <Flex
               className="sk-siteinfo-table"
               direction={{ default: "row", lg: "row" }}
