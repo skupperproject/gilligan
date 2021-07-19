@@ -6,12 +6,10 @@ export const LINKDOWN_VALUE = "Disconnected";
 export class LinksRows {
   // determine if the Name column should be a link to the details page
   isDetailLink = (value, extraInfo, detailsLink) => {
-    // connected links no longer have a site_id, so don't show the link to the site details page
-    /*
-    if (extraInfo.rowData.data.Status !== LINKDOWN_VALUE) {
+    if (extraInfo.rowData.data.cardData) {
       return detailsLink(value, extraInfo);
     }
-    */
+
     return <span>{value}</span>;
   };
 
@@ -25,10 +23,6 @@ export class LinksRows {
     {
       title: "Configured",
       field: "Configured",
-    },
-    {
-      title: "Type",
-      field: "Site type",
     },
     {
       title: "Cost",
