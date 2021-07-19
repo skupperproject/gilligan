@@ -138,15 +138,14 @@ class TokensPage extends React.Component {
     } else if (updateData.r1h) {
       // they requested expires 1 hour from now
       expires = new Date();
-      expires.setData(expires.getTime() + 1 * 60 * 60 * 1000);
+      expires.setDate(expires.getTime() + 1 * 60 * 60 * 1000);
     }
     const data = {
-      ID: updateData.ID,
-      claimsExpiration: expires,
-      Name: updateData.Name,
-      claimsRemaining: updateData["claimsRemaining"],
+      Name: updateData.name,
+      claimsRemaining: updateData.claimsRemaining,
+      claimExpiration: expires,
     };
-    const name = updateData.Name;
+    const name = updateData.name;
     this.props.service.updateToken(data).then(
       () => {
         const msg = `Token for ${name} successfully updated`;
@@ -174,7 +173,7 @@ class TokensPage extends React.Component {
 
   download = (index) => {
     const tokenInfo = this.props.service.siteInfo.tokens[index];
-    this.setState({ showDownload: true, defaultSiteName: tokenInfo.Name });
+    this.setState({ showDownload: true, defaultSiteName: tokenInfo.name });
   };
 
   showDeleteModal = (tokenInfo) => {
@@ -205,6 +204,11 @@ class TokensPage extends React.Component {
         });
       }
     );
+  };
+
+  doDownload = (fileName) => {
+    console.log(`tokensPage::doDownload called with ${fileName}`);
+    this.handleModalClose();
   };
 
   update = () => {
@@ -264,6 +268,7 @@ class TokensPage extends React.Component {
             showOpen={true}
             hideButton={true}
             defaultSiteName={defaultSiteName}
+            doDownload={this.doDownload}
           />
         )}
         {showUpdate && (
