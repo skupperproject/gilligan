@@ -279,12 +279,16 @@ class TableViewer extends React.Component {
   };
 
   slice = (fields, page, perPage) => {
-    let allRows = fields.map((f) => this.field2Row(f));
-    let rows = this.filter(allRows);
-    const total = rows.length;
-    rows = this.sort(rows);
-    rows = this.page(rows, total, page, perPage);
-    return { rows, page, total, allRows };
+    if (fields) {
+      let allRows = fields.map((f) => this.field2Row(f));
+      let rows = this.filter(allRows);
+      const total = rows.length;
+      rows = this.sort(rows);
+      rows = this.page(rows, total, page, perPage);
+      return { rows, page, total, allRows };
+    } else {
+      return [], page, 0, [];
+    }
   };
 
   sort = (rows) => {

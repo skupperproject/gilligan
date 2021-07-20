@@ -1,8 +1,8 @@
 class RESTService {
   constructor() {
-    this.url = `${window.location.protocol}//${window.location.host}`;
-    //this.url =
-    //  "https://skupper-default.grs1-153f1de160110098c1928a6c05e19444-0000.eu-gb.containers.appdomain.cloud";
+    //this.url = `${window.location.protocol}//${window.location.host}`;
+    this.url =
+      "https://skupper-default.grs1-153f1de160110098c1928a6c05e19444-0000.eu-gb.containers.appdomain.cloud";
     //console.log(`default REST url is ${this.url}`);
   }
 
@@ -11,7 +11,7 @@ class RESTService {
       if (process.env.NODE_ENV === "test") {
         const data = require("../public/data/testing.json");
         resolve(data);
-      } else if (process.env.NODE_ENV === "development") {
+      } /* else if (process.env.NODE_ENV === "development") {
         // This is used to get the data when the console
         // is served by yarn start or npm start
         this.fetchFrom("/data/DATA.json")
@@ -19,7 +19,7 @@ class RESTService {
           .catch((error) => {
             reject(error);
           });
-      } else {
+      } */ else {
         // try from the window url
         this.fetchFrom(`${this.url}/DATA`)
           .then(resolve)
@@ -34,9 +34,9 @@ class RESTService {
       let url = `${this.url}/`;
       let suffix = ".json";
 
-      if (process.env.NODE_ENV === "development") {
+      /*if (process.env.NODE_ENV === "development") {
         url = "/data/";
-      } else if (process.env.NODE_ENV === "test") {
+      } else*/ if (process.env.NODE_ENV === "test") {
         url = "../public/data/";
       } else {
         suffix = "";

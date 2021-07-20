@@ -167,6 +167,7 @@ class OverviewPage extends React.Component {
       // remove any disconnected links
       //data = data.filter((d) => d.Status !== LINKDOWN_VALUE);
 
+      if (!data.forEach) debugger;
       // change the name to the linked site's name
       data.forEach((d) => {
         const site = this.props.service.VAN.sites.find(
