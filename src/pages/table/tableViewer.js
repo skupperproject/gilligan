@@ -287,7 +287,7 @@ class TableViewer extends React.Component {
       rows = this.page(rows, total, page, perPage);
       return { rows, page, total, allRows };
     } else {
-      return [], page, 0, [];
+      return { rows: [], page, total: 0, allRows: [] };
     }
   };
 
