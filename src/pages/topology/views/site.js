@@ -37,7 +37,7 @@ const DEFAULT_DETAIL_OPTIONS = {
 
 const DEFAULT_OPTIONS = {
   traffic: false,
-  color: true,
+  color: false,
   showMetric: false,
   isExpanded: 0,
   showExternal: false,
@@ -62,7 +62,7 @@ export class Site {
     this.fields = [
       { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
-      { title: "Edge", field: "edge" },
+      //{ title: "Edge", field: "edge" },
     ];
     this.card = new SiteCard();
     this.linkCard = new LinkCard();
@@ -303,22 +303,13 @@ export class Site {
       .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
   createRouterLinksSelection = (svg) =>
-    svg
-      .append("svg:g")
-      .attr("class", "siteRouterLinks")
-      .selectAll("g");
+    svg.append("svg:g").attr("class", "siteRouterLinks").selectAll("g");
 
   createTrafficLinksSelection = (svg) =>
-    svg
-      .append("svg:g")
-      .attr("class", "siteTrafficLinks")
-      .selectAll("g");
+    svg.append("svg:g").attr("class", "siteTrafficLinks").selectAll("g");
 
   createMasksSelection = (svg) =>
-    svg
-      .append("svg:g")
-      .attr("class", "masks")
-      .selectAll("g");
+    svg.append("svg:g").attr("class", "masks").selectAll("g");
 
   setupStats = () => {
     const selection = d3
@@ -373,9 +364,9 @@ export class Site {
       .attr(
         "transform",
         (d) =>
-          `translate(${viewer.width / 2 - d.getWidth() / 2},${viewer.height /
-            2 -
-            d.getHeight() / 2})`
+          `translate(${viewer.width / 2 - d.getWidth() / 2},${
+            viewer.height / 2 - d.getHeight() / 2
+          })`
       )
       .attr("id", (d) => `${this.SVG_ID}-$cluster-${d.name}`);
 
@@ -712,7 +703,7 @@ export class Site {
     // not using markers since the arrows are not at the end of the lines
     d3.select(this.SVG_ID)
       .selectAll("path.mask")
-      .attr("d", function(d) {
+      .attr("d", function (d) {
         return self.genMask(d, this, sankey);
       });
   };
@@ -831,7 +822,7 @@ export class Site {
         .style("display", null)
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -853,15 +844,15 @@ export class Site {
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
-        .each("end", function() {
+        .each("end", function () {
           d3.select(this)
             .style("display", "block")
-            .attr("opacity", function(d) {
+            .attr("opacity", function (d) {
               const current = d3.select(this).attr("opacity");
               return self.anySelected() ? current : 1;
             })
             .select(".cluster-rects")
-            .attr("opacity", function(d) {
+            .attr("opacity", function (d) {
               const current = d3.select(this).attr("opacity");
               return self.anySelected() ? current : 1;
             })
@@ -897,7 +888,7 @@ export class Site {
         .selectAll("path")
         .transition()
         .duration(duration)
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           const previous = d3.select(this).attr("d");
           const current = self.genStatPath(d);
           return interpolatePath(previous, current);
@@ -908,13 +899,13 @@ export class Site {
         .selectAll("path.siteTrafficDir")
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
         .attr("stroke-width", 2)
         .attr("stroke", (d) => d.getColor())
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = self.genTrafficDir(d, false);
           return interpolatePath(previous, current);
@@ -926,7 +917,7 @@ export class Site {
         .selectAll("text.stats")
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -938,12 +929,12 @@ export class Site {
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
         .attr("fill", "black")
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = self.genMask(d, this, false);
           return interpolatePath(previous, current);
@@ -968,7 +959,7 @@ export class Site {
         .transition()
         .duration(duration)
         .attr("opacity", 0)
-        .each("end", function(d) {
+        .each("end", function (d) {
           // so mouseover events don't fire
           d3.select(this).style("display", "none");
         });
@@ -977,7 +968,7 @@ export class Site {
         .select("g.siteRouterLinks")
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -987,11 +978,11 @@ export class Site {
         .selectAll("path") // this includes the .site and .hittarget
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = pathBetween(d.source, d.target);
           return interpolatePath(previous, current);
@@ -1006,15 +997,15 @@ export class Site {
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
-        .each("end", function() {
+        .each("end", function () {
           d3.select(this)
             .style("display", "block")
-            .attr("opacity", function(d) {
+            .attr("opacity", function (d) {
               const current = d3.select(this).attr("opacity");
               return self.anySelected() ? current : 1;
             })
             .select(".cluster-rects")
-            .attr("opacity", function(d) {
+            .attr("opacity", function (d) {
               const current = d3.select(this).attr("opacity");
               return self.anySelected() ? current : 1;
             })
@@ -1051,9 +1042,7 @@ export class Site {
         .attr("y", (d) => d.getHeight() / 2);
 */
       // hide services
-      d3.select(this.SVG_ID)
-        .selectAll("g.services")
-        .style("display", "none");
+      d3.select(this.SVG_ID).selectAll("g.services").style("display", "none");
     });
   };
 
@@ -1066,7 +1055,7 @@ export class Site {
         .style("display", null)
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -1085,7 +1074,7 @@ export class Site {
         .selectAll("path")
         .transition()
         .duration(duration)
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           const previous = d3.select(this).attr("d");
           const current = self.genStatPath(d);
           return interpolatePath(previous, current);
@@ -1095,13 +1084,13 @@ export class Site {
         .selectAll("path.siteTrafficDir")
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
         .attr("stroke", "black")
         .attr("stroke-width", 1)
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = self.genTrafficDir(d, true);
           return interpolatePath(previous, current);
@@ -1112,7 +1101,7 @@ export class Site {
         .selectAll("text.stats")
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -1122,12 +1111,12 @@ export class Site {
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 0.5;
         })
         .attr("fill", (d) => d.target.color)
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           let previous = d3.select(this).attr("d");
           const current = self.genTraffic(d, true);
           return interpolatePath(previous, current);
@@ -1144,12 +1133,12 @@ export class Site {
         .attr("stroke-width", 0)
         .transition()
         .duration(duration)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
         .attr("fill", "black")
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = self.genMask(d, this, true);
           return interpolatePath(previous, current);
@@ -1355,7 +1344,7 @@ export class Site {
     //console.log(`------- chordOver site path`);
     d3.select(this.SVG_ID)
       .selectAll("path.siteTrafficLink")
-      .each(function(p) {
+      .each(function (p) {
         /*
       console.log(`${p.source.site_name}-${p.target.site_name} chordInfo is`);
       console.log(chord.info);
@@ -1377,7 +1366,7 @@ export class Site {
   setClass(site, cls, viewer) {
     d3.select(this.SVG_ID)
       .selectAll("g.cluster-rects")
-      .each(function(d) {
+      .each(function (d) {
         const match = d.site_name.includes(site) && site.length > 0;
         d3.select(this).classed(cls, match);
         d[cls] = match;
@@ -1390,7 +1379,7 @@ export class Site {
   arcOver(arc, over, viewer) {
     d3.select(this.SVG_ID)
       .selectAll("g.cluster")
-      .each(function(d) {
+      .each(function (d) {
         const match = arc.legend ? d.site_name : d.site_id;
         if (arc.key === match) {
           d.selected = over;
