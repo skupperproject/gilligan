@@ -104,12 +104,12 @@ class GetTokenModal extends React.Component {
           icon={!this.props.noIcon && <ArrowDownIcon />}
           id={`${!this.props.justButton ? "SKGETTOKEN" : ""}`}
         >
-          {this.props.title ? this.props.title : "Link remote site"}
+          {this.props.title ? this.props.title : "Link a remote site"}
         </Button>
         {!this.props.justButton && (
           <Modal
             width={"50%"}
-            title={this.props.title ? this.props.title : "Link remote site"}
+            title={this.props.title ? this.props.title : "Link a remote site"}
             className="sk-siteinfo-page-wrapper"
             isOpen={isModalOpen}
             onClose={this.handleModalToggle}
