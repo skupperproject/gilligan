@@ -35,7 +35,6 @@ import { viewsMap as VIEWS } from "../topology/views/views";
 import GetTokenModal from "./getTokenModal";
 import UseTokenModal from "./useTokenModal";
 import LinkedSitesTable from "./linkedSitesTable";
-import { LINKDOWN_VALUE } from "./linksRows";
 import UnlinkModal from "./unlinkModal";
 
 import { utils } from "../../utilities";
