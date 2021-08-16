@@ -121,7 +121,7 @@ class UseTokenModal extends React.Component {
                   Use the{" "}
                   <GetTokenModal
                     {...this.props}
-                    title="Link remote site"
+                    title="Link a remote site"
                     justButton
                     cls="sk-button-placeholder"
                   />
