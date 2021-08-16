@@ -139,6 +139,10 @@ class TokensPage extends React.Component {
       // they requested expires 1 hour from now
       expires = new Date();
       expires.setDate(expires.getTime() + 1 * 60 * 60 * 1000);
+    } else if (updateData.r15m) {
+      // they requested expires 15 min from now
+      expires = new Date();
+      expires.setDate(expires.getTime() + 15 * 60 * 1000);
     }
     const data = {
       Name: updateData.name,
