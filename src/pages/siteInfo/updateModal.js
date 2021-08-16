@@ -2,16 +2,18 @@ import React from "react";
 import { Modal, Button } from "@patternfly/react-core";
 import { Form, FormGroup, TextInput } from "@patternfly/react-core";
 import { Radio } from "@patternfly/react-core";
+import { utils } from "../../utilities";
 
 class UpdateModal extends React.Component {
   constructor(props) {
     super(props);
-    const never = this.props.updateData.Expires === 0;
+    const expires = this.expires();
     this.state = {
       ...this.props.updateData, // work with a copy in case they cancel the modal
-      r1h: !never,
-      r1d: false,
-      rn: never,
+      r15m: expires === "15m",
+      r1h: expires === "1h",
+      r1d: expires === "1d",
+      rn: expires === "never",
     };
   }
 
@@ -34,19 +36,39 @@ class UpdateModal extends React.Component {
 
   handleChangeExpires = (_, event) => {
     const name = event.currentTarget.name;
-    this.setState({ r1h: false, r1d: false, rn: false }, () => {
+    this.setState({ r15m: false, r1h: false, r1d: false, rn: false }, () => {
       this.setState({ [name]: true });
     });
   };
 
+  expires = () => {
+    const expires = this.props.updateData.claimExpiration;
+    if (!expires || expires === "0") return "never";
+    const date = new Date(expires);
+    const timeTillInSeconds = Math.floor((date - new Date()) / 1000);
+    if (timeTillInSeconds < 0) {
+      // expires was in the past
+      return "15m";
+    }
+    try {
+      const { interval, epoch } = utils.getDuration(timeTillInSeconds);
+      if (epoch === "minute" && interval <= 15) return "15m";
+      if (epoch === "hour" && interval <= 1) return "1h";
+      if (epoch === "day" && interval <= 1) return "1d";
+      return "15m";
+    } catch (e) {
+      return "15m";
+    }
+  };
+
   render() {
-    const { name, claimsRemaining, r1h, r1d, rn } = this.state;
+    const { name, claimsRemaining, r15m, r1h, r1d, rn } = this.state;
     return (
       <React.Fragment>
         <Modal
           width={"50%"}
           key="update-modal"
-          title="Update a token"
+          title="Update token"
           isOpen={true}
           onClose={this.handleModalToggle}
           actions={[
@@ -109,6 +131,14 @@ class UpdateModal extends React.Component {
               key="expiry-formGroup"
               fieldId="form-expiry"
             >
+              <Radio
+                id="radio-15m"
+                label="15 minutes from now"
+                name="r15m"
+                isChecked={r15m}
+                value={r15m}
+                onChange={this.handleChangeExpires}
+              />
               <Radio
                 id="radio-1h"
                 label="1 hour from now"
