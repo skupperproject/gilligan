@@ -18,6 +18,13 @@ under the License.
 */
 
 import React, { Component } from "react";
+import {
+  Title,
+  EmptyState,
+  EmptyStateIcon,
+  EmptyStateBody,
+} from "@patternfly/react-core";
+import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 import RequestReceived from "./requestReceived";
 import RequestSent from "./requestSent";
 import ConnectionsIn from "./connectionsIn";
@@ -50,6 +57,17 @@ class SubDetails extends Component {
     }
     return (
       <div className="sk-subdetails">
+        {!data.protocol && (
+          <div>
+            <EmptyState>
+              <EmptyStateIcon icon={SearchIcon} />
+              <Title size="lg" headingLevel="h4">
+                No data
+              </Title>
+              <EmptyStateBody>Data is not available.</EmptyStateBody>
+            </EmptyState>
+          </div>
+        )}
         {data.protocol && (
           <div className="details-section">
             <span className="detail-prompt">Protocol</span> {data.protocol}
