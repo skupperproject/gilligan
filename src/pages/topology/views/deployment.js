@@ -51,7 +51,7 @@ export class Deployment extends Service {
     super(data);
     this.Site = new Site(data);
     this.fields = [
-      { title: "Name (site)", field: "deployment" },
+      { title: "Name", field: "deployment" },
       { title: "Protocol", field: "protocol" },
       { title: "Site", field: "site_name" },
     ];
@@ -600,7 +600,7 @@ export class Deployment extends Service {
     return new Promise((resolve) => {
       const data = this.serviceNodes.nodes.map((n) => ({
         cardData: n,
-        deployment: `${n.shortName} (${n.cluster.site_name})`,
+        deployment: `${n.cluster.site_name}/${n.shortName}`,
         protocol: n.protocol.toUpperCase(),
         site_name: n.cluster.site_name,
       }));
