@@ -67,7 +67,7 @@ it("renders the deployment table view", () => {
   return service.connect().then(async () => {
     const { queryByTestId } = await render(<TableViewer {...props} />);
     expect(queryByTestId(/data-testid_deployment/i)).toBeTruthy();
-    const cartservice = queryByTestId("cartservice (site-b)");
+    const cartservice = queryByTestId("site-b/cartservice");
     expect(cartservice).toBeTruthy();
     fireEvent.click(cartservice);
     expect(props.handleShowSubTable).toHaveBeenCalled();

@@ -23,32 +23,13 @@ import { QDRService } from "../../qdrService";
 
 const service = new QDRService();
 
-it("renders the service view", () => {
+it("deployment view matches snapshot", () => {
   const setOptions = jest.fn();
-  return service.connect().then(async () => {
-    const props = { view: "service", service, setOptions };
-    const { queryByTestId } = await render(<TopologyViewer {...props} />);
-    expect(queryByTestId(/SVG_ID/i)).toBeTruthy();
-    expect(setOptions).toHaveBeenCalled();
-  });
-});
-
-it("renders the site view", () => {
-  const setOptions = jest.fn();
-  return service.connect().then(async () => {
-    const props = { view: "site", service, setOptions };
-    const { queryByTestId } = await render(<TopologyViewer {...props} />);
-    expect(queryByTestId(/SVG_ID/i)).toBeTruthy();
-    expect(setOptions).toHaveBeenCalled();
-  });
-});
-
-it("renders the deployment view", () => {
-  const setOptions = jest.fn();
-  return service.connect().then(async () => {
+  return service.connect().then(() => {
     const props = { view: "deployment", service, setOptions };
-    const { queryByTestId } = await render(<TopologyViewer {...props} />);
-    expect(queryByTestId(/SVG_ID/i)).toBeTruthy();
-    expect(setOptions).toHaveBeenCalled();
+
+    const { queryByTestId } = render(<TopologyViewer {...props} />);
+    const page = queryByTestId(/SVG_ID/i).outerHTML;
+    expect(page).toMatchSnapshot();
   });
 });
