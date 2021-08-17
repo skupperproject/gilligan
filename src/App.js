@@ -23,13 +23,13 @@ import "@patternfly/patternfly/patternfly.css";
 import "@patternfly/patternfly/patternfly-addons.css";
 import "@patternfly/patternfly/components/Nav/nav.css";
 import "./App.css";
-import PageLayout from "./layout";
+import Layout from "./layout";
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <Route path="/" render={(props) => <PageLayout {...props} />} />
+        <Route path="/" render={(props) => <Layout {...props} />} />
       </div>
     </Router>
   );

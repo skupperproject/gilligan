@@ -52,7 +52,7 @@ const VIEW_MODES = "viewModes";
 const LAST_VIEW = "lastView2";
 const CONNECT_TIMEOUT = 10 * 1000;
 
-class PageLayout extends React.Component {
+class Layout extends React.Component {
   constructor(props) {
     super(props);
     const view = utils.getSaved(LAST_VIEW, "service");
@@ -466,4 +466,4 @@ class PageLayout extends React.Component {
   }
 }
 
-export default PageLayout;
+export default Layout;
