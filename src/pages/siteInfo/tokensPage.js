@@ -40,7 +40,7 @@ class TokensPage extends React.Component {
     super(props);
     this.state = {
       showDownload: false,
-      defaultSiteName: null,
+      tokenName: null,
       showUpdate: false,
       updateData: null,
       showDeleteModal: false,
@@ -177,7 +177,7 @@ class TokensPage extends React.Component {
 
   download = (index) => {
     const tokenInfo = this.props.service.siteInfo.tokens[index];
-    this.setState({ showDownload: true, defaultSiteName: tokenInfo.name });
+    this.setState({ showDownload: true, tokenName: tokenInfo.name });
   };
 
   showDeleteModal = (tokenInfo) => {
@@ -224,7 +224,7 @@ class TokensPage extends React.Component {
   render() {
     const {
       showDownload,
-      defaultSiteName,
+      tokenName,
       showUpdate,
       updateData,
       showDeleteModal,
@@ -271,7 +271,7 @@ class TokensPage extends React.Component {
             handleModalClose={this.handleModalClose}
             showOpen={true}
             hideButton={true}
-            defaultSiteName={defaultSiteName}
+            tokenName={tokenName}
             doDownload={this.doDownload}
           />
         )}

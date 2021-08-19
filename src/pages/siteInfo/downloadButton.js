@@ -29,7 +29,7 @@ class DownloadButton extends React.Component {
 
   render() {
     const tokenLink = `${this.props.service.getSkupperTokenURL()}/${
-      this.props.defaultSiteName
+      this.props.tokenName
     }`;
     const { downloadFileName } = this.props;
     return (

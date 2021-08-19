@@ -28,19 +28,17 @@ class DownloadModal extends React.Component {
   }
 
   generateFileName = () => {
-    return `site-token-${
-      this.props.defaultSiteName
-        ? this.props.defaultSiteName
-        : this.props.service.siteInfo.site_name
-    }-${utils.randomHex(4)}.token`;
+    return `site-token-${this.props.tokenName}-${utils.randomHex(4)}.token`;
   };
 
   handleTextInputChange1 = (fileName) => {
     this.setState({ fileName });
   };
 
-  handleDownloadClicked = () => {
+  handleDownloadClicked = (event) => {
+    console.log(`downloadModal::handleDownloadClicked`);
     const { fileName } = this.state;
+
     this.setState({ isModalOpen: false }, () => {
       if (this.props.doDownload) {
         this.props.doDownload(fileName);
