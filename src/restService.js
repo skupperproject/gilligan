@@ -1,3 +1,7 @@
+// Set this to false (or just delete it) to allow this console to call GET /deployments
+const DISABLE_EXPOSE = false;
+const NODE_ENV_DEV = "development";
+const NODE_ENV_TST = "test";
 class RESTService {
   constructor() {
     this.url = `${window.location.protocol}//${window.location.host}`;
@@ -8,10 +12,13 @@ class RESTService {
 
   getData = () =>
     new Promise((resolve, reject) => {
-      if (process.env.NODE_ENV === "test") {
-        const data = require("../public/data/testing.json");
+      if (process.env.NODE_ENV === NODE_ENV_TST) {
+        // the require statement must be passed a variable instead of a string literal.
+        // Otherwise the browser will attempt to load the file when the code is compiled instead of at run-time.
+        const testfile = "../public/data/testing.json";
+        const data = require(testfile);
         resolve(data);
-      } else if (process.env.NODE_ENV === "development") {
+      } else if (process.env.NODE_ENV === NODE_ENV_DEV) {
         // This is used to get the data when the console
         // is served by yarn start or npm start
         this.fetchFrom("/data/DATA.json")
@@ -30,24 +37,34 @@ class RESTService {
     });
 
   getSiteInfo = (VAN) =>
-    new Promise((resolve, reject) => {
+    new Promise((resolve) => {
       let url = `${this.url}/`;
       let suffix = ".json";
 
-      if (process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === NODE_ENV_DEV) {
         url = "/data/";
-      } else if (process.env.NODE_ENV === "test") {
+      } else if (process.env.NODE_ENV === NODE_ENV_TST) {
         url = "../public/data/";
       } else {
         suffix = "";
       }
-      const endpoints = ["site", "tokens", "links" /*, "deployments"*/];
+      // TODO: look into why fetching "deployments.json" fails, but renmaing file to something else works
+      let endpoints = ["site", "tokens", "deployments", "links"];
+      if (process.env.NODE_ENV === NODE_ENV_DEV) {
+        endpoints = endpoints.map((endpoint) =>
+          endpoint === "deployments" ? "foo" : endpoint
+        );
+      }
+      if (DISABLE_EXPOSE) {
+        endpoints = endpoints.filter((endpoint) => endpoint !== "foo");
+      }
       let promises = endpoints.map((endpoint) =>
         this.fetchFrom(`${url}${endpoint}${suffix}`, endpoint === "site")
       );
       Promise.allSettled(promises).then((allResults) => {
         const results = {};
         endpoints.forEach((endpoint, i) => {
+          if (endpoint === "foo") endpoint = "deployments";
           results[endpoint] =
             allResults[i].status === "fulfilled"
               ? allResults[i].value
@@ -55,6 +72,7 @@ class RESTService {
               ? "" // if the site call failed, use empty string
               : []; // call failed. use empty array as result
         });
+        // the call to GET /site should return the site_id of the current site
         results.site = results.site.trim();
         let currentSite = VAN.sites.find(
           (site) => site.site_id === results.site
@@ -89,11 +107,11 @@ class RESTService {
           (results) => results.text(),
           (e) => {
             if (
-              process.env.NODE_ENV === "development" ||
-              process.env.NODE_ENV === "test"
+              process.env.NODE_ENV === NODE_ENV_DEV ||
+              process.env.NODE_ENV === NODE_ENV_TST
             ) {
               const url =
-                process.env.NODE_ENV === "development"
+                process.env.NODE_ENV === NODE_ENV_DEV
                   ? "/data/token.json"
                   : "../public/data/token.json";
               this.fetchFrom(url).then(
@@ -188,7 +206,7 @@ class RESTService {
   };
 
   // needed when the token is saved directly to a file
-  getSkupperTokenURL = () => `/tokens`;
+  getSkupperTokenURL = () => `${this.url}/downloadclaim`;
 
   fetchFrom = (url, asText) =>
     new Promise((resolve, reject) => {
