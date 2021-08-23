@@ -1,4 +1,4 @@
-// Set this to false (or just delete it) to allow this console to call GET /deployments
+// Set this to false (or just delete it) to allow this console to call GET /services
 const DISABLE_EXPOSE = false;
 const NODE_ENV_DEV = "development";
 const NODE_ENV_TST = "test";
@@ -16,6 +16,7 @@ class RESTService {
         // the require statement must be passed a variable instead of a string literal.
         // Otherwise the browser will attempt to load the file when the code is compiled instead of at run-time.
         const testfile = "../public/data/testing.json";
+        // eslint-disable-next-line
         const data = require(testfile);
         resolve(data);
       } else if (process.env.NODE_ENV === NODE_ENV_DEV) {
@@ -48,15 +49,9 @@ class RESTService {
       } else {
         suffix = "";
       }
-      // TODO: look into why fetching "deployments.json" fails, but renmaing file to something else works
-      let endpoints = ["site", "tokens", "deployments", "links"];
-      if (process.env.NODE_ENV === NODE_ENV_DEV) {
-        endpoints = endpoints.map((endpoint) =>
-          endpoint === "deployments" ? "foo" : endpoint
-        );
-      }
+      let endpoints = ["site", "tokens", "services", "links"];
       if (DISABLE_EXPOSE) {
-        endpoints = endpoints.filter((endpoint) => endpoint !== "foo");
+        endpoints = endpoints.filter((endpoint) => endpoint !== "services");
       }
       let promises = endpoints.map((endpoint) =>
         this.fetchFrom(`${url}${endpoint}${suffix}`, endpoint === "site")
@@ -64,7 +59,6 @@ class RESTService {
       Promise.allSettled(promises).then((allResults) => {
         const results = {};
         endpoints.forEach((endpoint, i) => {
-          if (endpoint === "foo") endpoint = "deployments";
           results[endpoint] =
             allResults[i].status === "fulfilled"
               ? allResults[i].value
@@ -142,16 +136,15 @@ class RESTService {
     this.postSiteInfoMethod(data, "UPDATE", "tokens", data.name);
 
   // create a deployment
-  exposeService = (data) =>
-    this.postSiteInfoMethod(data, "POST", "deployments");
+  exposeService = (data) => this.postSiteInfoMethod(data, "POST", "services");
 
   // delete a deployment
   unexposeService = (data) =>
-    this.postSiteInfoMethod(data, "DELETE", "deployments", data.Name);
+    this.postSiteInfoMethod(data, "DELETE", "services", data.Name);
 
   // update a site's name
   renameSite = (data) =>
-    this.postSiteInfoMethod(data, "UPDATE", "sites", data.site_id);
+    this.postSiteInfoMethod(data, "UPDATE", "site", data.site_id);
 
   // revoke site's certificate authority
   regenCA = () => this.postSiteInfoMethod({}, "DELETE", "certificateAuthority");
