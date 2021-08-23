@@ -186,6 +186,10 @@ const utils = {
     return curY;
   },
 
+  // determine the layout of the objects on the Graph view
+  // sets the .x and .y attributes of a node
+  // At the most basic level, this should put the nodes that are called to the right and
+  // nodes that do the calling to the left
   adjustPositions: ({
     nodes,
     links,
