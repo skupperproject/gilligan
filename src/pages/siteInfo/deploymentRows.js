@@ -64,7 +64,7 @@ export class DeploymentRows {
   ];
 
   fetch = (emptyRows, VANservice, formatterData) => {
-    const dataKey = "deployments";
+    const dataKey = "services";
     this.showExpose = formatterData.expose;
     this.showUnExpose = formatterData.unExpose;
 

@@ -198,7 +198,7 @@ class DeploymentTable extends React.Component {
   render() {
     const { showUnexposeModal, unexposeInfo, showExposeModal, exposeInfo } =
       this.state;
-    const serviceCount = this.props.service.siteInfo.deployments.length;
+    const serviceCount = this.props.service.siteInfo.services.length;
     return (
       <div>
         {showUnexposeModal && (
