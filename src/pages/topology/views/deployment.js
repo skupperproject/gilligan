@@ -190,6 +190,7 @@ export class Deployment extends Service {
       site.subServiceLinks = links;
     });
 
+    // position sites
     const interSiteLinks = this.Site.interSiteLinks(siteNodes);
     // set the site x,y
     utils.adjustPositions({
@@ -290,6 +291,7 @@ export class Deployment extends Service {
         width: site.r * 2,
         height: site.r * 2,
         xyKey: "sankeySiteOffset",
+        align: "vertical",
       });
       site.sankeyR = Math.max(
         site.r,
@@ -321,6 +323,7 @@ export class Deployment extends Service {
       width: utils.ServiceWidth,
       height: utils.ServiceHeight, //viewer.height,
       xyKey: "sankeySiteOffset",
+      align: "vertical",
     });
     // restore the saved positions
     subNodes.forEach((n) => {
