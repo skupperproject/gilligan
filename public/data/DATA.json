@@ -1,618 +1,768 @@
 {
   "sites": [
     {
-      "site_name": "My company frontend",
-      "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
-      "version": "51fdfc9-modified",
-      "connected": [],
-      "namespace": "skupper",
-      "url": "skupper-inter-router-skupper.apps.ansmith-van11.rhmw-integrations.net",
+      "site_name": "public",
+      "site_id": "aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+      "version": "0.7.0",
+      "connected": ["aeaf0882-9930-45c9-b8ac-bfc54158d4e1"],
+      "namespace": "public",
+      "url": "10.97.213.48",
       "edge": false
     },
     {
-      "site_name": "public2",
-      "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5",
-      "version": "51fdfc9-modified",
-      "connected": ["5316d5e6-43af-4755-acea-fee0107d6fb7"],
-      "namespace": "skupper",
-      "url": "skupper-inter-router-skupper.apps.ansmith-van15.rhmw-integrations.net",
-      "edge": false
-    },
-    {
-      "site_name": "private1",
-      "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b",
-      "version": "51fdfc9-modified",
+      "site_name": "private",
+      "site_id": "d12decfd-02bd-488c-9f1a-9b2da2e26f50",
+      "version": "0.7.0",
       "connected": [
-        "5316d5e6-43af-4755-acea-fee0107d6fb7",
-        "3914b0cf-16a2-43fc-b22e-e01de55719c5"
+        "aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+        "d12decfd-02bd-488c-9f1a-9b2da2e26f50"
       ],
-      "namespace": "default",
-      "url": "10.111.31.223",
+      "namespace": "private",
+      "url": "",
       "edge": false
     }
   ],
   "services": [
     {
-      "address": "mongo-c",
+      "address": "cluster1-kafka-brokers-0",
       "protocol": "tcp",
       "targets": [
         {
-          "name": "mongo-c-d69cbc956-n7qlr",
-          "target": "mongo-c",
-          "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5"
+          "name": "cluster1-kafka-0.cluster1-kafka-brokers.private",
+          "target": "egress",
+          "site_id": "d12decfd-02bd-488c-9f1a-9b2da2e26f50"
         }
       ],
       "connections_ingress": [
         {
-          "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
+          "site_id": "aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
           "connections": {
-            "10.129.2.91:38940@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:38940@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 5009,
+            "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 222527,
+              "bytes_out": 729173,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 1184,
+              "bytes_out": 4675,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 51,
+              "last_in": 51,
+              "bytes_in": 256166,
+              "bytes_out": 857467,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
               "last_out": 1,
               "last_in": 1,
-              "bytes_in": 593274,
-              "bytes_out": 1015890,
-              "client": "mongo-b-6866c58b8d-lsvd5"
+              "bytes_in": 7039,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-wvxvz"
             },
-            "10.129.2.91:40026@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:40026@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 4,
-              "last_in": 4859,
-              "bytes_in": 365,
-              "bytes_out": 390168,
-              "client": "mongo-b-6866c58b8d-lsvd5"
+            "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 218,
+              "bytes_out": 499,
+              "client": "order-processor-5799cb65f-wvxvz"
             },
-            "10.129.2.91:40040@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:40040@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 8,
-              "last_in": 8,
-              "bytes_in": 29646,
-              "bytes_out": 67901,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            }
-          }
-        },
-        {
-          "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5",
-          "connections": {
-            "10.128.2.74:46976@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:46976@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 7,
-              "last_in": 4866,
-              "bytes_in": 365,
-              "bytes_out": 390168,
-              "client": "mongo-c-d69cbc956-n7qlr"
-            },
-            "10.128.2.74:46978@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:46978@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 29707,
-              "bytes_out": 68039,
-              "client": "mongo-c-d69cbc956-n7qlr"
-            }
-          }
-        },
-        {
-          "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b",
-          "connections": {
-            "172.17.0.3:42590@70f1914e-7ff0-4199-ad97-f3670a681c0b": {
-              "id": "172.17.0.3:42590@70f1914e-7ff0-4199-ad97-f3670a681c0b",
-              "start_time": 5003,
+            "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
               "last_out": 1,
               "last_in": 1,
-              "bytes_in": 607997,
-              "bytes_out": 1036783,
-              "client": "mongo-a-8587696489-jwn6z"
-            }
-          }
-        }
-      ],
-      "connections_egress": [
-        {
-          "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5",
-          "connections": {
-            "10.128.2.74:46976@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:46976@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 4866,
-              "last_in": 7,
-              "bytes_in": 390168,
-              "bytes_out": 758,
-              "server": "mongo-c-d69cbc956-n7qlr"
+              "bytes_in": 28531,
+              "bytes_out": 30746,
+              "client": "order-processor-5799cb65f-wvxvz"
             },
-            "10.128.2.74:46978@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:46978@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 68039,
-              "bytes_out": 30100,
-              "server": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 255956,
+              "bytes_out": 856802,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.129.2.91:38940@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:38940@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 5015,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 1016324,
-              "bytes_out": 593921,
-              "server": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 96,
+              "last_in": 96,
+              "bytes_in": 1193,
+              "bytes_out": 4717,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.129.2.91:40026@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:40026@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4865,
-              "last_out": 4865,
-              "last_in": 5,
-              "bytes_in": 390168,
-              "bytes_out": 758,
-              "server": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 222492,
+              "bytes_out": 729058,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.129.2.91:40040@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:40040@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4865,
-              "last_out": 9,
-              "last_in": 9,
-              "bytes_in": 67901,
-              "bytes_out": 30039,
-              "server": "mongo-c-d69cbc956-n7qlr"
-            },
-            "172.17.0.3:42590@70f1914e-7ff0-4199-ad97-f3670a681c0b": {
-              "id": "172.17.0.3:42590@70f1914e-7ff0-4199-ad97-f3670a681c0b",
-              "start_time": 5004,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 1036783,
-              "bytes_out": 608390,
-              "server": "mongo-c-d69cbc956-n7qlr"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "mongo-b",
-      "protocol": "tcp",
-      "targets": [
-        {
-          "name": "mongo-b-6866c58b8d-lsvd5",
-          "target": "mongo-b",
-          "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7"
-        }
-      ],
-      "connections_ingress": [
-        {
-          "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
-          "connections": {
-            "10.129.2.91:49170@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49170@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 4,
-              "last_in": 4860,
-              "bytes_in": 416,
-              "bytes_out": 390623,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49174@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49174@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 4,
-              "last_in": 4860,
-              "bytes_in": 253,
-              "bytes_out": 389575,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49180@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49180@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 9,
-              "last_in": 9,
-              "bytes_in": 29646,
-              "bytes_out": 67901,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            }
-          }
-        },
-        {
-          "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5",
-          "connections": {
-            "10.128.2.74:37366@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37366@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5015,
-              "last_out": 0,
-              "last_in": 1,
-              "bytes_in": 598410,
-              "bytes_out": 1018899,
-              "client": "mongo-c-d69cbc956-n7qlr"
-            },
-            "10.128.2.74:38422@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38422@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 29880,
-              "bytes_out": 68770,
-              "client": "mongo-c-d69cbc956-n7qlr"
-            },
-            "10.128.2.74:38436@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38436@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 5,
-              "last_in": 4866,
-              "bytes_in": 192,
-              "bytes_out": 389437,
-              "client": "mongo-c-d69cbc956-n7qlr"
-            }
-          }
-        },
-        {
-          "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b",
-          "connections": {
-            "172.17.0.3:47404@70f1914e-7ff0-4199-ad97-f3670a681c0b": {
-              "id": "172.17.0.3:47404@70f1914e-7ff0-4199-ad97-f3670a681c0b",
-              "start_time": 5003,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 610945,
-              "bytes_out": 1043563,
-              "client": "mongo-a-8587696489-jwn6z"
-            }
-          }
-        }
-      ],
-      "connections_egress": [
-        {
-          "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
-          "connections": {
-            "10.128.2.74:37366@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37366@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5009,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 1018465,
-              "bytes_out": 598547,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.128.2.74:38422@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38422@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4861,
-              "last_out": 9,
-              "last_in": 9,
-              "bytes_in": 68632,
-              "bytes_out": 30212,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.128.2.74:38436@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38436@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4860,
-              "last_out": 4860,
-              "last_in": 4,
-              "bytes_in": 389437,
-              "bytes_out": 585,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49170@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49170@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 4860,
-              "last_in": 4,
-              "bytes_in": 390623,
-              "bytes_out": 809,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49174@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49174@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 4860,
-              "last_in": 4,
-              "bytes_in": 389575,
-              "bytes_out": 646,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49180@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49180@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 9,
-              "last_in": 9,
-              "bytes_in": 67901,
-              "bytes_out": 30039,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "172.17.0.3:47404@70f1914e-7ff0-4199-ad97-f3670a681c0b": {
-              "id": "172.17.0.3:47404@70f1914e-7ff0-4199-ad97-f3670a681c0b",
-              "start_time": 4999,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 1043129,
-              "bytes_out": 610690,
-              "server": "mongo-b-6866c58b8d-lsvd5"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "mongo-a",
-      "protocol": "tcp",
-      "targets": [
-        {
-          "name": "mongo-a-8587696489-jwn6z",
-          "target": "mongo-a",
-          "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b"
-        }
-      ],
-      "connections_ingress": [
-        {
-          "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
-          "connections": {
-            "10.129.2.91:46366@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:46366@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 5008,
+            "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
               "last_out": 2,
               "last_in": 2,
-              "bytes_in": 732748,
-              "bytes_out": 490355,
-              "client": "mongo-b-6866c58b8d-lsvd5"
+              "bytes_in": 7039,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.129.2.91:46462@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:46462@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4998,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 605870,
-              "bytes_out": 994436,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:46466@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:46466@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4997,
-              "last_out": 2,
-              "last_in": 4997,
-              "bytes_in": 699,
-              "bytes_out": 808132,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:47434@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:47434@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 4,
-              "last_in": 4860,
-              "bytes_in": 363,
-              "bytes_out": 401862,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:47452@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:47452@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4860,
-              "last_out": 9,
-              "last_in": 9,
-              "bytes_in": 29646,
-              "bytes_out": 67925,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49552@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49552@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4561,
-              "last_out": 4561,
-              "last_in": 4561,
-              "bytes_in": 340,
-              "bytes_out": 839,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            },
-            "10.129.2.91:49554@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49554@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4561,
-              "last_out": 4561,
-              "last_in": 4561,
-              "bytes_in": 0,
-              "bytes_out": 839,
-              "client": "mongo-b-6866c58b8d-lsvd5"
-            }
-          }
-        },
-        {
-          "site_id": "3914b0cf-16a2-43fc-b22e-e01de55719c5",
-          "connections": {
-            "10.128.2.74:37816@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37816@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5014,
-              "last_out": 3,
-              "last_in": 3,
-              "bytes_in": 729373,
-              "bytes_out": 489712,
-              "client": "mongo-c-d69cbc956-n7qlr"
-            },
-            "10.128.2.74:37894@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37894@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5004,
+            "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
               "last_out": 1,
               "last_in": 1,
-              "bytes_in": 608768,
-              "bytes_out": 991534,
-              "client": "mongo-c-d69cbc956-n7qlr"
+              "bytes_in": 5382,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.128.2.74:37900@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37900@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5003,
-              "last_out": 3,
-              "last_in": 5003,
-              "bytes_in": 702,
-              "bytes_out": 1080176,
-              "client": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28725,
+              "bytes_out": 30900,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.128.2.74:38868@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38868@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 6,
-              "last_in": 4866,
-              "bytes_in": 363,
-              "bytes_out": 401863,
-              "client": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 100,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 19493,
+              "bytes_out": 17416,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.128.2.74:38876@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38876@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4866,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 29707,
-              "bytes_out": 68063,
-              "client": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 96,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 4975,
+              "bytes_out": 1503,
+              "client": "order-processor-5799cb65f-tkjq5"
             },
-            "10.128.2.74:40960@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:40960@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4566,
-              "last_out": 4566,
-              "last_in": 4566,
-              "bytes_in": 0,
-              "bytes_out": 839,
-              "client": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 50,
+              "last_in": 50,
+              "bytes_in": 255276,
+              "bytes_out": 854548,
+              "client": "order-processor-5799cb65f-568t9"
             },
-            "10.128.2.74:40962@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:40962@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4566,
-              "last_out": 4566,
-              "last_in": 4566,
-              "bytes_in": 0,
-              "bytes_out": 839,
-              "client": "mongo-c-d69cbc956-n7qlr"
+            "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 1184,
+              "bytes_out": 4675,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 222339,
+              "bytes_out": 728644,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 7039,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 218,
+              "bytes_out": 499,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28725,
+              "bytes_out": 30900,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 135,
+              "last_in": 135,
+              "bytes_in": 1193,
+              "bytes_out": 4717,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 222007,
+              "bytes_out": 727803,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 640,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 6459,
+              "bytes_out": 1649,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28721,
+              "bytes_out": 30900,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 135,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 4067,
+              "bytes_out": 1385,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 221868,
+              "bytes_out": 727527,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 77,
+              "last_in": 77,
+              "bytes_in": 1192,
+              "bytes_out": 4716,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 6024,
+              "bytes_out": 1637,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28621,
+              "bytes_out": 30823,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 77,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 411,
+              "bytes_out": 616,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 221757,
+              "bytes_out": 727228,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 1228,
+              "bytes_out": 4832,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 6024,
+              "bytes_out": 1637,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 140,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 1696,
+              "bytes_out": 1145,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28621,
+              "bytes_out": 30823,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12625,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 221687,
+              "bytes_out": 726998,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12625,
+              "last_out": 111,
+              "last_in": 111,
+              "bytes_in": 1193,
+              "bytes_out": 4717,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 6024,
+              "bytes_out": 1637,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28427,
+              "bytes_out": 30669,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 111,
+              "last_out": 28,
+              "last_in": 28,
+              "bytes_in": 1046,
+              "bytes_out": 915,
+              "client": "frontend-7df75ff97c-shrtc"
             }
           }
         }
       ],
       "connections_egress": [
         {
-          "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b",
+          "site_id": "d12decfd-02bd-488c-9f1a-9b2da2e26f50",
           "connections": {
-            "10.128.2.74:37816@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37816@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5012,
-              "last_out": 4,
-              "last_in": 4,
-              "bytes_in": 489712,
-              "bytes_out": 729766,
-              "server": "mongo-a-8587696489-jwn6z"
+            "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 729173,
+              "bytes_out": 222527,
+              "server": "cluster1-kafka-0"
             },
-            "10.128.2.74:37894@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37894@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5002,
+            "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 4675,
+              "bytes_out": 1184,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 51,
+              "last_in": 51,
+              "bytes_in": 857467,
+              "bytes_out": 256166,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 1665,
+              "bytes_out": 7039,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 499,
+              "bytes_out": 218,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30746,
+              "bytes_out": 28531,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 856802,
+              "bytes_out": 255956,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 96,
+              "last_in": 96,
+              "bytes_in": 4717,
+              "bytes_out": 1193,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 729058,
+              "bytes_out": 222492,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
               "last_out": 2,
               "last_in": 2,
-              "bytes_in": 991534,
-              "bytes_out": 609161,
-              "server": "mongo-a-8587696489-jwn6z"
+              "bytes_in": 1665,
+              "bytes_out": 7039,
+              "server": "cluster1-kafka-0"
             },
-            "10.128.2.74:37900@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:37900@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 5001,
-              "last_out": 5001,
-              "last_in": 4,
-              "bytes_in": 1080176,
-              "bytes_out": 1083,
-              "server": "mongo-a-8587696489-jwn6z"
+            "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1665,
+              "bytes_out": 5382,
+              "server": "cluster1-kafka-0"
             },
-            "10.128.2.74:38868@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38868@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4864,
-              "last_out": 4864,
-              "last_in": 7,
-              "bytes_in": 401863,
-              "bytes_out": 756,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.128.2.74:38876@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:38876@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4864,
+            "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
               "last_out": 1,
               "last_in": 1,
-              "bytes_in": 68063,
-              "bytes_out": 30100,
-              "server": "mongo-a-8587696489-jwn6z"
+              "bytes_in": 30900,
+              "bytes_out": 28725,
+              "server": "cluster1-kafka-0"
             },
-            "10.128.2.74:40960@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:40960@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4565,
-              "last_out": 4565,
-              "last_in": 4565,
-              "bytes_in": 839,
-              "bytes_out": 340,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.128.2.74:40962@3914b0cf-16a2-43fc-b22e-e01de55719c5": {
-              "id": "10.128.2.74:40962@3914b0cf-16a2-43fc-b22e-e01de55719c5",
-              "start_time": 4565,
-              "last_out": 4565,
-              "last_in": 4565,
-              "bytes_in": 839,
-              "bytes_out": 340,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.129.2.91:46366@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:46366@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 5012,
-              "last_out": 4,
-              "last_in": 4,
-              "bytes_in": 490355,
-              "bytes_out": 733141,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.129.2.91:46462@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:46462@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 5002,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 994852,
-              "bytes_out": 606517,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.129.2.91:46466@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:46466@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 5001,
-              "last_out": 5001,
-              "last_in": 5,
-              "bytes_in": 808132,
-              "bytes_out": 1080,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.129.2.91:47434@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:47434@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4864,
-              "last_out": 4864,
-              "last_in": 7,
-              "bytes_in": 401862,
-              "bytes_out": 756,
-              "server": "mongo-a-8587696489-jwn6z"
-            },
-            "10.129.2.91:47452@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:47452@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4864,
+            "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 101,
               "last_out": 1,
               "last_in": 1,
-              "bytes_in": 68063,
-              "bytes_out": 30100,
-              "server": "mongo-a-8587696489-jwn6z"
+              "bytes_in": 17416,
+              "bytes_out": 19493,
+              "server": "cluster1-kafka-0"
             },
-            "10.129.2.91:49552@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49552@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4564,
-              "last_out": 4564,
-              "last_in": 4564,
-              "bytes_in": 839,
-              "bytes_out": 340,
-              "server": "mongo-a-8587696489-jwn6z"
+            "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 96,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 1503,
+              "bytes_out": 4975,
+              "server": "cluster1-kafka-0"
             },
-            "10.129.2.91:49554@5316d5e6-43af-4755-acea-fee0107d6fb7": {
-              "id": "10.129.2.91:49554@5316d5e6-43af-4755-acea-fee0107d6fb7",
-              "start_time": 4564,
-              "last_out": 4564,
-              "last_in": 4564,
-              "bytes_in": 839,
-              "bytes_out": 340,
-              "server": "mongo-a-8587696489-jwn6z"
+            "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 50,
+              "last_in": 50,
+              "bytes_in": 854548,
+              "bytes_out": 255276,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 4675,
+              "bytes_out": 1184,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 728644,
+              "bytes_out": 222339,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1665,
+              "bytes_out": 7039,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 104,
+              "last_in": 103,
+              "bytes_in": 499,
+              "bytes_out": 218,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30900,
+              "bytes_out": 28725,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 136,
+              "last_in": 136,
+              "bytes_in": 4717,
+              "bytes_out": 1193,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 727803,
+              "bytes_out": 222007,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 640,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 1649,
+              "bytes_out": 6459,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30900,
+              "bytes_out": 28721,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 1385,
+              "bytes_out": 4067,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12627,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 727527,
+              "bytes_out": 221868,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12627,
+              "last_out": 77,
+              "last_in": 77,
+              "bytes_in": 4716,
+              "bytes_out": 1192,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 627,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1637,
+              "bytes_out": 6024,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30823,
+              "bytes_out": 28621,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 77,
+              "last_out": 30,
+              "last_in": 30,
+              "bytes_in": 616,
+              "bytes_out": 411,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 727228,
+              "bytes_out": 221757,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 4832,
+              "bytes_out": 1228,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1637,
+              "bytes_out": 6024,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 140,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 1145,
+              "bytes_out": 1696,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30823,
+              "bytes_out": 28621,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 726998,
+              "bytes_out": 221687,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 111,
+              "last_in": 111,
+              "bytes_in": 4717,
+              "bytes_out": 1193,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 1637,
+              "bytes_out": 6024,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30669,
+              "bytes_out": 28427,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 111,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 915,
+              "bytes_out": 1046,
+              "server": "cluster1-kafka-0"
             }
           }
         }
