@@ -203,15 +203,21 @@ class Adapter {
           for (let connectionID in ingress.connections) {
             const client = ingress.connections[connectionID].client;
             // look for client in a target section
-            const targetInfo = this.findClientInTargets(client);
+            const targetInfo = this.findClientInTargets(
+              utils.shortName(client)
+            );
             if (!targetInfo.target) {
-              this.data.services.unshift(
-                this.newService({
-                  address: client,
-                  protocol: "tcp",
-                  client,
-                  site_id: ingress.site_id,
-                })
+              const newService = this.newService({
+                address: client,
+                protocol: "tcp",
+                client,
+                site_id: ingress.site_id,
+              });
+              this.data.services.unshift(newService);
+              this.addTargetToService(
+                newService,
+                utils.shortName(client),
+                ingress.site_id
               );
             }
           }
@@ -665,23 +671,13 @@ class Adapter {
   siteToSite = (from, to, stat) => {
     if (!stat) stat = "bytes_out";
     let value = null;
-    this.data.services.forEach((service) => {
-      if (service.requests_received) {
-        service.requests_received.forEach((request) => {
-          if (request.site_id === from.site_id) {
-            for (let client_id in request.by_client) {
-              const client_request = request.by_client[client_id];
-              for (let handling_site_id in client_request.by_handling_site) {
-                if (handling_site_id === to.site_id) {
-                  const handling_request =
-                    client_request.by_handling_site[handling_site_id];
-                  if (!value) value = 0;
-                  value += handling_request[stat];
-                }
-              }
-            }
-          }
-        });
+    this.data.deploymentLinks.forEach((deploymentLink) => {
+      if (
+        deploymentLink.source.site.site_id === from.site_id &&
+        deploymentLink.target.site.site_id === to.site_id
+      ) {
+        if (!value) value = 0;
+        value += deploymentLink.request[stat];
       }
     });
     return value;
