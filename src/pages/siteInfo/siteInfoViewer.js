@@ -62,7 +62,7 @@ class SiteInfoViewer extends React.Component {
         />
       ),
     };
-    if (!this.props.siteInfo.deployments) {
+    if (!this.props.siteInfo.services) {
       delete this.tabs.Deployments;
     }
   }
