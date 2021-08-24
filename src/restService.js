@@ -1,12 +1,12 @@
 // Set this to false (or just delete it) to allow this console to call GET /services
 const DISABLE_EXPOSE = false;
-const NODE_ENV_DEV = "development";
+const NODE_ENV_DEV = "_development";
 const NODE_ENV_TST = "test";
 class RESTService {
   constructor() {
     this.url = `${window.location.protocol}//${window.location.host}`;
-    //this.url =
-    //  "https://skupper-default.grs1-153f1de160110098c1928a6c05e19444-0000.eu-gb.containers.appdomain.cloud";
+    this.url =
+      "https://skupper-default.grs1-153f1de160110098c1928a6c05e19444-0000.eu-gb.containers.appdomain.cloud";
     //console.log(`default REST url is ${this.url}`);
   }
 

@@ -160,21 +160,15 @@ class DeploymentTable extends React.Component {
   // this is called after the expose modal is submitted
   doExpose = (exposeInfo) => {
     const exposeData = {
-      address: "my-skupper-service", // optional, if not specified will use target name
-      protocol: "http", //optional, valid values are http, http2, tcp (default)
-      port: 8080, //if not specified will try to deduce it but this is not always possible
-      target: {
-        name: "http-simple",
-        type: "deployment",
-      },
+      address: exposeInfo.name,
+      protocol: exposeInfo.protocol,
+      target: { name: exposeInfo.original.name, type: exposeInfo.type },
     };
-    exposeData.address = exposeInfo.name;
-    exposeData.protocol = exposeInfo.protocol;
-    exposeData.port = exposeInfo.port;
-    exposeData.target = {
-      name: exposeInfo.original.name,
-      type: exposeInfo.type,
-    };
+
+    const parsedPort = parseInt(exposeInfo.port, 10);
+    if (!isNaN(parsedPort)) {
+      exposeData.port = parsedPort;
+    }
 
     this.props.service.exposeService(exposeData).then(
       () => {

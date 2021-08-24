@@ -231,7 +231,7 @@ class Layout extends React.Component {
     this.service.update().then(
       (data) => {
         if (!this.unmounted) {
-          if (this.pageRef && this.pageRef.update) {
+          if (this.pageRef?.update) {
             this.pageRef.update();
           }
         }
@@ -243,6 +243,11 @@ class Layout extends React.Component {
         console.log(e);
       }
     );
+  };
+
+  forceUpdate = () => {
+    this.updating = false;
+    this.update();
   };
 
   doConnect = () => {
@@ -430,6 +435,7 @@ class Layout extends React.Component {
               {...this.props}
               handleChangeViewMode={this.handleChangeViewMode}
               handleViewDetails={this.handleViewDetails}
+              forceUpdate={this.forceUpdate}
               setOptions={this.setOptions}
               view={this.state.view}
               views={this.views}
@@ -442,6 +448,7 @@ class Layout extends React.Component {
               service={this.service}
               {...this.props}
               handleChangeViewMode={this.handleChangeViewMode}
+              forceUpdate={this.forceUpdate}
               setOptions={this.setOptions}
               view={this.state.view}
               views={this.views}
@@ -457,6 +464,7 @@ class Layout extends React.Component {
               mode={mode}
               handleViewDetails={this.handleViewDetails}
               handleChangeViewMode={this.handleChangeViewMode}
+              forceUpdate={this.forceUpdate}
               setOptions={this.setOptions}
             />
           )}

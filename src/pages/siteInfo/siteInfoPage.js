@@ -93,7 +93,7 @@ class SiteInfoPage extends Component {
   };
 
   addAlert = (alertProps) => {
-    if (this.siteInfoRef && this.siteInfoRef.doAddAlert) {
+    if (this.siteInfoRef?.doAddAlert) {
       this.siteInfoRef.doAddAlert(alertProps);
     }
   };

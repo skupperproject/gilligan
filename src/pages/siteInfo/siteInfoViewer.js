@@ -85,7 +85,7 @@ class SiteInfoViewer extends React.Component {
 
   update = () => {
     const currentTabRef = this.tabRefs[this.state.tab];
-    if (currentTabRef && currentTabRef.update) {
+    if (currentTabRef?.update) {
       currentTabRef.update();
     }
   };
@@ -113,6 +113,9 @@ class SiteInfoViewer extends React.Component {
   doAddAlert = (alertProps) => {
     alertProps.key = new Date().getTime();
     this.setState({ alerts: [...this.state.alerts, alertProps] });
+    if (this.props.forceUpdate) {
+      this.props.forceUpdate();
+    }
   };
 
   closeAlert = (event, alertKey) => {

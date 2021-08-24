@@ -26,6 +26,12 @@ class ExposePage extends React.Component {
     this.state = {};
   }
 
+  update = () => {
+    if (this.tableRef?.update) {
+      this.tableRef.update();
+    }
+  };
+
   render() {
     return (
       <div className="sk-siteinfo-page-wrapper">
@@ -35,7 +41,7 @@ class ExposePage extends React.Component {
           must be exposed to the skupper network.
         </div>
         <h2>Deployments and targets on this site</h2>
-        <DeploymentTable {...this.props} />
+        <DeploymentTable ref={(el) => (this.tableRef = el)} {...this.props} />
       </div>
     );
   }
