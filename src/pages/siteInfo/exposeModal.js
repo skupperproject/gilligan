@@ -2,21 +2,54 @@ import React from "react";
 import { Modal, Button } from "@patternfly/react-core";
 import { Form, FormGroup, TextInput } from "@patternfly/react-core";
 import { Select, SelectOption, SelectVariant } from "@patternfly/react-core";
+const PORT_SEPERATOR = " - ";
 class ExposeModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       ...this.props.exposeInfo,
-      selected: "TCP",
+      protocolSelected: null,
+      portSelected: null,
       isProtocolSelectOpen: false,
-    }; // work with a copy in case they cancel the modal
+      isPortSelectOpen: false,
+    }; // work with a copy in case they cancel the modal. we don't want to have the underlying data changed
 
-    this.options = [
-      <SelectOption key={0} value="TCP" />,
-      <SelectOption key={1} value="HTTP" />,
-      <SelectOption key={2} value="AMQP" />,
-    ];
+    this.protocols = ["tcp", "http", "http2"];
+    this.options = this.protocols.map((protocol, i) => (
+      <SelectOption key={i} value={protocol} />
+    ));
+    this.portOptions = this.props.exposeInfo.ports.map((port, i) => (
+      <SelectOption key={i} value={this.constructPortValue(port)} />
+    ));
+    this.state.portSelected = this.constructPortValue(
+      this.props.exposeInfo.ports[0]
+    );
+    const firstNamedPort = this.props.exposeInfo.ports.find((p) =>
+      this.protocols.includes(p.name)
+    );
+    if (firstNamedPort) {
+      this.state.protocolSelected = firstNamedPort.name;
+    }
   }
+
+  constructPortValue = (port) =>
+    `${port.name ? port.name : ""}${port.name ? PORT_SEPERATOR : ""}${
+      port.port
+    }`;
+
+  parsePortValue = (portString) => {
+    // parse out the name and port
+    const parts = portString.split(PORT_SEPERATOR);
+    let protocol = null;
+    let port = null;
+    if (parts.length === 2) {
+      protocol = parts[0];
+      port = parts[1];
+    } else {
+      port = parts[0];
+    }
+    return { port, protocol };
+  };
 
   handleModalToggle = (event) => {
     this.props.handleModalClose();
@@ -25,7 +58,8 @@ class ExposeModal extends React.Component {
   handleModalConfirm = () => {
     this.handleModalToggle();
     const exposeInfo = { ...this.state };
-    exposeInfo.Protocol = exposeInfo.selected;
+    exposeInfo.port = this.parsePortValue(exposeInfo.portSelected).port;
+    exposeInfo.protocol = exposeInfo.protocolSelected || this.protocols[0];
     this.props.doExpose(exposeInfo);
   };
 
@@ -36,17 +70,32 @@ class ExposeModal extends React.Component {
   };
 
   handlePortInputChange = (val) => {
-    this.setState({ Port: val });
+    this.setState({ port: val });
   };
 
-  handleProtocolSelectChange = (event, selection) => {
-    console.log(
-      `exposeModal::handleProtocolSelectChange selection was changed to`
-    );
-    console.log(selection);
+  handleProtocolSelectChange = (event, protocolSelected) => {
     this.setState({
-      selected: selection,
+      protocolSelected,
       isProtocolSelectOpen: false,
+    });
+  };
+
+  handlePortSelectChange = (event, portSelected) => {
+    // portSelected looks like "name - port" or just "port"
+    let { protocolSelected } = this.state;
+
+    // parse out the name and port
+    const parsed = this.parsePortValue(portSelected);
+
+    // if the protocol matches a protocol in the list, select that one
+    if (this.options.find((option) => option.key === parsed.protocol)) {
+      protocolSelected = parsed.protocol;
+    }
+
+    this.setState({
+      portSelected,
+      protocolSelected,
+      isPortSelectOpen: false,
     });
   };
 
@@ -56,14 +105,24 @@ class ExposeModal extends React.Component {
     });
   };
 
+  handleSelectPortToggle = (isPortSelectOpen) => {
+    this.setState({ isPortSelectOpen });
+  };
+
   render() {
-    const { Name, Port, isProtocolSelectOpen, selected } = this.state;
+    const {
+      name,
+      isProtocolSelectOpen,
+      isPortSelectOpen,
+      protocolSelected,
+      portSelected,
+    } = this.state;
     return (
       <React.Fragment>
         <Modal
           width={"50%"}
           key="expose-modal"
-          title="Expose a deployment"
+          title={`Expose a ${this.props.exposeInfo.type}`}
           isOpen={true}
           onClose={this.handleModalToggle}
           actions={[
@@ -88,7 +147,6 @@ class ExposeModal extends React.Component {
             <FormGroup
               label="Name"
               key="name-formGroup"
-              isRequired
               fieldId="simple-form-name"
             >
               <TextInput
@@ -96,9 +154,9 @@ class ExposeModal extends React.Component {
                 key="expose-name"
                 type="text"
                 id="expose-name"
-                name="Name"
+                name="name"
                 aria-describedby="simple-form-name-helper"
-                value={Name}
+                value={name}
                 onChange={this.handleTextInputChange}
               />
             </FormGroup>
@@ -108,18 +166,20 @@ class ExposeModal extends React.Component {
               isRequired
               fieldId="form-use"
             >
-              <TextInput
-                isRequired
-                key="expose-port"
-                type="number"
-                id="expose-port"
-                min={0}
-                name="Port"
-                aria-describedby="simple-form-port-helper"
-                value={Port}
-                onChange={this.handlePortInputChange}
-                className="sk-input-numeric-medium"
-              />
+              <Select
+                variant={SelectVariant.single}
+                placeholderText="Select a port"
+                aria-label="Select port input"
+                onToggle={this.handleSelectPortToggle}
+                onSelect={this.handlePortSelectChange}
+                selections={portSelected}
+                isOpen={isPortSelectOpen}
+                aria-labelledby="expose-port"
+                aria-describedby="expose-port"
+                menuAppendTo={() => document.body}
+              >
+                {this.portOptions}
+              </Select>
             </FormGroup>
             <FormGroup
               label="Protocol"
@@ -133,7 +193,7 @@ class ExposeModal extends React.Component {
                 aria-label="Select Input"
                 onToggle={this.handleSelectToggle}
                 onSelect={this.handleProtocolSelectChange}
-                selections={selected}
+                selections={protocolSelected}
                 isOpen={isProtocolSelectOpen}
                 aria-labelledby="expose-protocol"
                 aria-describedby="expose-protocol"

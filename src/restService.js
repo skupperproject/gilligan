@@ -49,9 +49,11 @@ class RESTService {
       } else {
         suffix = "";
       }
-      let endpoints = ["site", "tokens", "services", "links"];
+      let endpoints = ["site", "tokens", "links", "services", "targets"];
       if (DISABLE_EXPOSE) {
-        endpoints = endpoints.filter((endpoint) => endpoint !== "services");
+        endpoints = endpoints.filter(
+          (endpoint) => endpoint !== "services" && endpoint !== "targets"
+        );
       }
       let promises = endpoints.map((endpoint) =>
         this.fetchFrom(`${url}${endpoint}${suffix}`, endpoint === "site")
@@ -66,6 +68,20 @@ class RESTService {
               ? "" // if the site call failed, use empty string
               : []; // call failed. use empty array as result
         });
+        // fold targets into services
+        results.targets.forEach((target) => {
+          const deployed = results.services.find(
+            (service) => service.name === target.name
+          );
+          if (deployed) {
+            deployed.exposed = true;
+            deployed.type = target.type;
+          } else {
+            const index = results.services.push(target);
+            results.services[index - 1].exposed = false;
+          }
+        });
+
         // the call to GET /site should return the site_id of the current site
         results.site = results.site.trim();
         let currentSite = VAN.sites.find(
@@ -90,7 +106,7 @@ class RESTService {
 
   // delete a link
   unlinkSite = (data) =>
-    this.postSiteInfoMethod(data, "DELETE", "links", data.Name);
+    this.postSiteInfoMethod(data, "DELETE", "links", data.name);
 
   // create a token
   // called when the user requests that a token be copied to the clipboard
@@ -129,7 +145,7 @@ class RESTService {
 
   // delete a token
   deleteToken = (data) =>
-    this.postSiteInfoMethod(data, "DELETE", "tokens", data.Name);
+    this.postSiteInfoMethod(data, "DELETE", "tokens", data.name);
 
   // update a token
   updateToken = (data) =>
@@ -140,7 +156,7 @@ class RESTService {
 
   // delete a deployment
   unexposeService = (data) =>
-    this.postSiteInfoMethod(data, "DELETE", "services", data.Name);
+    this.postSiteInfoMethod(data, "DELETE", "services", data.name);
 
   // update a site's name
   renameSite = (data) =>
@@ -154,7 +170,7 @@ class RESTService {
     return new Promise((resolve, reject) => {
       let url = `${this.url}/${type}`;
       if (name) {
-        url = `${url}/${name}`;
+        url = `${url}/${encodeURIComponent(name)}`;
       }
       fetch(url, {
         method,

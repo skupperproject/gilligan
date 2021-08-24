@@ -47,6 +47,10 @@ export class QDRService {
             this.saveTimeSeries(data);
             this.initColors(data);
             this.rest.getSiteInfo(this.VAN).then((info) => {
+              if (!this.siteInfo) {
+                console.log("qdrService::connect 1st siteInfo is");
+                console.log(info);
+              }
               this.siteInfo = info;
               resolve(data);
             });

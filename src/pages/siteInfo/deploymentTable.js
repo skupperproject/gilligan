@@ -97,14 +97,12 @@ class DeploymentTable extends React.Component {
 
   // called to display the unexpose modal
   showUnexpose = (rowData) => {
-    const service_name = rowData.data.Name;
-    const service_id = rowData.data.ID;
     this.setState({
       showUnexposeModal: true,
-      // data sent to REST call
+      // data sent to modal
       unexposeInfo: {
-        Name: service_name,
-        service_id: service_id,
+        name: rowData.data.name,
+        type: rowData.data.type,
       },
     });
   };
@@ -118,7 +116,7 @@ class DeploymentTable extends React.Component {
   doUnexpose = (unexposeInfo) => {
     this.props.service.unexposeService(unexposeInfo).then(
       () => {
-        const msg = `Deployment ${unexposeInfo.Name} unexposed successfully`;
+        const msg = `Deployment ${unexposeInfo.name} unexposed successfully`;
         console.log(msg);
         this.props.addAlert({
           title: msg,
@@ -127,7 +125,7 @@ class DeploymentTable extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error unexposing deployment ${unexposeInfo.Name} - ${error.message}`;
+        const msg = `Error unexposing deployment ${unexposeInfo.name} - ${error.message}`;
         console.error(msg);
         this.props.addAlert({
           title: msg,
@@ -142,16 +140,15 @@ class DeploymentTable extends React.Component {
 
   // called to display the expose modal
   showExpose = (rowData) => {
-    const service_name = rowData.data.Name;
-    const service_id = rowData.data.ID;
+    const exposeInfo = {
+      name: rowData.data.name,
+      ports: rowData.data.ports,
+      type: rowData.data.type,
+      original: rowData.data,
+    };
     this.setState({
       showExposeModal: true,
-      exposeInfo: {
-        Name: service_name,
-        service_id: service_id,
-        Port: rowData.data.Port || "8080", // might be undefined
-        Protocol: rowData.data.Protocol || "TCP", // might be undefined
-      },
+      exposeInfo,
     });
   };
 
@@ -162,9 +159,26 @@ class DeploymentTable extends React.Component {
 
   // this is called after the expose modal is submitted
   doExpose = (exposeInfo) => {
-    this.props.service.exposeService(exposeInfo).then(
+    const exposeData = {
+      address: "my-skupper-service", // optional, if not specified will use target name
+      protocol: "http", //optional, valid values are http, http2, tcp (default)
+      port: 8080, //if not specified will try to deduce it but this is not always possible
+      target: {
+        name: "http-simple",
+        type: "deployment",
+      },
+    };
+    exposeData.address = exposeInfo.name;
+    exposeData.protocol = exposeInfo.protocol;
+    exposeData.port = exposeInfo.port;
+    exposeData.target = {
+      name: exposeInfo.original.name,
+      type: exposeInfo.type,
+    };
+
+    this.props.service.exposeService(exposeData).then(
       () => {
-        const msg = `Request to expose service ${exposeInfo.Name} sent.`;
+        const msg = `Request to expose service ${exposeData.address} sent.`;
         console.log(msg);
         this.props.addAlert({
           title: msg,
@@ -173,7 +187,7 @@ class DeploymentTable extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error exposing deployment ${exposeInfo.Name} - ${error.message}`;
+        const msg = `Error exposing deployment ${exposeData.address} - ${error.message}`;
         console.error(msg);
         this.props.addAlert({
           title: msg,
@@ -189,7 +203,7 @@ class DeploymentTable extends React.Component {
   // called by patternfly's table component
   // only put the menu to unexpose a deployment on table rows that are exposed
   actionResolver = (rowData) => {
-    if (rowData.data.Exposed !== this.deploymentData.unexposedValue) {
+    if (rowData.data.exposed !== this.deploymentData.unexposedValue) {
       return this.actions.filter((a) => a.title === "Unexpose");
     }
     return this.actions.filter((a) => a.title === "Expose");

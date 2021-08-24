@@ -31,10 +31,10 @@ class ExposePage extends React.Component {
       <div className="sk-siteinfo-page-wrapper">
         <h2>Exposing deployments on the network</h2>
         <div className="sk-sub-text">
-          Before a deployment can be called from another site, it must be
-          exposed to the skupper network.
+          Before a deployment or a target is available from another site, it
+          must be exposed to the skupper network.
         </div>
-        <h2>Deployments running on this site</h2>
+        <h2>Deployments and targets on this site</h2>
         <DeploymentTable {...this.props} />
       </div>
     );

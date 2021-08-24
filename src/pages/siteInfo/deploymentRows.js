@@ -2,7 +2,7 @@ import React from "react";
 import { Switch } from "@patternfly/react-core";
 
 import { utils } from "../../utilities";
-const UNEXPOSED_VALUE = "No";
+const UNEXPOSED_VALUE = false;
 
 export class DeploymentRows {
   // called when the expose button is clicked
@@ -39,7 +39,7 @@ export class DeploymentRows {
 
   // determine if the Name column should be a link to the details page
   isDetailLink = (value, extraInfo, detailsLink) => {
-    if (extraInfo.rowData.data.Exposed !== this.unexposedValue) {
+    if (extraInfo.rowData.data.exposed !== this.unexposedValue) {
       return detailsLink(value, extraInfo);
     }
     return <span>{value}</span>;
@@ -48,19 +48,21 @@ export class DeploymentRows {
   // Columns to display in the services table
   // This needs to be declared after the expose and isDetailLink variables are defined
   DeploymentFields = [
-    { title: "Name", field: "Name", isDetailLink: this.isDetailLink },
+    { title: "Name", field: "name", isDetailLink: this.isDetailLink },
     {
       title: "Exposed",
-      field: "Exposed",
+      field: "exposed",
       formatter: this.ExposeButton,
     },
+    /*
     {
       title: "Age",
       field: "Exposed",
       formatter: this.age,
     },
-    { title: "Port", field: "Port" },
-    { title: "Protocol", field: "Protocol" },
+    */
+    { title: "Port", field: "port" },
+    { title: "Protocol", field: "protocol" },
   ];
 
   fetch = (emptyRows, VANservice, formatterData) => {
@@ -76,27 +78,27 @@ export class DeploymentRows {
           // add cardData so the sub table viewer has the correct info
           const deployment = VANservice.VAN.deployments.find(
             (d) =>
-              d.service.address === row.Name &&
+              d.service.address === row.name &&
               d.site.site_id === siteInfo.site_id
           );
           const service = VANservice.VAN.services.find(
-            (s) => s.address === row.Name
+            (s) => s.address === row.name
           );
           if (deployment && service) {
             row.cardData = { ...service };
-            row.cardData.name = row.Name;
-            row.cardData.shortName = row.Name;
+            row.cardData.name = row.name;
+            row.cardData.shortName = row.name;
             row.cardData.nodeType = "deployment";
             row.cardData.cluster = VANservice.VAN.sites.find(
               (s) => s.site_id === siteInfo.site_id
             );
           }
-          if (row.Exposed === 0) {
-            row.Exposed = "unknown";
-          } else if (row.Exposed === false || row.Exposed === undefined) {
-            row.Exposed = this.unexposedValue;
+          if (row.exposed === 0) {
+            row.exposed = "unknown";
+          } else if (row.exposed === false || row.exposed === undefined) {
+            row.exposed = this.unexposedValue;
           } else {
-            row.Exposed = utils.convertDate(row.Exposed, "past");
+            row.exposed = utils.convertDate(row.exposed, "past");
           }
           return row;
         });

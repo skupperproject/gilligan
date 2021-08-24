@@ -24,7 +24,7 @@ class UnexposeModal extends React.Component {
         <Modal
           width={"50%"}
           key="unexpose-modal"
-          title="Unexpose deployment"
+          title={`Unexpose ${this.props.unexposeInfo.type} ${this.props.unexposeInfo.name}`}
           isOpen={true}
           onClose={this.handleModalToggle}
           actions={[
@@ -41,8 +41,8 @@ class UnexposeModal extends React.Component {
           ]}
           isfooterleftaligned={"true"}
         >
-          Are you sure you want to unexpose deployment{" "}
-          {this.props.unexposeInfo.Name}
+          Are you sure you want to unexpose {this.props.unexposeInfo.type}{" "}
+          {this.props.unexposeInfo.name}
         </Modal>
       </React.Fragment>
     );
