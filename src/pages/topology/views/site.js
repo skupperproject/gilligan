@@ -1307,8 +1307,8 @@ export class Site {
   }) => {
     const requests = {};
     stat = "bytes_out";
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
+    const from = direction === "out" ? "source" : "target";
+    const to = direction === "out" ? "target" : "source";
 
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const site = deploymentLink[to].site.site_name;

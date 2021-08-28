@@ -206,19 +206,19 @@ class OverviewPage extends React.Component {
   anyRequests = (direction) => {
     const data = this.data();
     let address = data ? data.address : null;
-    let site_info = null;
+    let site_name = null;
     if (this.props.view === "deployment" && data.address) {
-      site_info = data.cluster.site_name;
+      site_name = data.cluster.site_name;
     } else if (this.props.view === "site" && !data.address) {
       address = data.site_id;
     }
     const requests = this.viewObj.specificTimeSeries({
       VAN: this.props.service.VAN,
       direction,
-      stat: "bytes_out",
+      stat: direction === "in" ? "bytes_in" : "bytes_out",
       duration: "min",
       address,
-      site_name: site_info,
+      site_name,
     });
     return Object.keys(requests).length > 0;
   };
@@ -281,7 +281,7 @@ class OverviewPage extends React.Component {
                     ref={(el) => (this.chartRef1 = el)}
                     service={this.props.service}
                     site
-                    stat="bytes_out"
+                    stat="bytes_in"
                     direction="in"
                     type="line"
                     viewObj={this.viewObj}

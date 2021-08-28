@@ -755,8 +755,8 @@ export class Deployment extends Service {
     } else if (direction === "out" && stat === "bytes_in") {
       stat = "bytes_out";
     }
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
+    const from = direction === "out" ? "source" : "target";
+    const to = direction === "out" ? "target" : "source";
 
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;

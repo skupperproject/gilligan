@@ -57,7 +57,7 @@ class SubDetails extends Component {
     }
     return (
       <div className="sk-subdetails">
-        {!data.protocol && (
+        {false && !data.protocol && (
           <div>
             <EmptyState>
               <EmptyStateIcon icon={SearchIcon} />

@@ -70,7 +70,7 @@ class TimeSeries extends Component {
     if (!type) type = this.props.type;
     let dir = this.props.direction;
     if (this.props.data) {
-      dir = this.props.direction === "in" ? "out" : "in";
+      //dir = this.props.direction === "in" ? "out" : "in";
     }
     let { all, headerText, address, site_info } = chartUtils.init(
       this.props.site,
@@ -260,7 +260,7 @@ class TimeSeries extends Component {
                   // first time in, ensure y-axis ticks don't have duplicate labels
                   while (same) {
                     same = false;
-                    const ts = ticks.map((t) =>
+                    let ts = ticks.map((t) =>
                       utils.formatBytes(t, this.decimalPlaces)
                     );
                     const uniqueTicks = [...new Set(ts)];
@@ -268,6 +268,8 @@ class TimeSeries extends Component {
                       same = true;
                       if (++this.decimalPlaces > 10) {
                         same = false;
+                        // all the numbers are the same up to 10 decimal places
+                        ts = ticks.map((t) => utils.formatBytes(t, 0));
                       }
                     }
                     if (!same) {

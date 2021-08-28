@@ -745,7 +745,7 @@ class TopologyViewer extends Component {
 
   // which stat to use is determined by the service protocols.
   // if we have both http and tcp protocols, use the tcp protocol (since its a subset)
-  statForProtocol = () => this.state.options.http;
+  statForProtocol = () => this.state.options.http || "bytes_out";
   /*
   ["both", "tcp"].includes(this.statProtocol())
       ? this.state.options.tcp

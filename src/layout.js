@@ -140,6 +140,10 @@ class Layout extends React.Component {
   // called internally when clicking on a service/site/deployment to view the details page
   handleViewDetails = (mode, d, card, origin = "graph") => {
     let view = this.state.view;
+    if (d.nodeType === "cluster") {
+      // we want to see the details for a site
+      view = "site";
+    }
     // if we are on the overview page and want to see the details table, switch to the appropriate view, details mode
     if (origin === "overview") {
       if (card.cardType === "service") {
@@ -289,7 +293,7 @@ class Layout extends React.Component {
     } else {
       connectPath = "/";
       clearInterval(this.timer);
-      this.timer = setInterval(this.update, UPDATE_INTERVAL);
+      this.timer = setInterval(this.update, UPDATE_INTERVAL * 2);
       if (!this.unmounted) {
         this.setState({
           username: "Bob Denver",

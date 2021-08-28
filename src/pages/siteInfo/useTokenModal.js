@@ -73,7 +73,7 @@ class UseTokenModal extends React.Component {
 
   render() {
     const { isModalOpen, uploadMsg } = this.state;
-    const clipboardSupported = navigator.clipboard.readText;
+    const clipboardSupported = navigator.clipboard?.readText;
 
     return (
       <React.Fragment>

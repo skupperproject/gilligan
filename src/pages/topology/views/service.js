@@ -252,16 +252,10 @@ export class Service {
   createStatsGroup = (svg) => svg.append("svg:defs").attr("class", "statPaths");
 
   createServicesSelection = (svg) =>
-    svg
-      .append("svg:g")
-      .attr("class", "services")
-      .selectAll("g.service-type");
+    svg.append("svg:g").attr("class", "services").selectAll("g.service-type");
 
   createLinksSelection = (svg) =>
-    svg
-      .append("svg:g")
-      .attr("class", "links")
-      .selectAll("g");
+    svg.append("svg:g").attr("class", "links").selectAll("g");
 
   setupStats = () => {
     const selection = d3
@@ -315,7 +309,7 @@ export class Service {
     actualServices
       .append("svg:text")
       .attr("class", "service-type")
-      .text(function(d) {
+      .text(function (d) {
         this.innerHTML = d.shortName;
         if (!this.getBBox) {
           this.getBBox = () => ({
@@ -379,7 +373,7 @@ export class Service {
         .on("mousedown", (d) => {
           this.initial_mouse_down_position = d3.mouse(viewer.svg.node());
         })
-        .on("mouseout", function(d) {
+        .on("mouseout", function (d) {
           self.unSelectAll();
           viewer.showChord(null, false);
           viewer.clearPopups();
@@ -462,7 +456,7 @@ export class Service {
           viewer.showPopup(d, this.linkCard);
           viewer.restart();
         })
-        .on("mouseout", function(d) {
+        .on("mouseout", function (d) {
           self.unSelectAll();
           viewer.blurAll(false, d);
           //viewer.handleMouseOutPath(d);
@@ -719,7 +713,7 @@ export class Service {
         .transition()
         .duration(duration)
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         })
@@ -732,7 +726,7 @@ export class Service {
         .selectAll("path")
         .transition()
         .duration(duration)
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           const previous = d3.select(this).attr("d");
           const current = genPath({
             link: d,
@@ -748,15 +742,13 @@ export class Service {
         .duration(duration)
         .attr("stroke", (d) => "black")
         .attr("stroke-width", 1)
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d });
           return interpolatePath(previous, current);
         });
 
-      d3.select(this.SVG_ID)
-        .selectAll(".end-point")
-        .style("display", null);
+      d3.select(this.SVG_ID).selectAll(".end-point").style("display", null);
 
       // shrink the hittarget paths
       d3.select(this.SVG_ID)
@@ -764,7 +756,7 @@ export class Service {
         .attr("d", (d) => genPath({ link: d }))
         .attr("stroke-width", 6)
         .attr("stroke", (d) => null)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : null;
         });
@@ -777,7 +769,7 @@ export class Service {
         .attr("fill", (d) => d.lightColor)
         .attr("width", (d) => d.getWidth())
         .attr("height", (d) => d.getHeight())
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -788,7 +780,7 @@ export class Service {
         .transition()
         .duration(duration)
         .attr("y", (d) => d.getHeight() / 2)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -801,12 +793,12 @@ export class Service {
         .attr("stroke", (d) => (color ? d.getColor() : null))
         .attr("stroke-width", 0)
         .attr("opacity", 0)
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d, sankey: true, width: 2 });
           return interpolatePath(previous, current);
         })
-        .each("end", function(d) {
+        .each("end", function (d) {
           d3.select(this).style("display", "none");
         });
     });
@@ -815,9 +807,7 @@ export class Service {
   toServiceSankey = (duration) => {
     return new Promise((resolve) => {
       const self = this;
-      d3.select(this.SVG_ID)
-        .selectAll(".end-point")
-        .style("display", "none");
+      d3.select(this.SVG_ID).selectAll(".end-point").style("display", "none");
 
       // move the service rects to their sankey locations
       d3.select(this.SVG_ID)
@@ -836,7 +826,7 @@ export class Service {
         .duration(duration)
         .attr("height", (d) => d.getHeight())
         .attr("fill", (d) => d.lightColor)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -847,7 +837,7 @@ export class Service {
         .transition()
         .duration(duration)
         .attr("y", (d) => d.getHeight() / 2)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 1;
         });
@@ -869,11 +859,11 @@ export class Service {
         .attr("stroke", (d) => d.target.color)
         .attr("fill", (d) => d.target.color)
         .attr("stroke-width", 0)
-        .attr("opacity", function(d) {
+        .attr("opacity", function (d) {
           const current = d3.select(this).attr("opacity");
           return self.anySelected() ? current : 0.5;
         })
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           let previous = d3.select(this).attr("d");
           const current = genPath({ link: d, sankey: true });
           return interpolatePath(previous, current);
@@ -884,7 +874,7 @@ export class Service {
         .selectAll("path")
         .transition()
         .duration(duration)
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           const previous = d3.select(this).attr("d");
           const current = genPath({
             link: d,
@@ -901,7 +891,7 @@ export class Service {
         .duration(duration)
         .attr("stroke-width", 1)
         .attr("stroke", "black")
-        .attrTween("d", function(d, i) {
+        .attrTween("d", function (d, i) {
           const previous = d3.select(this).attr("d");
           const current = genPath({ link: d, width: d.width });
           return interpolatePath(previous, current);
@@ -1033,8 +1023,8 @@ export class Service {
   }) => {
     const requests = {};
     stat = "bytes_out";
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
+    const from = direction === "out" ? "source" : "target";
+    const to = direction === "out" ? "target" : "source";
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = deploymentLink[from].service.address;
       const toAddress = deploymentLink[to].service.address;
@@ -1066,7 +1056,7 @@ export class Service {
   chordOver(chord, over, viewer) {
     d3.select(this.SVG_ID)
       .selectAll("path.service")
-      .each(function(p) {
+      .each(function (p) {
         if (
           `-${p.source.name}-${p.target.name}` === chord.key ||
           `-${p.target.name}-${p.source.name}` === chord.key
@@ -1086,7 +1076,7 @@ export class Service {
   setClass(address, cls, viewer) {
     d3.select(this.SVG_ID)
       .selectAll("g.service-type")
-      .each(function(d) {
+      .each(function (d) {
         const match = d.address.includes(address) && address.length > 0;
         d3.select(this).classed(cls, match);
         d[cls] = match;
@@ -1097,7 +1087,7 @@ export class Service {
   arcOver(arc, over, viewer) {
     d3.select(this.SVG_ID)
       .selectAll("rect.service-type")
-      .each(function(d) {
+      .each(function (d) {
         if (arc.key === d.address) {
           if (!over) {
             d.selected = false;
