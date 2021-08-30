@@ -27,8 +27,9 @@ export class SiteCard {
     this.popupInfo = {
       compact: ["namespace"],
       expanded: [
+        { title: "Version", getFn: (o) => o.version },
         { title: "URL", getFn: (o) => o.url },
-        { title: "Site type", getFn: (o) => (o.edge ? "Edge" : "Normal") },
+        /*{ title: "Site type", getFn: (o) => (o.edge ? "Edge" : "Normal") },*/
         { title: this.getDeploymentTitle, getFn: this.getDeployments },
       ],
     };
