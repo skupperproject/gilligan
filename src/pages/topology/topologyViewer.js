@@ -861,11 +861,8 @@ class TopologyViewer extends Component {
                 >
                   <div className="diagram">
                     <div ref={(el) => (this.topologyRef = el)} id="topology" />
-                    <div
-                      id="topo_popover-div"
-                      className={this.state.showCard ? "" : "hidden"}
-                    >
-                      {this.state.showCard && (
+                    {this.state.showCard && (
+                      <div id="topo_popover-div">
                         <PopupCard
                           ref={(el) => (this.cardRef = el)}
                           cardSize="expanded"
@@ -877,8 +874,8 @@ class TopologyViewer extends Component {
                           view={this.view}
                           stat={this.statForProtocol()}
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                   {this.state.showLegend && (
                     <LegendComponent
