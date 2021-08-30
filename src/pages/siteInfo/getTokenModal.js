@@ -34,9 +34,11 @@ class GetTokenModal extends React.Component {
   handleCopy = () => {
     this.props.service.getTokenData().then(
       (results) => {
-        const token = results; //JSON.stringify(results, null, 2);
+        const token = JSON.stringify(results);
         navigator.clipboard.writeText(token).then(
-          (s) => {
+          (clip) => {
+            const msg = `Request for token sent. The token should be on the clipboard.`;
+            console.log(msg);
             this.setState(
               {
                 uploadMsg: "Token copied to clipboard",
@@ -46,8 +48,10 @@ class GetTokenModal extends React.Component {
               this.handleCopyDone
             );
           },
-          (e) => {
-            this.setState({ uploadMsg: e, uploadStatus: "error" });
+          (error) => {
+            const msg = `Request for token failed ${error.message}`;
+            console.error(msg);
+            this.setState({ uploadMsg: error, uploadStatus: "error" });
           }
         );
       },
@@ -63,32 +67,6 @@ class GetTokenModal extends React.Component {
     // enable Step 2
     if (this.arrowRef) {
       this.arrowRef.animateIn();
-    }
-  };
-
-  handlePaste = (element) => {
-    let sendToServer = (token) => this.props.service.uploadToken(token);
-    if (navigator.clipboard.readText) {
-      navigator.clipboard.readText().then((clipText) => {
-        sendToServer(clipText).then(
-          () => {},
-          (error) => {
-            console.log(error);
-          }
-        );
-      });
-    } else {
-      setTimeout(() => {
-        const token = element.value;
-        sendToServer(token).then(
-          () => {
-            element.value = `Site linking requested.`;
-          },
-          (error) => {
-            element.value = `Site linking is ${error}`;
-          }
-        );
-      }, 0);
     }
   };
 
@@ -140,10 +118,10 @@ class GetTokenModal extends React.Component {
                   text="Copy a token to the clipboard"
                   cls={"sk-block-button"}
                 />
-                <span className={`sk-status-message ${uploadStatus}`}>
-                  {uploadMsg}
-                </span>
               </div>
+              <span className={`sk-status-message ${uploadStatus}`}>
+                <h1>{uploadMsg}</h1>
+              </span>
               <h1 className={step2Enabled ? "" : "disabled"}>
                 Step 2: Use the token to link the sites
               </h1>

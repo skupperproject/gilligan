@@ -12,6 +12,7 @@ class UseTokenModal extends React.Component {
     this.state = {
       isModalOpen: false,
       uploadMsg: null,
+      invalidClipboard: this.isInvalidClipboard(),
     };
   }
 
@@ -62,7 +63,6 @@ class UseTokenModal extends React.Component {
       navigator.clipboard.readText().then((clipText) => {
         sendToServer(clipText).then(success, failure);
       });
-      // this is clipboard text
     } else {
       setTimeout(() => {
         const token = element.value;
@@ -71,8 +71,35 @@ class UseTokenModal extends React.Component {
     }
   };
 
+  componentDidUpdate = () => {
+    const { invalidClipboard } = this.state;
+    this.isInvalidClipboard().then((invalid) => {
+      if (invalidClipboard !== invalid) {
+        this.setState({ invalidClipboard: invalid });
+      }
+    });
+  };
+
+  // is the text on the clipboard a token
+  isInvalidClipboard = () => {
+    return new Promise((resolve) => {
+      navigator.clipboard.readText().then((clipText) => {
+        if (clipText) {
+          try {
+            const token = JSON.parse(clipText);
+            resolve(!token.kind || !token.data);
+          } catch (e) {
+            resolve(true);
+          }
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  };
+
   render() {
-    const { isModalOpen, uploadMsg } = this.state;
+    const { isModalOpen, uploadMsg, invalidClipboard } = this.state;
     const clipboardSupported = navigator.clipboard?.readText;
 
     return (
@@ -110,46 +137,53 @@ class UseTokenModal extends React.Component {
             ]}
             isfooterleftaligned={"true"}
           >
-            <Form key="download-form" className="sk-form">
-              <h1 className="sk-faded">Step 1: Generate a token</h1>
-              <List className="sk-faded">
-                <ListItem component={ListComponent.ol}>
-                  If you have not already done so, navigate to the site that can
-                  accept an incoming connection.
-                </ListItem>
-                <ListItem component={ListComponent.ol}>
-                  Use the{" "}
-                  <GetTokenModal
-                    {...this.props}
-                    title="Link a remote site"
-                    justButton
-                    cls="sk-button-placeholder"
+            {invalidClipboard && (
+              <div>
+                The clipboad does not contain a valid skupper link token.
+              </div>
+            )}
+            {!invalidClipboard && (
+              <Form key="download-form" className="sk-form">
+                <h1 className="sk-faded">Step 1: Generate a token</h1>
+                <List className="sk-faded">
+                  <ListItem component={ListComponent.ol}>
+                    If you have not already done so, navigate to the site that
+                    can accept an incoming connection.
+                  </ListItem>
+                  <ListItem component={ListComponent.ol}>
+                    Use the{" "}
+                    <GetTokenModal
+                      {...this.props}
+                      title="Link a remote site"
+                      justButton
+                      cls="sk-button-placeholder"
+                    />
+                    button to get a link token.
+                  </ListItem>
+                </List>
+                <h1>Step 2: Use the token to link the sites</h1>
+                {clipboardSupported && (
+                  <PasteButton
+                    handlePasteClicked={this.handlePaste}
+                    text="Use the token on the clipboard"
                   />
-                  button to get a link token.
-                </ListItem>
-              </List>
-              <h1>Step 2: Use the token to link the sites</h1>
-              {clipboardSupported && (
-                <PasteButton
-                  handlePasteClicked={this.handlePaste}
-                  text="Use the token on the clipboard"
-                />
-              )}
-              {!clipboardSupported && (
-                <React.Fragment>
-                  <span>
-                    Paste the token from the remote site to create a link.
-                  </span>
-                  <input
-                    ref={(el) => (this.pasteRef = el)}
-                    id="skPastedInput"
-                    placeholder="Paste token copied from another site here"
-                    onPaste={() => this.handlePaste(this.pasteRef)}
-                  />
-                </React.Fragment>
-              )}
-              {uploadMsg}
-            </Form>
+                )}
+                {!clipboardSupported && (
+                  <React.Fragment>
+                    <span>
+                      Paste the token from the remote site to create a link.
+                    </span>
+                    <input
+                      ref={(el) => (this.pasteRef = el)}
+                      id="skPastedInput"
+                      placeholder="Paste token copied from another site here"
+                      onPaste={() => this.handlePaste(this.pasteRef)}
+                    />
+                  </React.Fragment>
+                )}
+                {uploadMsg}
+              </Form>
+            )}
           </Modal>
         )}
       </React.Fragment>
