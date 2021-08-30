@@ -83,7 +83,12 @@ class UseTokenModal extends React.Component {
   // is the text on the clipboard a token
   isInvalidClipboard = () => {
     return new Promise((resolve) => {
-      navigator.clipboard.readText().then((clipText) => {
+      // Firefox only supports reading the clipboard in browser extensions, using the "clipboardRead" extension permission.
+      if (!navigator.clipboard?.readText) {
+        resolve(false);
+        return;
+      }
+      navigator.clipboard?.readText().then((clipText) => {
         if (clipText) {
           try {
             const token = JSON.parse(clipText);
