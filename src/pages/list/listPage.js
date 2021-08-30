@@ -227,9 +227,11 @@ class ListPage extends React.Component {
                           <span>{c.site_name}</span>
                         </div>
                       </CardHead>
-                      <CardBody>
-                        Health <CardHealth cluster={c} />
-                      </CardBody>
+                      {false && (
+                        <CardBody>
+                          Health <CardHealth cluster={c} />
+                        </CardBody>
+                      )}
                       <CardBody>
                         {this.subNodes(c)}{" "}
                         {utils.safePlural(this.subNodes(c), "service")}
