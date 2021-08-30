@@ -62,6 +62,7 @@ export class Site {
     this.fields = [
       { title: "Name", field: "site_name" },
       { title: "Namespace", field: "namespace" },
+      { title: "Version", field: "version" },
       //{ title: "Edge", field: "edge" },
     ];
     this.card = new SiteCard();
@@ -1176,6 +1177,7 @@ export class Site {
       site_name: n.site_name,
       namespace: n.namespace,
       edge: n.edge ? "true" : "false",
+      version: n.version,
       servers: [
         ...new Set(
           n.servers.map((s) => this.data.adapter.serviceNameFromClientId(s))
