@@ -131,7 +131,7 @@ class PopupCard extends React.Component {
             </div>
           </CardHeader>
         )}
-        {!hideBody && (
+        {false && !hideBody && (
           <CardBody>
             <span className="body-line-prompt">Health</span>
             <CardHealth cluster={cardService} />
