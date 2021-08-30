@@ -114,8 +114,6 @@ class PopupCard extends React.Component {
 
   render() {
     let { cardService, card, hideBody, hideHeading } = this.props;
-    console.log("popupCard::render cardService");
-    console.log(cardService);
     return (
       <Card
         isHoverable
