@@ -100,7 +100,13 @@ class RESTService {
 
   // create a link
   uploadToken = (data) => {
-    const obj = JSON.parse(data);
+    let obj = data;
+
+    try {
+      obj = JSON.parse(data);
+    } catch (e) {
+      obj = { data };
+    }
     return this.postSiteInfoMethod(obj, "POST", "links");
   };
 
@@ -112,34 +118,27 @@ class RESTService {
   // called when the user requests that a token be copied to the clipboard
   getTokenData = () => {
     return new Promise((resolve, reject) => {
-      this.postSiteInfoMethod({}, "POST", "tokens")
-        .then(
-          (results) => results.text(),
-          (e) => {
-            if (
-              process.env.NODE_ENV === NODE_ENV_DEV ||
-              process.env.NODE_ENV === NODE_ENV_TST
-            ) {
-              const url =
-                process.env.NODE_ENV === NODE_ENV_DEV
-                  ? "/data/token.json"
-                  : "../public/data/token.json";
-              this.fetchFrom(url).then(
-                (token) => {
-                  resolve(token);
-                },
-                (error) => {
-                  reject(error);
-                }
-              );
-            } else {
-              reject(e);
-            }
+      this.postSiteInfoMethod({}, "POST", "tokens").then(
+        (results) => {
+          //success
+          results.text().then(resolve);
+        },
+        (e) => {
+          // failure
+          if (
+            process.env.NODE_ENV === NODE_ENV_DEV ||
+            process.env.NODE_ENV === NODE_ENV_TST
+          ) {
+            const url =
+              process.env.NODE_ENV === NODE_ENV_DEV
+                ? "/data/token.json"
+                : "../public/data/token.json";
+            this.fetchFrom(url).then(resolve, reject);
+          } else {
+            reject(e);
           }
-        )
-        .then((text) => {
-          resolve(text);
-        });
+        }
+      );
     });
   };
 
