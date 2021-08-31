@@ -1,41 +1,45 @@
 {
   "name": "skupper-console",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
-    "@babel/core": "7.14.2",
-    "@patternfly/patternfly": "^4.102.2",
-    "@patternfly/react-charts": "^6.14.17",
-    "@patternfly/react-core": "^4.115.2",
-    "@patternfly/react-icons": "^4.10.2",
-    "@patternfly/react-styles": "^4.10.2",
-    "@patternfly/react-table": "^4.26.7",
-    "@patternfly/react-topology": "^4.8.37",
+    "@patternfly/patternfly": "^4.132.2",
+    "@patternfly/react-charts": "^6.15.20",
+    "@patternfly/react-core": "^4.152.4",
+    "@patternfly/react-icons": "^4.11.14",
+    "@patternfly/react-styles": "^4.11.13",
+    "@patternfly/react-table": "^4.29.58",
+    "@patternfly/react-topology": "^4.9.62",
     "@plotly/d3-sankey-circular": "^0.33.1",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@testing-library/user-event": "^13.2.1",
     "d3": "3.5.17",
     "d3-interpolate-path": "^2.1.2",
     "d3-queue": "^3.0.7",
     "express": "^4.17.1",
     "history": "^5.0.0",
-    "react": "^16.8.6",
-    "react-app-polyfill": "^1.0.6",
-    "react-dev-utils": "^9.1.0",
-    "react-dom": "^16.8.6",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-draggable": "^4.4.3",
     "react-router-dom": "^5.2.0",
-    "redux": "^4.1.0",
-    "resolve": "1.20.0",
-    "topojson-client": "^3.1.0"
+    "web-vitals": "^1.0.1"
+  },
+  "devDependencies": {
+    "react-scripts": "^4.0.3"
   },
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "test": "node scripts/test.js --silent",
-    "gzip": "tar -czvf master.tar.gz --exclude='./node_modules' --exclude='./.history' --exclude='./.git' --exclude='./build' --exclude='./public/data' --exclude='./master.tar.gz' --exclude='./console.tgz' .",
-    "release": "node scripts/build.js && cd build/ && tar -zcvf ../console.tgz . && cd -"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --silent",
+    "release": "react-scripts build && cd build/ && tar -zcvf ../console.tgz --exclude='./data' . && cd -",
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
@@ -48,118 +52,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "jest": {
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts"
-    ],
-    "setupFiles": [
-      "react-app-polyfill/jsdom"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/__tests__/setup.js"
-    ],
-    "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
-      "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
-    ],
-    "testEnvironment": "jest-environment-jsdom-fourteen",
-    "transform": {
-      "^.+\\.(js|jsx|ts|tsx)$": "<rootDir>/node_modules/babel-jest",
-      "^.+\\.css$": "<rootDir>/config/jest/cssTransform.js",
-      "^(?!.*\\.(js|jsx|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|ts|tsx)$",
-      "^.+\\.module\\.(css|sass|scss)$"
-    ],
-    "modulePaths": [],
-    "moduleNameMapper": {
-      "^react-native$": "react-native-web",
-      "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"
-    },
-    "moduleFileExtensions": [
-      "web.js",
-      "js",
-      "web.ts",
-      "ts",
-      "web.tsx",
-      "tsx",
-      "json",
-      "web.jsx",
-      "jsx",
-      "node"
-    ],
-    "watchPlugins": [
-      "jest-watch-typeahead/filename",
-      "jest-watch-typeahead/testname"
-    ],
-    "verbose": false
-  },
-  "babel": {
-    "presets": [
-      "react-app"
-    ]
-  },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^5.12.0",
-    "@testing-library/react": "^11.2.7",
-    "@svgr/webpack": "5.5.0",
-    "@typescript-eslint/eslint-plugin": "4.23.0",
-    "@typescript-eslint/parser": "4.23.0",
-    "babel-eslint": "10.1.0",
-    "babel-jest": "^26.6.3",
-    "babel-loader": "8.2.2",
-    "babel-plugin-named-asset-import": "^0.3.7",
-    "babel-preset-react-app": "^9.1.2",
-    "body-parser": "^1.19.0",
-    "camelcase": "^6.2.0",
-    "case-sensitive-paths-webpack-plugin": "2.4.0",
-    "css-loader": "3.6.0",
-    "dotenv": "8.6.0",
-    "dotenv-expand": "5.1.0",
-    "eslint": "^7.26.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-config-react-app": "^6.0.0",
-    "eslint-loader": "4.0.2",
-    "eslint-plugin-flowtype": "5.7.2",
-    "eslint-plugin-import": "2.23.0",
-    "eslint-plugin-jsx-a11y": "6.4.1",
-    "eslint-plugin-prettier": "^3.4.0",
-    "eslint-plugin-react": "^7.23.2",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "file-loader": "6.2.0",
-    "fs-extra": "9.1.0",
-    "html-webpack-plugin": "4.5.2",
-    "identity-obj-proxy": "3.0.0",
-    "is-wsl": "^2.2.0",
-    "jest": "26.6.3",
-    "jest-environment-jsdom-fourteen": "1.0.1",
-    "jest-resolve": "26.6.2",
-    "jest-watch-typeahead": "0.6.3",
-    "lodash-es": "^4.17.21",
-    "mini-css-extract-plugin": "0.12.0",
-    "optimize-css-assets-webpack-plugin": "5.0.4",
-    "pnp-webpack-plugin": "1.6.4",
-    "postcss-flexbugs-fixes": "4.1.0",
-    "postcss-loader": "3.0.0",
-    "postcss-normalize": "7.0.1",
-    "postcss-preset-env": "6.7.0",
-    "postcss-safe-parser": "4.0.2",
-    "prettier": "^2.3.0",
-    "prop-types": "^15.7.2",
-    "react-test-renderer": "^16.14.0",
-    "sass-loader": "7.3.1",
-    "semver": "6.3.0",
-    "style-loader": "0.23.1",
-    "terser-webpack-plugin": "^3.1.0",
-    "ts-pnp": "1.2.0",
-    "typescript": "^3.9.9",
-    "url-loader": "1.1.2",
-    "webpack": "4.46.0",
-    "webpack-dev-server": "3.11.2",
-    "webpack-manifest-plugin": "2.2.0",
-    "workbox-webpack-plugin": "4.3.1"
   }
 }
