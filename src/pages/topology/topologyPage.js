@@ -68,7 +68,7 @@ class TopologyPage extends Component {
                 <SplitItem>
                   <TextContent>
                     <Text className="overview-title" component={TextVariants.p}>
-                      {utils.Icap(this.props.view)}s
+                      {utils.Icap(this.props.views[this.props.view])}
                     </Text>
                   </TextContent>
                 </SplitItem>

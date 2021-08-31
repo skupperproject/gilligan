@@ -51,7 +51,7 @@ export class Deployment extends Service {
     super(data);
     this.Site = new Site(data);
     this.fields = [
-      { title: "Name (site)", field: "deployment" },
+      { title: "Name", field: "deployment" },
       { title: "Protocol", field: "protocol" },
       { title: "Site", field: "site_name" },
     ];
@@ -70,11 +70,6 @@ export class Deployment extends Service {
     );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
-    this.Site.siteNodes.nodes.forEach((n) => {
-      if (isNaN(n.x)) {
-        console.log(`(${n.address}).x was NaN`);
-      }
-    });
     return { nodeCount: this.nodes().nodes.length, size: vsize };
   };
 
@@ -195,6 +190,7 @@ export class Deployment extends Service {
       site.subServiceLinks = links;
     });
 
+    // position sites
     const interSiteLinks = this.Site.interSiteLinks(siteNodes);
     // set the site x,y
     utils.adjustPositions({
@@ -295,6 +291,7 @@ export class Deployment extends Service {
         width: site.r * 2,
         height: site.r * 2,
         xyKey: "sankeySiteOffset",
+        align: "vertical",
       });
       site.sankeyR = Math.max(
         site.r,
@@ -326,6 +323,7 @@ export class Deployment extends Service {
       width: utils.ServiceWidth,
       height: utils.ServiceHeight, //viewer.height,
       xyKey: "sankeySiteOffset",
+      align: "vertical",
     });
     // restore the saved positions
     subNodes.forEach((n) => {
@@ -547,7 +545,7 @@ export class Deployment extends Service {
       .transition()
       .duration(duration)
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
-      .each("end", function() {
+      .each("end", function () {
         d3.select(this)
           .style("display", "block")
           .attr("opacity", 1)
@@ -605,7 +603,7 @@ export class Deployment extends Service {
     return new Promise((resolve) => {
       const data = this.serviceNodes.nodes.map((n) => ({
         cardData: n,
-        deployment: `${n.shortName} (${n.cluster.site_name})`,
+        deployment: `${n.cluster.site_name}/${n.shortName}`,
         protocol: n.protocol.toUpperCase(),
         site_name: n.cluster.site_name,
       }));
@@ -757,8 +755,8 @@ export class Deployment extends Service {
     } else if (direction === "out" && stat === "bytes_in") {
       stat = "bytes_out";
     }
-    const from = direction === "in" ? "source" : "target";
-    const to = direction === "in" ? "target" : "source";
+    const from = direction === "out" ? "source" : "target";
+    const to = direction === "out" ? "target" : "source";
 
     VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
       const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
@@ -796,7 +794,7 @@ export class Deployment extends Service {
     if (!chord.info) return;
     d3.select(this.SVG_ID)
       .selectAll("path.service")
-      .each(function(p) {
+      .each(function (p) {
         if (
           chord.info.source.site_name === p.source.parentNode.site_name &&
           chord.info.target.site_name === p.target.parentNode.site_name &&
@@ -814,7 +812,7 @@ export class Deployment extends Service {
     super.setClass(address, cls, viewer);
     d3.select(this.SVG_ID)
       .selectAll("g.cluster-rects")
-      .each(function(d) {
+      .each(function (d) {
         const match = d.site_name.includes(address) && address.length > 0;
         d3.select(this).classed(cls, match);
         d[cls] = match;
@@ -829,7 +827,7 @@ export class Deployment extends Service {
     } else {
       d3.select(this.SVG_ID)
         .selectAll("rect.service-type")
-        .each(function(d) {
+        .each(function (d) {
           let match = `${d.address} (${d.parentNode.site_name})`;
           if (arc.all) {
             match = d.address;

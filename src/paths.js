@@ -38,6 +38,14 @@ const distance = (pt1, pt2) => {
   return Math.sqrt(xdiff * xdiff + ydiff * ydiff);
 };
 
+export const genBezier = ({ x0, y0, x1, y1 }) => {
+  const path = d3path.path();
+  const mid = (x1 + x0) / 2;
+  path.moveTo(x0, y0);
+  path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
+  return path.toString();
+};
+
 export const genPath = ({
   link,
   mask,

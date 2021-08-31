@@ -39,11 +39,14 @@ class TableViewer extends React.Component {
   }
 
   componentDidMount = () => {
-    this.mounted = true;
     if (!this.dataSource) return;
+    this.mounted = true;
     this.dataSource.initNodesAndLinks(this);
     // initialize the columns and get the data
-    this.dataSource.fields.forEach((f) => {
+    this.dataSourceFields = this.props.fields
+      ? this.props.fields
+      : this.dataSource.fields;
+    this.dataSourceFields.forEach((f) => {
       f.transforms = [];
       f.cellFormatters = [];
       if (!f.noSort) f.transforms.push(sortable);
@@ -55,20 +58,33 @@ class TableViewer extends React.Component {
       }
       if (f.formatter) {
         f.cellFormatters.push((value, extraInfo) =>
-          this.formatter(f.formatter, value, extraInfo)
+          this.customFormatter(value, extraInfo, f.formatter)
         );
+      }
+      if (f.isDetailLink) {
+        if (typeof f.isDetailLink === "function") {
+          // if isDetailLink is a function, let it decide if the field gets a details link
+          f.cellFormatters.push((value, extraInfo) =>
+            f.isDetailLink(value, extraInfo, this.detailLink)
+          );
+        } else {
+          // isDetailLink was a boolean (true). Always add a details link
+          f.cellFormatters.push(this.detailLink);
+        }
       }
     });
     // if the dataSource did not provide its own cell formatter for details
-    if (!this.dataSource.detailFormatter) {
-      this.dataSource.fields[0].cellFormatters.push(this.detailLink);
+    if (!this.dataSource.detailFormatter && !this.props.noFormat) {
+      this.dataSourceFields[0].cellFormatters.push(this.detailLink);
     }
 
-    this.setState({ columns: this.dataSource.fields }, () => {
+    this.setState({ columns: this.dataSourceFields }, () => {
       this.update();
     });
 
-    this.props.setOptions({ view: this.props.view, mode: "table" }, true);
+    if (this.props.setOptions) {
+      this.props.setOptions({ view: this.props.view, mode: "table" }, true);
+    }
   };
 
   componentWillUnmount = () => {
@@ -77,8 +93,6 @@ class TableViewer extends React.Component {
 
   componentDidUpdate = () => {
     if (this.view !== this.props.view) {
-      this.view = this.props.view;
-      this.dataSource = new VIEWS[this.view](this.props.service);
       this.setState(this.init(), () => {
         this.componentDidMount();
       });
@@ -116,9 +130,12 @@ class TableViewer extends React.Component {
   };
 
   fetch = (page, perPage) => {
+    const doFetch = this.props.doFetch
+      ? this.props.doFetch
+      : this.dataSource.doFetch;
     // get the data. Note: The current page number might change if
     // the number of rows is less than before
-    this.dataSource.doFetch(page, perPage).then((results) => {
+    doFetch(page, perPage).then((results) => {
       const sliced = this.slice(results.data, results.page, results.perPage);
       // if fetch was called and the component was unmounted before
       // the results arrived, don't call setState
@@ -148,27 +165,16 @@ class TableViewer extends React.Component {
     );
   };
 
+  customFormatter = (value, extraInfo, formatter) => {
+    return formatter(value, extraInfo);
+  };
+
   detailClick = (value, extraInfo) => {
     this.props.handleShowSubTable("table", {
       value,
       extraInfo,
       card: this.dataSource.card,
     });
-    /*
-    this.setState({
-      redirect: true,
-      redirectState: {
-        value: extraInfo.rowData.cells[extraInfo.columnIndex],
-        currentRecord: extraInfo.rowData.data,
-        entity: this.entity,
-        page: this.state.page,
-        sortBy: this.state.sortBy,
-        filterBy: this.state.filterBy,
-        perPage: this.state.perPage,
-        property: extraInfo.property,
-      },
-    });
-    */
   };
 
   // cell formatter
@@ -229,12 +235,12 @@ class TableViewer extends React.Component {
   };
 
   field2Row = (field) => ({
-    cells: this.dataSource.fields.map((f) => field[f.field]),
+    cells: this.dataSourceFields.map((f) => field[f.field]),
     data: field,
   });
 
   cellIndex = (field) => {
-    return this.dataSource.fields.findIndex((f) => {
+    return this.dataSourceFields.findIndex((f) => {
       return f.title === field;
     });
   };
@@ -252,6 +258,15 @@ class TableViewer extends React.Component {
         return r.cells[cellIndex].includes(filterValue);
       });
     }
+    if (this.props.excludeCurrent) {
+      const cellIndex = this.cellIndex("Name");
+      rows = rows.filter(
+        (r) => r.cells[cellIndex] !== this.props.service.siteInfo.site_name
+      );
+    }
+    if (this.props.rowFilter) {
+      rows = this.props.rowFilter(rows);
+    }
     return rows;
   };
 
@@ -264,12 +279,16 @@ class TableViewer extends React.Component {
   };
 
   slice = (fields, page, perPage) => {
-    let allRows = fields.map((f) => this.field2Row(f));
-    let rows = this.filter(allRows);
-    const total = rows.length;
-    rows = this.sort(rows);
-    rows = this.page(rows, total, page, perPage);
-    return { rows, page, total, allRows };
+    if (fields) {
+      let allRows = fields.map((f) => this.field2Row(f));
+      let rows = this.filter(allRows);
+      const total = rows.length;
+      rows = this.sort(rows);
+      rows = this.page(rows, total, page, perPage);
+      return { rows, page, total, allRows };
+    } else {
+      return { rows: [], page, total: 0, allRows: [] };
+    }
   };
 
   sort = (rows) => {
@@ -307,15 +326,21 @@ class TableViewer extends React.Component {
     }
     return (
       <React.Fragment>
-        <TableToolbar
-          total={this.state.total}
-          page={this.state.page}
-          perPage={this.state.perPage}
-          onSetPage={this.onSetPage}
-          onPerPageSelect={this.onPerPageSelect}
-          fields={this.dataSource.fields}
-          handleChangeFilterValue={this.handleChangeFilterValue}
-        />
+        {!this.props.noToolbar && (
+          <TableToolbar
+            total={this.state.total}
+            page={this.state.page}
+            perPage={this.state.perPage}
+            onSetPage={this.onSetPage}
+            onPerPageSelect={this.onPerPageSelect}
+            fields={
+              this.dataSourceFields
+                ? this.dataSourceFields
+                : this.dataSource.fields
+            }
+            handleChangeFilterValue={this.handleChangeFilterValue}
+          />
+        )}
         <Table
           cells={this.state.columns}
           rows={this.state.rows}
@@ -324,11 +349,16 @@ class TableViewer extends React.Component {
           onSort={this.onSort}
           variant={TableVariant.compact}
           data-testid={`data-testid_${this.props.view}`}
+          actions={this.props.actions ? this.props.actions : null}
+          actionResolver={
+            this.props.actionResolver ? this.props.actionResolver : null
+          }
         >
           <TableHeader />
           <TableBody />
         </Table>
-        {this.renderPagination("bottom")}
+        {(!this.props.noToolbar || this.props.bottomToolbar) &&
+          this.renderPagination("bottom")}
       </React.Fragment>
     );
   }

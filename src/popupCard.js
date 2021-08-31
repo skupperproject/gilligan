@@ -52,7 +52,7 @@ class PopupCard extends React.Component {
   attrExists = (obj, attr) => {
     if (typeof attr === "string") return obj[attr];
     if (attr.getFn) {
-      const v = attr.getFn(obj);
+      const v = attr.getFn(obj, this.props);
       return v !== undefined ? true : false;
     }
   };
@@ -60,7 +60,7 @@ class PopupCard extends React.Component {
   cardTitle = (obj, attr) => {
     if (typeof attr === "string") return attr;
     if (typeof attr.title === "string") return attr.title;
-    if (typeof attr.title === "function") return attr.title(obj);
+    if (typeof attr.title === "function") return attr.title(obj, this.props);
   };
 
   cardBodies = (obj) => {
@@ -131,7 +131,7 @@ class PopupCard extends React.Component {
             </div>
           </CardHeader>
         )}
-        {!hideBody && (
+        {false && !hideBody && (
           <CardBody>
             <span className="body-line-prompt">Health</span>
             <CardHealth cluster={cardService} />

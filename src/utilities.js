@@ -43,7 +43,7 @@ const fillColor = (v) => {
 
 export class QDRLogger {
   constructor(log, source) {
-    this.log = function(msg) {
+    this.log = function (msg) {
       log.log(
         " % c % s % s % s",
         "color: yellow; background - color: black;",
@@ -186,6 +186,10 @@ const utils = {
     return curY;
   },
 
+  // determine the layout of the objects on the Graph view
+  // sets the .x and .y attributes of a node
+  // At the most basic level, this should put the nodes that are called to the right and
+  // nodes that do the calling to the left
   adjustPositions: ({
     nodes,
     links,
@@ -736,10 +740,10 @@ const utils = {
     }
     var n = 0;
     transition
-      .each(function() {
+      .each(function () {
         ++n;
       })
-      .each("end", function() {
+      .each("end", function () {
         if (!--n) callback.apply(this, arguments);
       });
   },
@@ -875,13 +879,39 @@ const utils = {
     return { interval: 0, epoch: "second" };
   },
 
+  convertDate: (strMSec, tense) => {
+    let date;
+    if (typeof strMSec === "string") {
+      date = new Date(parseInt(strMSec, 10));
+    } else {
+      date = strMSec;
+    }
+    if (tense === "past") {
+      return utils.timeAgo(date);
+    } else if (tense === "future") {
+      return utils.timeTill(date);
+    } else {
+      return date.toDateString();
+    }
+  },
+  timeTill: (date) => {
+    const timeTillInSeconds = Math.floor((date - new Date()) / 1000);
+    if (timeTillInSeconds < 0) {
+      return null; // indicate that the supplied date is past
+    }
+    const { interval, epoch } = utils.getDuration(timeTillInSeconds);
+    const suffix = interval === 1 ? "" : "s";
+
+    return `${interval} ${epoch}${suffix} from now`;
+  },
   // Calculate
   timeAgo: (date) => {
     const timeAgoInSeconds = Math.floor((new Date() - date) / 1000);
     const { interval, epoch } = utils.getDuration(timeAgoInSeconds);
     const suffix = interval === 1 ? "" : "s";
+    const prefix = epoch === "year" ? "Over " : "";
 
-    return `${interval} ${epoch}${suffix} ago`;
+    return `${prefix}${interval} ${epoch}${suffix} ago`;
   },
 
   humanize: (str) => {
@@ -1109,6 +1139,12 @@ const utils = {
     }
     return rates;
   },
+
+  // used to create a few hex characters in file names
+  randomHex: (numCharacters) =>
+    [...Array(numCharacters)]
+      .map(() => Math.floor(Math.random() * 16).toString(16))
+      .join(""),
 };
 
 export { utils };

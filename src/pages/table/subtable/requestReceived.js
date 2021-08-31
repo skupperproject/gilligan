@@ -35,7 +35,7 @@ class RequestReceived extends Component {
 
   heading = (requests) => {
     return (
-      requests.length > 0 && (
+      requests?.length > 0 && (
         <StackItem>
           <TextContent>
             <Text component={TextVariants.h3}>HTTP requests received from</Text>
@@ -45,19 +45,20 @@ class RequestReceived extends Component {
     );
   };
 
-  dataList = (requests) => (
-    <DataList aria-label="Expandable data list" isCompact>
-      {requests.map((r, i) => (
-        <DataListItem
-          key={`rr-${i}`}
-          aria-labelledby={`item-${i}`}
-          isExpanded={this.props.expanded.includes(`request-${i}`)}
-        >
-          {this.request(r, i)}
-        </DataListItem>
-      ))}
-    </DataList>
-  );
+  dataList = (requests) =>
+    requests && (
+      <DataList aria-label="Expandable data list" isCompact>
+        {requests.map((r, i) => (
+          <DataListItem
+            key={`rr-${i}`}
+            aria-labelledby={`item-${i}`}
+            isExpanded={this.props.expanded.includes(`request-${i}`)}
+          >
+            {this.request(r, i)}
+          </DataListItem>
+        ))}
+      </DataList>
+    );
 
   requests = (data) => {
     let received = [];

@@ -1,0 +1,58 @@
+{
+  "site_name": "My company frontend",
+  "site_id": "5316d5e6-43af-4755-acea-fee0107d6fb7",
+  "Site type": "OpenShift",
+  "namespace": "skupper",
+  "tokens": [
+    {
+      "Name": "public2",
+      "Status": "Active",
+      "Use count": 0,
+      "Use limit": 1,
+      "Expires": 0,
+      "Created": 1583793999616,
+      "ID": "this-is-a-unique-string"
+    },
+    {
+      "Name": "private1",
+      "Status": "Active",
+      "Expires": 0,
+      "Created": 1583793999616,
+      "ID": "this-is-another-unique-string"
+    },
+    {
+      "Name": "private1",
+      "Status": "Deleted",
+      "Created": 1599999999999,
+      "ID": "this-is-a-totally-unique-string"
+    }
+  ],
+  "links": [
+    {
+      "Name": "link-asf2",
+      "Status": "connected",
+      "Site type": "Podman",
+      "Cost": 1,
+      "Linked": 1583793999616,
+      "site_id": "70f1914e-7ff0-4199-ad97-f3670a681c0b"
+    },
+    {
+      "Name": "link-347d",
+      "Status": "disconnected"
+    }
+  ],
+  "deployments": [
+    {
+      "Name": "mongo-b",
+      "ID": "this-is-a-generated-deployment-id-for-mongo-b",
+      "Exposed": 1622566923561,
+      "Port": 8080,
+      "Protocol": "TCP"
+    },
+    {
+      "Name": "tax calculator",
+      "ID": "this-is-a-generated-deployment-id-for-tax-calculator",
+      "Exposed": false
+    }
+  ]
+}

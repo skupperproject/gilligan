@@ -21,15 +21,20 @@ import RESTService from "./restService";
 import Adapter from "./adapter";
 import { utils } from "./utilities";
 export const UPDATE_INTERVAL = 2000;
+export const ALERT_TIMEOUT = 6000;
 
 // number of milliseconds between topology updates
 export class QDRService {
   constructor(hooks) {
     this.hooks = hooks;
     this.history = {};
+    this.VAN = null;
+    this.rest = null;
+    this.adapter = null;
+    this.siteInfo = null;
   }
 
-  connect(to) {
+  connect = (to) => {
     return new Promise((resolve, reject) => {
       if (!this.rest) this.rest = new RESTService();
       this.rest
@@ -41,13 +46,57 @@ export class QDRService {
             this.VAN = data;
             this.saveTimeSeries(data);
             this.initColors(data);
-            resolve(data);
+            this.rest.getSiteInfo(this.VAN).then((info) => {
+              if (!this.siteInfo) {
+                console.log("qdrService::connect 1st siteInfo is");
+                console.log(info);
+              }
+              this.siteInfo = info;
+              resolve(data);
+            });
           },
           (error) => reject(error)
         )
-        .catch(() => {});
+        .catch((e) => {
+          console.log(`communication error ${e.message}`);
+        });
     });
-  }
+  };
+
+  // SITE
+  getSiteInfo = () => new Promise((resolve) => resolve(this.siteInfo));
+
+  // RENAME_SITE
+  renameSite = (data) => this.rest.renameSite(data);
+
+  // REGENERATE_CA
+  regenCA = () => this.rest.regenCA();
+
+  // USETOKEN
+  uploadToken = (data) => this.rest.uploadToken(data);
+
+  getSkupperTokenURL = () => {
+    return this.rest.getSkupperTokenURL();
+  };
+
+  // GENERATE_TOKEN
+  getTokenData = () => this.rest.getTokenData();
+
+  // DELETE_TOKEN
+  deleteToken = (data) => this.rest.deleteToken(data);
+
+  // UPDATE_TOKEN
+  updateToken = (data) => this.rest.updateToken(data);
+
+  // UNLINK
+  unlinkSite = (data) => this.rest.unlinkSite(data);
+
+  // UNEXPOSE
+  unexposeService = (data) => this.rest.unexposeService(data);
+
+  // EXPOSE
+  exposeService = (data) => this.rest.exposeService(data);
+
   update() {
     return this.connect();
   }
@@ -75,8 +124,8 @@ export class QDRService {
   };
 }
 
-(function() {
-  console.dump = function(o) {
+(function () {
+  console.dump = function (o) {
     if (window.JSON && window.JSON.stringify)
       console.log(JSON.stringify(o, undefined, 2));
     else console.log(o);

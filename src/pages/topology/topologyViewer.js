@@ -745,7 +745,7 @@ class TopologyViewer extends Component {
 
   // which stat to use is determined by the service protocols.
   // if we have both http and tcp protocols, use the tcp protocol (since its a subset)
-  statForProtocol = () => this.state.options.http;
+  statForProtocol = () => this.state.options.http || "bytes_out";
   /*
   ["both", "tcp"].includes(this.statProtocol())
       ? this.state.options.tcp
@@ -861,11 +861,8 @@ class TopologyViewer extends Component {
                 >
                   <div className="diagram">
                     <div ref={(el) => (this.topologyRef = el)} id="topology" />
-                    <div
-                      id="topo_popover-div"
-                      className={this.state.showCard ? "" : "hidden"}
-                    >
-                      {this.state.showCard && (
+                    {this.state.showCard && (
+                      <div id="topo_popover-div">
                         <PopupCard
                           ref={(el) => (this.cardRef = el)}
                           cardSize="expanded"
@@ -877,8 +874,8 @@ class TopologyViewer extends Component {
                           view={this.view}
                           stat={this.statForProtocol()}
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                   {this.state.showLegend && (
                     <LegendComponent

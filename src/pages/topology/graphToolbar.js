@@ -82,9 +82,6 @@ class GraphToolbar extends Component {
   };
 
   onSelect = (event) => {
-    console.log("onSelect called");
-    event.persist();
-    console.log(event);
     if (event.target.id === "trafficOptions") {
       console.log("showing traffic modal");
       this.handleShowTrafficModal();

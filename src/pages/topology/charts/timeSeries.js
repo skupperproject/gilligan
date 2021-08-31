@@ -62,11 +62,15 @@ class TimeSeries extends Component {
     }
   };
 
+  update = () => {
+    this.init(this.props.type);
+  };
+
   init = (type) => {
     if (!type) type = this.props.type;
     let dir = this.props.direction;
     if (this.props.data) {
-      dir = this.props.direction === "in" ? "out" : "in";
+      //dir = this.props.direction === "in" ? "out" : "in";
     }
     let { all, headerText, address, site_info } = chartUtils.init(
       this.props.site,
@@ -125,13 +129,8 @@ class TimeSeries extends Component {
         data = defaultTSData;
       }
     }
-    let {
-      legendHeight,
-      toolbarHeight,
-      headerHeight,
-      width,
-      height,
-    } = this.state;
+    let { legendHeight, toolbarHeight, headerHeight, width, height } =
+      this.state;
     //if (height === 0) {
     const containerId = this.props.containerId
       ? this.props.containerId
@@ -141,10 +140,10 @@ class TimeSeries extends Component {
       d3.select(".sk-chart-legend-container").node(),
       [0, 0]
     );
-    const toolbarSize = utils.getSizes(d3.select(".sk-chart-toolbar").node(), [
-      0,
-      0,
-    ]);
+    const toolbarSize = utils.getSizes(
+      d3.select(".sk-chart-toolbar").node(),
+      [0, 0]
+    );
     const headerSize = utils.getSizes(d3.select(".sk-chart-header").node(), [
       toolbarSize[0],
       56,
@@ -185,10 +184,7 @@ class TimeSeries extends Component {
 
     //console.log(`${this.props.direction} count ${count} height ${Math.max(count * perRow + xAxis, atLeast)}`);
     //if (this.props.direction === "out") console.log(data);
-    const scale = d3.scale
-      .linear()
-      .domain([1, 5, 100])
-      .range([100, 40, 30]);
+    const scale = d3.scale.linear().domain([1, 5, 100]).range([100, 40, 30]);
     return Math.max(count * scale(count) + xAxis, atLeast);
 
     //return (height - toolbarHeight - headerHeight * 2 - legendHeight) / 2 - 10;
@@ -255,9 +251,32 @@ class TimeSeries extends Component {
                 dependentAxis
                 showGrid
                 fixLabelOverlap={true}
-                tickFormat={(tick) => {
-                  const t = utils.formatBytes(tick, 0);
-                  return t;
+                style={{
+                  tickLabels: { fontSize: 12 },
+                }}
+                tickFormat={(tick, index, ticks) => {
+                  let same = index === 0;
+                  this.decimalPlaces = 0;
+                  // first time in, ensure y-axis ticks don't have duplicate labels
+                  while (same) {
+                    same = false;
+                    let ts = ticks.map((t) =>
+                      utils.formatBytes(t, this.decimalPlaces)
+                    );
+                    const uniqueTicks = [...new Set(ts)];
+                    if (uniqueTicks.length !== ts.length) {
+                      same = true;
+                      if (++this.decimalPlaces > 10) {
+                        same = false;
+                        // all the numbers are the same up to 10 decimal places
+                        ts = ticks.map((t) => utils.formatBytes(t, 0));
+                      }
+                    }
+                    if (!same) {
+                      this.ts = ts;
+                    }
+                  }
+                  return this.ts[index];
                 }}
               />
               <ChartGroup>

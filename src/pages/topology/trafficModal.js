@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import { Modal } from "@patternfly/react-core";
 import { Flex, FlexItem } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
-import { Button, Radio, Checkbox } from "@patternfly/react-core";
+import { Button, Radio } from "@patternfly/react-core";
 import { Service } from "../topology/views/service";
 import { Site } from "../topology/views/site";
 import Adapter from "../../adapter";
@@ -54,6 +54,10 @@ class TrafficModal extends Component {
       options: { ...this.props.options },
     };
     this.dropdownItems = [
+      {
+        key: "none",
+        name: "None",
+      },
       {
         key: "requests",
         name: "Requests",
@@ -117,10 +121,10 @@ class TrafficModal extends Component {
       return;
     }
     this.setupViews();
-    const sizes = utils.getSizes(d3.select("#skTrafficDiagrams").node(), [
-      400,
-      280,
-    ]);
+    const sizes = utils.getSizes(
+      d3.select("#skTrafficDiagrams").node(),
+      [400, 280]
+    );
 
     // set the svgs' width to the width of the modal's diagram container / 2
     this.lineController.width = sizes[0];
@@ -249,7 +253,7 @@ class TrafficModal extends Component {
     const { options } = this.state;
     options.showMetric = checked;
     this.setState({ options }, () => {
-      this.setShowMetric();
+      this.setShowMetric(false);
     });
   };
 
@@ -257,7 +261,13 @@ class TrafficModal extends Component {
   handleChangeMetric = (checked, e) => {
     const id = e.target.id;
     const { options } = this.state;
-    options.stat = id === "traffic-requests" ? "requests" : "bytes_out";
+    if (id === "traffic-none") {
+      options.showMetric = false;
+      options.stat = "none";
+    } else {
+      options.showMetric = true;
+      options.stat = id === "traffic-requests" ? "requests" : "bytes_out";
+    }
     this.setState({ options }, () => {
       this.setShowMetric(false);
     });
@@ -283,6 +293,7 @@ class TrafficModal extends Component {
     });
   };
 
+  /*
   radio = (which) => {
     if (this.view === "site") {
       if (which === "connections") return this.state.options.color;
@@ -295,11 +306,11 @@ class TrafficModal extends Component {
       }
       return this.state.options.traffic;
     }
-  };
+  };*/
 
   render() {
     const { isTrafficModalOpen } = this.props;
-    const { showMetric, stat, color, traffic } = this.state.options;
+    const { stat, color, traffic } = this.state.options;
 
     const showTraffic = (
       <React.Fragment>
@@ -308,7 +319,7 @@ class TrafficModal extends Component {
             <SplitItem>
               <Radio
                 className="sk-traffic-checkbox"
-                label="Show site connections"
+                label="Show site links"
                 isChecked={traffic === false && color !== true}
                 onChange={this.handleChangeConnection}
                 aria-label="show connection direction"
@@ -346,14 +357,7 @@ class TrafficModal extends Component {
 
     const showMetricsCheckbox = (
       <React.Fragment>
-        <Checkbox
-          label="Show traffic metrics as"
-          isChecked={showMetric}
-          onChange={this.handleChangeShowMetric}
-          aria-label="show metrics"
-          id="showMetric"
-          name="showMetric"
-        />
+        <h1>Metric to show</h1>
         <div className="sk-flex">
           {this.dropdownItems.map((item) => (
             <Radio

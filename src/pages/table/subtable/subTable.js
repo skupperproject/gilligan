@@ -42,8 +42,8 @@ class SubTable extends Component {
   constructor(props) {
     super(props);
     this.state = { popupContent: null };
-    this.viewObj = new VIEWS[this.props.view](this.props.service);
-    this.view = this.props.view;
+    this.view = this.props.view === "thissite" ? "site" : this.props.view;
+    this.viewObj = new VIEWS[this.view](this.props.service);
   }
 
   componentDidMount = () => {
@@ -55,7 +55,9 @@ class SubTable extends Component {
   };
 
   handleChangeLastUpdated = () => {
-    this.updatedRef.update();
+    if (this.updatedRef) {
+      this.updatedRef.update();
+    }
   };
 
   update = () => {
@@ -69,7 +71,7 @@ class SubTable extends Component {
   };
 
   returnToView = (mode) => {
-    this.props.handleChangeViewMode(mode);
+    this.props.handleChangeViewMode(mode, true, this.props.origin);
   };
 
   showTooltip = (content, eventX, eventY) => {
@@ -93,24 +95,31 @@ class SubTable extends Component {
   data = () =>
     this.props.data
       ? this.props.data
-      : this.props.info.extraInfo.rowData.data.cardData;
+      : this.props.info.extraInfo
+      ? this.props.info.extraInfo.rowData.data.cardData
+      : null;
 
   anyRequests = (direction) => {
     const data = this.data();
+    if (!data) return false;
     let address = data ? data.address : null;
-    let site_info = null;
-    if (this.props.view === "deployment" && data.address) {
-      site_info = data.cluster.site_name;
+    let site_name = null;
+    if (this.props.view === "deployment") {
+      if (data.address) {
+        site_name = data.cluster.site_name;
+      } else {
+        site_name = data.site_name;
+      }
     } else if (this.props.view === "site" && !data.address) {
       address = data.site_id;
     }
     const requests = this.viewObj.specificTimeSeries({
       VAN: this.props.service.VAN,
       direction,
-      stat: "bytes_out",
+      stat: direction === "in" ? "bytes_in" : "bytes_out",
       duration: "min",
       address,
-      site_name: site_info,
+      site_name,
     });
     return Object.keys(requests).length > 0;
   };
@@ -127,6 +136,7 @@ class SubTable extends Component {
   render() {
     const { options } = utils.viewFromHash();
     const data = this.data();
+    if (!data) return null;
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
     const { popupContent } = this.state;
@@ -160,7 +170,9 @@ class SubTable extends Component {
       return (
         <Breadcrumb className="sk-breadcrumbList">
           <BreadcrumbItem onClick={() => this.returnToView("table")}>
-            {utils.Icap(this.props.view)}s
+            {utils.Icap(
+              this.props.view === "site" ? "network" : `${this.props.view}s`
+            )}
           </BreadcrumbItem>
           <BreadcrumbHeading>{options.item}</BreadcrumbHeading>
         </Breadcrumb>
@@ -214,7 +226,10 @@ class SubTable extends Component {
                   </FlexItem>
                 )}
               </Flex>
-              <Flex direction={{ default: "column", lg: "row" }}>
+              <Flex
+                className="sk-charts-sections"
+                direction={{ default: "column", lg: "row" }}
+              >
                 {hasIn && (
                   <FlexItem id="sk-subTable-line1">
                     <TimeSeries
@@ -225,8 +240,8 @@ class SubTable extends Component {
                         this.props.view === "deployment"
                       }
                       deployment={this.props.view === "deployment"}
-                      stat="bytes_out"
-                      direction="out"
+                      stat="bytes_in"
+                      direction="in"
                       type="line"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-line1"
@@ -247,7 +262,7 @@ class SubTable extends Component {
                       }
                       deployment={this.props.view === "deployment"}
                       stat="bytes_out"
-                      direction="in"
+                      direction="out"
                       type="line"
                       viewObj={this.viewObj}
                       containerId="sk-subTable-line2"
@@ -267,7 +282,7 @@ class SubTable extends Component {
                         this.props.view === "deployment"
                       }
                       deployment={this.props.view === "deployment"}
-                      stat="bytes_out"
+                      stat="bytes_in"
                       direction="in"
                       type="bar"
                       viewObj={this.viewObj}

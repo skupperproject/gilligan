@@ -1,775 +1,768 @@
 {
   "sites": [
     {
-      "site_name": "site-a",
-      "site_id": "7hZ9GQzD6u",
-      "connected": [],
-      "namespace": "pub1",
-      "url": "grs-test-1.devcluster.openshift.com",
+      "site_name": "public",
+      "site_id": "aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+      "version": "0.7.0",
+      "connected": ["aeaf0882-9930-45c9-b8ac-bfc54158d4e1"],
+      "namespace": "public",
+      "url": "10.97.213.48",
       "edge": false
     },
     {
-      "site_name": "site-b",
-      "site_id": "m32q5a0vtb",
-      "connected": ["7hZ9GQzD6u"],
-      "namespace": "pub2",
-      "url": "grs-test-2.devcluster.openshift.com",
+      "site_name": "private",
+      "site_id": "d12decfd-02bd-488c-9f1a-9b2da2e26f50",
+      "version": "0.7.0",
+      "connected": [
+        "aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+        "d12decfd-02bd-488c-9f1a-9b2da2e26f50"
+      ],
+      "namespace": "private",
+      "url": "",
       "edge": false
-    },
-    {
-      "site_name": "mini1",
-      "site_id": "aArHqpCWpc",
-      "connected": ["7hZ9GQzD6u"],
-      "namespace": "default",
-      "url": "10.107.63.213",
-      "edge": true
     }
   ],
   "services": [
     {
-      "address": "currencyservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "currencyservice-6c7c479d45-j4zm9",
-          "target": "currencyservice",
-          "site_id": "m32q5a0vtb"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_client": {
-            "frontend-5d68fd5b7d-6kgx5": {
-              "requests": 35,
-              "bytes_in": 697,
-              "bytes_out": 1712,
-              "details": {
-                "POST:200": 35
-              },
-              "latency_max": 25,
-              "by_handling_site": {
-                "m32q5a0vtb": {
-                  "requests": 35,
-                  "bytes_in": 697,
-                  "bytes_out": 1712,
-                  "details": {
-                    "POST:200": 35
-                  },
-                  "latency_max": 25
-                }
-              }
-            }
-          }
-        },
-        {
-          "site_id": "m32q5a0vtb",
-          "by_client": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 3,
-              "bytes_in": 69,
-              "bytes_out": 55,
-              "details": {
-                "POST:200": 3
-              },
-              "latency_max": 7,
-              "by_handling_site": {
-                "m32q5a0vtb": {
-                  "requests": 3,
-                  "bytes_in": 69,
-                  "bytes_out": 55,
-                  "details": {
-                    "POST:200": 3
-                  },
-                  "latency_max": 7
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "m32q5a0vtb",
-          "by_server": {
-            "currencyservice-6c7c479d45-j4zm9": {
-              "requests": 38,
-              "bytes_in": 766,
-              "bytes_out": 1767,
-              "details": {
-                "POST:200": 38
-              },
-              "latency_max": 6
-            }
-          },
-          "by_originating_site": {
-            "7hZ9GQzD6u": {
-              "requests": 35,
-              "bytes_in": 697,
-              "bytes_out": 1712,
-              "details": {
-                "POST:200": 35
-              },
-              "latency_max": 6
-            },
-            "m32q5a0vtb": {
-              "requests": 3,
-              "bytes_in": 69,
-              "bytes_out": 55,
-              "details": {
-                "POST:200": 3
-              },
-              "latency_max": 3
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "shippingservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "shippingservice-6dc47b7f85-pctvp",
-          "target": "shippingservice",
-          "site_id": "aArHqpCWpc"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_client": {
-            "frontend-5d68fd5b7d-6kgx5": {
-              "requests": 3,
-              "bytes_in": 95,
-              "bytes_out": 60,
-              "details": {
-                "POST:200": 3
-              },
-              "latency_max": 201,
-              "by_handling_site": {
-                "aArHqpCWpc": {
-                  "requests": 3,
-                  "bytes_in": 95,
-                  "bytes_out": 60,
-                  "details": {
-                    "POST:200": 3
-                  },
-                  "latency_max": 201
-                }
-              }
-            }
-          }
-        },
-        {
-          "site_id": "m32q5a0vtb",
-          "by_client": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 2,
-              "bytes_in": 208,
-              "bytes_out": 45,
-              "details": {
-                "POST:200": 2
-              },
-              "latency_max": 196,
-              "by_handling_site": {
-                "aArHqpCWpc": {
-                  "requests": 2,
-                  "bytes_in": 208,
-                  "bytes_out": 45,
-                  "details": {
-                    "POST:200": 2
-                  },
-                  "latency_max": 196
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "aArHqpCWpc",
-          "by_server": {
-            "shippingservice-6dc47b7f85-pctvp": {
-              "requests": 5,
-              "bytes_in": 303,
-              "bytes_out": 105,
-              "details": {
-                "POST:200": 5
-              },
-              "latency_max": 13
-            }
-          },
-          "by_originating_site": {
-            "7hZ9GQzD6u": {
-              "requests": 3,
-              "bytes_in": 95,
-              "bytes_out": 60,
-              "details": {
-                "POST:200": 3
-              },
-              "latency_max": 13
-            },
-            "m32q5a0vtb": {
-              "requests": 2,
-              "bytes_in": 208,
-              "bytes_out": 45,
-              "details": {
-                "POST:200": 2
-              },
-              "latency_max": 10
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "checkoutservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "checkoutservice-6fcc84467f-5wwjl",
-          "target": "checkoutservice",
-          "site_id": "m32q5a0vtb"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_client": {
-            "frontend-5d68fd5b7d-6kgx5": {
-              "requests": 1,
-              "bytes_in": 167,
-              "bytes_out": 215,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 992,
-              "by_handling_site": {
-                "m32q5a0vtb": {
-                  "requests": 1,
-                  "bytes_in": 167,
-                  "bytes_out": 215,
-                  "details": {
-                    "POST:200": 1
-                  },
-                  "latency_max": 992
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "m32q5a0vtb",
-          "by_server": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 1,
-              "bytes_in": 167,
-              "bytes_out": 215,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 977
-            }
-          },
-          "by_originating_site": {
-            "7hZ9GQzD6u": {
-              "requests": 1,
-              "bytes_in": 167,
-              "bytes_out": 215,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 977
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "cartservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "cartservice-684bb46b44-ht84q",
-          "target": "cartservice",
-          "site_id": "m32q5a0vtb"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_client": {
-            "frontend-5d68fd5b7d-6kgx5": {
-              "requests": 9,
-              "bytes_in": 419,
-              "bytes_out": 293,
-              "details": {
-                "POST:200": 9
-              },
-              "latency_max": 42,
-              "by_handling_site": {
-                "m32q5a0vtb": {
-                  "requests": 9,
-                  "bytes_in": 419,
-                  "bytes_out": 293,
-                  "details": {
-                    "POST:200": 9
-                  },
-                  "latency_max": 42
-                }
-              }
-            }
-          }
-        },
-        {
-          "site_id": "m32q5a0vtb",
-          "by_client": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 2,
-              "bytes_in": 86,
-              "bytes_out": 80,
-              "details": {
-                "POST:200": 2
-              },
-              "latency_max": 23,
-              "by_handling_site": {
-                "m32q5a0vtb": {
-                  "requests": 2,
-                  "bytes_in": 86,
-                  "bytes_out": 80,
-                  "details": {
-                    "POST:200": 2
-                  },
-                  "latency_max": 23
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "m32q5a0vtb",
-          "by_server": {
-            "cartservice-684bb46b44-ht84q": {
-              "requests": 11,
-              "bytes_in": 505,
-              "bytes_out": 373,
-              "details": {
-                "POST:200": 11
-              },
-              "latency_max": 36
-            }
-          },
-          "by_originating_site": {
-            "7hZ9GQzD6u": {
-              "requests": 9,
-              "bytes_in": 419,
-              "bytes_out": 293,
-              "details": {
-                "POST:200": 9
-              },
-              "latency_max": 36
-            },
-            "m32q5a0vtb": {
-              "requests": 2,
-              "bytes_in": 86,
-              "bytes_out": 80,
-              "details": {
-                "POST:200": 2
-              },
-              "latency_max": 20
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "adservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "adservice-55f9757757-9998f",
-          "target": "adservice",
-          "site_id": "m32q5a0vtb"
-        }
-      ],
-      "requests_received": [],
-      "requests_handled": []
-    },
-    {
-      "address": "emailservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "emailservice-574f4b546c-2vhsc",
-          "site_id": "aArHqpCWpc"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "m32q5a0vtb",
-          "by_client": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 1,
-              "bytes_in": 236,
-              "bytes_out": 5,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 208,
-              "by_handling_site": {
-                "aArHqpCWpc": {
-                  "requests": 1,
-                  "bytes_in": 236,
-                  "bytes_out": 5,
-                  "details": {
-                    "POST:200": 1
-                  },
-                  "latency_max": 208
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "aArHqpCWpc",
-          "by_server": {
-            "emailservice-574f4b546c-2vhsc": {
-              "requests": 1,
-              "bytes_in": 236,
-              "bytes_out": 5,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 8
-            }
-          },
-          "by_originating_site": {
-            "m32q5a0vtb": {
-              "requests": 1,
-              "bytes_in": 236,
-              "bytes_out": 5,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 8
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "redis-cart",
+      "address": "cluster1-kafka-brokers-0",
       "protocol": "tcp",
       "targets": [
         {
-          "name": "redis-cart-5f59546cdd-x8765",
-          "target": "redis-cart",
-          "site_id": "m32q5a0vtb"
+          "name": "cluster1-kafka-0.cluster1-kafka-brokers.private",
+          "target": "egress",
+          "site_id": "d12decfd-02bd-488c-9f1a-9b2da2e26f50"
         }
       ],
       "connections_ingress": [
         {
-          "site_id": "m32q5a0vtb",
+          "site_id": "aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
           "connections": {
-            "10.128.2.12:35793@m32q5a0vtb": {
-              "id": "10.128.2.12:35793@m32q5a0vtb",
-              "start_time": 1586195414773,
-              "bytes_in": 2128,
-              "bytes_out": 5453,
-              "client": "cartservice-684bb46b44-ht84q",
-              "last_in": 1586195635166,
-              "last_out": 1586195635169
+            "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 222527,
+              "bytes_out": 729173,
+              "client": "order-processor-5799cb65f-wvxvz"
             },
-            "10.128.2.12:42713@m32q5a0vtb": {
-              "id": "10.128.2.12:42713@m32q5a0vtb",
-              "start_time": 1586195414781,
-              "bytes_in": 167,
-              "bytes_out": 104,
-              "client": "cartservice-684bb46b44-ht84q",
-              "last_in": 1586195595750,
-              "last_out": 1586195595754
+            "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 1184,
+              "bytes_out": 4675,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 51,
+              "last_in": 51,
+              "bytes_in": 256166,
+              "bytes_out": 857467,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 7039,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 218,
+              "bytes_out": 499,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28531,
+              "bytes_out": 30746,
+              "client": "order-processor-5799cb65f-wvxvz"
+            },
+            "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 255956,
+              "bytes_out": 856802,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 96,
+              "last_in": 96,
+              "bytes_in": 1193,
+              "bytes_out": 4717,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 222492,
+              "bytes_out": 729058,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 7039,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 5382,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28725,
+              "bytes_out": 30900,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 100,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 19493,
+              "bytes_out": 17416,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 96,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 4975,
+              "bytes_out": 1503,
+              "client": "order-processor-5799cb65f-tkjq5"
+            },
+            "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 50,
+              "last_in": 50,
+              "bytes_in": 255276,
+              "bytes_out": 854548,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 1184,
+              "bytes_out": 4675,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 222339,
+              "bytes_out": 728644,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 7039,
+              "bytes_out": 1665,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 218,
+              "bytes_out": 499,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28725,
+              "bytes_out": 30900,
+              "client": "order-processor-5799cb65f-568t9"
+            },
+            "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 135,
+              "last_in": 135,
+              "bytes_in": 1193,
+              "bytes_out": 4717,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 222007,
+              "bytes_out": 727803,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 640,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 6459,
+              "bytes_out": 1649,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28721,
+              "bytes_out": 30900,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 135,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 4067,
+              "bytes_out": 1385,
+              "client": "market-data-7dd96d6f7-p874n"
+            },
+            "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 221868,
+              "bytes_out": 727527,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 77,
+              "last_in": 77,
+              "bytes_in": 1192,
+              "bytes_out": 4716,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 6024,
+              "bytes_out": 1637,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28621,
+              "bytes_out": 30823,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 77,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 411,
+              "bytes_out": 616,
+              "client": "frontend-7df75ff97c-nm688"
+            },
+            "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 221757,
+              "bytes_out": 727228,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 1228,
+              "bytes_out": 4832,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 6024,
+              "bytes_out": 1637,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 140,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 1696,
+              "bytes_out": 1145,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28621,
+              "bytes_out": 30823,
+              "client": "frontend-7df75ff97c-88r64"
+            },
+            "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12625,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 221687,
+              "bytes_out": 726998,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12625,
+              "last_out": 111,
+              "last_in": 111,
+              "bytes_in": 1193,
+              "bytes_out": 4717,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 6024,
+              "bytes_out": 1637,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 28427,
+              "bytes_out": 30669,
+              "client": "frontend-7df75ff97c-shrtc"
+            },
+            "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 111,
+              "last_out": 28,
+              "last_in": 28,
+              "bytes_in": 1046,
+              "bytes_out": 915,
+              "client": "frontend-7df75ff97c-shrtc"
             }
           }
         }
       ],
       "connections_egress": [
         {
-          "site_id": "m32q5a0vtb",
+          "site_id": "d12decfd-02bd-488c-9f1a-9b2da2e26f50",
           "connections": {
-            "10.128.2.12:35793@m32q5a0vtb": {
-              "id": "10.128.2.12:35793@m32q5a0vtb",
-              "start_time": 1586195414807,
-              "bytes_in": 5453,
-              "bytes_out": 2128,
-              "server": "redis-cart-5f59546cdd-x8765",
-              "last_out": 1586195635167,
-              "last_in": 1586195635168
+            "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45766@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 729173,
+              "bytes_out": 222527,
+              "server": "cluster1-kafka-0"
             },
-            "10.128.2.12:42713@m32q5a0vtb": {
-              "id": "10.128.2.12:42713@m32q5a0vtb",
-              "start_time": 1586195414813,
-              "bytes_in": 104,
-              "bytes_out": 167,
-              "server": "redis-cart-5f59546cdd-x8765",
-              "last_out": 1586195595752,
-              "last_in": 1586195595753
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "paymentservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "paymentservice-8495dfc549-4ztnc",
-          "target": "paymentservice",
-          "site_id": "aArHqpCWpc"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "m32q5a0vtb",
-          "by_client": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 1,
-              "bytes_in": 52,
-              "bytes_out": 43,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 219,
-              "by_handling_site": {
-                "aArHqpCWpc": {
-                  "requests": 1,
-                  "bytes_in": 52,
-                  "bytes_out": 43,
-                  "details": {
-                    "POST:200": 1
-                  },
-                  "latency_max": 219
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "aArHqpCWpc",
-          "by_server": {
-            "paymentservice-8495dfc549-4ztnc": {
-              "requests": 1,
-              "bytes_in": 52,
-              "bytes_out": 43,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 19
-            }
-          },
-          "by_originating_site": {
-            "m32q5a0vtb": {
-              "requests": 1,
-              "bytes_in": 52,
-              "bytes_out": 43,
-              "details": {
-                "POST:200": 1
-              },
-              "latency_max": 19
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "productcatalogservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "productcatalogservice-d564bdf4c-ldr9d",
-          "target": "productcatalogservice",
-          "site_id": "7hZ9GQzD6u"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_client": {
-            "frontend-5d68fd5b7d-6kgx5": {
-              "requests": 41,
-              "bytes_in": 673,
-              "bytes_out": 9242,
-              "details": {
-                "POST:200": 41
-              },
-              "latency_max": 14,
-              "by_handling_site": {
-                "7hZ9GQzD6u": {
-                  "requests": 41,
-                  "bytes_in": 673,
-                  "bytes_out": 9242,
-                  "details": {
-                    "POST:200": 41
-                  },
-                  "latency_max": 14
-                }
-              }
+            "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45768@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 4675,
+              "bytes_out": 1184,
+              "server": "cluster1-kafka-0"
             },
-            "recommendationservice-76598d5889-tzw5f": {
-              "requests": 6,
-              "bytes_in": 30,
-              "bytes_out": 8634,
-              "details": {
-                "POST:200": 6
-              },
-              "latency_max": 6,
-              "by_handling_site": {
-                "7hZ9GQzD6u": {
-                  "requests": 6,
-                  "bytes_in": 30,
-                  "bytes_out": 8634,
-                  "details": {
-                    "POST:200": 6
-                  },
-                  "latency_max": 6
-                }
-              }
-            }
-          }
-        },
-        {
-          "site_id": "m32q5a0vtb",
-          "by_client": {
-            "checkoutservice-6fcc84467f-5wwjl": {
-              "requests": 2,
-              "bytes_in": 34,
-              "bytes_out": 342,
-              "details": {
-                "POST:200": 2
-              },
-              "latency_max": 14,
-              "by_handling_site": {
-                "7hZ9GQzD6u": {
-                  "requests": 2,
-                  "bytes_in": 34,
-                  "bytes_out": 342,
-                  "details": {
-                    "POST:200": 2
-                  },
-                  "latency_max": 14
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_server": {
-            "productcatalogservice-d564bdf4c-ldr9d": {
-              "requests": 49,
-              "bytes_in": 737,
-              "bytes_out": 18218,
-              "details": {
-                "POST:200": 49
-              },
-              "latency_max": 3
-            }
-          },
-          "by_originating_site": {
-            "7hZ9GQzD6u": {
-              "requests": 47,
-              "bytes_in": 703,
-              "bytes_out": 17876,
-              "details": {
-                "POST:200": 47
-              },
-              "latency_max": 3
+            "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45770@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 51,
+              "last_in": 51,
+              "bytes_in": 857467,
+              "bytes_out": 256166,
+              "server": "cluster1-kafka-0"
             },
-            "m32q5a0vtb": {
-              "requests": 2,
-              "bytes_in": 34,
-              "bytes_out": 342,
-              "details": {
-                "POST:200": 2
-              },
-              "latency_max": 1
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "recommendationservice",
-      "protocol": "http",
-      "targets": [
-        {
-          "name": "recommendationservice-76598d5889-tzw5f",
-          "target": "recommendationservice",
-          "site_id": "7hZ9GQzD6u"
-        }
-      ],
-      "requests_received": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_client": {
-            "frontend-5d68fd5b7d-6kgx5": {
-              "requests": 6,
-              "bytes_in": 342,
-              "bytes_out": 390,
-              "details": {
-                "POST:200": 6
-              },
-              "latency_max": 66,
-              "by_handling_site": {
-                "7hZ9GQzD6u": {
-                  "requests": 6,
-                  "bytes_in": 342,
-                  "bytes_out": 390,
-                  "details": {
-                    "POST:200": 6
-                  },
-                  "latency_max": 66
-                }
-              }
-            }
-          }
-        }
-      ],
-      "requests_handled": [
-        {
-          "site_id": "7hZ9GQzD6u",
-          "by_server": {
-            "recommendationservice-76598d5889-tzw5f": {
-              "requests": 6,
-              "bytes_in": 342,
-              "bytes_out": 390,
-              "details": {
-                "POST:200": 6
-              },
-              "latency_max": 13
-            }
-          },
-          "by_originating_site": {
-            "7hZ9GQzD6u": {
-              "requests": 6,
-              "bytes_in": 342,
-              "bytes_out": 390,
-              "details": {
-                "POST:200": 6
-              },
-              "latency_max": 13
+            "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45866@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 1665,
+              "bytes_out": 7039,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45868@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 499,
+              "bytes_out": 218,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.14:45870@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30746,
+              "bytes_out": 28531,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46650@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 103,
+              "last_in": 103,
+              "bytes_in": 856802,
+              "bytes_out": 255956,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46652@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 96,
+              "last_in": 96,
+              "bytes_in": 4717,
+              "bytes_out": 1193,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46654@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 729058,
+              "bytes_out": 222492,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46742@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1665,
+              "bytes_out": 7039,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46744@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 651,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1665,
+              "bytes_out": 5382,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46748@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30900,
+              "bytes_out": 28725,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46750@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 101,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 17416,
+              "bytes_out": 19493,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.15:46752@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 96,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 1503,
+              "bytes_out": 4975,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52160@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 50,
+              "last_in": 50,
+              "bytes_in": 854548,
+              "bytes_out": 255276,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52164@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 54,
+              "last_in": 54,
+              "bytes_in": 4675,
+              "bytes_out": 1184,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52166@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12651,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 728644,
+              "bytes_out": 222339,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1665,
+              "bytes_out": 7039,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52256@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 650,
+              "last_out": 104,
+              "last_in": 103,
+              "bytes_in": 499,
+              "bytes_out": 218,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.16:52258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30900,
+              "bytes_out": 28725,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41254@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 136,
+              "last_in": 136,
+              "bytes_in": 4717,
+              "bytes_out": 1193,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41258@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12640,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 727803,
+              "bytes_out": 222007,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41304@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 640,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 1649,
+              "bytes_out": 6459,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41310@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30900,
+              "bytes_out": 28721,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.17:41312@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 36,
+              "last_in": 36,
+              "bytes_in": 1385,
+              "bytes_out": 4067,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44366@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12627,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 727527,
+              "bytes_out": 221868,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44368@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12627,
+              "last_out": 77,
+              "last_in": 77,
+              "bytes_in": 4716,
+              "bytes_out": 1192,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44414@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 627,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1637,
+              "bytes_out": 6024,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44416@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30823,
+              "bytes_out": 28621,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.18:44420@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 77,
+              "last_out": 30,
+              "last_in": 30,
+              "bytes_in": 616,
+              "bytes_out": 411,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33596@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 727228,
+              "bytes_out": 221757,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:33598@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 140,
+              "last_in": 140,
+              "bytes_in": 4832,
+              "bytes_out": 1228,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36242@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 2,
+              "last_in": 2,
+              "bytes_in": 1637,
+              "bytes_out": 6024,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36354@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 140,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 1145,
+              "bytes_out": 1696,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.19:36356@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 137,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30823,
+              "bytes_out": 28621,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39206@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 139,
+              "last_in": 139,
+              "bytes_in": 726998,
+              "bytes_out": 221687,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:39208@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 12626,
+              "last_out": 111,
+              "last_in": 111,
+              "bytes_in": 4717,
+              "bytes_out": 1193,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41800@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 626,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 1637,
+              "bytes_out": 6024,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41906@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 136,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 30669,
+              "bytes_out": 28427,
+              "server": "cluster1-kafka-0"
+            },
+            "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1": {
+              "id": "172.17.0.20:41912@aeaf0882-9930-45c9-b8ac-bfc54158d4e1",
+              "start_time": 111,
+              "last_out": 29,
+              "last_in": 29,
+              "bytes_in": 915,
+              "bytes_out": 1046,
+              "server": "cluster1-kafka-0"
             }
           }
         }

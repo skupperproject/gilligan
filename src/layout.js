@@ -41,6 +41,7 @@ import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
+import SiteInfoPage from "./pages/siteInfo/siteInfoPage";
 import ErrorPage from "./pages/connect/errorPage";
 import { QDRService, UPDATE_INTERVAL } from "./qdrService";
 import { utils } from "./utilities";
@@ -51,19 +52,26 @@ const VIEW_MODES = "viewModes";
 const LAST_VIEW = "lastView2";
 const CONNECT_TIMEOUT = 10 * 1000;
 
-class PageLayout extends React.Component {
+class Layout extends React.Component {
   constructor(props) {
     super(props);
     const view = utils.getSaved(LAST_VIEW, "service");
+    // view modes are "graph", "table", "details", and "Overview"
     this.viewModes = utils.getSaved(VIEW_MODES, {
+      thissite: "Overview",
       service: "graph",
       site: "graph",
       deployment: "graph",
     });
+    // added in version 1.5 so it won't be in the data that was saved before that
+    if (!this.viewModes.thissite) {
+      this.viewModes.thissite = "Overview";
+    }
     // never start with the details view
     if (this.viewModes[view] === "details") {
-      this.viewModes[view] = "table";
+      this.viewModes[view] = view === "thissite" ? "Overview" : "table";
     }
+    this.setCorrectMode(view, this.viewModes[view]);
     // setup the last mode the user picked
     this.savedMode = null;
     this.state = {
@@ -78,12 +86,12 @@ class PageLayout extends React.Component {
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
 
-    this.views = [
-      { description: "Services", name: "service" },
-      { description: "Sites", name: "site" },
-      { description: "Deployments", name: "deployment" },
-      //{ name: "Processes", view: "process" },
-    ];
+    this.views = {
+      thissite: "Site",
+      site: "Network",
+      service: "Services",
+      deployment: "Deployments",
+    };
   }
   componentDidMount = () => {
     this.doConnect();
@@ -105,8 +113,8 @@ class PageLayout extends React.Component {
     // a new URL was pasted into the browser's address bar.
     // go to the new view and use its parameters
     if (this.navSelect !== "userChanged" && !utils.isEmpty(options)) {
-      const view = options.view || "service";
-      const mode = options.mode || "graph";
+      const view = options.view || "thissite";
+      const mode = options.mode || view === "thissite" ? "Overview" : "graph";
       // save the new options for the new view
       utils.overrideOptions(view, options);
       this.viewModes[view] = mode;
@@ -130,26 +138,52 @@ class PageLayout extends React.Component {
   };
 
   // called internally when clicking on a service/site/deployment to view the details page
-  handleViewDetails = (mode, d, card) => {
-    this.savedMode = this.viewModes[this.state.view];
-    this.viewModes[this.state.view] = mode;
+  handleViewDetails = (mode, d, card, origin = "graph") => {
+    let view = this.state.view;
+    if (d.nodeType === "cluster") {
+      // we want to see the details for a site
+      view = "site";
+    }
+    // if we are on the overview page and want to see the details table, switch to the appropriate view, details mode
+    if (origin === "overview") {
+      if (card.cardType === "service") {
+        view = "service";
+      } else if (card.cardType === "deployment") {
+        view = "deployment";
+      } else {
+        view = "site";
+      }
+    }
+    this.savedMode = this.viewModes[view];
+    this.viewModes[view] = mode;
     this.navSelect = "userChanged";
-    this.setState({ mode }, () => {
-      this.pageRef.handleShowSubTable("graph", d, card);
+    this.setState({ view, mode }, () => {
+      this.pageRef.handleShowSubTable(origin, d, card);
     });
   };
 
+  setCorrectMode = (view, mode) => {
+    if (view !== "thissite" && mode !== "table" && mode !== "graph") {
+      this.viewModes[view] = "graph";
+      mode = this.viewModes[view];
+    }
+    return mode;
+  };
   // user clicked on a nav item to go to a view
   onNavSelect = (result) => {
+    let { mode } = this.state;
+    const { view } = this.state;
+
     this.navSelect = "userChanged";
     utils.setSaved(LAST_VIEW, result.itemId);
 
     // restore the last mode the user selected
     if (this.savedMode) {
-      this.viewModes[this.state.view] = this.savedMode;
-      utils.setSaved(VIEW_MODES, this.viewModes);
+      this.viewModes[view] = this.savedMode;
       this.savedMode = null;
     }
+    mode = this.setCorrectMode(view, mode);
+    utils.setSaved(VIEW_MODES, this.viewModes);
 
     // when clicking on a nav item, go to the table view instead of the details view
     if (this.viewModes[result.itemId] === "details") {
@@ -157,6 +191,7 @@ class PageLayout extends React.Component {
     }
     this.setState({
       view: result.itemId,
+      mode,
       connectPath: "",
     });
   };
@@ -190,8 +225,9 @@ class PageLayout extends React.Component {
   update = () => {
     if (this.updating) {
       console.log(
-        `updating took longer than ${UPDATE_INTERVAL /
-          1000} seconds. Skipping this update`
+        `updating took longer than ${
+          UPDATE_INTERVAL / 1000
+        } seconds. Skipping this update`
       );
       return;
     }
@@ -199,7 +235,7 @@ class PageLayout extends React.Component {
     this.service.update().then(
       (data) => {
         if (!this.unmounted) {
-          if (this.pageRef && this.pageRef.update) {
+          if (this.pageRef?.update) {
             this.pageRef.update();
           }
         }
@@ -211,6 +247,11 @@ class PageLayout extends React.Component {
         console.log(e);
       }
     );
+  };
+
+  forceUpdate = () => {
+    this.updating = false;
+    this.update();
   };
 
   doConnect = () => {
@@ -252,7 +293,7 @@ class PageLayout extends React.Component {
     } else {
       connectPath = "/";
       clearInterval(this.timer);
-      this.timer = setInterval(this.update, UPDATE_INTERVAL);
+      this.timer = setInterval(this.update, UPDATE_INTERVAL * 2);
       if (!this.unmounted) {
         this.setState({
           username: "Bob Denver",
@@ -265,28 +306,25 @@ class PageLayout extends React.Component {
 
   toL = (s) => s[0].toLowerCase() + s.slice(1);
 
-  getMode = () => {
-    let mode = this.viewModes[this.state.view];
-    return mode;
-  };
+  getMode = () => this.viewModes[this.state.view];
 
   render() {
     const { view } = this.state;
     const mode = this.getMode();
+    //console.log(`layout::render view ${view} mode ${mode}`);
     const PageNav = () => {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
           <NavList>
-            {this.views.map((viewInfo) => {
-              const { description, name } = viewInfo;
+            {Object.keys(this.views).map((viewKey) => {
               return (
                 <NavItem
-                  id={`${name}NavItem`}
-                  itemId={name}
-                  isActive={name === view}
-                  key={name}
+                  id={`${viewKey}NavItem`}
+                  itemId={viewKey}
+                  isActive={viewKey === view}
+                  key={viewKey}
                 >
-                  <div className="nav-item-link">{description}</div>
+                  <div className="nav-item-link">{this.views[viewKey]}</div>
                 </NavItem>
               );
             })}
@@ -401,8 +439,10 @@ class PageLayout extends React.Component {
               {...this.props}
               handleChangeViewMode={this.handleChangeViewMode}
               handleViewDetails={this.handleViewDetails}
+              forceUpdate={this.forceUpdate}
               setOptions={this.setOptions}
               view={this.state.view}
+              views={this.views}
               mode="graph"
             />
           )}
@@ -412,9 +452,24 @@ class PageLayout extends React.Component {
               service={this.service}
               {...this.props}
               handleChangeViewMode={this.handleChangeViewMode}
+              forceUpdate={this.forceUpdate}
               setOptions={this.setOptions}
               view={this.state.view}
+              views={this.views}
               mode={mode}
+              origin={this.state.origin}
+            />
+          )}
+          {this.state.connected && view === "thissite" && (
+            <SiteInfoPage
+              ref={(el) => (this.pageRef = el)}
+              service={this.service}
+              {...this.props}
+              mode={mode}
+              handleViewDetails={this.handleViewDetails}
+              handleChangeViewMode={this.handleChangeViewMode}
+              forceUpdate={this.forceUpdate}
+              setOptions={this.setOptions}
             />
           )}
         </Page>
@@ -423,4 +478,4 @@ class PageLayout extends React.Component {
   }
 }
 
-export default PageLayout;
+export default Layout;

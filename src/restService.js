@@ -1,15 +1,25 @@
+// Set this to false (or just delete it) to allow this console to call GET /services
+const DISABLE_EXPOSE = false;
+const NODE_ENV_DEV = "development";
+const NODE_ENV_TST = "test";
 class RESTService {
   constructor() {
     this.url = `${window.location.protocol}//${window.location.host}`;
+    //this.url =
+    //  "https://skupper-default.grs1-153f1de160110098c1928a6c05e19444-0000.eu-gb.containers.appdomain.cloud";
     //console.log(`default REST url is ${this.url}`);
   }
 
   getData = () =>
     new Promise((resolve, reject) => {
-      if (process.env.NODE_ENV === "test") {
-        const data = require("../public/data/DATA.json");
+      if (process.env.NODE_ENV === NODE_ENV_TST) {
+        // the require statement must be passed a variable instead of a string literal.
+        // Otherwise the browser will attempt to load the file when the code is compiled instead of at run-time.
+        const testfile = "../public/data/testing.json";
+        // eslint-disable-next-line
+        const data = require(testfile);
         resolve(data);
-      } else if (process.env.NODE_ENV === "development") {
+      } else if (process.env.NODE_ENV === NODE_ENV_DEV) {
         // This is used to get the data when the console
         // is served by yarn start or npm start
         this.fetchFrom("/data/DATA.json")
@@ -27,53 +37,189 @@ class RESTService {
       }
     });
 
-  getSiteInfo = () =>
-    new Promise((resolve, reject) => {
-      if (process.env.NODE_ENV === "test") {
-        console.log("getSiteInfo test");
-        const data = require("../public/data/SITE.json");
-        resolve(data);
+  getSiteInfo = (VAN) =>
+    new Promise((resolve) => {
+      let url = `${this.url}/`;
+      let suffix = ".json";
+
+      if (process.env.NODE_ENV === NODE_ENV_DEV) {
+        url = "/data/";
+      } else if (process.env.NODE_ENV === NODE_ENV_TST) {
+        url = "../public/data/";
       } else {
-        this.fetchFrom(`${this.url}/SITE`)
-          .then(resolve)
-          .catch((error) => {
-            console.log(`getSiteInfo error from ${this.url}/SITE: ${error}`);
-            this.fetchFrom("/data/SITE.json")
-              .then((results) => {
-                console.log(
-                  `getSiteInfo results ${JSON.stringify(results, null, 2)}`
-                );
-                resolve(results);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-          });
+        suffix = "";
       }
+      let endpoints = ["site", "tokens", "links", "services", "targets"];
+      if (DISABLE_EXPOSE) {
+        endpoints = endpoints.filter(
+          (endpoint) => endpoint !== "services" && endpoint !== "targets"
+        );
+      }
+      let promises = endpoints.map((endpoint) =>
+        this.fetchFrom(`${url}${endpoint}${suffix}`, endpoint === "site")
+      );
+      Promise.allSettled(promises).then((allResults) => {
+        const results = {};
+        endpoints.forEach((endpoint, i) => {
+          results[endpoint] =
+            allResults[i].status === "fulfilled"
+              ? allResults[i].value
+              : endpoint === "site"
+              ? "" // if the site call failed, use empty string
+              : []; // call failed. use empty array as result
+        });
+        // fold targets into services
+        results.targets.forEach((target) => {
+          const deployed = results.services.find(
+            (service) => service.name === target.name
+          );
+          if (deployed) {
+            deployed.exposed = true;
+            deployed.type = target.type;
+          } else {
+            const index = results.services.push(target);
+            results.services[index - 1].exposed = false;
+          }
+        });
+
+        // the call to GET /site should return the site_id of the current site
+        results.site = results.site.trim();
+        let currentSite = VAN.sites.find(
+          (site) => site.site_id === results.site
+        );
+        if (!currentSite) {
+          currentSite = VAN.sites[0];
+        }
+        results["site_name"] = currentSite.site_name;
+        results["site_id"] = currentSite.site_id;
+        results["Site type"] = currentSite["Site type"];
+        results["namespace"] = currentSite.namespace;
+        resolve(results);
+      });
     });
 
-  uploadToken = (data) =>
-    new Promise((resolve, reject) => {
-      fetch(`${this.url}/TOKEN`, {
-        method: "POST",
-        body: data,
+  // create a link
+  uploadToken = (data) => {
+    let obj = data;
+
+    try {
+      obj = JSON.parse(data);
+    } catch (e) {
+      obj = { data };
+    }
+    return this.postSiteInfoMethod(obj, "POST", "links");
+  };
+
+  // delete a link
+  unlinkSite = (data) =>
+    this.postSiteInfoMethod(data, "DELETE", "links", data.name);
+
+  // create a token
+  // called when the user requests that a token be copied to the clipboard
+  getTokenData = () => {
+    return new Promise((resolve, reject) => {
+      this.postSiteInfoMethod({}, "POST", "tokens").then(
+        (results) => {
+          //success
+          results.text().then(resolve);
+        },
+        (e) => {
+          // failure
+          if (
+            process.env.NODE_ENV === NODE_ENV_DEV ||
+            process.env.NODE_ENV === NODE_ENV_TST
+          ) {
+            const url =
+              process.env.NODE_ENV === NODE_ENV_DEV
+                ? "/data/token.json"
+                : "../public/data/token.json";
+            this.fetchFrom(url).then(resolve, reject);
+          } else {
+            reject(e);
+          }
+        }
+      );
+    });
+  };
+
+  // delete a token
+  deleteToken = (data) =>
+    this.postSiteInfoMethod(data, "DELETE", "tokens", data.name);
+
+  // update a token
+  updateToken = (data) =>
+    this.postSiteInfoMethod(data, "UPDATE", "tokens", data.name);
+
+  // create a deployment
+  exposeService = (data) => this.postSiteInfoMethod(data, "POST", "services");
+
+  // delete a deployment
+  unexposeService = (data) =>
+    this.postSiteInfoMethod(data, "DELETE", "services", data.name);
+
+  // update a site's name
+  renameSite = (data) =>
+    this.postSiteInfoMethod(data, "UPDATE", "site", data.site_id);
+
+  // revoke site's certificate authority
+  regenCA = () => this.postSiteInfoMethod({}, "DELETE", "certificateAuthority");
+
+  // POST the data using method
+  postSiteInfoMethod = (data, method, type, name) => {
+    return new Promise((resolve, reject) => {
+      let url = `${this.url}/${type}`;
+      if (name) {
+        url = `${url}/${encodeURIComponent(name)}`;
+      }
+      fetch(url, {
+        method,
+        body: JSON.stringify(data),
       })
-        .then((response) => {
-          console.log(
-            `uploadToken response is ${JSON.stringify(response, null, 2)}`
-          );
-          resolve(response);
-        })
+        .then(
+          (response) => {
+            if (!response.ok) {
+              const forname = name ? ` for ${name}` : "";
+              console.log(
+                `${method} to ${type}${forname} with data ${JSON.stringify(
+                  data,
+                  null,
+                  2
+                )} returned with a status of ${response.status}`
+              );
+              const e =
+                response.status === 404
+                  ? new Error(`${method}::${type} not implemented`)
+                  : new Error(
+                      `${method} ${type} ${response.statusText} (${response.status})`
+                    );
+              console.log("rejecting with error");
+              console.log(e);
+              reject(e);
+            } else {
+              resolve(response);
+            }
+          },
+          (error) => {
+            console.log(`error ${method}::${type} `);
+            console.log(error);
+            reject(error);
+          }
+        )
         .catch((error) => {
-          console.log(`uploadToken error is ${JSON.stringify(error, null, 2)}`);
-          reject(error);
+          // server error
+          const e = new Error(`Failed with error ${error.status}`);
+          reject(e);
         });
     });
+  };
 
-  fetchFrom = (url) =>
+  // needed when the token is saved directly to a file
+  getSkupperTokenURL = () => `${this.url}/downloadclaim`;
+
+  fetchFrom = (url, asText) =>
     new Promise((resolve, reject) => {
       fetch(url)
-        .then((res) => res.json())
+        .then((res) => (!asText ? res.json() : res.text()))
         .then((data) => {
           resolve(data);
         })
