@@ -35,7 +35,8 @@ class RequestReceived extends Component {
 
   heading = (requests) => {
     return (
-      requests?.length > 0 && (
+      requests &&
+      requests.length > 0 && (
         <StackItem>
           <TextContent>
             <Text component={TextVariants.h3}>HTTP requests received from</Text>
@@ -64,7 +65,7 @@ class RequestReceived extends Component {
     let received = [];
     if (data.nodeType === "cluster") {
       const fromSite = {};
-      this.props.service.adapter.getDeploymentLinks(false).forEach((l) => {
+      this.props.service.adapter.getDeploymentLinks().forEach((l) => {
         if (l.target.site.site_name === data.site_name && l.request.details) {
           const sourceSite = l.source.site.site_name;
           if (!(sourceSite in fromSite)) {

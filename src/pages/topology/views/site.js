@@ -157,9 +157,7 @@ export class Site {
   };
 
   initTrafficLinks = (nodes, links, vsize, viewer, radius) => {
-    let deploymentLinks = this.data.adapter.getDeploymentLinks(
-      viewer.state.options.showExternal
-    );
+    let deploymentLinks = this.data.adapter.getDeploymentLinks();
     deploymentLinks.forEach((link) => {
       let stat = viewer.statForProtocol();
       if (stat === "bytes_in") stat = "bytes_out";
@@ -1196,7 +1194,7 @@ export class Site {
     const to = direction === "in" ? "source" : "target";
     const from = direction === "in" ? "target" : "source";
 
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const toName = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;
@@ -1226,7 +1224,7 @@ export class Site {
   }) => {
     const requests = {};
     stat = "bytes_out";
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const testSiteId =
         direction === "in"
           ? deploymentLink.target.site.site_id
@@ -1271,7 +1269,7 @@ export class Site {
     const to = direction === "in" ? "source" : "target";
     const from = direction === "in" ? "target" : "source";
 
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const toName = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;
@@ -1312,7 +1310,7 @@ export class Site {
     const from = direction === "out" ? "source" : "target";
     const to = direction === "out" ? "target" : "source";
 
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const site = deploymentLink[to].site.site_name;
       const fromId = deploymentLink[from].site.site_id;
       const toId = deploymentLink[to].site.site_id;

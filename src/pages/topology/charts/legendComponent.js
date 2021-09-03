@@ -20,6 +20,7 @@ under the License.
 import React, { Component } from "react";
 import RoutersComponent from "../chord/routersComponent";
 import { utils } from "../../../utilities";
+import { SHOW_EXTERNAL } from "../../../adapter";
 
 class SkupperLegend extends Component {
   constructor(props) {
@@ -46,10 +47,7 @@ class SkupperLegend extends Component {
         }
       } else {
         Object.keys(utils.serviceColors).forEach((service) => {
-          if (
-            this.props.showExternal ||
-            !this.props.viewObj.isExternal(service)
-          ) {
+          if (SHOW_EXTERNAL || !this.props.viewObj.isExternal(service)) {
             colors[service] = utils.serviceColors[service];
           }
         });

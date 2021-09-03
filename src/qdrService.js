@@ -112,7 +112,8 @@ export class QDRService {
 
   saveTimeSeries = (data) => {
     // push the current link.request onto link.history
-    data.deploymentLinks.forEach((link) => {
+    const deploymentLinks = data.getDeploymentLinks();
+    deploymentLinks.forEach((link) => {
       utils.keepHistory({
         obj: link.request,
         storage: this.history,

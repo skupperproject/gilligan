@@ -7,16 +7,19 @@ import { List, ListItem, ListComponent } from "@patternfly/react-core";
 import CopyButton from "./copyButton";
 import UseTokenModal from "./useTokenModal";
 import ArrowTo from "./arrowTo";
+import ManualCopyModal from "./manualCopyModal";
 
 class GetTokenModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       isModalOpen: false,
+      showManualModal: false,
       uploadMsg: null,
       uploadStatus: null,
       step2Enabled: false,
     };
+    this.clipboardSupported = navigator.clipboard;
   }
 
   handleModalToggle = () => {
@@ -25,7 +28,7 @@ class GetTokenModal extends React.Component {
       () => {
         // blur the step 2 when modal is closed so it won't be enabled if this dialog is re-displayed
         if (!this.state.isModalOpen) {
-          this.setState({ step2Enabled: false });
+          this.setState({ step2Enabled: false, showManualModal: false });
         }
       }
     );
@@ -35,25 +38,35 @@ class GetTokenModal extends React.Component {
     this.props.service.getTokenData().then(
       (results) => {
         const token = JSON.stringify(results);
-        navigator.clipboard.writeText(token).then(
-          (clip) => {
-            const msg = `Request for token sent. The token should be on the clipboard.`;
-            console.log(msg);
-            this.setState(
-              {
-                uploadMsg: "Token copied to clipboard",
-                uploadStatus: "success",
-                step2Enabled: true,
-              },
-              this.handleCopyDone
-            );
-          },
-          (error) => {
-            const msg = `Request for token failed ${error.message}`;
-            console.error(msg);
-            this.setState({ uploadMsg: error, uploadStatus: "error" });
-          }
-        );
+        if (!this.clipboardSupported) {
+          this.setState({
+            theToken: results,
+            step2Enabled: true,
+            uploadMsg: "",
+            uploadStatus: "pending",
+            showManualModal: true,
+          });
+        } else {
+          navigator.clipboard.writeText(token).then(
+            (clip) => {
+              const msg = `Request for token sent. The token should be on the clipboard.`;
+              console.log(msg);
+              this.setState(
+                {
+                  uploadMsg: "Token copied to clipboard",
+                  uploadStatus: "success",
+                  step2Enabled: true,
+                },
+                this.handleCopyDone
+              );
+            },
+            (error) => {
+              const msg = `Request for token failed ${error.message}`;
+              console.error(msg);
+              this.setState({ uploadMsg: error, uploadStatus: "error" });
+            }
+          );
+        }
       },
       (error) => {
         console.log(`fetch clipboard data error`);
@@ -69,9 +82,23 @@ class GetTokenModal extends React.Component {
       this.arrowRef.animateIn();
     }
   };
+  handleManualCopyModalClose = () => {
+    this.setState({ showManualModal: false });
+  };
+
+  showManualCopyModal = () => {
+    this.setState({ showManualModal: true });
+  };
 
   render() {
-    const { isModalOpen, uploadMsg, uploadStatus, step2Enabled } = this.state;
+    const {
+      isModalOpen,
+      showManualModal,
+      uploadMsg,
+      uploadStatus,
+      step2Enabled,
+      theToken,
+    } = this.state;
 
     return (
       <React.Fragment>
@@ -122,6 +149,19 @@ class GetTokenModal extends React.Component {
               <span className={`sk-status-message ${uploadStatus}`}>
                 <h1>{uploadMsg}</h1>
               </span>
+              <div>
+                {!this.clipboardSupported && step2Enabled && (
+                  <Button onClick={this.showManualCopyModal}>
+                    Copy token manually
+                  </Button>
+                )}
+                {showManualModal && (
+                  <ManualCopyModal
+                    copyText={theToken}
+                    handleModalClose={this.handleManualCopyModalClose}
+                  />
+                )}
+              </div>
               <h1 className={step2Enabled ? "" : "disabled"}>
                 Step 2: Use the token to link the sites
               </h1>

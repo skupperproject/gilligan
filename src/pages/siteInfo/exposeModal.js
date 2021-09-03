@@ -7,28 +7,33 @@ class ExposeModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      ...this.props.exposeInfo,
+      ...this.props.exposeInfo, // work with a copy in case they cancel the modal. we don't want to have the underlying data changed
       protocolSelected: null,
       portSelected: null,
       isProtocolSelectOpen: false,
       isPortSelectOpen: false,
-    }; // work with a copy in case they cancel the modal. we don't want to have the underlying data changed
+      port: 27000,
+    };
 
     this.protocols = ["tcp", "http", "http2"];
     this.options = this.protocols.map((protocol, i) => (
       <SelectOption key={i} value={protocol} />
     ));
-    this.portOptions = this.props.exposeInfo.ports.map((port, i) => (
-      <SelectOption key={i} value={this.constructPortValue(port)} />
-    ));
-    this.state.portSelected = this.constructPortValue(
-      this.props.exposeInfo.ports[0]
-    );
-    const firstNamedPort = this.props.exposeInfo.ports.find((p) =>
-      this.protocols.includes(p.name)
-    );
-    if (firstNamedPort) {
-      this.state.protocolSelected = firstNamedPort.name;
+    if (this.props.exposeInfo.ports && this.props.exposeInfo.ports.length > 0) {
+      this.portOptions = this.props.exposeInfo.ports.map((port, i) => (
+        <SelectOption key={i} value={this.constructPortValue(port)} />
+      ));
+      this.state.portSelected = this.constructPortValue(
+        this.props.exposeInfo.ports[0]
+      );
+      const firstNamedPort = this.props.exposeInfo.ports.find((p) =>
+        this.protocols.includes(p.name)
+      );
+      if (firstNamedPort) {
+        this.state.protocolSelected = firstNamedPort.name;
+      }
+    } else {
+      this.state.protocolSelected = "tcp";
     }
   }
 
@@ -58,7 +63,9 @@ class ExposeModal extends React.Component {
   handleModalConfirm = () => {
     this.handleModalToggle();
     const exposeInfo = { ...this.state };
-    exposeInfo.port = this.parsePortValue(exposeInfo.portSelected).port;
+    if (this.portOptions) {
+      exposeInfo.port = this.parsePortValue(exposeInfo.portSelected).port;
+    }
     exposeInfo.protocol = exposeInfo.protocolSelected || this.protocols[0];
     this.props.doExpose(exposeInfo);
   };
@@ -116,6 +123,7 @@ class ExposeModal extends React.Component {
       isPortSelectOpen,
       protocolSelected,
       portSelected,
+      port,
     } = this.state;
     return (
       <React.Fragment>
@@ -166,20 +174,34 @@ class ExposeModal extends React.Component {
               isRequired
               fieldId="form-use"
             >
-              <Select
-                variant={SelectVariant.single}
-                placeholderText="Select a port"
-                aria-label="Select port input"
-                onToggle={this.handleSelectPortToggle}
-                onSelect={this.handlePortSelectChange}
-                selections={portSelected}
-                isOpen={isPortSelectOpen}
-                aria-labelledby="expose-port"
-                aria-describedby="expose-port"
-                menuAppendTo={() => document.body}
-              >
-                {this.portOptions}
-              </Select>
+              {this.portOptions && (
+                <Select
+                  variant={SelectVariant.single}
+                  placeholderText="Select a port"
+                  aria-label="Select port input"
+                  onToggle={this.handleSelectPortToggle}
+                  onSelect={this.handlePortSelectChange}
+                  selections={portSelected}
+                  isOpen={isPortSelectOpen}
+                  aria-labelledby="expose-port"
+                  aria-describedby="expose-port"
+                  menuAppendTo={() => document.body}
+                >
+                  {this.portOptions}
+                </Select>
+              )}
+              {!this.portOptions && (
+                <TextInput
+                  isRequired
+                  key="expose-port"
+                  type="number"
+                  id="expose-port"
+                  name="port"
+                  aria-describedby="form-port"
+                  value={port}
+                  onChange={this.handleTextInputChange}
+                />
+              )}
             </FormGroup>
             <FormGroup
               label="Protocol"

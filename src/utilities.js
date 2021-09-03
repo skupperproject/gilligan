@@ -149,6 +149,29 @@ const utils = {
     if (obj) return JSON.parse(JSON.stringify(obj));
   },
 
+  hasUnicode: (str) => {
+    for (let i = 0; i < str.length; i++) {
+      let cc = str.charCodeAt(i);
+      if (cc > 127 || cc < 32) return true;
+    }
+    return false;
+  },
+
+  // uppercase given protocol string and for http return HTTP/1 or HTTP/2
+  protocol: (val) => {
+    const protocolMap = {
+      tcp: "TCP",
+      http: "HTTP/1",
+      http1: "HTTP/1",
+      http2: "HTTP/2",
+    };
+    return protocolMap[val]
+      ? protocolMap[val] // it matches one of the keys
+      : typeof val === "string"
+      ? val.toUpperCase()
+      : val;
+  },
+
   getUrlParts: (fullUrl) => {
     fullUrl = fullUrl || window.location;
     const url = document.createElement("a");

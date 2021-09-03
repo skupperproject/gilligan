@@ -85,7 +85,7 @@ class SiteInfoViewer extends React.Component {
 
   update = () => {
     const currentTabRef = this.tabRefs[this.state.tab];
-    if (currentTabRef?.update) {
+    if (currentTabRef && currentTabRef.update) {
       currentTabRef.update();
     }
   };

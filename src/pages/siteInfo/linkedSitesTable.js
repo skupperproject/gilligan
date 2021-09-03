@@ -69,7 +69,7 @@ class LinkedSitesTable extends React.Component {
 
   // called periodically by the parent component
   update = () => {
-    if (this.tableRef?.update) {
+    if (this.tableRef && this.tableRef.update) {
       this.tableRef.update();
     }
   };
@@ -121,7 +121,7 @@ class LinkedSitesTable extends React.Component {
     this.setState({
       showUnlinkModal: true,
       unlinkInfo: {
-        Name: rowData.data.Name,
+        name: rowData.data.Name,
       },
     });
   };
@@ -134,7 +134,7 @@ class LinkedSitesTable extends React.Component {
     this.props.service.unlinkSite(unlinkInfo).then(
       () => {
         if (!this.mounted) return;
-        const msg = `Site ${unlinkInfo.Name} unlinked successfully`;
+        const msg = `Site ${unlinkInfo.name} unlinked successfully`;
         console.log(msg);
         this.addAlert({
           title: msg,
@@ -144,7 +144,7 @@ class LinkedSitesTable extends React.Component {
       },
       (error) => {
         if (!this.mounted) return;
-        const msg = `Error unlinking site ${unlinkInfo.Name} - ${error.message}`;
+        const msg = `Error unlinking site ${unlinkInfo.name} - ${error.message}`;
         console.error(msg);
         this.addAlert({
           title: msg,

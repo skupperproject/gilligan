@@ -36,6 +36,7 @@ class UseTokenModal extends React.Component {
   };
 
   handlePaste = (element) => {
+    element = this.pasteRef;
     let sendToServer = (token) => this.props.service.uploadToken(token);
     const success = () => {
       const msg = `Site linking request submitted. The request may take a little while.`;
@@ -59,7 +60,7 @@ class UseTokenModal extends React.Component {
       });
       this.setState({ isModalOpen: false });
     };
-    if (navigator.clipboard.readText) {
+    if (navigator.clipboard) {
       navigator.clipboard.readText().then((clipText) => {
         sendToServer(clipText).then(success, failure);
       });
@@ -84,28 +85,30 @@ class UseTokenModal extends React.Component {
   isInvalidClipboard = () => {
     return new Promise((resolve) => {
       // Firefox only supports reading the clipboard in browser extensions, using the "clipboardRead" extension permission.
-      if (!navigator.clipboard?.readText) {
-        resolve(false);
-        return;
-      }
-      navigator.clipboard?.readText().then((clipText) => {
-        if (clipText) {
-          try {
-            const token = JSON.parse(clipText);
-            resolve(!token.kind || !token.data);
-          } catch (e) {
+      if (!navigator.clipboard) {
+        resolve(false); // assume whatever is on the clipboard (if anything) is valid so the PastButton is rendered
+      } else {
+        navigator.clipboard.readText().then((clipText) => {
+          if (clipText) {
+            try {
+              const token = JSON.parse(clipText);
+              resolve(!token.kind || !token.data);
+            } catch (e) {
+              resolve(true);
+            }
+          } else {
             resolve(true);
           }
-        } else {
-          resolve(true);
-        }
-      });
+        });
+      }
     });
   };
 
   render() {
     const { isModalOpen, uploadMsg, invalidClipboard } = this.state;
-    const clipboardSupported = navigator.clipboard?.readText;
+    const clipboardSupported = navigator.clipboard
+      ? navigator.clipboard.readText
+      : false;
 
     return (
       <React.Fragment>

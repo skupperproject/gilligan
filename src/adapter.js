@@ -1,17 +1,29 @@
 import { utils } from "./utilities";
 var INSTANCE = 0;
+export const SHOW_EXTERNAL = true;
+
 class Adapter {
   constructor(data) {
     this.data = data;
+    this.sortSites();
+    this.sortServices();
+    /*
+    console.log("new data");
+    try {
+      console.log(JSON.stringify(data, null, 2));
+    } catch (e) {
+      console.log(data);
+    }
+    */
     //console.log("original data");
     //console.log(JSON.parse(JSON.stringify(data)));
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
+    this.fixBinaryAddresses();
+    this.fixConnections();
     this.removeEmptyServices();
     this.addSendersServices();
-    this.sortSites();
-    this.sortServices();
     this.addServicesToClusters();
     this.addServersToSites();
     this.addSourcesTargets();
@@ -22,8 +34,7 @@ class Adapter {
         console.log(this.data);
       }
     }
-    data.getDeploymentLinks = (showExternal) =>
-      this.getDeploymentLinks(showExternal);
+    data.getDeploymentLinks = () => this.getDeploymentLinks(SHOW_EXTERNAL);
     this.siteInfo = { name: this.data.sites[0].site_name };
   }
 
@@ -42,6 +53,30 @@ class Adapter {
       }
     });
   };
+
+  // TODO: why do some services have non-ascii characters?
+  fixBinaryAddresses = () => {
+    this.data.services = this.data.services.filter(
+      (service) => !utils.hasUnicode(service.address)
+    );
+  };
+
+  // sometimes a tcp service will not have a connections_in/egress
+  // rather than test for that in all the code here, we just set
+  // any missing lists to []
+  fixConnections = () => {
+    this.data.services.forEach((service) => {
+      if (service.protocol === "tcp") {
+        if (!service.connections_egress) {
+          service.connections_egress = [];
+        }
+        if (!service.connections_ingress) {
+          service.connections_ingress = [];
+        }
+      }
+    });
+  };
+
   sortSites = () => {
     this.data.sites.sort((a, b) =>
       a.site_name < b.site_name ? -1 : a.site_name > b.site_name ? 1 : 0
@@ -282,7 +317,7 @@ class Adapter {
     });
   };
 
-  getDeploymentLinks = (showExternal = false) => {
+  getDeploymentLinks = (showExternal = SHOW_EXTERNAL) => {
     if (!showExternal) {
       return this.data.deploymentLinks.filter(
         (link) =>
@@ -319,19 +354,21 @@ class Adapter {
           const egress = to.connections_egress[e];
           if (egress.site_id === toSite) {
             for (const connectionID in egress.connections) {
-              for (let i = 0; i < to.connections_ingress.length; i++) {
-                const ingress = to.connections_ingress[i];
-                if (ingress.site_id === fromSite) {
-                  const connection = ingress.connections[connectionID];
-                  if (connection) {
-                    const client = connection.client;
-                    const clientService = this.data.services.find((s) =>
-                      s.targets.some(
-                        (t) => t.name === client && t.site_id === fromSite
-                      )
-                    );
-                    if (from === clientService) {
-                      utils.aggregateAttributes(connection, req);
+              if (to.connections_ingress) {
+                for (let i = 0; i < to.connections_ingress.length; i++) {
+                  const ingress = to.connections_ingress[i];
+                  if (ingress.site_id === fromSite) {
+                    const connection = ingress.connections[connectionID];
+                    if (connection) {
+                      const client = connection.client;
+                      const clientService = this.data.services.find((s) =>
+                        s.targets.some(
+                          (t) => t.name === client && t.site_id === fromSite
+                        )
+                      );
+                      if (from === clientService) {
+                        utils.aggregateAttributes(connection, req);
+                      }
                     }
                   }
                 }
@@ -351,16 +388,18 @@ class Adapter {
     } else if (service.connections_egress) {
       service.connections_egress.forEach((egress) => {
         for (let connectionID in egress.connections) {
-          service.connections_ingress.forEach((ingress) => {
-            const ingressConnection = ingress.connections[connectionID];
-            if (ingressConnection) {
-              const client = ingressConnection.client;
-              const sourceService = this.serviceNameFromClientId(client);
-              if (sourceService) {
-                serviceAddresses.push(sourceService);
+          if (service.connections_ingress) {
+            service.connections_ingress.forEach((ingress) => {
+              const ingressConnection = ingress.connections[connectionID];
+              if (ingressConnection) {
+                const client = ingressConnection.client;
+                const sourceService = this.serviceNameFromClientId(client);
+                if (sourceService) {
+                  serviceAddresses.push(sourceService);
+                }
               }
-            }
-          });
+            });
+          }
         }
       });
     }

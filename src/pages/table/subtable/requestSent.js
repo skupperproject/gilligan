@@ -58,7 +58,7 @@ class RequestSent extends Component {
     if (data.nodeType === "cluster") {
       const VANData = this.props.service.adapter.data;
       const bySite = {};
-      VANData.getDeploymentLinks(false).forEach((l) => {
+      VANData.getDeploymentLinks().forEach((l) => {
         if (l.source.site.site_id === data.site_id && l.request.details) {
           const siteName = l.target.site.site_name;
           if (!(siteName in bySite)) {

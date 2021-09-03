@@ -49,6 +49,7 @@ class OverviewPage extends React.Component {
       getSkupperMsg: null,
       showUnlinkModal: false,
       unlinkInfo: null,
+      linkedCount: this.props.service.siteInfo.links.length,
     };
     this.viewObj = new VIEWS["site"](this.props.service);
     this.actions = [
@@ -68,15 +69,20 @@ class OverviewPage extends React.Component {
   };
 
   update = () => {
-    if (this.tableRef?.update) {
-      this.tableRef.update();
-    }
-    if (this.chartRef1?.update) {
-      this.chartRef1.update();
-    }
-    if (this.chartRef2?.update) {
-      this.chartRef2.update();
-    }
+    this.setState(
+      { linkedCount: this.props.service.siteInfo.links.length },
+      () => {
+        if (this.tableRef && this.tableRef.update) {
+          this.tableRef.update();
+        }
+        if (this.chartRef1 && this.chartRef1.update) {
+          this.chartRef1.update();
+        }
+        if (this.chartRef2 && this.chartRef2.update) {
+          this.chartRef2.update();
+        }
+      }
+    );
   };
 
   addAlert = (alertProps) => {
@@ -86,7 +92,9 @@ class OverviewPage extends React.Component {
   };
 
   actionResolver = (rowData) => {
-    const site_id = rowData.data.cardData?.site_id;
+    const site_id = rowData.data.cardData
+      ? rowData.data.cardData.site_id
+      : null;
     const isCurrent = site_id === this.props.siteInfo.site_id;
     if (isCurrent) return null;
     return this.actions;
@@ -96,7 +104,7 @@ class OverviewPage extends React.Component {
     this.setState({
       showUnlinkModal: true,
       unlinkInfo: {
-        Name: rowData.data.Name,
+        name: rowData.data.Name,
       },
     });
   };
@@ -108,7 +116,7 @@ class OverviewPage extends React.Component {
   doUnlink = (unlinkInfo) => {
     this.props.service.unlinkSite(unlinkInfo).then(
       () => {
-        const msg = `Site ${unlinkInfo.Name} unlinked successfully`;
+        const msg = `Site ${unlinkInfo.name} unlinked successfully`;
         console.log(msg);
         this.addAlert({
           title: msg,
@@ -117,7 +125,7 @@ class OverviewPage extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error unlinking site ${unlinkInfo.Name} - ${error.message}`;
+        const msg = `Error unlinking site ${unlinkInfo.name} - ${error.message}`;
         console.error(msg);
         this.addAlert({
           title: msg,
@@ -146,7 +154,9 @@ class OverviewPage extends React.Component {
       <Title headingLevel="h4" size="md">
         No linked sites
       </Title>
-      <EmptyStateBody>There are no sites linked to this site</EmptyStateBody>
+      <EmptyStateBody>
+        This site has not initiated any links to other Skupper sites
+      </EmptyStateBody>
       <EmptyStateSecondaryActions>
         <GetTokenModal {...this.props} addAlert={this.addAlert} />
         <UseTokenModal
@@ -159,23 +169,24 @@ class OverviewPage extends React.Component {
     </EmptyState>
   );
 
-  // called after the data for the linedSitesTable is fetched
+  // called after the data for the linkedSitesTable is fetched
   // used to add/remove rows
   filterLinkData = (data) => {
     if (data) {
       // remove any disconnected links
       //data = data.filter((d) => d.Status !== LINKDOWN_VALUE);
 
-      if (!data.forEach) debugger;
-      // change the name to the linked site's name
-      data.forEach((d) => {
-        const site = this.props.service.VAN.sites.find(
-          (s) => s.site_id === d.site_id
-        );
-        if (site) {
-          d.Name = site.site_name;
-        }
-      });
+      if (data.forEach) {
+        // change the name to the linked site's name
+        data.forEach((d) => {
+          const site = this.props.service.VAN.sites.find(
+            (s) => s.site_id === d.site_id
+          );
+          if (site) {
+            d.Name = site.site_name;
+          }
+        });
+      }
 
       // add the current site to the linked sites rows
       const siteInfo = this.props.service.siteInfo;
@@ -193,7 +204,11 @@ class OverviewPage extends React.Component {
       current.cardData.shortName = utils.shortName(current.Name);
       current.cardData.nodeType = "cluster";
 
-      return [current, ...data];
+      try {
+        return [current, ...data];
+      } catch (e) {
+        return [];
+      }
     } else {
       return data;
     }
@@ -224,8 +239,7 @@ class OverviewPage extends React.Component {
   };
 
   render() {
-    const { showUnlinkModal, unlinkInfo } = this.state;
-    const linkedCount = this.props.service.siteInfo.links.length;
+    const { showUnlinkModal, unlinkInfo, linkedCount } = this.state;
     const data = this.data();
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
@@ -266,7 +280,7 @@ class OverviewPage extends React.Component {
                 ref={(el) => (this.tableRef = el)}
                 {...this.props}
                 dataFilter={this.filterLinkData}
-                fieldsFilter={this.filterLinkFields}
+                _fieldsFilter={this.filterLinkFields}
                 actionResolver={this.actionResolver}
               />
             </div>

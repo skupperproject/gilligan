@@ -231,31 +231,29 @@ export class Deployment extends Service {
     const stat = viewer.statForProtocol();
     const subNodes = serviceNodes.nodes;
     const sites = siteNodes;
-    this.data.adapter
-      .getDeploymentLinks(viewer.state.options.showExternal)
-      .forEach((deploymentLink) => {
-        const source = subNodes.find(
-          (n) =>
-            n.address === deploymentLink.source.service.address &&
-            n.cluster.site_id === deploymentLink.source.site.site_id
-        );
-        const target = subNodes.find(
-          (n) =>
-            n.address === deploymentLink.target.service.address &&
-            n.cluster.site_id === deploymentLink.target.site.site_id
-        );
-        const linkIndex = links.addLink({
-          source,
-          target,
-          dir: "out",
-          cls: "node2node",
-          uid: `Link-${source.uuid}-${target.uuid}`,
-        });
-        const link = links.links[linkIndex];
-        link.request = deploymentLink.request;
-        link.value = link.request[stat] || 0;
-        link.getColor = () => utils.linkColor(link, links.links);
+    this.data.adapter.getDeploymentLinks().forEach((deploymentLink) => {
+      const source = subNodes.find(
+        (n) =>
+          n.address === deploymentLink.source.service.address &&
+          n.cluster.site_id === deploymentLink.source.site.site_id
+      );
+      const target = subNodes.find(
+        (n) =>
+          n.address === deploymentLink.target.service.address &&
+          n.cluster.site_id === deploymentLink.target.site.site_id
+      );
+      const linkIndex = links.addLink({
+        source,
+        target,
+        dir: "out",
+        cls: "node2node",
+        uid: `Link-${source.uuid}-${target.uuid}`,
       });
+      const link = links.links[linkIndex];
+      link.request = deploymentLink.request;
+      link.value = link.request[stat] || 0;
+      link.getColor = () => utils.linkColor(link, links.links);
+    });
     // get the sankey height of each node based on link.value
     utils.initSankey({
       nodes: subNodes,
@@ -614,7 +612,7 @@ export class Deployment extends Service {
   // get requests for charts
   allRequests = (VAN, direction, stat, showExternal = true) => {
     const requests = {};
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const which = direction === "in" ? "source" : "target";
       const site = deploymentLink[which].site.site_name;
       const address = `${deploymentLink[which].service.address}\n(${site})`;
@@ -657,7 +655,7 @@ export class Deployment extends Service {
     const adddressSite = `${address} (${site_info})`;
 
     stat = "bytes_out";
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const test = direction === "in" ? "target" : "source";
       const other = direction === "out" ? "target" : "source";
       const testAddress = `${deploymentLink[test].service.address} (${deploymentLink[test].site.site_name})`;
@@ -701,7 +699,7 @@ export class Deployment extends Service {
     showExternal = true,
   }) => {
     const requests = {};
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const which = direction === "in" ? "source" : "target";
       const address = deploymentLink[which].service.address;
       const site = deploymentLink[which].site.site_name;
@@ -758,7 +756,7 @@ export class Deployment extends Service {
     const from = direction === "out" ? "source" : "target";
     const to = direction === "out" ? "target" : "source";
 
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const fromAddress = `${deploymentLink[from].service.address} (${deploymentLink[from].site.site_name})`;
       const toAddress = `${deploymentLink[to].service.address} (${deploymentLink[to].site.site_name})`;
       if (fromAddress === adddressSite) {

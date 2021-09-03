@@ -225,32 +225,36 @@ class Layout extends React.Component {
   update = () => {
     if (this.updating) {
       console.log(
-        `updating took longer than ${
-          UPDATE_INTERVAL / 1000
-        } seconds. Skipping this update`
+        `updating took longer than ${UPDATE_INTERVAL / 1000} seconds.`
       );
-      return;
+      //return;
     }
     this.updating = true;
-    this.service.update().then(
-      (data) => {
-        if (!this.unmounted) {
-          if (this.pageRef?.update) {
-            this.pageRef.update();
+    try {
+      this.service.update().then(
+        (data) => {
+          if (!this.unmounted) {
+            if (this.pageRef && this.pageRef.update) {
+              this.pageRef.update();
+            }
           }
+          this.updating = false;
+        },
+        (e) => {
+          this.updating = false;
+          console.log("error during update");
+          console.log(e);
         }
-        this.updating = false;
-      },
-      (e) => {
-        this.updating = false;
-        console.log("error during update");
-        console.log(e);
-      }
-    );
+      );
+    } catch (e) {
+      this.updating = false;
+      console.log("internal error during update");
+      console.log(e);
+    }
   };
 
   forceUpdate = () => {
-    this.updating = false;
+    if (this.updating) return;
     this.update();
   };
 

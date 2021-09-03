@@ -195,7 +195,7 @@ class GraphToolbar extends Component {
             type="search"
             onChange={this.handleTextInputChange}
             aria-label="search text input"
-            placeholder={`Highlight ${this.props.view}s...`}
+            placeholder={`${utils.Icap(this.props.view)} name`}
           />
         </SplitItem>
       </Split>

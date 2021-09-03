@@ -19,11 +19,13 @@ export class DeploymentRows {
     <Switch
       data-testid={value}
       label="Exposed"
-      labelOff="Not Exposed"
+      labelOff="Not exposed"
       isChecked={value !== this.unexposedValue}
       onChange={(event) => this.expose(value, extraInfo)}
     />
   );
+
+  fixProtocol = (value) => utils.protocol(value);
 
   // make the magic value accessible
   unexposedValue = UNEXPOSED_VALUE;
@@ -62,7 +64,7 @@ export class DeploymentRows {
     },
     */
     { title: "Port", field: "port" },
-    { title: "Protocol", field: "protocol" },
+    { title: "Protocol", field: "protocol", formatter: this.fixProtocol },
   ];
 
   fetch = (emptyRows, VANservice, formatterData) => {
@@ -72,9 +74,10 @@ export class DeploymentRows {
 
     return new Promise((resolve) => {
       VANservice.getSiteInfo().then((siteInfo) => {
-        let data = siteInfo[dataKey];
-
-        const rows = data.map((row) => {
+        const filtered = siteInfo[dataKey].filter(
+          (service) => service.endpoints
+        );
+        const rows = filtered.map((row) => {
           // add cardData so the sub table viewer has the correct info
           const deployment = VANservice.VAN.deployments.find(
             (d) =>

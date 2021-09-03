@@ -91,7 +91,7 @@ class TableViewer extends React.Component {
     this.mounted = false;
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate = (prevProps, prevState) => {
     if (this.view !== this.props.view) {
       this.setState(this.init(), () => {
         this.componentDidMount();
@@ -165,9 +165,8 @@ class TableViewer extends React.Component {
     );
   };
 
-  customFormatter = (value, extraInfo, formatter) => {
-    return formatter(value, extraInfo);
-  };
+  customFormatter = (value, extraInfo, formatter) =>
+    formatter(value, extraInfo, this.props.service);
 
   detailClick = (value, extraInfo) => {
     this.props.handleShowSubTable("table", {
@@ -279,7 +278,7 @@ class TableViewer extends React.Component {
   };
 
   slice = (fields, page, perPage) => {
-    if (fields) {
+    if (fields && fields.map) {
       let allRows = fields.map((f) => this.field2Row(f));
       let rows = this.filter(allRows);
       const total = rows.length;

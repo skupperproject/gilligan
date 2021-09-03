@@ -27,6 +27,7 @@ import { Node, Nodes } from "../nodes.js";
 import { Links } from "../links.js";
 import ServiceCard from "../cards/serviceCard";
 import LinkCard from "../cards/linkCard";
+import { SHOW_EXTERNAL } from "../../../adapter";
 const SERVICE_POSITION = "svc";
 const ZOOM_SCALE = "sscale";
 const ZOOM_TRANSLATE = "strans";
@@ -111,7 +112,7 @@ export class Service {
 
   initNodes(serviceNodes, includeDuplicate, showExternal, colors) {
     this.data.adapter.data.services
-      .filter((service) => !service.isExternal)
+      .filter((service) => SHOW_EXTERNAL || !service.isExternal)
       .forEach((service) => {
         // if we haven't already added this service || or we want duplicates
         if (
@@ -152,9 +153,7 @@ export class Service {
     //const options = viewer.state.options;
     let stat = viewer.statForProtocol();
     if (stat === "bytes_in") stat = "bytes_out";
-    let deploymentLinks = this.data.adapter.getDeploymentLinks(
-      viewer.state.options.showExternal
-    );
+    let deploymentLinks = this.data.adapter.getDeploymentLinks();
     deploymentLinks.forEach((deploymentLink, i) => {
       const source = serviceNodes.find(
         (n) => n.address === deploymentLink.source.service.address
@@ -922,7 +921,7 @@ export class Service {
   allRequests = (VAN, direction, stat, showExternal = false) => {
     const requests = {};
     const which = direction === "in" ? "source" : "target";
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const address = deploymentLink[which].service.address;
       if (!requests.hasOwnProperty(address)) requests[address] = {};
       utils.aggregateAttributes(
@@ -949,7 +948,7 @@ export class Service {
   }) => {
     const requests = {};
     stat = "bytes_out";
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const testAddress =
         direction === "in"
           ? deploymentLink.target.service.address
@@ -988,7 +987,7 @@ export class Service {
   }) => {
     const requests = {};
     const which = direction === "in" ? "source" : "target";
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const address = deploymentLink[which].service.address;
       const samples = utils.getHistory({
         histories: deploymentLink.history,
@@ -1025,7 +1024,7 @@ export class Service {
     stat = "bytes_out";
     const from = direction === "out" ? "source" : "target";
     const to = direction === "out" ? "target" : "source";
-    VAN.getDeploymentLinks(showExternal).forEach((deploymentLink) => {
+    VAN.getDeploymentLinks().forEach((deploymentLink) => {
       const fromAddress = deploymentLink[from].service.address;
       const toAddress = deploymentLink[to].service.address;
       if (fromAddress === address) {

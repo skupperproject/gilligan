@@ -1,5 +1,4 @@
 // Set this to false (or just delete it) to allow this console to call GET /services
-const DISABLE_EXPOSE = false;
 const NODE_ENV_DEV = "development";
 const NODE_ENV_TST = "test";
 class RESTService {
@@ -50,11 +49,6 @@ class RESTService {
         suffix = "";
       }
       let endpoints = ["site", "tokens", "links", "services", "targets"];
-      if (DISABLE_EXPOSE) {
-        endpoints = endpoints.filter(
-          (endpoint) => endpoint !== "services" && endpoint !== "targets"
-        );
-      }
       let promises = endpoints.map((endpoint) =>
         this.fetchFrom(`${url}${endpoint}${suffix}`, endpoint === "site")
       );
@@ -69,6 +63,7 @@ class RESTService {
               : []; // call failed. use empty array as result
         });
         // fold targets into services
+        // TODO: do this somewhere else after the data is retrieved
         results.targets.forEach((target) => {
           const deployed = results.services.find(
             (service) => service.name === target.name
@@ -76,9 +71,12 @@ class RESTService {
           if (deployed) {
             deployed.exposed = true;
             deployed.type = target.type;
+            deployed.ports = target.ports;
           } else {
             const index = results.services.push(target);
-            results.services[index - 1].exposed = false;
+            const notDeployed = results.services[index - 1];
+            notDeployed.exposed = false;
+            notDeployed.endpoints = target;
           }
         });
 

@@ -27,7 +27,7 @@ class ExposePage extends React.Component {
   }
 
   update = () => {
-    if (this.tableRef?.update) {
+    if (this.tableRef && this.tableRef.update) {
       this.tableRef.update();
     }
   };
@@ -37,10 +37,10 @@ class ExposePage extends React.Component {
       <div className="sk-siteinfo-page-wrapper">
         <h2>Exposing deployments on the network</h2>
         <div className="sk-sub-text">
-          Before a deployment or a target is available from another site, it
-          must be exposed to the skupper network.
+          Before a deployment is available from linked sites, it must be exposed
+          on the Skupper network.
         </div>
-        <h2>Deployments and targets on this site</h2>
+        <h2>Deployments available on this site</h2>
         <DeploymentTable ref={(el) => (this.tableRef = el)} {...this.props} />
       </div>
     );

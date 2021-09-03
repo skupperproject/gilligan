@@ -42,7 +42,7 @@ class DeleteModal extends React.Component {
           ]}
           isfooterleftaligned={"true"}
         >
-          Are you sure you want to delete the token for{" "}
+          Are you sure you want to delete the token{" "}
           {deleteInfo.actionProps.data.site_name}
         </Modal>
       </React.Fragment>

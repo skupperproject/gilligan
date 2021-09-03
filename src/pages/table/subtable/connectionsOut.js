@@ -58,7 +58,7 @@ class ConnectionsOut extends Component {
     if (data.nodeType === "cluster") {
       const VANData = this.props.service.adapter.data;
       const bySite = {};
-      VANData.getDeploymentLinks(false).forEach((l) => {
+      VANData.getDeploymentLinks().forEach((l) => {
         if (l.target.site.site_id === data.site_id && l.request.id) {
           const siteName = l.source.site.site_name;
           if (!(siteName in bySite)) {

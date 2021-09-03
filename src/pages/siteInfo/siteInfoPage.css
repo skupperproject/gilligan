@@ -324,3 +324,7 @@ h1:not(:first-of-type) {
 table.pf-c-table.pf-m-grid-md.pf-m-compact * {
   font-size: 14px;
 }
+
+.sk-not-connected {
+  color: red !important;
+}

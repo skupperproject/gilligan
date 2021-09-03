@@ -1,5 +1,5 @@
 import React from "react";
-
+import OutlinedQuestionCircleIcon from "@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon";
 import { utils } from "../../utilities";
 export const LINKDOWN_VALUE = "Disconnected";
 
@@ -17,13 +17,13 @@ export class LinksRows {
   LinkFields = [
     { title: "Name", field: "Name", isDetailLink: this.isDetailLink },
     {
-      title: "Connected",
+      title: "Status",
       field: "Connected",
-    },
+    } /*
     {
       title: "Configured",
       field: "Configured",
-    },
+    },*/,
     {
       title: "Cost",
       field: "Cost",
@@ -46,9 +46,9 @@ export class LinksRows {
         const rows = data.map((row) => {
           // add cardData so the sub table viewer has the correct info
           // find the service for this row
-          const sites = VANservice.VAN.sites.filter(
-            (s) => s.site_id === row.site_id
-          );
+          const parts = row.Url.split(":");
+          const url = parts[0];
+          const sites = VANservice.VAN.sites.filter((s) => s.url === url);
           if (sites.length > 0) {
             const site = sites[0];
             row.cardData = { ...site };
@@ -59,8 +59,23 @@ export class LinksRows {
           if (row.Linked) {
             row.Linked = utils.convertDate(row.Linked, "date");
           }
-          row.Connected = row.Connected ? "True" : "";
+          if (row.Connected) {
+            if (sites.length > 0) {
+              const site_name = sites[0].site_name;
+              row.Connected = `Connected to ${site_name}`;
+            } else {
+              row.Connected = "Connected but not configured";
+            }
+          } else {
+            row.Connected = (
+              <span className="sk-not-connected">
+                Not connected{" "}
+                <OutlinedQuestionCircleIcon title={row.Description} />
+              </span>
+            );
+          }
           row.Configured = row.Configured ? "True" : "";
+
           if (row.Created) {
             const date = new Date(row.Created);
             row.Created = utils.convertDate(date, "past");

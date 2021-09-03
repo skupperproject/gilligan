@@ -48,8 +48,8 @@ class ChordData {
     let addresses = {};
     let outer = this.snapshots;
     if (outer.length === 0) outer = outer = [this.last_values];
-    outer.forEach(function(snap) {
-      snap.values.forEach(function(lv) {
+    outer.forEach(function (snap) {
+      snap.values.forEach(function (lv) {
         if (!(lv.address in addresses)) {
           addresses[lv.address] = this.filter.indexOf(lv.address) < 0;
         }
@@ -61,8 +61,8 @@ class ChordData {
     let routers = {};
     let outer = this.snapshots;
     if (outer.length === 0) outer = [this.last_values];
-    outer.forEach(function(snap) {
-      snap.values.forEach(function(lv) {
+    outer.forEach(function (snap) {
+      snap.values.forEach(function (lv) {
         routers[lv.egress] = true;
         routers[lv.ingress] = true;
       });
@@ -71,14 +71,14 @@ class ChordData {
   }
   applyFilter(filter) {
     if (filter) this.setFilter(filter);
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       resolve(convert(this, this.last_values));
     });
   }
   // construct a square matrix of the number of messages each router has egressed from each router
   getMatrix(d, stat) {
     let self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       // get the router.node and router.link info
       // the raw data received from the routers
       // for each router in the network
@@ -203,7 +203,7 @@ class ChordData {
     return new Promise((resolve) => {
       const values = [];
       if (onlyServices.length > 0) {
-        deploymentLinks = service.VAN.deploymentLinks.filter((l) => {
+        deploymentLinks = service.VAN.getDeploymentLinks().filter((l) => {
           return onlyServices.some(
             (os) =>
               os.address === l.source.service.address ||
@@ -264,7 +264,7 @@ class ChordData {
 // Private functions
 
 // compare the current values to the last_values and return the rate/second
-let calcRate = function(values, last_values, snapshots) {
+let calcRate = function (values, last_values, snapshots) {
   let now = Date.now();
   if (!last_values.values) {
     last_values.values = values;
@@ -290,7 +290,7 @@ let calcRate = function(values, last_values, snapshots) {
   let newest = snapshots[snapshots.length - 1];
   let rateValues = [];
   let elapsed = (newest.timestamp - oldest.timestamp) / 1000;
-  let getValueFor = function(snap, value) {
+  let getValueFor = function (snap, value) {
     for (let i = 0; i < snap.values.length; i++) {
       if (
         snap.values[i].ingress === value.ingress &&
@@ -300,7 +300,7 @@ let calcRate = function(values, last_values, snapshots) {
         return snap.values[i].messages;
     }
   };
-  values.forEach(function(value) {
+  values.forEach(function (value) {
     let first = getValueFor(oldest, value);
     let last = getValueFor(newest, value);
     let rate = (last - first) / elapsed;
@@ -315,17 +315,17 @@ let calcRate = function(values, last_values, snapshots) {
   return rateValues;
 };
 
-let genKeys = function(values) {
-  values.forEach(function(value) {
+let genKeys = function (values) {
+  values.forEach(function (value) {
     value.key = value.egress + value.ingress + value.address;
   });
 };
-let sortByKeys = function(values) {
-  return values.sort(function(a, b) {
+let sortByKeys = function (values) {
+  return values.sort(function (a, b) {
     return a.key > b.key ? 1 : a.key < b.key ? -1 : 0;
   });
 };
-let convert = function(self, values, converter) {
+let convert = function (self, values, converter) {
   if (!converter) converter = self.converter;
   // sort the raw data by egress router name
   genKeys(values);

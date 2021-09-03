@@ -47,10 +47,10 @@ class TokensPage extends React.Component {
       deleteInfo: null,
     };
     this.actions = [
-      {
+      /*{
         title: "Update",
         onClick: (event, rowId, rowData, extra) => this.updateToken(rowId),
-      },
+      },*/
       {
         title: "Delete",
         onClick: (event, rowId, rowData, extra) =>
@@ -131,28 +131,31 @@ class TokensPage extends React.Component {
 
   doUpdate = (updateData) => {
     let expires = 0; // default to never
+    let now = new Date();
     if (updateData.r1d) {
       // they requested expires 1 day from now
-      expires = new Date();
-      expires.setDate(expires.getDate() + 1);
+      expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     } else if (updateData.r1h) {
       // they requested expires 1 hour from now
-      expires = new Date();
-      expires.setDate(expires.getTime() + 1 * 60 * 60 * 1000);
+      expires = new Date(now.getTime() + 1 * 60 * 60 * 1000);
     } else if (updateData.r15m) {
       // they requested expires 15 min from now
-      expires = new Date();
-      expires.setDate(expires.getTime() + 15 * 60 * 1000);
+      expires = new Date(now.getTime() + 15 * 60 * 1000);
+      console.log(`tokensPage::doUpdate expires`);
+      console.log(expires);
     }
+    let iClaims = parseInt(updateData.claimsRemaining, 10);
     const data = {
-      Name: updateData.name,
-      claimsRemaining: updateData.claimsRemaining,
+      name: updateData.name,
+      claimsRemaining: isNaN(iClaims) ? 0 : iClaims,
       claimExpiration: expires,
     };
+    console.log(`tokensPage::doUpdate data sent`);
+    console.log(data);
     const name = updateData.name;
     this.props.service.updateToken(data).then(
       () => {
-        const msg = `Token for ${name} successfully updated`;
+        const msg = `Token ${name} successfully updated`;
         console.log(msg);
         this.addAlert({
           title: msg,
@@ -161,7 +164,7 @@ class TokensPage extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error updating token for ${name} ${error.message}`;
+        const msg = `Error updating token ${name} ${error.message}`;
         console.error(msg);
         this.addAlert({
           title: msg,
@@ -185,10 +188,10 @@ class TokensPage extends React.Component {
   };
 
   doDelete = (deleteInfo) => {
-    const Name = deleteInfo.actionProps.data.site_name;
-    this.props.service.deleteToken({ Name }).then(
+    const data = { name: deleteInfo.name.title };
+    this.props.service.deleteToken(data).then(
       () => {
-        const msg = `Token for ${Name} successfully deleted`;
+        const msg = `Token ${data.name} successfully deleted`;
         console.log(msg);
         this.addAlert({
           title: msg,
@@ -197,7 +200,7 @@ class TokensPage extends React.Component {
         });
       },
       (error) => {
-        const msg = `Error deleting token for ${Name} ${error.message}`;
+        const msg = `Error deleting token ${data.name} ${error.message}`;
         console.error(msg);
         this.addAlert({
           title: msg,
@@ -216,7 +219,7 @@ class TokensPage extends React.Component {
   };
 
   update = () => {
-    if (this.tableRef?.update) {
+    if (this.tableRef && this.tableRef.update) {
       this.tableRef.update();
     }
   };

@@ -40,7 +40,7 @@ class LinkedSitesPage extends React.Component {
   getUniqueId = () => new Date().getTime();
 
   update = () => {
-    if (this.tableRef?.update) {
+    if (this.tableRef && this.tableRef.update) {
       this.tableRef.update();
     }
   };
