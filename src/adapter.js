@@ -15,8 +15,6 @@ class Adapter {
       console.log(data);
     }
     */
-    //console.log("original data");
-    //console.log(JSON.parse(JSON.stringify(data)));
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
@@ -27,6 +25,7 @@ class Adapter {
     this.addServicesToClusters();
     this.addServersToSites();
     this.addSourcesTargets();
+    this.sortServices();
     this.createDeployments();
     if (this.instance === 1) {
       if (process.env.NODE_ENV !== "test") {
@@ -82,10 +81,21 @@ class Adapter {
       a.site_name < b.site_name ? -1 : a.site_name > b.site_name ? 1 : 0
     );
   };
-  sortServices = () =>
+  sortServices = () => {
     this.data.services.sort((a, b) =>
       a.address < b.address ? -1 : a.address > b.address ? 1 : 0
     );
+    this.data.services.forEach((service) => {
+      if (service.protocol === "tcp") {
+        service.connections_ingress.sort((a, b) =>
+          a.site_id < b.site_id ? -1 : a.site_id > b.site_id ? 1 : 0
+        );
+        service.connections_egress.sort((a, b) =>
+          a.site_id < b.site_id ? -1 : a.site_id > b.site_id ? 1 : 0
+        );
+      }
+    });
+  };
 
   addTarget = (targets, name, site_id) => {
     if (!targets.some((t) => t.name === name && t.site_id === site_id)) {
@@ -172,7 +182,7 @@ class Adapter {
   newService = ({ address, protocol = "http", client, site_id }) => {
     const service = {
       derived: !this.data.emptyHttpServices.some((s) => s.address === address),
-      isExternal: address === "undefined" || this.isIP(address),
+      isExternal: this.isIP(address) || address === "undefined",
       address,
       protocol,
       targets: [{ name: client, site_id }],
@@ -238,9 +248,7 @@ class Adapter {
           for (let connectionID in ingress.connections) {
             const client = ingress.connections[connectionID].client;
             // look for client in a target section
-            const targetInfo = this.findClientInTargets(
-              utils.shortName(client)
-            );
+            const targetInfo = this.findClientInTargets(client);
             if (!targetInfo.target) {
               const newService = this.newService({
                 address: client,
@@ -249,11 +257,7 @@ class Adapter {
                 site_id: ingress.site_id,
               });
               this.data.services.unshift(newService);
-              this.addTargetToService(
-                newService,
-                utils.shortName(client),
-                ingress.site_id
-              );
+              this.addTargetToService(newService, client, ingress.site_id);
             }
           }
         });

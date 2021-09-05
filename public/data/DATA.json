@@ -1,257 +1,171 @@
 {
   "sites": [
     {
-      "site_name": "private",
-      "site_id": "1911ed50-1b63-4397-896b-4bf169db1225",
+      "site_name": "private1",
+      "site_id": "cf79d94b-4248-44f5-b8f2-e07697b13047",
       "version": "3c025c0",
-      "connected": ["cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2"],
-      "namespace": "private",
-      "url": "10.101.73.173",
+      "connected": [
+        "94830b1e-c32f-4180-8cef-06cf48592803",
+        "aae23611-d2a8-4745-995b-c76cfc40a440"
+      ],
+      "namespace": "private1",
+      "url": "10.97.89.51",
+      "edge": false
+    },
+    {
+      "site_name": "public2",
+      "site_id": "aae23611-d2a8-4745-995b-c76cfc40a440",
+      "version": "3c025c0",
+      "connected": [],
+      "namespace": "public2",
+      "url": "10.105.226.136",
       "edge": false
     },
     {
       "site_name": "public1",
-      "site_id": "cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
+      "site_id": "94830b1e-c32f-4180-8cef-06cf48592803",
       "version": "3c025c0",
-      "connected": ["850e8d68-5688-45bc-a4ea-d15dab0c39cf"],
-      "namespace": "default",
-      "url": "10.109.63.201",
-      "edge": false
-    },
-    {
-      "site_name": "public",
-      "site_id": "850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-      "version": "3c025c0",
-      "connected": [],
-      "namespace": "public",
-      "url": "10.103.42.141",
+      "connected": ["aae23611-d2a8-4745-995b-c76cfc40a440"],
+      "namespace": "public1",
+      "url": "10.101.87.23",
       "edge": false
     }
   ],
   "services": [
     {
-      "address": "mongo-c",
-      "protocol": "tcp",
-      "targets": [
-        {
-          "name": "mongo-c-54866cb45c-bb5kf",
-          "target": "mongo-c.mongo-c",
-          "site_id": "cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2"
-        }
-      ]
-    },
-    {
-      "address": "\u0002�\u003c$\u0017",
-      "protocol": "tcp",
-      "targets": null,
-      "connections_ingress": [
-        {
-          "site_id": "850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-          "connections": {
-            "172.17.0.1:12144@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:12144@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106268,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 14341234,
-              "bytes_out": 23836493,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:16583@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:16583@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 5,
-              "last_in": 106036,
-              "bytes_in": 697,
-              "bytes_out": 6327750,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:30120@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:30120@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 647725,
-              "bytes_out": 1465196,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:31301@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:31301@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 5,
-              "last_in": 106036,
-              "bytes_in": 758,
-              "bytes_out": 6327329,
-              "client": "172.17.0.1"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "address": "@",
-      "protocol": "tcp",
-      "targets": null,
-      "connections_ingress": [
-        {
-          "site_id": "1911ed50-1b63-4397-896b-4bf169db1225",
-          "connections": {
-            "172.17.0.1:9593@1911ed50-1b63-4397-896b-4bf169db1225": {
-              "id": "172.17.0.1:9593@1911ed50-1b63-4397-896b-4bf169db1225",
-              "start_time": 106280,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 14294768,
-              "bytes_out": 23807555,
-              "client": "172.17.0.1"
-            }
-          }
-        }
-      ]
-    },
-    {
       "address": "mongo-a",
       "protocol": "tcp",
       "targets": [
         {
-          "name": "mongo-a-6bb796fd8f-ldpqx",
+          "name": "mongo-a-6bb796fd8f-nqwv9",
           "target": "mongo-a.mongo-a",
-          "site_id": "1911ed50-1b63-4397-896b-4bf169db1225"
+          "site_id": "cf79d94b-4248-44f5-b8f2-e07697b13047"
         }
       ],
       "connections_ingress": [
         {
-          "site_id": "cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
+          "site_id": "aae23611-d2a8-4745-995b-c76cfc40a440",
           "connections": {
-            "172.17.0.1:1359@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:1359@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 0,
-              "last_in": 105991,
+            "172.17.0.1:10251@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:10251@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82736,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 12064353,
+              "bytes_out": 8089268,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:12085@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:12085@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82934,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 11276868,
+              "bytes_out": 17643946,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:18745@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:18745@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82736,
+              "last_out": 1,
+              "last_in": 82736,
+              "bytes_in": 1140,
+              "bytes_out": 11511681,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:20071@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:20071@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82859,
+              "last_out": 82859,
+              "last_in": 82859,
+              "bytes_in": 340,
+              "bytes_out": 839,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:33123@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:33123@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82919,
+              "last_out": 8,
+              "last_in": 8,
+              "bytes_in": 506632,
+              "bytes_out": 1146058,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:47626@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:47626@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82929,
+              "last_out": 2,
+              "last_in": 82925,
               "bytes_in": 758,
-              "bytes_out": 6490998,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:19744@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:19744@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 89503,
-              "last_in": 89503,
-              "bytes_in": 2244,
-              "bytes_out": 2721,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:2739@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:2739@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106278,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 14453985,
-              "bytes_out": 22616599,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:28111@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:28111@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 103893,
-              "last_in": 103893,
-              "bytes_in": 1135,
-              "bytes_out": 1724,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:38035@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:38035@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106267,
-              "last_out": 2,
-              "last_in": 106267,
-              "bytes_in": 1093,
-              "bytes_out": 12726207,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:46682@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:46682@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106277,
-              "last_out": 2,
-              "last_in": 2,
-              "bytes_in": 15983190,
-              "bytes_out": 10724580,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:8307@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:8307@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 6,
-              "last_in": 6,
-              "bytes_in": 647420,
-              "bytes_out": 1464530,
+              "bytes_out": 5087086,
               "client": "172.17.0.1"
             }
           }
         },
         {
-          "site_id": "850e8d68-5688-45bc-a4ea-d15dab0c39cf",
+          "site_id": "94830b1e-c32f-4180-8cef-06cf48592803",
           "connections": {
-            "172.17.0.1:36391@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:36391@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 105737,
-              "last_in": 105737,
-              "bytes_in": 590,
-              "bytes_out": 1024,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:41254@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:41254@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 4,
-              "last_in": 106036,
-              "bytes_in": 758,
-              "bytes_out": 6493532,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:43961@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:43961@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106267,
-              "last_out": 2,
-              "last_in": 106267,
-              "bytes_in": 1093,
-              "bytes_out": 12725225,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:55948@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:55948@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 106036,
-              "last_in": 106036,
+            "172.17.0.1:12939@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:12939@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82568,
+              "last_out": 82568,
+              "last_in": 82568,
               "bytes_in": 340,
               "bytes_out": 839,
               "client": "172.17.0.1"
             },
-            "172.17.0.1:7622@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:7622@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
+            "172.17.0.1:14185@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:14185@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82736,
               "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 647725,
-              "bytes_out": 1465220,
+              "last_in": 82736,
+              "bytes_in": 1142,
+              "bytes_out": 11511292,
               "client": "172.17.0.1"
             },
-            "172.17.0.1:8791@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:8791@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106279,
+            "172.17.0.1:15286@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:15286@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82738,
+              "last_out": 0,
+              "last_in": 82735,
+              "bytes_in": 758,
+              "bytes_out": 5075443,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:32816@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:32816@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82744,
               "last_out": 1,
               "last_in": 1,
-              "bytes_in": 14340734,
-              "bytes_out": 22605777,
+              "bytes_in": 11167506,
+              "bytes_out": 17602276,
               "client": "172.17.0.1"
             },
-            "172.17.0.1:9484@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:9484@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106278,
-              "last_out": 2,
-              "last_in": 2,
-              "bytes_in": 15878756,
-              "bytes_out": 10604616,
+            "172.17.0.1:55686@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:55686@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82728,
+              "last_out": 5,
+              "last_in": 5,
+              "bytes_in": 505473,
+              "bytes_out": 1143437,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:60659@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:60659@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82568,
+              "last_out": 82568,
+              "last_in": 82568,
+              "bytes_in": 340,
+              "bytes_out": 839,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:7896@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:7896@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82736,
+              "last_out": 0,
+              "last_in": 0,
+              "bytes_in": 12111828,
+              "bytes_out": 8091998,
               "client": "172.17.0.1"
             }
           }
@@ -259,133 +173,124 @@
       ],
       "connections_egress": [
         {
-          "site_id": "1911ed50-1b63-4397-896b-4bf169db1225",
+          "site_id": "cf79d94b-4248-44f5-b8f2-e07697b13047",
           "connections": {
-            "172.17.0.1:1359@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:1359@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105993,
-              "last_out": 105993,
-              "last_in": 0,
-              "bytes_in": 6490998,
-              "bytes_out": 758,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:19744@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:19744@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105993,
-              "last_out": 89505,
-              "last_in": 89505,
-              "bytes_in": 2721,
-              "bytes_out": 2244,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:2739@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:2739@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106280,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 22616599,
-              "bytes_out": 14453985,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:28111@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:28111@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105993,
-              "last_out": 103895,
-              "last_in": 103895,
-              "bytes_in": 1724,
-              "bytes_out": 1135,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:36391@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:36391@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106037,
-              "last_out": 105737,
-              "last_in": 105737,
-              "bytes_in": 1024,
-              "bytes_out": 590,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:38035@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:38035@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106268,
-              "last_out": 106268,
-              "last_in": 2,
-              "bytes_in": 12726207,
-              "bytes_out": 1093,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:41254@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:41254@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106037,
-              "last_out": 106037,
-              "last_in": 4,
-              "bytes_in": 6493532,
-              "bytes_out": 758,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:43961@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:43961@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106268,
-              "last_out": 106268,
-              "last_in": 2,
-              "bytes_in": 12725225,
-              "bytes_out": 1093,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:46682@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:46682@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106278,
-              "last_out": 2,
-              "last_in": 2,
-              "bytes_in": 10724580,
-              "bytes_out": 15983190,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:55948@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:55948@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106037,
-              "last_out": 106037,
-              "last_in": 106037,
-              "bytes_in": 839,
-              "bytes_out": 340,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
-            },
-            "172.17.0.1:7622@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:7622@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106037,
+            "172.17.0.1:10251@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:10251@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82735,
               "last_out": 0,
               "last_in": 0,
-              "bytes_in": 1465220,
-              "bytes_out": 647725,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
+              "bytes_in": 8089268,
+              "bytes_out": 12064353,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
             },
-            "172.17.0.1:8307@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:8307@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105993,
-              "last_out": 6,
-              "last_in": 6,
-              "bytes_in": 1464530,
-              "bytes_out": 647420,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
+            "172.17.0.1:12085@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:12085@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82930,
+              "last_out": 0,
+              "last_in": 0,
+              "bytes_in": 17643946,
+              "bytes_out": 11276868,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
             },
-            "172.17.0.1:8791@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:8791@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106280,
-              "last_out": 1,
+            "172.17.0.1:12939@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:12939@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82567,
+              "last_out": 82567,
+              "last_in": 82567,
+              "bytes_in": 839,
+              "bytes_out": 340,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:14185@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:14185@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82735,
+              "last_out": 82735,
+              "last_in": 0,
+              "bytes_in": 11511292,
+              "bytes_out": 1142,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:15286@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:15286@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82737,
+              "last_out": 82734,
+              "last_in": 0,
+              "bytes_in": 5075443,
+              "bytes_out": 758,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:18745@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:18745@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82735,
+              "last_out": 82735,
+              "last_in": 0,
+              "bytes_in": 11511681,
+              "bytes_out": 1140,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:20071@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:20071@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82859,
+              "last_out": 82859,
+              "last_in": 82859,
+              "bytes_in": 839,
+              "bytes_out": 340,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:32816@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:32816@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82740,
+              "last_out": 0,
+              "last_in": 0,
+              "bytes_in": 17602276,
+              "bytes_out": 11167506,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:33123@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:33123@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82919,
+              "last_out": 7,
+              "last_in": 7,
+              "bytes_in": 1146058,
+              "bytes_out": 506632,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:47626@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:47626@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82929,
+              "last_out": 82924,
               "last_in": 1,
-              "bytes_in": 22605777,
-              "bytes_out": 14340734,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
+              "bytes_in": 5087086,
+              "bytes_out": 758,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
             },
-            "172.17.0.1:9484@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:9484@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106278,
-              "last_out": 2,
-              "last_in": 2,
-              "bytes_in": 10604616,
-              "bytes_out": 15878756,
-              "server": "mongo-a-6bb796fd8f-ldpqx"
+            "172.17.0.1:55686@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:55686@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82727,
+              "last_out": 5,
+              "last_in": 5,
+              "bytes_in": 1143437,
+              "bytes_out": 505473,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:60659@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:60659@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82567,
+              "last_out": 82567,
+              "last_in": 82567,
+              "bytes_in": 839,
+              "bytes_out": 340,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
+            },
+            "172.17.0.1:7896@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:7896@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82735,
+              "last_out": 0,
+              "last_in": 0,
+              "bytes_in": 8091998,
+              "bytes_out": 12111828,
+              "server": "mongo-a-6bb796fd8f-nqwv9"
             }
           }
         }
@@ -396,86 +301,77 @@
       "protocol": "tcp",
       "targets": [
         {
-          "name": "mongo-b-86758f9555-2rdqg",
+          "name": "mongo-b-86758f9555-92crx",
           "target": "mongo-b.mongo-b",
-          "site_id": "850e8d68-5688-45bc-a4ea-d15dab0c39cf"
+          "site_id": "94830b1e-c32f-4180-8cef-06cf48592803"
         }
       ],
       "connections_ingress": [
         {
-          "site_id": "1911ed50-1b63-4397-896b-4bf169db1225",
+          "site_id": "cf79d94b-4248-44f5-b8f2-e07697b13047",
           "connections": {
-            "172.17.0.1:44731@1911ed50-1b63-4397-896b-4bf169db1225": {
-              "id": "172.17.0.1:44731@1911ed50-1b63-4397-896b-4bf169db1225",
-              "start_time": 106268,
+            "172.17.0.1:4614@cf79d94b-4248-44f5-b8f2-e07697b13047": {
+              "id": "172.17.0.1:4614@cf79d94b-4248-44f5-b8f2-e07697b13047",
+              "start_time": 82740,
               "last_out": 0,
               "last_in": 0,
-              "bytes_in": 14281437,
-              "bytes_out": 23764419,
+              "bytes_in": 11124000,
+              "bytes_out": 18466332,
               "client": "172.17.0.1"
             }
           }
         },
         {
-          "site_id": "cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
+          "site_id": "aae23611-d2a8-4745-995b-c76cfc40a440",
           "connections": {
-            "172.17.0.1:35921@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:35921@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106278,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 14453323,
-              "bytes_out": 23794679,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:45446@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:45446@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
+            "172.17.0.1:34399@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:34399@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82739,
               "last_out": 1,
-              "last_in": 105991,
-              "bytes_in": 585,
-              "bytes_out": 6323132,
+              "last_in": 82735,
+              "bytes_in": 758,
+              "bytes_out": 4937771,
               "client": "172.17.0.1"
             },
-            "172.17.0.1:54832@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:54832@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 6,
-              "last_in": 6,
-              "bytes_in": 647593,
-              "bytes_out": 1465239,
+            "172.17.0.1:48682@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:48682@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82725,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 11242869,
+              "bytes_out": 18457956,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:53067@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:53067@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82729,
+              "last_out": 7,
+              "last_in": 7,
+              "bytes_in": 505473,
+              "bytes_out": 1143413,
               "client": "172.17.0.1"
             }
           }
         },
         {
-          "site_id": "850e8d68-5688-45bc-a4ea-d15dab0c39cf",
+          "site_id": "94830b1e-c32f-4180-8cef-06cf48592803",
           "connections": {
-            "172.17.0.1:14588@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:14588@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 5,
-              "last_in": 106036,
+            "172.17.0.1:1316@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:1316@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82738,
+              "last_out": 1,
+              "last_in": 82735,
               "bytes_in": 758,
-              "bytes_out": 6326021,
+              "bytes_out": 4937780,
               "client": "172.17.0.1"
             },
-            "172.17.0.1:54641@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:54641@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 647725,
-              "bytes_out": 1465196,
-              "client": "172.17.0.1"
-            },
-            "172.17.0.1:55171@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:55171@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
+            "172.17.0.1:35005@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:35005@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82728,
               "last_out": 5,
-              "last_in": 106036,
-              "bytes_in": 697,
-              "bytes_out": 6294013,
+              "last_in": 5,
+              "bytes_in": 505473,
+              "bytes_out": 1143413,
               "client": "172.17.0.1"
             }
           }
@@ -483,175 +379,204 @@
       ],
       "connections_egress": [
         {
-          "site_id": "850e8d68-5688-45bc-a4ea-d15dab0c39cf",
+          "site_id": "94830b1e-c32f-4180-8cef-06cf48592803",
           "connections": {
-            "172.17.0.1:14588@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:14588@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 106036,
-              "last_in": 5,
-              "bytes_in": 6326021,
+            "172.17.0.1:1316@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:1316@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82738,
+              "last_out": 82735,
+              "last_in": 1,
+              "bytes_in": 4937780,
               "bytes_out": 758,
-              "server": "mongo-b-86758f9555-2rdqg"
+              "server": "mongo-b-86758f9555-92crx"
             },
-            "172.17.0.1:35921@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:35921@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 106279,
-              "last_out": 1,
+            "172.17.0.1:34399@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:34399@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82740,
+              "last_out": 82735,
               "last_in": 1,
-              "bytes_in": 23794679,
-              "bytes_out": 14453323,
-              "server": "mongo-b-86758f9555-2rdqg"
+              "bytes_in": 4937771,
+              "bytes_out": 758,
+              "server": "mongo-b-86758f9555-92crx"
             },
-            "172.17.0.1:44731@1911ed50-1b63-4397-896b-4bf169db1225": {
-              "id": "172.17.0.1:44731@1911ed50-1b63-4397-896b-4bf169db1225",
-              "start_time": 106268,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 23764419,
-              "bytes_out": 14281437,
-              "server": "mongo-b-86758f9555-2rdqg"
-            },
-            "172.17.0.1:45446@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:45446@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105992,
-              "last_out": 105992,
-              "last_in": 1,
-              "bytes_in": 6323132,
-              "bytes_out": 585,
-              "server": "mongo-b-86758f9555-2rdqg"
-            },
-            "172.17.0.1:54641@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:54641@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 1465196,
-              "bytes_out": 647725,
-              "server": "mongo-b-86758f9555-2rdqg"
-            },
-            "172.17.0.1:54832@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:54832@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105992,
-              "last_out": 6,
-              "last_in": 6,
-              "bytes_in": 1465239,
-              "bytes_out": 647593,
-              "server": "mongo-b-86758f9555-2rdqg"
-            },
-            "172.17.0.1:55171@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:55171@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106036,
-              "last_out": 106036,
+            "172.17.0.1:35005@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:35005@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82728,
+              "last_out": 5,
               "last_in": 5,
-              "bytes_in": 6294013,
-              "bytes_out": 697,
-              "server": "mongo-b-86758f9555-2rdqg"
+              "bytes_in": 1143413,
+              "bytes_out": 505473,
+              "server": "mongo-b-86758f9555-92crx"
+            },
+            "172.17.0.1:4614@cf79d94b-4248-44f5-b8f2-e07697b13047": {
+              "id": "172.17.0.1:4614@cf79d94b-4248-44f5-b8f2-e07697b13047",
+              "start_time": 82741,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 18466332,
+              "bytes_out": 11124000,
+              "server": "mongo-b-86758f9555-92crx"
+            },
+            "172.17.0.1:48682@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:48682@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82725,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 18457956,
+              "bytes_out": 11242869,
+              "server": "mongo-b-86758f9555-92crx"
+            },
+            "172.17.0.1:53067@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:53067@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82730,
+              "last_out": 7,
+              "last_in": 7,
+              "bytes_in": 1143413,
+              "bytes_out": 505473,
+              "server": "mongo-b-86758f9555-92crx"
             }
           }
         }
       ]
     },
     {
-      "address": "p/��T",
+      "address": "mongo-c",
       "protocol": "tcp",
-      "targets": null,
-      "connections_egress": [
+      "targets": [
         {
-          "site_id": "cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-          "connections": {
-            "172.17.0.1:12144@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:12144@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106267,
-              "last_out": 1,
-              "last_in": 1,
-              "bytes_in": 23836493,
-              "bytes_out": 14341234,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            },
-            "172.17.0.1:16583@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:16583@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106035,
-              "last_out": 106035,
-              "last_in": 5,
-              "bytes_in": 6327750,
-              "bytes_out": 697,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            },
-            "172.17.0.1:24480@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:24480@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 6,
-              "last_in": 6,
-              "bytes_in": 1464506,
-              "bytes_out": 647420,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            },
-            "172.17.0.1:30120@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:30120@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106035,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 1465196,
-              "bytes_out": 647725,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            },
-            "172.17.0.1:31301@850e8d68-5688-45bc-a4ea-d15dab0c39cf": {
-              "id": "172.17.0.1:31301@850e8d68-5688-45bc-a4ea-d15dab0c39cf",
-              "start_time": 106035,
-              "last_out": 106035,
-              "last_in": 4,
-              "bytes_in": 6327329,
-              "bytes_out": 758,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            },
-            "172.17.0.1:46328@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:46328@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 105991,
-              "last_in": 1,
-              "bytes_in": 6324275,
-              "bytes_out": 758,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            },
-            "172.17.0.1:9593@1911ed50-1b63-4397-896b-4bf169db1225": {
-              "id": "172.17.0.1:9593@1911ed50-1b63-4397-896b-4bf169db1225",
-              "start_time": 106278,
-              "last_out": 0,
-              "last_in": 0,
-              "bytes_in": 23807555,
-              "bytes_out": 14294768,
-              "server": "mongo-c-54866cb45c-bb5kf"
-            }
-          }
+          "name": "mongo-c-54866cb45c-6ntpk",
+          "target": "mongo-c.mongo-c",
+          "site_id": "aae23611-d2a8-4745-995b-c76cfc40a440"
         }
-      ]
-    },
-    {
-      "address": "",
-      "protocol": "tcp",
-      "targets": null,
+      ],
       "connections_ingress": [
         {
-          "site_id": "cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
+          "site_id": "cf79d94b-4248-44f5-b8f2-e07697b13047",
           "connections": {
-            "172.17.0.1:24480@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:24480@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 6,
-              "last_in": 6,
-              "bytes_in": 647420,
-              "bytes_out": 1464506,
+            "172.17.0.1:4168@cf79d94b-4248-44f5-b8f2-e07697b13047": {
+              "id": "172.17.0.1:4168@cf79d94b-4248-44f5-b8f2-e07697b13047",
+              "start_time": 82930,
+              "last_out": 0,
+              "last_in": 0,
+              "bytes_in": 11149282,
+              "bytes_out": 18508431,
+              "client": "172.17.0.1"
+            }
+          }
+        },
+        {
+          "site_id": "aae23611-d2a8-4745-995b-c76cfc40a440",
+          "connections": {
+            "172.17.0.1:14837@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:14837@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82919,
+              "last_out": 8,
+              "last_in": 8,
+              "bytes_in": 506632,
+              "bytes_out": 1146034,
               "client": "172.17.0.1"
             },
-            "172.17.0.1:46328@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2": {
-              "id": "172.17.0.1:46328@cdd88f2a-3ebc-4d29-8a4b-f13d5260fcb2",
-              "start_time": 105991,
-              "last_out": 1,
-              "last_in": 105991,
+            "172.17.0.1:45560@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:45560@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82929,
+              "last_out": 2,
+              "last_in": 82925,
               "bytes_in": 758,
-              "bytes_out": 6324275,
+              "bytes_out": 4949098,
               "client": "172.17.0.1"
+            }
+          }
+        },
+        {
+          "site_id": "94830b1e-c32f-4180-8cef-06cf48592803",
+          "connections": {
+            "172.17.0.1:29397@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:29397@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82744,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 11168310,
+              "bytes_out": 18471229,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:53446@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:53446@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82738,
+              "last_out": 1,
+              "last_in": 82735,
+              "bytes_in": 758,
+              "bytes_out": 4937693,
+              "client": "172.17.0.1"
+            },
+            "172.17.0.1:64144@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:64144@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82728,
+              "last_out": 5,
+              "last_in": 5,
+              "bytes_in": 505473,
+              "bytes_out": 1143413,
+              "client": "172.17.0.1"
+            }
+          }
+        }
+      ],
+      "connections_egress": [
+        {
+          "site_id": "aae23611-d2a8-4745-995b-c76cfc40a440",
+          "connections": {
+            "172.17.0.1:14837@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:14837@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82919,
+              "last_out": 8,
+              "last_in": 8,
+              "bytes_in": 1146034,
+              "bytes_out": 506632,
+              "server": "mongo-c-54866cb45c-6ntpk"
+            },
+            "172.17.0.1:29397@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:29397@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82742,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 18471229,
+              "bytes_out": 11168310,
+              "server": "mongo-c-54866cb45c-6ntpk"
+            },
+            "172.17.0.1:4168@cf79d94b-4248-44f5-b8f2-e07697b13047": {
+              "id": "172.17.0.1:4168@cf79d94b-4248-44f5-b8f2-e07697b13047",
+              "start_time": 82931,
+              "last_out": 1,
+              "last_in": 1,
+              "bytes_in": 18508431,
+              "bytes_out": 11149282,
+              "server": "mongo-c-54866cb45c-6ntpk"
+            },
+            "172.17.0.1:45560@aae23611-d2a8-4745-995b-c76cfc40a440": {
+              "id": "172.17.0.1:45560@aae23611-d2a8-4745-995b-c76cfc40a440",
+              "start_time": 82929,
+              "last_out": 82925,
+              "last_in": 2,
+              "bytes_in": 4949098,
+              "bytes_out": 758,
+              "server": "mongo-c-54866cb45c-6ntpk"
+            },
+            "172.17.0.1:53446@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:53446@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82737,
+              "last_out": 82735,
+              "last_in": 1,
+              "bytes_in": 4937693,
+              "bytes_out": 758,
+              "server": "mongo-c-54866cb45c-6ntpk"
+            },
+            "172.17.0.1:64144@94830b1e-c32f-4180-8cef-06cf48592803": {
+              "id": "172.17.0.1:64144@94830b1e-c32f-4180-8cef-06cf48592803",
+              "start_time": 82727,
+              "last_out": 6,
+              "last_in": 6,
+              "bytes_in": 1143413,
+              "bytes_out": 505473,
+              "server": "mongo-c-54866cb45c-6ntpk"
             }
           }
         }

@@ -18,17 +18,8 @@ under the License.
 */
 
 import React from "react";
-import {
-  Title,
-  EmptyState,
-  EmptyStateIcon,
-  EmptyStateVariant,
-  EmptyStateBody,
-  EmptyStateSecondaryActions,
-} from "@patternfly/react-core";
 import { Flex, FlexItem } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
-import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 
 import TimeSeries from "../topology/charts/timeSeries";
 import { viewsMap as VIEWS } from "../topology/views/views";
@@ -36,6 +27,7 @@ import GetTokenModal from "./getTokenModal";
 import UseTokenModal from "./useTokenModal";
 import LinkedSitesTable from "./linkedSitesTable";
 import UnlinkModal from "./unlinkModal";
+import EmptyLinkState from "./emptyLinkState";
 
 import { utils } from "../../utilities";
 
@@ -147,28 +139,6 @@ class OverviewPage extends React.Component {
     };
   };
 
-  emptyState = () => (
-    <EmptyState variant={EmptyStateVariant.xs} className="sk-empty-container">
-      <EmptyStateIcon icon={SearchIcon} />
-
-      <Title headingLevel="h4" size="md">
-        No linked sites
-      </Title>
-      <EmptyStateBody>
-        This site has not initiated any links to other Skupper sites
-      </EmptyStateBody>
-      <EmptyStateSecondaryActions>
-        <GetTokenModal {...this.props} addAlert={this.addAlert} />
-        <UseTokenModal
-          {...this.props}
-          title="Use a token"
-          direction="up"
-          addAlert={this.addAlert}
-        />
-      </EmptyStateSecondaryActions>
-    </EmptyState>
-  );
-
   // called after the data for the linkedSitesTable is fetched
   // used to add/remove rows
   filterLinkData = (data) => {
@@ -254,7 +224,25 @@ class OverviewPage extends React.Component {
             doUnlink={this.doUnlink}
           />
         )}
-        {linkedCount === 0 && this.emptyState()}
+        {linkedCount === 0 && (
+          <React.Fragment>
+            <Split gutter="md">
+              <SplitItem isFilled></SplitItem>
+              <SplitItem>
+                <div className="sk-site-actions">
+                  <GetTokenModal {...this.props} addAlert={this.addAlert} />
+                  <UseTokenModal
+                    {...this.props}
+                    title="Use a token"
+                    direction="up"
+                    addAlert={this.addAlert}
+                  />
+                </div>
+              </SplitItem>
+            </Split>
+            {<EmptyLinkState />}
+          </React.Fragment>
+        )}
         {linkedCount > 0 && data && (
           <React.Fragment>
             <Split gutter="md">

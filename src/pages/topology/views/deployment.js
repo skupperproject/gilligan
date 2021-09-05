@@ -86,9 +86,24 @@ export class Deployment extends Service {
       vsize,
       viewer
     );
-    utils.reconcileArrays(this.Site.siteNodes.nodes, newSiteNodes.nodes);
-    utils.reconcileArrays(this.serviceNodes.nodes, newServiceNodes.nodes);
-    utils.reconcileLinks(this.serviceLinks.links, newServiceLinks.links);
+    utils.reconcileArrays(
+      this.Site.siteNodes.nodes,
+      newSiteNodes.nodes,
+      true,
+      "siteNodes"
+    );
+    utils.reconcileArrays(
+      this.serviceNodes.nodes,
+      newServiceNodes.nodes,
+      true,
+      "serviceNodes"
+    );
+    utils.reconcileLinks(
+      this.serviceLinks.links,
+      newServiceLinks.links,
+      true,
+      "serviceLinks"
+    );
     this.setSitePositions(viewer.sankey);
     this.setServicePositions(viewer.sankey);
     viewer.restart();
