@@ -1,5 +1,4 @@
 import React from "react";
-import OutlinedQuestionCircleIcon from "@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon";
 import { utils } from "../../utilities";
 export const LINKDOWN_VALUE = "Disconnected";
 
@@ -67,12 +66,7 @@ export class LinksRows {
               row.Connected = "Connected but not configured";
             }
           } else {
-            row.Connected = (
-              <span className="sk-not-connected">
-                Not connected{" "}
-                <OutlinedQuestionCircleIcon title={row.Description} />
-              </span>
-            );
+            row.Connected = "Not connected";
           }
           row.Configured = row.Configured ? "True" : "";
 

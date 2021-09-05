@@ -18,23 +18,19 @@ under the License.
 */
 
 import React from "react";
-import {
-  EmptyState,
-  EmptyStateBody,
-  EmptyStateVariant,
-  Title,
-  EmptyStateIcon,
-  EmptyStateSecondaryActions,
-} from "@patternfly/react-core";
-import SearchIcon from "@patternfly/react-icons/dist/js/icons/search-icon";
 import UnlinkModal from "./unlinkModal";
 import TableViewer from "../table/tableViewer";
 import { LinksRows } from "./linksRows";
+import EmptyLinkState from "./emptyLinkState";
 
 class LinkedSitesTable extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { showUnlinkModal: false, unlinkInfo: null };
+    this.state = {
+      showUnlinkModal: false,
+      unlinkInfo: null,
+      linkCount: this.props.service.siteInfo.links.length,
+    };
     this.actions = [
       {
         title: "Unlink",
@@ -54,24 +50,16 @@ class LinkedSitesTable extends React.Component {
     this.mounted = false;
   };
 
-  // this is displayed if there are no links in the site specific information
-  emptyState = () => (
-    <EmptyState variant={EmptyStateVariant.xs} className="sk-empty-container">
-      <EmptyStateIcon icon={SearchIcon} />
-
-      <Title headingLevel="h4" size="md">
-        No links
-      </Title>
-      <EmptyStateBody>There are no links for this site.</EmptyStateBody>
-      <EmptyStateSecondaryActions></EmptyStateSecondaryActions>
-    </EmptyState>
-  );
-
   // called periodically by the parent component
   update = () => {
-    if (this.tableRef && this.tableRef.update) {
-      this.tableRef.update();
-    }
+    this.setState(
+      { linkCount: this.props.service.siteInfo.links.length },
+      () => {
+        if (this.tableRef && this.tableRef.update) {
+          this.tableRef.update();
+        }
+      }
+    );
   };
 
   // called after a link name is clicked in the links table
@@ -97,7 +85,7 @@ class LinkedSitesTable extends React.Component {
     };
     return new Promise((resolve) => {
       this.linksData
-        .fetch(this.emptyState(), this.props.service, formatterData)
+        .fetch(<EmptyLinkState />, this.props.service, formatterData)
         .then((data) => {
           if (this.props.dataFilter) {
             data = this.props.dataFilter(data);
@@ -171,8 +159,7 @@ class LinkedSitesTable extends React.Component {
   };
 
   render() {
-    const { showUnlinkModal, unlinkInfo } = this.state;
-    const linkCount = this.props.service.siteInfo.links.length;
+    const { showUnlinkModal, unlinkInfo, linkCount } = this.state;
     return (
       <div>
         {showUnlinkModal && (
@@ -183,7 +170,7 @@ class LinkedSitesTable extends React.Component {
             doUnlink={this.doUnlink}
           />
         )}
-        {linkCount === 0 && this.emptyState()}
+        {linkCount === 0 && <EmptyLinkState />}
         {linkCount > 0 && (
           <TableViewer
             ref={(el) => (this.tableRef = el)}
