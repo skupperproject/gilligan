@@ -259,9 +259,6 @@ class TopologyViewer extends Component {
 
     // create the nodes and links for this view
     const { nodeCount, size } = this.viewObj.initNodesAndLinks(this);
-    console.log(
-      `topologyViewer::init deploymentLinks after init: ${this.props.service.VAN.deploymentLinks.length}`
-    );
     this.deploymentLinksLength = this.props.service.VAN.deploymentLinks.length;
 
     // mouse event vars
