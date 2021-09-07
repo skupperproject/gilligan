@@ -82,18 +82,23 @@ class Adapter {
     );
   };
   sortServices = () => {
+    const bySiteId = [
+      "requests_received",
+      "requests_handled",
+      "connections_ingress",
+      "connections_egress",
+    ];
     this.data.services.sort((a, b) =>
       a.address < b.address ? -1 : a.address > b.address ? 1 : 0
     );
     this.data.services.forEach((service) => {
-      if (service.protocol === "tcp") {
-        service.connections_ingress.sort((a, b) =>
-          a.site_id < b.site_id ? -1 : a.site_id > b.site_id ? 1 : 0
-        );
-        service.connections_egress.sort((a, b) =>
-          a.site_id < b.site_id ? -1 : a.site_id > b.site_id ? 1 : 0
-        );
-      }
+      bySiteId.forEach((attr) => {
+        if (service[attr]) {
+          service[attr].sort((a, b) =>
+            a.site_id < b.site_id ? -1 : a.site_id > b.site_id ? 1 : 0
+          );
+        }
+      });
     });
   };
 
@@ -166,10 +171,12 @@ class Adapter {
     }
   };
 
-  findClientInTargets = (client) => {
+  findClientInTargets = (client, site_id) => {
     for (let i = 0; i < this.data.services.length; i++) {
       const service = this.data.services[i];
-      const target = service.targets.find((t) => t.name === client);
+      const target = service.targets.find(
+        (t) => t.name === client && t.site_id === site_id
+      );
       if (target) {
         return { service, target };
       }
@@ -243,12 +250,45 @@ class Adapter {
             }
           }
         });
+      } else if (service.connections_egress) {
+        service.connections_egress.forEach((connection_egress) => {
+          //const site_id = connection_egress.site_id;
+          const connections = connection_egress.connections;
+          for (let egress_connection_id in connections) {
+            service.connections_ingress.forEach((connection_ingress) => {
+              const ingress_site_id = connection_ingress.site_id;
+              const ingress_connections = connection_ingress.connections;
+              if (
+                Object.keys(ingress_connections).includes(egress_connection_id)
+              ) {
+                const client = ingress_connections[egress_connection_id].client;
+                const targetInfo = this.findClientInTargets(
+                  client,
+                  ingress_site_id
+                );
+                if (!targetInfo.target) {
+                  const newService = this.newService({
+                    address: client,
+                    protocol: "tcp",
+                    client,
+                    site_id: ingress_site_id,
+                  });
+                  this.data.services.unshift(newService);
+                  this.addTargetToService(newService, client, ingress_site_id);
+                }
+              }
+            });
+          }
+        });
       } else if (service.connections_ingress) {
         service.connections_ingress.forEach((ingress) => {
           for (let connectionID in ingress.connections) {
             const client = ingress.connections[connectionID].client;
             // look for client in a target section
-            const targetInfo = this.findClientInTargets(client);
+            const targetInfo = this.findClientInTargets(
+              client,
+              ingress.site_id
+            );
             if (!targetInfo.target) {
               const newService = this.newService({
                 address: client,
