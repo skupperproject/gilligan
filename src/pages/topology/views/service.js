@@ -292,8 +292,12 @@ export class Service {
 
     serviceTypesEnter.append("svg:title").text((d) => d.shortName);
 
-    const actualServices = serviceTypesEnter.filter((d) => !d.isExternal);
-    const externalClients = serviceTypesEnter.filter((d) => d.isExternal);
+    const actualServices = serviceTypesEnter.filter(
+      (d) => true || !d.isExternal
+    );
+    const externalClients = serviceTypesEnter.filter(
+      (d) => false && d.isExternal
+    );
     actualServices
       .append("svg:rect")
       .attr("class", "service-type")
