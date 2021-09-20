@@ -515,6 +515,9 @@ const utils = {
       let i = 19;
       while (!found) {
         let color = colorGen(i);
+        if (utils.isIP(name)) {
+          color = "#FFFFFF";
+        }
         if (
           !Object.keys(serviceColors).some(
             (service) => serviceColors[service] === color
@@ -1004,6 +1007,12 @@ const utils = {
       saved.tcp = saved.stat.tcp;
       delete saved.stat;
     }
+    if (saved.isExpanded !== undefined) {
+      saved.isExpanded = parseInt(saved.isExpanded, 10);
+      if (isNaN(saved.isExpanded)) {
+        saved.isExpanded = 0;
+      }
+    }
     //if (saved.color !== undefined) delete saved.color;
     return saved;
   },
@@ -1168,6 +1177,14 @@ const utils = {
     [...Array(numCharacters)]
       .map(() => Math.floor(Math.random() * 16).toString(16))
       .join(""),
+
+  // is the address a valid ip address?
+  // used to differentiate between external (ip address) clients and
+  // clients that are resident in a site
+  isIP: (address) =>
+    /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+      address
+    ),
 };
 
 export { utils };
