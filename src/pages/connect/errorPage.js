@@ -35,29 +35,39 @@ class ErrorPage extends React.Component {
                 {this.props.error}
               </Text>
             </TextContent>
-            <div id="sk-try-list">
+            {this.props.reason === "updating" && (
               <TextContent>
                 <Text component={TextVariants.p}>
-                  Here are some things to try:
+                  Skupper network is adjusting to a new or removed link between
+                  sites. One moment please.
                 </Text>
               </TextContent>
-              <List>
-                <ListItem>
-                  <Button
-                    id="sk-try-again"
-                    variant="primary"
-                    onClick={this.props.handleTryAgain}
-                  >
-                    Try again
-                  </Button>
-                </ListItem>
-                <ListItem>
-                  To help diagnose the problem
-                  <pre>{`curl ${window.location.protocol}//${window.location.host}/DATA`}</pre>
-                  and report the results to the skupper support site.
-                </ListItem>
-              </List>
-            </div>
+            )}
+            {this.props.reason !== "updating" && (
+              <div id="sk-try-list">
+                <TextContent>
+                  <Text component={TextVariants.p}>
+                    Here are some things to try:
+                  </Text>
+                </TextContent>
+                <List>
+                  <ListItem>
+                    <Button
+                      id="sk-try-again"
+                      variant="primary"
+                      onClick={this.props.handleTryAgain}
+                    >
+                      Try again
+                    </Button>
+                  </ListItem>
+                  <ListItem>
+                    To help diagnose the problem
+                    <pre>{`curl ${window.location.protocol}//${window.location.host}/DATA`}</pre>
+                    and report the results to the skupper support site.
+                  </ListItem>
+                </List>
+              </div>
+            )}
           </div>
         </Bullseye>
       </LoginPage>
