@@ -189,7 +189,7 @@ class Adapter {
   newService = ({ address, protocol = "http", client, site_id }) => {
     const service = {
       derived: !this.data.emptyHttpServices.some((s) => s.address === address),
-      isExternal: this.isIP(address) || address === "undefined",
+      isExternal: utils.isIP(address) || address === "undefined",
       address,
       protocol,
       targets: [{ name: client, site_id }],
@@ -571,14 +571,6 @@ class Adapter {
     });
     return serviceName;
   };
-
-  // is the address a valid ip address?
-  // used to differentiate between external (ip address) clients and
-  // clients that are resident in a site
-  isIP = (address) =>
-    /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-      address
-    );
 
   serviceFromServer = (server, site_id) =>
     this.data.services.find((service) =>
