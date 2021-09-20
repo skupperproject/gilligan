@@ -1,3 +1,7 @@
 .skupper-console .pf-c-page__main {
   /* overflow: hidden; */
 }
+
+.sk-sitename {
+  font-weight: bold;
+}
