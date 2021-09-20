@@ -19,30 +19,37 @@ import { Nodes } from "./nodes.js";
 export function updateState(circle) {
   circle
     //.selectAll("circle")
-    .classed("highlighted", function(d) {
+    .classed("highlighted", function (d) {
       return d.highlighted;
     })
-    .classed("selected", function(d) {
+    .classed("selected", function (d) {
       return d.selected;
     })
-    .classed("fixed", function(d) {
+    .classed("fixed", function (d) {
       return d.fixed ? d.fixed & 1 : false;
     })
-    .classed("multiple", function(d) {
+    .classed("multiple", function (d) {
       return d.normals && d.normals.length > 1;
     });
 }
 
 export function appendCloud(g) {
+  g.append("svg:rect")
+    .attr("class", "client")
+    .attr("width", (d) => d.getWidth())
+    .attr("height", (d) => d.getHeight())
+    .attr("fill", "#FFFFFF");
+  /*
   g.append("svg:path")
-    .attr("class", "cloud")
+    .attr("class", "client")
     .attr(
       "d",
       "M 25,60 a 20,20 1 0,0 0,40 h 50 a 20,20 1 0,0 0,-40 a 10,10 1 0,0 -15,-10 a 15,15 1 0,0 -35,10 z"
     )
     .attr("transform", "translate(0,-58)");
+    */
   g.append("svg:text")
-    .attr("class", "cloud")
+    .attr("class", "client")
     .attr("x", 50)
     .attr("y", 24)
     .attr("dominant-baseline", "middle")
@@ -145,7 +152,7 @@ export function addDefs(svg) {
     .data(defs)
     .enter()
     .append("svg:marker")
-    .attr("id", function(d) {
+    .attr("id", function (d) {
       return [d.sten, d.state, d.r].join("-");
     })
     .attr("viewBox", "0 -5 10 10")
@@ -155,7 +162,7 @@ export function addDefs(svg) {
     .attr("markerUnits", "userSpaceOnUse")
     .attr("orient", "auto")
     .append("svg:path")
-    .attr("d", function(d) {
+    .attr("d", function (d) {
       return d.sten === "end"
         ? "M 0 -5 L 10 0 L 0 5 z"
         : "M 10 -5 L 0 0 L 10 5 z";
