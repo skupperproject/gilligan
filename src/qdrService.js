@@ -55,10 +55,14 @@ export class QDRService {
               resolve(data);
             });
           },
-          (error) => reject(error)
+          (error) => {
+            //console.log(`qdrService::connect error   .status ${error.status}`);
+            reject(error);
+          }
         )
         .catch((e) => {
-          console.log(`communication error ${e.message}`);
+          //console.log(`communication error ${e.message}   .status ${e.status}`);
+          reject(e);
         });
     });
   };
