@@ -1213,6 +1213,11 @@ g.service-type.selected * {
   opacity: 1;
 }
 
+rect.client {
+  stroke: black;
+  stroke-width: 1px;
+}
+
 rect.service-type {
   stroke: black;
   stroke-width: 1px;
