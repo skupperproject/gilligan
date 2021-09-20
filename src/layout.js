@@ -20,14 +20,12 @@ under the License.
 import React from "react";
 import {
   Brand,
-  Button,
-  ButtonVariant,
   Page,
   PageHeader,
+  PageHeaderTools,
+  PageHeaderToolsGroup,
+  PageHeaderToolsItem,
   SkipToContent,
-  Toolbar,
-  ToolbarGroup,
-  ToolbarItem,
   PageSidebar,
 } from "@patternfly/react-core";
 
@@ -35,9 +33,6 @@ import { Nav, NavItem, NavList } from "@patternfly/react-core";
 
 import { BrowserRouter as Router, Redirect } from "react-router-dom";
 import { createBrowserHistory } from "history";
-import accessibleStyles from "@patternfly/patternfly/utilities/Accessibility/accessibility.css";
-import { css } from "@patternfly/react-styles";
-import { BellIcon } from "@patternfly/react-icons";
 import ConnectPage from "./pages/connect/connectPage";
 import TopologyPage from "./pages/topology/topologyPage";
 import TablePage from "./pages/table/tablePage";
@@ -75,13 +70,15 @@ class Layout extends React.Component {
     // setup the last mode the user picked
     this.savedMode = null;
     this.state = {
-      connected: false,
+      connected: false, // true after we get our first /DATA
+      updating: false, // true when we are receive status code 500 errors from the server
       connectPath: "",
       username: "",
       view,
       mode: this.viewModes[view],
       connectionError: null,
       connectionTimedout: false,
+      site_name: null,
     };
     this.hooks = { setLocation: this.setLocation };
     this.service = new QDRService(this.hooks);
@@ -92,6 +89,7 @@ class Layout extends React.Component {
       service: "Services",
       deployment: "Deployments",
     };
+    this.updateDepth = 0; // depth of request queue
   }
   componentDidMount = () => {
     this.doConnect();
@@ -113,8 +111,16 @@ class Layout extends React.Component {
     // a new URL was pasted into the browser's address bar.
     // go to the new view and use its parameters
     if (this.navSelect !== "userChanged" && !utils.isEmpty(options)) {
-      const view = options.view || "thissite";
-      const mode = options.mode || view === "thissite" ? "Overview" : "graph";
+      let view = options.view || "thissite";
+      const mode =
+        view === "thissite"
+          ? "Overview"
+          : options.mode
+          ? options.mode
+          : "graph";
+      if (mode === "Overview" && view !== "thissite") {
+        view = "thissite";
+      }
       // save the new options for the new view
       utils.overrideOptions(view, options);
       this.viewModes[view] = mode;
@@ -223,38 +229,43 @@ class Layout extends React.Component {
 
   // called from setInterval to update the DATA
   update = () => {
-    if (this.updating) {
+    if (this.updateDepth > 0) {
       console.log(
-        `updating took longer than ${UPDATE_INTERVAL / 1000} seconds.`
+        `updating took longer than ${
+          UPDATE_INTERVAL / 1000
+        } seconds. Request depth ${this.updateDepth}`
       );
-      //return;
     }
-    this.updating = true;
+    ++this.updateDepth;
     try {
       this.service.update().then(
-        (data) => {
+        () => {
+          --this.updateDepth;
+          if (this.state.updating) {
+            this.setState({ updating: false });
+          }
           if (!this.unmounted) {
             if (this.pageRef && this.pageRef.update) {
               this.pageRef.update();
             }
           }
-          this.updating = false;
         },
         (e) => {
-          this.updating = false;
-          console.log("error during update");
+          --this.updateDepth;
+          if (e.status === 500 && !this.state.updating) {
+            this.setState({ updating: true });
+          }
           console.log(e);
         }
       );
     } catch (e) {
-      this.updating = false;
-      console.log("internal error during update");
+      --this.updateDepth;
       console.log(e);
     }
   };
 
   forceUpdate = () => {
-    if (this.updating) return;
+    if (this.updateDepth > 0) return;
     this.update();
   };
 
@@ -303,6 +314,7 @@ class Layout extends React.Component {
           username: "Bob Denver",
           connectPath,
           connected: true,
+          site_name: this.service.siteInfo.site_name,
         });
       }
     }
@@ -313,9 +325,8 @@ class Layout extends React.Component {
   getMode = () => this.viewModes[this.state.view];
 
   render() {
-    const { view } = this.state;
+    const { view, site_name } = this.state;
     const mode = this.getMode();
-    //console.log(`layout::render view ${view} mode ${mode}`);
     const PageNav = () => {
       return (
         <Nav onSelect={this.onNavSelect} theme="dark" className="pf-m-dark">
@@ -337,24 +348,13 @@ class Layout extends React.Component {
       );
     };
     const PageToolbar = (
-      <Toolbar>
-        <ToolbarGroup
-          className={css(
-            accessibleStyles.screenReader,
-            accessibleStyles.visibleOnLg
-          )}
-        >
-          <ToolbarItem>
-            <Button
-              id="default-example-uid-01"
-              aria-label="Notifications actions"
-              variant={ButtonVariant.plain}
-            >
-              <BellIcon />
-            </Button>
-          </ToolbarItem>
-        </ToolbarGroup>
-      </Toolbar>
+      <PageHeaderTools>
+        <PageHeaderToolsGroup>
+          <PageHeaderToolsItem>
+            Site <span className="sk-sitename">{site_name}</span>
+          </PageHeaderToolsItem>
+        </PageHeaderToolsGroup>
+      </PageHeaderTools>
     );
 
     const Header = (
@@ -370,7 +370,7 @@ class Layout extends React.Component {
             <span id="skupper-logo">Skupper</span>
           </React.Fragment>
         }
-        toolbar={PageToolbar}
+        headerTools={PageToolbar}
         showNavToggle
       />
     );
@@ -415,6 +415,17 @@ class Layout extends React.Component {
               handleTryAgain={this.handleTryAgain}
               error="The request to fetch the data has timed out."
               title="Timed out"
+              reason="timedOut"
+            />
+          )}
+          {this.state.updating && (
+            <ErrorPage
+              {...this.props}
+              service={this.service}
+              handleTryAgain={this.handleTryAgain}
+              error={this.state.connectionError}
+              title="Connection error"
+              reason="updating"
             />
           )}
           {!this.state.connected && this.state.connectionError && (
@@ -424,9 +435,11 @@ class Layout extends React.Component {
               handleTryAgain={this.handleTryAgain}
               error={this.state.connectionError}
               title="Connection error"
+              reason="lostConnection"
             />
           )}
-          {!this.state.connected &&
+          {!this.state.updating &&
+            !this.state.connected &&
             !this.state.connectionError &&
             !this.state.connectionTimedout && (
               <ConnectPage
