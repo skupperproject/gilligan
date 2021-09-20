@@ -40,7 +40,7 @@ const DEFAULT_DETAIL_OPTIONS = {
 const DEFAULT_OPTIONS = {
   traffic: false,
   color: true,
-  showMetric: false,
+  showMetric: true,
   isExpanded: 0,
   showExternal: false,
   http: "bytes_out",
@@ -207,6 +207,9 @@ export class Service {
 
     // set the expanded height
     serviceNodes.forEach((n) => {
+      if (n.isExternal) {
+        n.y1 = n.y0 + n.getHeight(false);
+      }
       n.sankeyHeight = Math.max(n.y1 - n.y0, utils.ServiceHeight);
       n.expanded = true;
     });
@@ -301,11 +304,11 @@ export class Service {
     actualServices
       .append("svg:rect")
       .attr("class", "service-type")
-      .attr("rx", 5)
-      .attr("ry", 5)
+      .attr("rx", (d) => (d.isExternal ? 0 : 5))
+      .attr("ry", (d) => (d.isExternal ? 0 : 5))
       .attr("width", (d) => d.getWidth())
       .attr("height", (d) => d.getHeight())
-      .attr("fill", "#FFFFFF");
+      .attr("stroke", "#000000");
 
     appendCloud(externalClients);
 
@@ -507,11 +510,11 @@ export class Service {
     if (n["user-hidden"]) {
       return 4;
     }
+    if (n.isExternal) {
+      return this.serviceWidth(n, expanded);
+    }
     if (expanded && n.sankeyHeight) {
       return Math.max(n.sankeyHeight, utils.ServiceHeight);
-    }
-    if (n.isExternal) {
-      return 47;
     }
     return utils.ServiceHeight;
   };
