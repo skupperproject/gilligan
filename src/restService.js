@@ -86,6 +86,9 @@ class RESTService {
           (site) => site.site_id === results.site
         );
         if (!currentSite) {
+          console.error(
+            `restService::getSiteInfo !currentSite site returned is ${results.site}`
+          );
           currentSite = VAN.sites[0];
         }
         results["site_name"] = currentSite.site_name;
@@ -216,12 +219,20 @@ class RESTService {
 
   fetchFrom = (url, asText) =>
     new Promise((resolve, reject) => {
+      let status;
       fetch(url)
-        .then((res) => (!asText ? res.json() : res.text()))
+        .then((res) => {
+          status = res.status;
+          return !asText ? res.json() : res.text();
+        })
         .then((data) => {
+          if (!asText) {
+            data.status = status;
+          }
           resolve(data);
         })
         .catch((error) => {
+          error.status = status;
           reject(error);
         });
     });
