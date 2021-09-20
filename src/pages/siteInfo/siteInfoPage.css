@@ -101,10 +101,6 @@ input[type="file"] {
   background-color: #004080;
 }
 
-.sk-block-button {
-  width: 18em;
-}
-
 .sk-sub-text {
   margin-left: 1.3em;
 }
@@ -315,6 +311,7 @@ h1:not(:first-of-type) {
 
 .sk-block-button {
   display: block;
+  width: 20em;
 }
 
 .sk-secondary-section {

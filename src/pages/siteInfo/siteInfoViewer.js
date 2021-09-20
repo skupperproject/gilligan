@@ -129,6 +129,8 @@ class SiteInfoViewer extends React.Component {
     return (
       <Tabs
         activeKey={tab}
+        mountOnEnter
+        unmountOnExit
         isSecondary
         onSelect={this.handleTabClick}
         className="sk-thissite-tabs"

@@ -35,45 +35,56 @@ class GetTokenModal extends React.Component {
   };
 
   handleCopy = () => {
-    this.props.service.getTokenData().then(
-      (results) => {
-        const token = JSON.stringify(results);
-        if (!this.clipboardSupported) {
-          this.setState({
-            theToken: results,
-            step2Enabled: true,
-            uploadMsg: "",
-            uploadStatus: "pending",
-            showManualModal: true,
-          });
-        } else {
-          navigator.clipboard.writeText(token).then(
-            (clip) => {
-              const msg = `Request for token sent. The token should be on the clipboard.`;
-              console.log(msg);
-              this.setState(
-                {
-                  uploadMsg: "Token copied to clipboard",
-                  uploadStatus: "success",
-                  step2Enabled: true,
-                },
-                this.handleCopyDone
-              );
-            },
-            (error) => {
-              const msg = `Request for token failed ${error.message}`;
-              console.error(msg);
-              this.setState({ uploadMsg: error, uploadStatus: "error" });
-            }
-          );
-        }
-      },
-      (error) => {
-        console.log(`fetch clipboard data error`);
-        console.log(error);
-        this.setState({ uploadMsg: error.message, uploadStatus: "error" });
+    if (this.state.step2Enabled) {
+      // they clicked on the "Copy a token..." button after the token was already created.
+      if (!this.clipboardSupported) {
+        this.setState({
+          uploadMsg: "",
+          uploadStatus: "pending",
+          showManualModal: true,
+        });
       }
-    );
+    } else {
+      this.props.service.getTokenData().then(
+        (results) => {
+          const token = JSON.stringify(results);
+          if (!this.clipboardSupported) {
+            this.setState({
+              theToken: results,
+              step2Enabled: true,
+              uploadMsg: "",
+              uploadStatus: "pending",
+              showManualModal: true,
+            });
+          } else {
+            navigator.clipboard.writeText(token).then(
+              (clip) => {
+                const msg = `Request for token sent. The token should be on the clipboard.`;
+                console.log(msg);
+                this.setState(
+                  {
+                    uploadMsg: "Token copied to clipboard",
+                    uploadStatus: "success",
+                    step2Enabled: true,
+                  },
+                  this.handleCopyDone
+                );
+              },
+              (error) => {
+                const msg = `Request for token failed ${error.message}`;
+                console.error(msg);
+                this.setState({ uploadMsg: error, uploadStatus: "error" });
+              }
+            );
+          }
+        },
+        (error) => {
+          console.log(`fetch clipboard data error`);
+          console.log(error);
+          this.setState({ uploadMsg: error.message, uploadStatus: "error" });
+        }
+      );
+    }
   };
 
   handleCopyDone = () => {
@@ -139,29 +150,25 @@ class GetTokenModal extends React.Component {
                 does not allow incoming connections, navigate to the skupper
                 console for the site that does allow incoming connections and
                 get a token.
-                <CopyButton
-                  {...this.props}
-                  handleDownloadClicked={this.handleCopy}
-                  text="Copy a token to the clipboard"
-                  cls={"sk-block-button"}
-                />
               </div>
+              <CopyButton
+                {...this.props}
+                handleDownloadClicked={this.handleCopy}
+                text={`${
+                  this.clipboardSupported ? "Copy" : "Manually copy"
+                } a token to the clipboard`}
+                cls={"sk-block-button"}
+              />
+              {showManualModal && (
+                <ManualCopyModal
+                  copyText={theToken}
+                  handleModalClose={this.handleManualCopyModalClose}
+                />
+              )}
+
               <span className={`sk-status-message ${uploadStatus}`}>
                 <h1>{uploadMsg}</h1>
               </span>
-              <div>
-                {!this.clipboardSupported && step2Enabled && (
-                  <Button onClick={this.showManualCopyModal}>
-                    Copy token manually
-                  </Button>
-                )}
-                {showManualModal && (
-                  <ManualCopyModal
-                    copyText={theToken}
-                    handleModalClose={this.handleManualCopyModalClose}
-                  />
-                )}
-              </div>
               <h1 className={step2Enabled ? "" : "disabled"}>
                 Step 2: Use the token to link the sites
               </h1>
@@ -170,7 +177,7 @@ class GetTokenModal extends React.Component {
                   Navigate to the remote site's Skupper console.
                 </ListItem>
                 <ListItem component={ListComponent.ol}>
-                  Once there, click on the{" "}
+                  Once there, click on that console's{" "}
                   <UseTokenModal
                     {...this.props}
                     title="Use a token"

@@ -67,7 +67,7 @@ class ManualCopyModal extends React.Component {
                 clipboard.
               </HelperTextItem>
             </HelperText>
-            <textarea
+            <input
               ref={(el) => (this.copyRef = el)}
               readOnly
               key="copy-text"
@@ -75,6 +75,7 @@ class ManualCopyModal extends React.Component {
               name="copy"
               aria-describedby="text to copy"
               value={copyText}
+              type="password"
             />
           </Form>
         </Modal>

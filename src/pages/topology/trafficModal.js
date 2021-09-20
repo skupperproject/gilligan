@@ -53,7 +53,7 @@ class TrafficModal extends Component {
     this.state = {
       options: { ...this.props.options },
     };
-    this.dropdownItems = [
+    this.radioItems = [
       {
         key: "none",
         name: "None",
@@ -236,6 +236,8 @@ class TrafficModal extends Component {
   setShowMetric = (initial) => {
     this.resizeLinks(initial);
     // show/hide the new metric
+    console.log(`trafficModal::setShowMetric called with options`);
+    console.log(this.state.options);
     this.lineView.setLinkStat(
       this.state.options.showMetric, // show or hide the stat
       this.state.options.stat // which stat to show
@@ -359,7 +361,7 @@ class TrafficModal extends Component {
       <React.Fragment>
         <h1>Metric to show</h1>
         <div className="sk-flex">
-          {this.dropdownItems.map((item) => (
+          {this.radioItems.map((item) => (
             <Radio
               label={item.name}
               key={item.key}

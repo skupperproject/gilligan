@@ -16,22 +16,35 @@ class UseTokenModal extends React.Component {
     };
   }
 
-  handleModalToggle = () => {
-    this.setState(
-      { isModalOpen: !this.state.isModalOpen, uploadMsg: null },
-      () => {
-        if (this.state.isModalOpen) {
-          if (this.arrowRef) {
-            //this.arrowRef.animateIn();
-          }
-        }
+  componentDidUpdate = () => {
+    const { invalidClipboard } = this.state;
+    this.isInvalidClipboard().then((invalid) => {
+      if (invalidClipboard !== invalid) {
+        this.setState({ invalidClipboard: invalid });
       }
-    );
+    });
+    const clipboardSupported = navigator.clipboard
+      ? navigator.clipboard.readText
+      : false;
+    if (!clipboardSupported && this.state.isModalOpen && this.pasteRef) {
+      this.pasteRef.focus();
+    }
+  };
+
+  handleModalToggle = () => {
+    this.setState({ isModalOpen: !this.state.isModalOpen, uploadMsg: null });
   };
 
   addAlert = (alertProps) => {
     if (this.props.addAlert) {
       this.props.addAlert(alertProps);
+    }
+  };
+
+  handleManualPaste = (element) => {
+    if (element) {
+      element.style = "visibility: hidden";
+      this.handlePaste(element);
     }
   };
 
@@ -70,15 +83,6 @@ class UseTokenModal extends React.Component {
         sendToServer(token).then(success, failure);
       }, 0);
     }
-  };
-
-  componentDidUpdate = () => {
-    const { invalidClipboard } = this.state;
-    this.isInvalidClipboard().then((invalid) => {
-      if (invalidClipboard !== invalid) {
-        this.setState({ invalidClipboard: invalid });
-      }
-    });
   };
 
   // is the text on the clipboard a token
@@ -185,7 +189,7 @@ class UseTokenModal extends React.Component {
                       ref={(el) => (this.pasteRef = el)}
                       id="skPastedInput"
                       placeholder="Paste token copied from another site here"
-                      onPaste={() => this.handlePaste(this.pasteRef)}
+                      onPaste={() => this.handleManualPaste(this.pasteRef)}
                     />
                   </React.Fragment>
                 )}

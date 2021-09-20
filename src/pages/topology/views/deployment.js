@@ -33,7 +33,7 @@ const ZOOM_TRANSLATE = "dtrans";
 const DEFAULT_OPTIONS = {
   traffic: false,
   color: true,
-  showMetric: false,
+  showMetric: true,
   isExpanded: 0,
   showExternal: false,
   http: "bytes_out",

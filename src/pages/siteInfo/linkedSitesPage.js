@@ -65,7 +65,10 @@ class LinkedSitesPage extends React.Component {
             </div>
           </SplitItem>
         </Split>
-
+        <div className="sk-sub-text">
+          Links that were initiated from this site to other Skupper sites are
+          listed here.
+        </div>
         <LinkedSitesTable ref={(el) => (this.tableRef = el)} {...this.props} />
       </div>
     );

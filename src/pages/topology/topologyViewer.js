@@ -110,8 +110,13 @@ class TopologyViewer extends Component {
     if (
       saved.isExpanded === undefined ||
       saved.isExpanded === true ||
-      saved.isExpanded === false
+      saved.isExpanded === false ||
+      saved.isExpanded === "0"
     ) {
+      saved.isExpanded = 0;
+    }
+    saved.isExpanded = parseInt(saved.isExpanded, 10);
+    if (isNaN(saved.isExpanded)) {
       saved.isExpanded = 0;
     }
     /*
@@ -758,17 +763,18 @@ class TopologyViewer extends Component {
   handleExpandDrawer = (e, type = null) => {
     const { options } = this.state;
     options.isExpanded = Math.min(options.isExpanded + 1, 2);
-    const expandPanel = d3.select("#sk-drawer-panel-content");
-    expandPanel.classed("pf-m-width-25", options.isExpanded === 1);
-    expandPanel.classed("pf-m-width-100", options.isExpanded === 2);
-    this.setState({ options }, () => this.handleResizeDrawer(type));
+    this.setDrawerClass(options);
   };
 
   handleCollapseDrawer = () => {
     const { options } = this.state;
     options.isExpanded = Math.max(options.isExpanded - 1, 0);
+    this.setDrawerClass(options);
+  };
+
+  setDrawerClass = (options) => {
     const expandPanel = d3.select("#sk-drawer-panel-content");
-    expandPanel.classed("pf-m-width-25", options.isExpanded < 2);
+    expandPanel.classed("pf-m-width-25", options.isExpanded === 1);
     expandPanel.classed("pf-m-width-100", options.isExpanded === 2);
     this.setState({ options }, () => this.handleResizeDrawer());
   };
@@ -791,7 +797,8 @@ class TopologyViewer extends Component {
   };
 
   render() {
-    const { isExpanded } = this.state.options;
+    let { isExpanded } = this.state.options;
+    // controlButtons are for the legend
     const controlButtons = createTopologyControlButtons({
       zoomInCallback: this.zoomInCallback,
       zoomOutCallback: this.zoomOutCallback,
@@ -833,7 +840,7 @@ class TopologyViewer extends Component {
             handleChangeChartType={this.handleChangeChartType}
           />
         )}
-        <Drawer isExpanded={isExpanded}>
+        <Drawer isExpanded={isExpanded > 0}>
           <DrawerContent
             className="sk-drawer-content"
             panelContent={panelContent}
