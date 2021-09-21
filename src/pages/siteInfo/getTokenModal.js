@@ -47,7 +47,6 @@ class GetTokenModal extends React.Component {
     } else {
       this.props.service.getTokenData().then(
         (results) => {
-          const token = JSON.stringify(results);
           if (!this.clipboardSupported) {
             this.setState({
               theToken: results,
@@ -57,7 +56,7 @@ class GetTokenModal extends React.Component {
               showManualModal: true,
             });
           } else {
-            navigator.clipboard.writeText(token).then(
+            navigator.clipboard.writeText(results).then(
               (clip) => {
                 const msg = `Request for token sent. The token should be on the clipboard.`;
                 console.log(msg);
