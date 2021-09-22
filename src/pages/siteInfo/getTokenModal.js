@@ -22,6 +22,14 @@ class GetTokenModal extends React.Component {
     this.clipboardSupported = navigator.clipboard;
   }
 
+  componentDidMount = () => {
+    this.mounted = true;
+  };
+
+  componentWillUnmount = () => {
+    this.mounted = false;
+  };
+
   handleModalToggle = () => {
     this.setState(
       { isModalOpen: !this.state.isModalOpen, uploadMsg: null },
@@ -47,6 +55,9 @@ class GetTokenModal extends React.Component {
     } else {
       this.props.service.getTokenData().then(
         (results) => {
+          if (!this.mounted) {
+            return;
+          }
           if (!this.clipboardSupported) {
             this.setState({
               theToken: results,
@@ -58,6 +69,9 @@ class GetTokenModal extends React.Component {
           } else {
             navigator.clipboard.writeText(results).then(
               (clip) => {
+                if (!this.mounted) {
+                  return;
+                }
                 const msg = `Request for token sent. The token should be on the clipboard.`;
                 console.log(msg);
                 this.setState(
