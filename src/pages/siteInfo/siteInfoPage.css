@@ -32,6 +32,10 @@
   display: block;
 }
 
+.sk-siteinfo-page-wrapper .pf-c-card__header {
+  padding-left: 0;
+}
+
 .sk-siteinfo-prompt {
   /* color: #999999; */
   padding-right: 0.5em;
@@ -324,4 +328,8 @@ table.pf-c-table.pf-m-grid-md.pf-m-compact * {
 
 .sk-not-connected {
   color: red !important;
+}
+
+.sk-sub-group {
+  margin-left: 2em;
 }
