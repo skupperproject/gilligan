@@ -27,7 +27,9 @@ class UseTokenModal extends React.Component {
       ? navigator.clipboard.readText
       : false;
     if (!clipboardSupported && this.state.isModalOpen && this.pasteRef) {
-      this.pasteRef.focus();
+      try {
+        this.pasteRef.focus();
+      } catch (e) {}
     }
   };
 

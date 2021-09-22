@@ -29,7 +29,9 @@ class MetricsDrowdown extends React.Component {
 
   onFocus = () => {
     const element = document.getElementById("toggle-id");
-    element.focus();
+    try {
+      element.focus();
+    } catch (e) {}
   };
 
   render() {

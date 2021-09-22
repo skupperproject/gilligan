@@ -32,8 +32,10 @@ class ManualCopyModal extends React.Component {
   componentDidMount = () => {
     setTimeout(() => {
       if (this.copyRef) {
-        this.copyRef.focus();
-        this.copyRef.select();
+        try {
+          this.copyRef.focus();
+          this.copyRef.select();
+        } catch (e) {}
       }
     }, 1);
   };
