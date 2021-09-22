@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 /*
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -25,9 +26,8 @@ import TimeSeries from "../topology/charts/timeSeries";
 import { viewsMap as VIEWS } from "../topology/views/views";
 import GetTokenModal from "./getTokenModal";
 import UseTokenModal from "./useTokenModal";
-import LinkedSitesTable from "./linkedSitesTable";
 import UnlinkModal from "./unlinkModal";
-import EmptyLinkState from "./emptyLinkState";
+import OverviewCard from "./overviewCard";
 
 import { utils } from "../../utilities";
 
@@ -61,11 +61,14 @@ class OverviewPage extends React.Component {
   };
 
   update = () => {
+    if (!this.mounted) {
+      return;
+    }
     this.setState(
       { linkedCount: this.props.service.siteInfo.links.length },
       () => {
-        if (this.tableRef && this.tableRef.update) {
-          this.tableRef.update();
+        if (this.cardRef && this.cardRef.update) {
+          this.cardRef.update();
         }
         if (this.chartRef1 && this.chartRef1.update) {
           this.chartRef1.update();
@@ -93,6 +96,9 @@ class OverviewPage extends React.Component {
   };
 
   showUnlink = (rowData) => {
+    if (!this.mounted) {
+      return;
+    }
     this.setState({
       showUnlinkModal: true,
       unlinkInfo: {
@@ -102,6 +108,9 @@ class OverviewPage extends React.Component {
   };
 
   handleUnlinkClose = () => {
+    if (!this.mounted) {
+      return;
+    }
     this.setState({ showUnlinkModal: false, unlinkInfo: null });
   };
 
@@ -209,7 +218,7 @@ class OverviewPage extends React.Component {
   };
 
   render() {
-    const { showUnlinkModal, unlinkInfo, linkedCount } = this.state;
+    const { showUnlinkModal, unlinkInfo } = this.state;
     const data = this.data();
     const hasIn = this.anyRequests("in");
     const hasOut = this.anyRequests("out");
@@ -224,30 +233,11 @@ class OverviewPage extends React.Component {
             doUnlink={this.doUnlink}
           />
         )}
-        {linkedCount === 0 && (
-          <React.Fragment>
-            <Split gutter="md">
-              <SplitItem isFilled></SplitItem>
-              <SplitItem>
-                <div className="sk-site-actions">
-                  <GetTokenModal {...this.props} addAlert={this.addAlert} />
-                  <UseTokenModal
-                    {...this.props}
-                    title="Use a token"
-                    direction="up"
-                    addAlert={this.addAlert}
-                  />
-                </div>
-              </SplitItem>
-            </Split>
-            {<EmptyLinkState />}
-          </React.Fragment>
-        )}
-        {linkedCount > 0 && data && (
+        {data && (
           <React.Fragment>
             <Split gutter="md">
               <SplitItem>
-                <h1>Linked sites</h1>
+                <h1>Details</h1>
               </SplitItem>
               <SplitItem isFilled></SplitItem>
 
@@ -263,15 +253,8 @@ class OverviewPage extends React.Component {
                 </div>
               </SplitItem>
             </Split>
-            <div className="sk-site-table-wrapper">
-              <LinkedSitesTable
-                ref={(el) => (this.tableRef = el)}
-                {...this.props}
-                dataFilter={this.filterLinkData}
-                _fieldsFilter={this.filterLinkFields}
-                actionResolver={this.actionResolver}
-              />
-            </div>
+            <OverviewCard ref={(el) => (this.cardRef = el)} {...this.props} />
+            <br />
             {(hasIn || hasOut) && <h1>Site traffic</h1>}
             <Flex
               className="sk-siteinfo-table"
