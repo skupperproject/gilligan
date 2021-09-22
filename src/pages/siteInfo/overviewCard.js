@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React from "react";
 import { Card, CardBody, Label, Grid, Flex } from "@patternfly/react-core";
+import { utils } from "../../utilities";
 
 import {
   TableComposable,
@@ -62,6 +63,7 @@ class OverviewCard extends React.Component {
     const siteRows = this.props.service.VAN.sites
       .map((site) => [site.site_name, site.namespace, site.version])
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    const siteCount = siteRows.length;
 
     return (
       <Card isCompact isPlain>
@@ -73,8 +75,8 @@ class OverviewCard extends React.Component {
               direction={{ default: "column" }}
             >
               <Label color="blue">
-                {this.props.service.VAN.sites.length} Site
-                {`${this.props.service.VAN.sites.length !== 1 ? "s" : ""}`}
+                {siteCount} {`${siteCount > 1 ? "Linked s" : "S"}`}
+                {utils.safePlural(siteCount, "ite")}
               </Label>
               <TableComposable
                 aria-label="Simple table"
@@ -110,8 +112,8 @@ class OverviewCard extends React.Component {
               direction={{ default: "column" }}
             >
               <Label color="purple">
-                {serviceCount} Deployment
-                {`${serviceCount !== 1 ? "s" : ""}`}
+                {serviceCount} Exposed{" "}
+                {utils.safePlural(serviceCount, "deployment")}
               </Label>
               <TableComposable
                 aria-label="Simple table"

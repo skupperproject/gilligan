@@ -237,7 +237,7 @@ class OverviewPage extends React.Component {
           <React.Fragment>
             <Split gutter="md">
               <SplitItem>
-                <h1>Details</h1>
+                <h1>Network details</h1>
               </SplitItem>
               <SplitItem isFilled></SplitItem>
 
@@ -255,7 +255,7 @@ class OverviewPage extends React.Component {
             </Split>
             <OverviewCard ref={(el) => (this.cardRef = el)} {...this.props} />
             <br />
-            {(hasIn || hasOut) && <h1>Site traffic</h1>}
+            {(hasIn || hasOut) && <h1>Traffic for this site</h1>}
             <Flex
               className="sk-siteinfo-table"
               direction={{ default: "row", lg: "row" }}
