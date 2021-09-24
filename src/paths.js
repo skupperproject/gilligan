@@ -184,7 +184,8 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
 // create a complex path exiting source on the right
 // and curving around to enter the target on the left
 const circular = (link, sankey, width, reverse, off, site) => {
-  const rWidth = sankey || reverse ? link.width : width;
+  //const rWidth = sankey || reverse ? link.width : width;
+  const rWidth = sankey ? link.width : width;
   const minR = 10;
   const maxR = 80;
   const { offsetX, offsetY } = calcOffsets(link, off);
