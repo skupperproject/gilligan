@@ -7,14 +7,6 @@ class Adapter {
     this.data = data;
     this.sortSites();
     this.sortServices();
-    /*
-    console.log("new data");
-    try {
-      console.log(JSON.stringify(data, null, 2));
-    } catch (e) {
-      console.log(data);
-    }
-    */
     this.instance = ++INSTANCE;
     this.decorateSiteNames();
     this.fixTargets();
@@ -208,7 +200,9 @@ class Adapter {
     if (!service.targets) {
       service.targets = [];
     }
-    if (!service.targets.some((t) => t.name === name)) {
+    if (
+      !service.targets.some((t) => t.name === name && t.site_id === site_id)
+    ) {
       service.targets.push({ name, site_id });
     }
   };
@@ -580,8 +574,8 @@ class Adapter {
   findService = (address) =>
     this.data.services.find((s) => s.address === address);
   findSite = (site_id) => this.data.sites.find((s) => s.site_id === site_id);
-  findInTargets = (service) =>
-    service.targets.find((t) => t.name === service.address);
+  findAllTargets = (service) =>
+    service.targets.filter((t) => t.name === service.address);
 
   // get a list of sites the given service is resident in
   getServiceSites = (service) => {
@@ -593,9 +587,11 @@ class Adapter {
           sites.push(this.findSite(connection.site_id));
         });
       } else {
-        const target = this.findInTargets(service);
-        if (target) {
-          sites.push(this.findSite(target.site_id));
+        const targets = this.findAllTargets(service);
+        if (targets) {
+          targets.forEach((t) => {
+            sites.push(this.findSite(t.site_id));
+          });
         }
       }
     } else {
@@ -603,18 +599,22 @@ class Adapter {
       if (service.requests_handled) {
         if (service.requests_handled.length === 0) {
           // service that only sends requests
-          const target = this.findInTargets(service);
-          if (target) {
-            sites.push(this.findSite(target.site_id));
+          const targets = this.findAllTargets(service);
+          if (targets) {
+            targets.forEach((t) => {
+              sites.push(this.findSite(t.site_id));
+            });
           }
         }
         service.requests_handled.forEach((request) => {
           sites.push(this.findSite(request.site_id));
         });
       } else {
-        const target = this.findInTargets(service);
-        if (target) {
-          sites.push(this.findSite(target.site_id));
+        const targets = this.findAllTargets(service);
+        if (targets) {
+          targets.forEach((t) => {
+            sites.push(this.findSite(t.site_id));
+          });
         }
       }
     }
