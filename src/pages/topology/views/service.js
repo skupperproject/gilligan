@@ -636,6 +636,7 @@ export class Service {
           link: d,
           reverse: d.circular,
           offsetY: 4,
+          width: sankey ? d.width : undefined,
         })
       );
   }
@@ -886,6 +887,7 @@ export class Service {
             link: d,
             reverse: d.circular,
             offsetY: 4,
+            width: d.width,
           });
           return interpolatePath(previous, current);
         });

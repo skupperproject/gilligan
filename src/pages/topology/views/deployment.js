@@ -496,7 +496,7 @@ export class Deployment extends Service {
       .attr("d", (d) => genPath({ link: d, sankey: true }));
 
     this.linksSelection.selectAll("path.servicesankeyDir").attr("d", (d) => {
-      return genPath({ link: d, width: d.width });
+      return genPath({ link: d, width: sankey ? d.width : undefined });
     });
 
     this.linksSelection
@@ -512,6 +512,7 @@ export class Deployment extends Service {
           link: d,
           reverse: d.circular,
           offsetY: 4,
+          width: sankey ? d.width : undefined,
         })
       );
   };
