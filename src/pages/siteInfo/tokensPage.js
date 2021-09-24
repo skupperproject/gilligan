@@ -255,9 +255,9 @@ class TokensPage extends React.Component {
           </SplitItem>
         </Split>
         <div className="sk-sub-text">
-          Sites must be linked before they can communicate. Link tokens issued
-          from this site allow other sites to establish a connection to this
-          site.
+          Link tokens issued from this site allow other Skupper sites to
+          establish a connection to this site. To create a new link token, use
+          the 'Link a remote site' button.
         </div>
         <h1 className="sk-secondary-section">Tokens issued from this site</h1>
         <SiteInfoTable
