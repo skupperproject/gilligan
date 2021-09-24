@@ -316,7 +316,6 @@ class TopologyViewer extends Component {
         }
         this.viewObj.drag(d, this.state.options.traffic);
         this.drawNodesAndPaths();
-        this.setLinkStat();
       })
       .on("dragend", (d) => {
         this.viewObj.dragEnd(d, this.state.options.traffic);
@@ -366,6 +365,7 @@ class TopologyViewer extends Component {
           }
         }
         this.restart();
+        this.setLinkStat();
       });
     }
   };
@@ -580,6 +580,7 @@ class TopologyViewer extends Component {
         this
       )
       .then(() => {
+        this.setLinkStat();
         this.viewObj.transitioning = false;
       });
   };
