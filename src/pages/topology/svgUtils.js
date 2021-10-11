@@ -59,6 +59,18 @@ export function appendCloud(g) {
   return g;
 }
 
+export function appendCloud2(g, xtrans = 0, ytrans = 0) {
+  g.append("svg:path")
+    .attr("class", "cloud")
+    .attr(
+      "d",
+      "M 25,60 a 20,20 1 0,0 0,40 h 50 a 20,20 1 0,0 0,-40 a 10,10 1 0,0 -15,-10 a 15,15 1 0,0 -35,10 z"
+    )
+    .attr("transform", `translate(${xtrans}, ${ytrans})`);
+
+  return g;
+}
+
 // content inside the circle
 export function appendContent(g) {
   // show node IDs

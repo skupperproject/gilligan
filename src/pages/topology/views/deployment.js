@@ -582,8 +582,8 @@ export class Deployment extends Service {
       .selectAll("text.cluster-name")
       .transition()
       .duration(duration)
-      .attr("y", -10)
-      .attr("x", (d) => d.getWidth() / 2);
+      .attr("x", (d) => (d.gateway ? d.getWidth() / 2 + 90 : d.getWidth() / 2))
+      .attr("y", (d) => (d.gateway ? d.getHeight() / 2 + 62 : -10));
   };
 
   toSankey = (duration) => {
@@ -608,8 +608,8 @@ export class Deployment extends Service {
       .selectAll("text.cluster-name")
       .transition()
       .duration(duration)
-      .attr("y", -10)
-      .attr("x", (d) => d.getWidth(true) / 2);
+      .attr("x", (d) => (d.gateway ? d.getWidth() / 2 + 90 : d.getWidth() / 2))
+      .attr("y", (d) => (d.gateway ? d.getHeight() / 2 + 62 : -10));
   };
 
   // get records for the table view

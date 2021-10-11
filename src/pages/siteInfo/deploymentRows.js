@@ -74,8 +74,10 @@ export class DeploymentRows {
 
     return new Promise((resolve) => {
       VANservice.getSiteInfo().then((siteInfo) => {
+        console.log(`deploymentRows::fetch siteInfo`);
+        console.log(siteInfo);
         const filtered = siteInfo[dataKey].filter(
-          (service) => service.endpoints
+          (service) => service.exposed !== undefined
         );
         const rows = filtered.map((row) => {
           // add cardData so the sub table viewer has the correct info

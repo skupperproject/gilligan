@@ -20,7 +20,7 @@ under the License.
 import React from "react";
 import { Tabs, Tab } from "@patternfly/react-core";
 import Overview from "./overviewPage";
-import Expose from "./exposePage";
+import ExposePage from "./exposePage";
 import Tokens from "./tokensPage";
 import LinkedSites from "./linkedSitesPage";
 import { Alert, AlertActionCloseButton } from "@patternfly/react-core";
@@ -47,7 +47,7 @@ class SiteInfoViewer extends React.Component {
         />
       ),
       Deployments: (
-        <Expose
+        <ExposePage
           {...this.props}
           ref={(el) => (this.tabRefs["Deployments"] = el)}
         />
@@ -167,7 +167,7 @@ class SiteInfoViewer extends React.Component {
               )
             )}
 
-            {this.tabs[t]}
+            {tab === t && this.tabs[t]}
           </Tab>
         ))}
       </Tabs>

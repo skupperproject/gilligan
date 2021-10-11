@@ -307,6 +307,7 @@ class TopologyViewer extends Component {
         d3.event.sourceEvent.stopPropagation();
         this.viewObj.dragStart(d, this.state.options.traffic);
         this.viewObj.dragging = true;
+        this.clearPopups();
       })
       .on("drag", (d) => {
         // happens on newly added nodes that have never been dragged
