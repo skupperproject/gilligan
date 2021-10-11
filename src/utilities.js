@@ -114,6 +114,8 @@ const componentToHex = (c) => c.toString(16).padStart(2, "0");
 
 const utils = {
   VIEW_DURATION: 500,
+  GatewayWidth: 40,
+  GatewayHeight: 120,
   ServiceWidth: 180,
   ServiceHeight: 40,
   ServiceGap: 5,
