@@ -8,6 +8,7 @@ class Adapter {
     this.sortSites();
     this.sortServices();
     this.instance = ++INSTANCE;
+    this.processGateways();
     this.decorateSiteNames();
     this.fixTargets();
     this.fixBinaryAddresses();
@@ -28,6 +29,17 @@ class Adapter {
     data.getDeploymentLinks = () => this.getDeploymentLinks(SHOW_EXTERNAL);
     this.siteInfo = { name: this.data.sites[0].site_name };
   }
+
+  processGateways = () => {
+    this.data.sites.forEach((site) => {
+      if (site.type === "gateway") {
+        if (site.site_name === "") {
+          site.site_name = "gateway";
+        }
+        site.gateway = true;
+      }
+    });
+  };
 
   // if multiple sites have the same name,
   // append (#) to the site names
