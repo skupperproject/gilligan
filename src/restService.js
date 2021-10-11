@@ -63,7 +63,32 @@ class RESTService {
               : []; // call failed. use empty array as result
         });
         // fold targets into services
+        results.targets.forEach((target) => {
+          const resident = results.services.find(
+            (service) => service.name === target.name
+          );
+          if (resident) {
+            if (
+              resident.endpoints &&
+              resident.endpoints.find((endp) => endp.target === target.name)
+            ) {
+              resident.exposed = true;
+              resident.type = target.type;
+              resident.ports = target.ports;
+            }
+          } else {
+            // there is no service that matches this target
+            const available = {
+              name: target.name,
+              type: target.type,
+              endpoints: null,
+              exposed: false,
+            };
+            results.services.push(available);
+          }
+        });
         // TODO: do this somewhere else after the data is retrieved
+        /*
         results.targets.forEach((target) => {
           const deployed = results.services.find(
             (service) => service.name === target.name
@@ -79,6 +104,7 @@ class RESTService {
             notDeployed.endpoints = target;
           }
         });
+        */
 
         // the call to GET /site should return the site_id of the current site
         results.site = results.site.trim();
