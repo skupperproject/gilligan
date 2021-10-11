@@ -586,9 +586,11 @@ svg#SVG_ID:not(.active):not(.ctrl) path.service {
   cursor: pointer;
 }
 
+/*
 path.hittarget {
-  /* stroke: transparent; */
+   stroke: transparent;
 }
+*/
 
 path.hittarget.highlighted {
   stroke: #6f6;
@@ -1213,6 +1215,17 @@ g.service-type.selected * {
   opacity: 1;
 }
 
+.gateway-line-in,
+.gateway-line-out {
+  stroke: black;
+}
+
+.cloud {
+  stroke-width: 1;
+  stroke: black;
+  fill: white;
+}
+
 rect.client {
   stroke: black;
   stroke-width: 1px;
@@ -1587,6 +1600,14 @@ a.selected.pf-c-dropdown__menu-item {
   position: relative;
   top: 2px;
 }
+
+.sk-gateway-arrow {
+  color: black;
+  position: relative;
+  top: -2px;
+  font-size: 10px;
+}
+
 .health-ok {
   color: #33cc33;
 }
