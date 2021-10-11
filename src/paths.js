@@ -301,14 +301,18 @@ const circular = (link, sankey, width, reverse, off, site) => {
 // return the path between 2 circles
 // the path is the shortest line segment joining the circles
 export const pathBetween = (source, target) => {
-  const x1 = source.x + source.r; // center of source circle
+  const x1 = source.gateway ? source.x + source.r * 2 : source.x + source.r; // center of source circle
   const y1 = source.y + source.r;
   const x2 = target.x + target.r; // center of target circle
   const y2 = target.y + target.r;
   const pt1 = circleIntercept(x1, y1, source.r, x2, y2);
   const pt2 = circleIntercept(x2, y2, target.r, x1, y1);
   let path = d3path.path();
-  path.moveTo(pt1.x, pt1.y);
+  if (source.gateway) {
+    path.moveTo(x1, y1);
+  } else {
+    path.moveTo(pt1.x, pt1.y);
+  }
   path.lineTo(pt2.x, pt2.y);
   return path.toString();
 };
