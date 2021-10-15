@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React from "react";
-import { Card, CardBody, Label, Grid, Flex } from "@patternfly/react-core";
+import { Card, CardBody, Label, Flex } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
 import { utils } from "../../utilities";
 
@@ -12,7 +12,6 @@ import {
   Th,
   Td,
 } from "@patternfly/react-table";
-import { TableDefaults } from "@patternfly/react-table/dist/esm/components/Table/base";
 
 class OverviewCard extends React.Component {
   constructor(props) {
