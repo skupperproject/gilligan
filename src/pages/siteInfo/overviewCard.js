@@ -16,34 +16,15 @@ import {
 class OverviewCard extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { isCardExpanded: true, updateCount: 0 };
-
-    this.onCardExpand = () => {
-      this.setState({
-        isCardExpanded: !this.state.isCardExpanded,
-      });
-    };
-
-    this.onActionToggle = (isDropdownOpen) => {
-      this.setState({
-        isDropdownOpen,
-      });
-    };
-
-    this.onActionSelect = (event) => {
-      this.setState({
-        isDropdownOpen: !this.state.isDropdownOpen,
-      });
-    };
+    this.state = { tableInfo: null };
   }
 
-  update = () => {
-    // hack to force the component to rerender after each update
-    this.setState({ updateCount: this.state.updateCount + 1 });
+  componentDidMount = () => {
+    // 1st time in
+    this.update();
   };
 
-  render() {
-    const { updateCount } = this.state;
+  update = () => {
     const residentServices = this.props.service.VAN.deployments
       .filter((d) => !d.service.derived)
       .sort((a, b) =>
@@ -90,7 +71,7 @@ class OverviewCard extends React.Component {
       gatewayColumns.pop();
     }
 
-    const tables = [
+    const tableInfo = [
       {
         count: siteCount,
         columns: siteColumns,
@@ -119,61 +100,67 @@ class OverviewCard extends React.Component {
         rows: gatewayRows,
         label: (
           <Label color="green">
-            {gatewayCount} {utils.safePlural(gatewayCount, "gateway")}
+            {gatewayCount} {utils.safePlural(gatewayCount, "Gateway")}
           </Label>
         ),
       },
     ];
+    this.setState({ tableInfo });
+  };
 
-    return (
-      <Card isCompact isPlain>
-        <CardBody>
-          <Split hasGutter isWrappable>
-            {tables.map((table) => (
-              <SplitItem>
-                <Flex
-                  spaceItems={{ default: "spaceItemsLg" }}
-                  alignItems={{ default: "alignItemsFlexStart" }}
-                  direction={{ default: "column" }}
-                >
-                  {table.label}
-                  <TableComposable
-                    aria-label="Simple table"
-                    variant="compact"
-                    borders={false}
+  render() {
+    const { tableInfo } = this.state;
+    if (tableInfo) {
+      return (
+        <Card isCompact isPlain>
+          <CardBody>
+            <Split hasGutter isWrappable>
+              {tableInfo.map((table) => (
+                <SplitItem isFilled>
+                  <Flex
+                    spaceItems={{ default: "spaceItemsLg" }}
+                    alignItems={{ default: "alignItemsFlexStart" }}
+                    direction={{ default: "column" }}
+                    grow={{ default: "grow" }}
                   >
-                    <Thead>
-                      <Tr>
-                        {table.columns.map((column, columnIndex) => (
-                          <Th key={columnIndex} width={30}>
-                            {column}
-                          </Th>
-                        ))}
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {table.rows.map((row, rowIndex) => (
-                        <Tr key={rowIndex}>
-                          {row.map((cell, cellIndex) => (
-                            <Td
-                              key={`${rowIndex}_${cellIndex}`}
-                              dataLabel={table.columns[cellIndex]}
-                            >
-                              {cell}
-                            </Td>
+                    {table.label}
+                    <TableComposable
+                      aria-label="Simple table"
+                      variant="compact"
+                      borders={false}
+                    >
+                      <Thead>
+                        <Tr>
+                          {table.columns.map((column, columnIndex) => (
+                            <Th key={columnIndex}>{column}</Th>
                           ))}
                         </Tr>
-                      ))}
-                    </Tbody>
-                  </TableComposable>
-                </Flex>
-              </SplitItem>
-            ))}
-          </Split>
-          {updateCount ? <span /> : <span />}
-        </CardBody>
-      </Card>
-    );
+                      </Thead>
+                      <Tbody>
+                        {table.rows.map((row, rowIndex) => (
+                          <Tr key={rowIndex}>
+                            {row.map((cell, cellIndex) => (
+                              <Td
+                                key={`${rowIndex}_${cellIndex}`}
+                                dataLabel={table.columns[cellIndex]}
+                              >
+                                {cell}
+                              </Td>
+                            ))}
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </TableComposable>
+                  </Flex>
+                </SplitItem>
+              ))}
+            </Split>
+          </CardBody>
+        </Card>
+      );
+    } else {
+      return null;
+    }
   }
 }
 
