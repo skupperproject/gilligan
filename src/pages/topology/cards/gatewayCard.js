@@ -21,17 +21,18 @@ import React from "react";
 import { utils } from "../../../utilities";
 
 export class GatewayCard {
-  constructor() {
-    this.icon = (
-      <React.Fragment>
-        <i className={`fa fa-cloud`}></i>
-        <i className="fa fa-arrow-right sk-gateway-arrow" />
-      </React.Fragment>
-    );
+  constructor(adapter) {
+    this.icon = <i className={`fa fa-exchange`}></i>;
     this.cardType = "gateway";
+    this.heading = "Gateway";
+    this.adapter = adapter;
     this.popupInfo = {
       compact: ["namespace"],
-      expanded: [{ title: "Version", getFn: (o) => o.version }],
+      expanded: [
+        { title: "Version", getFn: (o) => o.version },
+        { title: "Parent site", getFn: this.getParentSiteName },
+        { title: "Gateway type", getFn: (o) => o.type },
+      ],
     };
   }
   subNodes = (cluster) => cluster.services.length;
@@ -48,6 +49,12 @@ export class GatewayCard {
       );
     });
     return deployed;
+  };
+  getParentSiteName = (o) => {
+    try {
+      return o.parent_site.site_name;
+    } catch (e) {}
+    //returns undefined;
   };
 }
 

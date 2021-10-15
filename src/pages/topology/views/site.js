@@ -19,7 +19,7 @@ under the License.
 
 import * as d3 from "d3";
 import { utils } from "../../../utilities";
-import { appendCloud2 } from "../svgUtils";
+import { appendGateways, gatewayPath } from "../svgUtils";
 import { genPath, pathBetween } from "../../../paths";
 import { interpolatePath } from "d3-interpolate-path";
 import SiteCard from "../cards/siteCard";
@@ -394,26 +394,25 @@ export class Site {
     const gateways = rects
       .filter((d) => d.gateway)
       .append("svg:g")
-      .attr("transform", "translate(80, 12)");
+      .attr("class", "gateway-background");
 
-    appendCloud2(gateways, -20);
+    appendGateways(gateways);
     gateways
-      .append("svg:path")
-      .attr("class", "gateway-line-in")
-      .attr(
-        "d",
-        (d) =>
-          `M 40 ${28 + d.getHeight() / 2} L ${70 + d.getWidth()} ${
-            28 + d.getHeight() / 2
-          }`
-      )
-      .attr("marker-end", "url(#http-end)");
+      .append("svg:text")
+      .attr("class", "gateway-title")
+      .attr("x", (d) => d.getWidth() / 2)
+      .attr("y", -10)
+      .attr("dominant-baseline", "middle")
+      .attr("text-anchor", "middle")
+      .text((d) => {
+        return `Gateway at site ${d.parent_site.site_name}`;
+      });
 
     rects
       .append("svg:text")
       .attr("class", "cluster-name")
       .attr("x", (d) => d.getWidth() / 2)
-      .attr("y", (d) => d.getHeight() / 2)
+      .attr("y", (d) => (d.gateway ? d.getHeight() + 10 : -10))
       .attr("dominant-baseline", "middle")
       .attr("text-anchor", "middle")
       .text((d) => d.name);
@@ -678,7 +677,7 @@ export class Site {
   genStatPath = (d) =>
     genPath({
       link: d,
-      reverse: d.circular,
+      reverse: d.source.x0 > d.target.x0 + d.target.getWidth(),
       offsetY: 4,
       width: 1,
       site: true,
@@ -751,13 +750,9 @@ export class Site {
   };
 
   clusterHeight = (n, expanded) =>
-    n.gateway
-      ? utils.GatewayHeight
-      : expanded || n.expanded
-      ? n.sankeyR * 2
-      : n.normalR * 2;
+    expanded || n.expanded ? n.sankeyR * 2 : n.normalR * 2;
   clusterWidth = (n, expanded) =>
-    n.gateway ? utils.GatewayWidth : this.clusterHeight(n, expanded);
+    n.gateway ? n.normalR * 2 : this.clusterHeight(n, expanded);
 
   highlightLink(highlight, link, d, sankey, color) {
     this.trafficLinksSelection
@@ -901,12 +896,8 @@ export class Site {
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
-        .attr("x", (d) =>
-          d.gateway ? d.getWidth() / 2 + 10 : d.getWidth() / 2
-        )
-        .attr("y", (d) =>
-          d.gateway ? d.getHeight() / 2 + 20 : d.getHeight() / 2
-        );
+        .attr("x", (d) => d.getWidth() / 2)
+        .attr("y", (d) => (d.gateway ? d.getHeight() + 10 : -10));
 
       // traffic mouseover path
       d3.select(this.SVG_ID)
@@ -978,6 +969,30 @@ export class Site {
         .transition()
         .duration(duration)
         .attr("opacity", 0);
+
+      d3.select(this.SVG_ID)
+        .select("g.gateway-background")
+        .selectAll("path.cloud")
+        .transition()
+        .duration(duration)
+        .attrTween("d", function (d) {
+          const previous = d3.select(this).attr("d");
+          const current = gatewayPath(d.getWidth(), d.getHeight());
+          return interpolatePath(previous, current);
+        });
+
+      d3.select(this.SVG_ID)
+        .selectAll("rect.gateway-background-rect")
+        .transition()
+        .duration(duration)
+        .attr("width", (d) => d.getWidth())
+        .attr("height", (d) => d.getHeight());
+
+      d3.select(this.SVG_ID)
+        .selectAll(".gateway-title")
+        .transition()
+        .duration(duration)
+        .attr("x", (d) => d.getWidth() / 2);
     });
   };
 
@@ -1066,8 +1081,8 @@ export class Site {
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
-        .attr("x", (d) => (d.gateway ? d.r + 10 : d.r))
-        .attr("y", (d) => (d.gateway ? d.r + 20 : d.r));
+        .attr("x", (d) => d.getWidth() / 2)
+        .attr("y", (d) => (d.gateway ? d.getHeight() + 10 : -10));
       /*
       d3.select(this.SVG_ID)
         .selectAll("text.cluster-name")
@@ -1075,6 +1090,30 @@ export class Site {
 */
       // hide services
       d3.select(this.SVG_ID).selectAll("g.services").style("display", "none");
+
+      d3.select(this.SVG_ID)
+        .select("g.gateway-background")
+        .selectAll("path.cloud")
+        .transition()
+        .duration(duration)
+        .attrTween("d", function (d) {
+          const previous = d3.select(this).attr("d");
+          const current = gatewayPath(d.getWidth(), d.getHeight());
+          return interpolatePath(previous, current);
+        });
+
+      d3.select(this.SVG_ID)
+        .selectAll("rect.gateway-background-rect")
+        .transition()
+        .duration(duration)
+        .attr("width", (d) => d.getWidth())
+        .attr("height", (d) => d.getHeight());
+
+      d3.select(this.SVG_ID)
+        .selectAll(".gateway-title")
+        .transition()
+        .duration(duration)
+        .attr("x", (d) => d.getWidth() / 2);
     });
   };
 
@@ -1197,12 +1236,31 @@ export class Site {
         .selectAll("text.cluster-name")
         .transition()
         .duration(duration)
-        .attr("x", (d) =>
-          d.gateway ? d.getWidth() / 2 + 10 : d.getWidth() / 2
-        )
-        .attr("y", (d) =>
-          d.gateway ? d.getHeight() / 2 + 20 : d.getHeight() / 2
-        );
+        .attr("x", (d) => d.getWidth() / 2)
+        .attr("y", (d) => (d.gateway ? d.getHeight() + 10 : -10));
+
+      d3.select(this.SVG_ID)
+        .select("g.gateway-background")
+        .selectAll("path.cloud")
+        .transition()
+        .duration(duration)
+        .attrTween("d", function (d) {
+          const previous = d3.select(this).attr("d");
+          const current = gatewayPath(d.getWidth(), d.getHeight());
+          return interpolatePath(previous, current);
+        });
+      d3.select(this.SVG_ID)
+        .selectAll("rect.gateway-background-rect")
+        .transition()
+        .duration(duration)
+        .attr("width", (d) => d.getWidth())
+        .attr("height", (d) => d.getHeight());
+
+      d3.select(this.SVG_ID)
+        .selectAll(".gateway-title")
+        .transition()
+        .duration(duration)
+        .attr("x", (d) => d.getWidth() / 2);
     });
   };
 

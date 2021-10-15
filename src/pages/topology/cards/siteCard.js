@@ -29,8 +29,11 @@ export class SiteCard {
       expanded: [
         { title: "Version", getFn: (o) => o.version },
         { title: "URL", getFn: (o) => o.url },
-        /*{ title: "Site type", getFn: (o) => (o.edge ? "Edge" : "Normal") },*/
         { title: this.getDeploymentTitle, getFn: this.getDeployments },
+        {
+          title: (site) => (site.edge ? "Site type" : null),
+          getFn: (o) => (o.edge ? "Edge" : null),
+        },
       ],
     };
   }

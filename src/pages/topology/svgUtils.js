@@ -15,6 +15,7 @@
  */
 
 import { Nodes } from "./nodes.js";
+import { utils } from "../../utilities";
 
 export function updateState(circle) {
   circle
@@ -59,7 +60,35 @@ export function appendCloud(g) {
   return g;
 }
 
-export function appendCloud2(g, xtrans = 0, ytrans = 0) {
+export function gatewayPath(w, h) {
+  return `M 20 0 L0 0 L0 ${h} L 20 ${h} M ${w - 20} 0 L${w} 0 L ${w} ${h} L ${
+    w - 20
+  } ${h}`;
+}
+export function appendGateways(g, xtrans = 0, ytrans = 0) {
+  g.append("svg:rect")
+    .attr("class", "gateway-background-rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", (d) => d.getWidth())
+    .attr("height", (d) => d.getHeight());
+
+  g.append("svg:path")
+    .attr("class", "cloud")
+    .attr("d", (d) => {
+      const h = d.getHeight();
+      const w = d.getWidth();
+      return gatewayPath(w, h);
+    });
+  /*
+  g.append("svg:rect")
+    .attr("class", "cloud")
+    .attr("x", xtrans)
+    .attr("y", ytrans)
+    .attr("width", (d) => d.getWidth())
+    .attr("height", (d) => d.getHeight());
+*/
+  /*
   g.append("svg:path")
     .attr("class", "cloud")
     .attr(
@@ -67,6 +96,7 @@ export function appendCloud2(g, xtrans = 0, ytrans = 0) {
       "M 25,60 a 20,20 1 0,0 0,40 h 50 a 20,20 1 0,0 0,-40 a 10,10 1 0,0 -15,-10 a 15,15 1 0,0 -35,10 z"
     )
     .attr("transform", `translate(${xtrans}, ${ytrans})`);
+    */
 
   return g;
 }

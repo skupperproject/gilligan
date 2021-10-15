@@ -634,7 +634,7 @@ export class Service {
       .attr("d", (d) =>
         genPath({
           link: d,
-          reverse: d.circular,
+          reverse: d.source.x0 > d.target.x0 + d.target.getWidth(),
           offsetY: 4,
           width: sankey ? d.width : undefined,
         })
@@ -737,7 +737,7 @@ export class Service {
           const previous = d3.select(this).attr("d");
           const current = genPath({
             link: d,
-            reverse: d.circular,
+            reverse: d.source.x0 > d.target.x0 + d.target.getWidth(),
             offsetY: 4,
           });
           return interpolatePath(previous, current);
@@ -885,7 +885,7 @@ export class Service {
           const previous = d3.select(this).attr("d");
           const current = genPath({
             link: d,
-            reverse: d.circular,
+            reverse: d.source.x0 > d.target.x0 + d.target.getWidth(),
             offsetY: 4,
             width: d.width,
           });

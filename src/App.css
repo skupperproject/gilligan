@@ -1302,17 +1302,27 @@ path.to-router {
   fill: none;
 }
 
-path.cloud {
+.cloud {
   fill: white;
-  stroke: black;
-  stroke-width: 2;
+  stroke: #eaeaea;
+  stroke-width: 10;
   stroke-linejoin: round;
 }
-path.cloud:hover {
-  fill: aliceblue;
-  stroke: lightskyblue;
+.cloud:hover {
+  fill: #fcfcfc;
+  stroke: #bbbbbb;
 }
 
+.gateway-background rect {
+  fill: white;
+}
+.gateway-background rect:hover + .cloud {
+  stroke: #bbbbbb;
+}
+
+.gateway-title {
+  fill: #666666;
+}
 path.external {
   fill: white;
   stroke-width: 2;

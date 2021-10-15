@@ -32,11 +32,10 @@ class Adapter {
 
   processGateways = () => {
     this.data.sites.forEach((site) => {
-      if (site.type === "gateway") {
-        if (site.site_name === "") {
-          site.site_name = "gateway";
-        }
-        site.gateway = true;
+      if (site.gateway) {
+        try {
+          site.parent_site = this.findSite(site.connected[0]);
+        } catch (e) {}
       }
     });
   };

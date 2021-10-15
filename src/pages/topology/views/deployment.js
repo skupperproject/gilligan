@@ -20,6 +20,8 @@ under the License.
 import * as d3 from "d3";
 import { utils } from "../../../utilities";
 import { genPath } from "../../../paths";
+import { gatewayPath } from "../svgUtils";
+import { interpolatePath } from "d3-interpolate-path";
 
 import { Site } from "./site";
 import { Service } from "./service";
@@ -507,14 +509,14 @@ export class Deployment extends Service {
     d3.select(this.SVG_ID)
       .select("defs.statPaths")
       .selectAll("path")
-      .attr("d", (d) =>
-        genPath({
+      .attr("d", (d) => {
+        return genPath({
           link: d,
-          reverse: d.circular,
+          reverse: d.source.x0 > d.target.x0 + d.target.getWidth(),
           offsetY: 4,
           width: sankey ? d.width : undefined,
-        })
-      );
+        });
+      });
   };
 
   collapseNodes = () => {
@@ -582,8 +584,32 @@ export class Deployment extends Service {
       .selectAll("text.cluster-name")
       .transition()
       .duration(duration)
-      .attr("x", (d) => (d.gateway ? d.getWidth() / 2 + 90 : d.getWidth() / 2))
-      .attr("y", (d) => (d.gateway ? d.getHeight() / 2 + 62 : -10));
+      .attr("x", (d) => d.getWidth() / 2)
+      .attr("y", (d) => (d.gateway ? d.getHeight() + 10 : -10));
+
+    d3.select(this.SVG_ID)
+      .select("g.gateway-background")
+      .selectAll("path.cloud")
+      .transition()
+      .duration(duration)
+      .attrTween("d", function (d) {
+        const previous = d3.select(this).attr("d");
+        const current = gatewayPath(d.getWidth(), d.getHeight());
+        return interpolatePath(previous, current);
+      });
+
+    d3.select(this.SVG_ID)
+      .selectAll("rect.gateway-background-rect")
+      .transition()
+      .duration(duration)
+      .attr("width", (d) => d.getWidth())
+      .attr("height", (d) => d.getHeight());
+
+    d3.select(this.SVG_ID)
+      .selectAll(".gateway-title")
+      .transition()
+      .duration(duration)
+      .attr("x", (d) => d.getWidth() / 2);
   };
 
   toSankey = (duration) => {
@@ -608,8 +634,32 @@ export class Deployment extends Service {
       .selectAll("text.cluster-name")
       .transition()
       .duration(duration)
-      .attr("x", (d) => (d.gateway ? d.getWidth() / 2 + 90 : d.getWidth() / 2))
-      .attr("y", (d) => (d.gateway ? d.getHeight() / 2 + 62 : -10));
+      .attr("x", (d) => d.getWidth() / 2)
+      .attr("y", (d) => (d.gateway ? d.getHeight() + 10 : -10));
+
+    d3.select(this.SVG_ID)
+      .select("g.gateway-background")
+      .selectAll("path.cloud")
+      .transition()
+      .duration(duration)
+      .attrTween("d", function (d) {
+        const previous = d3.select(this).attr("d");
+        const current = gatewayPath(d.getWidth(), d.getHeight());
+        return interpolatePath(previous, current);
+      });
+
+    d3.select(this.SVG_ID)
+      .selectAll("rect.gateway-background-rect")
+      .transition()
+      .duration(duration)
+      .attr("width", (d) => d.getWidth())
+      .attr("height", (d) => d.getHeight());
+
+    d3.select(this.SVG_ID)
+      .selectAll(".gateway-title")
+      .transition()
+      .duration(duration)
+      .attr("x", (d) => d.getWidth() / 2);
   };
 
   // get records for the table view

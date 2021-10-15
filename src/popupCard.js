@@ -43,7 +43,9 @@ class PopupCard extends React.Component {
     }
     return (
       <div className="body-line">
-        <span className="body-line-prompt">{utils.Icap(title)}</span>
+        <span className={title ? "body-line-prompt" : ""}>
+          {utils.Icap(title)}
+        </span>
         <span className="body-line-value">{property}</span>
       </div>
     );
@@ -122,6 +124,11 @@ class PopupCard extends React.Component {
           this.props.inline ? "inline" : "popup"
         }`}
       >
+        {!hideHeading && card.heading && (
+          <CardHeader>
+            <div className="card-cluster-heading">{card.heading}</div>
+          </CardHeader>
+        )}
         {!hideHeading && (
           <CardHeader>
             <div className="card-cluster-header">

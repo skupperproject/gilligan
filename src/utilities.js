@@ -115,7 +115,7 @@ const componentToHex = (c) => c.toString(16).padStart(2, "0");
 const utils = {
   VIEW_DURATION: 500,
   GatewayWidth: 40,
-  GatewayHeight: 120,
+  GatewayHeight: 40,
   ServiceWidth: 180,
   ServiceHeight: 40,
   ServiceGap: 5,
@@ -709,6 +709,8 @@ const utils = {
   circularize: (links) => {
     let circularLinkID = 0;
     links.forEach((l) => {
+      l.circular = false;
+      /*
       const sx =
         l.source.nodeType === "cluster"
           ? l.source.x1 - l.source.getWidth() / 2
@@ -734,6 +736,7 @@ const utils = {
           delete l.circularLinkType;
         }
       }
+      */
     });
   },
 
