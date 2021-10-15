@@ -131,7 +131,10 @@ const utils = {
     for (var i = 0; i < es.length; ++i) {
       if (str.endsWith(es[i])) return str + "es";
     }
-    if (str.endsWith("y")) return str.substr(0, str.length - 2) + "ies";
+    if (str.endsWith("y"))
+      return str.toLowerCase() === "gateway"
+        ? str + "s"
+        : str.substr(0, str.length - 2) + "ies";
     if (str.endsWith("s")) return str;
     return str + "s";
   },
