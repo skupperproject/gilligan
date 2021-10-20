@@ -709,40 +709,6 @@ const utils = {
     }
   },
 
-  circularize: (links) => {
-    let circularLinkID = 0;
-    links.forEach((l) => {
-      l.circular = false;
-      /*
-      const sx =
-        l.source.nodeType === "cluster"
-          ? l.source.x1 - l.source.getWidth() / 2
-          : l.source.x1;
-      const tx =
-        l.source.nodeType === "cluster"
-          ? l.target.x0 + l.target.getWidth() / 2
-          : l.target.x0;
-      if (sx >= tx || l.source === l.target) {
-        l.circular = true;
-        l.circularLinkID = circularLinkID++;
-        const circularLinkType = l.source.y0 > l.target.y0 ? "top" : "bottom";
-
-        l.circularLinkType = circularLinkType;
-        l.source.partOfCycle = true;
-        l.target.partOfCycle = true;
-        l.source.circularLinkType = circularLinkType;
-        l.target.circularLinkType = circularLinkType;
-      } else {
-        if (l.circular) {
-          l.circular = false;
-          delete l.circularLinkID;
-          delete l.circularLinkType;
-        }
-      }
-      */
-    });
-  },
-
   updateSankey: ({ nodes, links }) => {
     nodes.forEach((n) => {
       n.x0 = n.x;
@@ -750,9 +716,12 @@ const utils = {
       n.x1 = n.x0 + n.getWidth();
       n.y1 = n.y0 + n.sankeyHeight;
     });
-    utils.circularize(links);
+    links.forEach((l) => {
+      l.circular = false;
+    });
     // use the sankeyHeight when updating sankey path
     const linkNodes = nodes.filter((n) =>
+      // only use the links involved with the passed in nodes
       links.some((l) => l.source === n || l.target === n)
     );
     zeroIfyLinks(links);
