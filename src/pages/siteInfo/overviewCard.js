@@ -115,45 +115,47 @@ class OverviewCard extends React.Component {
         <Card isCompact isPlain>
           <CardBody>
             <Split hasGutter isWrappable>
-              {tableInfo.map((table) => (
-                <SplitItem isFilled>
-                  <Flex
-                    spaceItems={{ default: "spaceItemsLg" }}
-                    alignItems={{ default: "alignItemsFlexStart" }}
-                    direction={{ default: "column" }}
-                    grow={{ default: "grow" }}
-                  >
-                    {table.label}
-                    <TableComposable
-                      aria-label="Simple table"
-                      variant="compact"
-                      borders={false}
+              {tableInfo
+                .filter((table) => table.rows.length > 0)
+                .map((table, i) => (
+                  <SplitItem isFilled key={`table-${i}`}>
+                    <Flex
+                      spaceItems={{ default: "spaceItemsLg" }}
+                      alignItems={{ default: "alignItemsFlexStart" }}
+                      direction={{ default: "column" }}
+                      grow={{ default: "grow" }}
                     >
-                      <Thead>
-                        <Tr>
-                          {table.columns.map((column, columnIndex) => (
-                            <Th key={columnIndex}>{column}</Th>
-                          ))}
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {table.rows.map((row, rowIndex) => (
-                          <Tr key={rowIndex}>
-                            {row.map((cell, cellIndex) => (
-                              <Td
-                                key={`${rowIndex}_${cellIndex}`}
-                                dataLabel={table.columns[cellIndex]}
-                              >
-                                {cell}
-                              </Td>
+                      {table.label}
+                      <TableComposable
+                        aria-label="Simple table"
+                        variant="compact"
+                        borders={false}
+                      >
+                        <Thead>
+                          <Tr>
+                            {table.columns.map((column, columnIndex) => (
+                              <Th key={columnIndex}>{column}</Th>
                             ))}
                           </Tr>
-                        ))}
-                      </Tbody>
-                    </TableComposable>
-                  </Flex>
-                </SplitItem>
-              ))}
+                        </Thead>
+                        <Tbody>
+                          {table.rows.map((row, rowIndex) => (
+                            <Tr key={rowIndex}>
+                              {row.map((cell, cellIndex) => (
+                                <Td
+                                  key={`${rowIndex}_${cellIndex}`}
+                                  dataLabel={table.columns[cellIndex]}
+                                >
+                                  {cell}
+                                </Td>
+                              ))}
+                            </Tr>
+                          ))}
+                        </Tbody>
+                      </TableComposable>
+                    </Flex>
+                  </SplitItem>
+                ))}
             </Split>
           </CardBody>
         </Card>
