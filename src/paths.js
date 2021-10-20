@@ -230,8 +230,6 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
   }
   const overlapped = isOverlapped(link);
   if (overlapped) {
-    console.log(`paths::bezier.. overlapped link`);
-    console.log(link);
     x0 = link.source.x0 + link.source.getWidth() / 2;
     x1 = link.target.x0 + link.target.getWidth() / 2;
     if (link.source.y0 + link.source.getHeight() / 2 < link.target.y0) {
@@ -248,13 +246,13 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
 
   const sankeyBezierVertical = (
     path,
-    ltx,
+    ltx, // left top
     lty,
     rtx,
     rty,
     lbx,
     lby,
-    rbx,
+    rbx, // right bottom
     rby
   ) => {
     const midy = (lty + lby) / 2;
@@ -286,17 +284,25 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
             ? (link.source.y0 + link.source.y1) / 2
             : link.source.y1,
           link.target.x0,
-          link.target.y0,
+          link.target.nodeType === "cluster"
+            ? (link.target.y0 + link.target.y1) / 2
+            : link.target.y0,
           link.target.x1,
-          link.target.y0
+          link.target.nodeType === "cluster"
+            ? (link.target.y0 + link.target.y1) / 2
+            : link.target.y0
         );
       } else {
         sankeyBezierVertical(
           path,
           link.target.x0,
-          link.target.y1,
+          link.target.nodeType === "cluster"
+            ? (link.target.y0 + link.target.y1) / 2
+            : link.target.y1,
           link.target.x1,
-          link.target.y1,
+          link.target.nodeType === "cluster"
+            ? (link.target.y0 + link.target.y1) / 2
+            : link.target.y1,
           link.source.x0,
           link.source.nodeType === "cluster"
             ? (link.source.y0 + link.source.y1) / 2
@@ -310,10 +316,8 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
     } else {
       if (link.source.x0 > link.target.x0 + link.target.getWidth()) {
         if (link.source.nodeType === "cluster") {
-          console.log("cluster sankey source is to the right");
-          console.log(link);
           x0 = link.source.x0 + link.source.getWidth() / 2;
-          x1 = link.target.x0 + link.target.getWidth();
+          x1 = link.target.x0 + link.target.getWidth() / 2;
         } else {
           x0 = link.source.x0;
           x1 = link.target.x0 + link.target.getWidth();
