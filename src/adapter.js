@@ -35,7 +35,9 @@ class Adapter {
       if (site.gateway) {
         try {
           site.parent_site = this.findSite(site.connected[0]);
-        } catch (e) {}
+        } catch (e) {
+          console.log(`Error finding gateway parent site`);
+        }
       }
     });
   };
