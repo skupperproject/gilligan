@@ -82,6 +82,12 @@ export const genPath = ({
 // construct an arrow on the surface of the target circle
 // oriented along the path connecting the source and target circles
 const genMask = (link, selection, site) => {
+  if (link.target.gateway) {
+    console.log(
+      `paths::getMask asked to create mask for gateway  site: ${site}`
+    );
+    return bezierPath(link, false, 1, false, 0);
+  }
   if (!selection.getTotalLength) {
     selection.getTotalLength = () => 100;
     selection.getPointAtLength = (p) => ({ x: p, y: p / 100 });
@@ -139,64 +145,15 @@ const isOverlapped = (link) => {
   }
   return overlapped;
 };
-const _bezierPath = (link, offset) => {
-  const path = d3path.path();
-  let x0, y0, x1, y1, mid, midy;
-  const { offsetX } = calcOffsets(link, offset);
-
-  const overlapped = isOverlapped(link);
-  if (!overlapped) {
-    y0 = link.source.y0 + link.source.getHeight() / 2;
-    y1 = link.target.y0 + link.target.getHeight() / 2;
-    if (link.source.x0 > link.target.x0 + link.target.getWidth()) {
-      x0 = link.source.x0;
-      x1 = link.target.x0 + link.target.getWidth();
-    } else {
-      x0 = link.source.x0 + link.source.getWidth();
-      x1 = link.target.x0;
-    }
-  } else {
-    x0 = link.source.x0 + link.source.getWidth() / 2;
-    x1 = link.target.x0 + link.target.getWidth() / 2;
-    if (link.source.y0 + link.source.getHeight() / 2 < link.target.y0) {
-      y0 = link.source.y0 + link.source.getHeight();
-      y1 = link.target.y0;
-    } else {
-      y0 = link.source.y0;
-      y1 = link.target.y0 + link.target.getHeight();
-    }
-  }
-  mid = (x0 + x1) / 2;
-  midy = (y0 + y1) / 2;
-  x0 += offsetX;
-  x1 += offsetX;
-  if (
-    offset &&
-    link.source.x0 + link.source.getWidth() / 2 >
-      link.target.x0 + link.target.getWidth() / 2
-  ) {
-    // reverse the source and target for the statPath so the text isn't upside-down
-    let swp = x0;
-    x0 = x1;
-    x1 = swp;
-    swp = y0;
-    y0 = y1;
-    y1 = swp;
-  }
-
-  path.moveTo(x0, y0);
-  if (overlapped) {
-    path.bezierCurveTo(x0, midy, x1, midy, x1, y1);
-  } else {
-    path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
-  }
-  return path.toString();
-};
 
 // create a bezier path between link.source and link.target
 const bezierPath = (link, sankey, width, reverse, offset) => {
   let x0 = link.source.x1; // right side of source
-  if (link.source.expanded && link.source.nodeType === "cluster") {
+  if (
+    link.source.expanded &&
+    link.source.nodeType === "cluster" &&
+    !link.source.gateway
+  ) {
     x0 -= link.source.getWidth() / 2;
   }
   const { offsetX, offsetY } = calcOffsets(link, offset);
@@ -205,7 +162,11 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
       ? link.y0 - offsetY
       : link.source.y0 + link.source.getHeight() / 2 - offsetY;
   let x1 = link.target.x0; // left side of target
-  if (link.source.expanded && link.target.nodeType === "cluster") {
+  if (
+    link.target.expanded &&
+    link.target.nodeType === "cluster" &&
+    !link.target.gateway
+  ) {
     x1 += link.target.getWidth() / 2;
   }
   x0 += offsetX;
@@ -216,7 +177,6 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
       ? link.y1 - offsetY
       : link.target.y0 + link.target.getHeight() / 2 - offsetY;
   let mid = (x0 + x1) / 2;
-  let midy = (y0 + y1) / 2;
 
   let halfWidth = width / 2;
   let leftTop = y0 - halfWidth;
@@ -241,7 +201,6 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
     }
     x0 += offsetX;
     x1 += offsetX;
-    midy = (link.source.y1 + link.target.y0) / 2;
   }
 
   const sankeyBezierVertical = (
@@ -273,49 +232,50 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
     if (overlapped) {
       // source bottom is above the target top
       if (link.source.y1 < link.target.y0) {
+        const lrty =
+          link.source.nodeType === "cluster" && !link.source.gateway
+            ? (link.source.y0 + link.source.y1) / 2
+            : link.source.y1;
+        const lrby =
+          link.target.nodeType === "cluster" && !link.target.gateway
+            ? (link.target.y0 + link.target.y1) / 2
+            : link.target.y0;
+
         sankeyBezierVertical(
           path,
           link.source.x0,
-          link.source.nodeType === "cluster"
-            ? (link.source.y0 + link.source.y1) / 2
-            : link.source.y1,
+          lrty,
           link.source.x1,
-          link.source.nodeType === "cluster"
-            ? (link.source.y0 + link.source.y1) / 2
-            : link.source.y1,
+          lrty,
           link.target.x0,
-          link.target.nodeType === "cluster"
-            ? (link.target.y0 + link.target.y1) / 2
-            : link.target.y0,
+          lrby,
           link.target.x1,
-          link.target.nodeType === "cluster"
-            ? (link.target.y0 + link.target.y1) / 2
-            : link.target.y0
+          lrby
         );
       } else {
+        const lrty =
+          link.target.nodeType === "cluster" && !link.target.gateway
+            ? (link.target.y0 + link.target.y1) / 2
+            : link.target.y1;
+        const lrby =
+          link.source.nodeType === "cluster" && !link.target.gateway
+            ? (link.source.y0 + link.source.y1) / 2
+            : link.source.y0;
         sankeyBezierVertical(
           path,
           link.target.x0,
-          link.target.nodeType === "cluster"
-            ? (link.target.y0 + link.target.y1) / 2
-            : link.target.y1,
+          lrty,
           link.target.x1,
-          link.target.nodeType === "cluster"
-            ? (link.target.y0 + link.target.y1) / 2
-            : link.target.y1,
+          lrty,
           link.source.x0,
-          link.source.nodeType === "cluster"
-            ? (link.source.y0 + link.source.y1) / 2
-            : link.source.y0,
+          lrby,
           link.source.x1,
-          link.source.nodeType === "cluster"
-            ? (link.source.y0 + link.source.y1) / 2
-            : link.source.y0
+          lrby
         );
       }
     } else {
       if (link.source.x0 > link.target.x0 + link.target.getWidth()) {
-        if (link.source.nodeType === "cluster") {
+        if (link.source.nodeType === "cluster" && !link.source.gateway) {
           x0 = link.source.x0 + link.source.getWidth() / 2;
           x1 = link.target.x0 + link.target.getWidth() / 2;
         } else {
@@ -364,123 +324,6 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
         path.bezierCurveTo(mid, y0, mid, y1, x1, y1);
       }
     }
-  }
-  return path.toString();
-};
-
-// create a complex path exiting source on the right
-// and curving around to enter the target on the left
-const circular = (link, sankey, width, reverse, off, site) => {
-  //const rWidth = sankey || reverse ? link.width : width;
-  const rWidth = sankey ? link.width : width;
-  const minR = 10;
-  const maxR = 80;
-  const { offsetX, offsetY } = calcOffsets(link, off);
-  // straight line exiting source
-  const gapSource = site ? link.source.r : 8;
-  // straight line entering target
-  const gapTarget = site ? link.target.r : 8;
-  // radius of the turns
-  const r = Math.max(Math.min(maxR, rWidth), minR);
-  // right side of source
-  let sourceX = link.source.x1;
-  if (link.source.expanded && link.source.nodeType === "cluster") {
-    sourceX -= link.source.getWidth() / 2;
-  }
-  // left side of target
-  let targetX = link.target.x0;
-  if (link.target.expanded && link.target.nodeType === "cluster") {
-    targetX += link.target.getWidth() / 2;
-  }
-  const sourceY =
-    link.source.expanded && !isNaN(link.y0)
-      ? link.y0
-      : link.source.y0 + link.source.getHeight() / 2;
-  const targetY =
-    link.target.expanded && !isNaN(link.y1)
-      ? link.y1
-      : link.target.y0 + link.target.getHeight() / 2;
-
-  sourceX += offsetX;
-  targetX += offsetX;
-
-  const bottom = Math.max(
-    link.source.y0 + link.source.getHeight(),
-    link.target.y0 + link.target.getHeight()
-  );
-  let bottomY = Math.max(
-    bottom + (r - width / 2) * 2,
-    bottom + r + width / 2,
-    bottom + r * 2
-  );
-  const offset = sankey ? width / 2 : 0;
-  let sy = sourceY - offset - offsetY;
-  let ty = targetY - offset - offsetY;
-  let by = bottomY + offset - offsetY;
-  let sr = r + offset;
-
-  if (link.source.isExternal) {
-    sy = link.source.y + 24;
-    sr = 8;
-  }
-  let path = d3path.path();
-
-  if (!reverse) {
-    path.moveTo(sourceX, sy);
-    path.lineTo(sourceX + gapSource, sy);
-    path.arcTo(
-      sourceX + gapSource + sr,
-      sy,
-      sourceX + gapSource + sr,
-      sy + sr,
-      sr
-    );
-    path.lineTo(sourceX + gapSource + sr, by - sr);
-    path.arcTo(sourceX + gapSource + sr, by, sourceX + gapSource, by, sr);
-    path.lineTo(targetX - gapTarget, by);
-    path.arcTo(
-      targetX - gapTarget - sr,
-      by,
-      targetX - gapTarget - sr,
-      by - sr,
-      sr
-    );
-    path.lineTo(targetX - gapTarget - sr, ty + sr);
-    path.arcTo(targetX - gapTarget - sr, ty, targetX - gapTarget, ty, sr);
-    path.lineTo(targetX, ty);
-  }
-  if (sankey || reverse) {
-    if (!reverse) {
-      sy = sourceY + offset;
-      ty = targetY + offset;
-      by = bottomY - offset;
-      sr = Math.max(r - offset, minR);
-      path.lineTo(targetX, ty);
-    } else {
-      path.moveTo(targetX, ty);
-    }
-    path.lineTo(targetX - gapTarget, ty);
-    path.arcTo(
-      targetX - gapTarget - sr,
-      ty,
-      targetX - gapTarget - sr,
-      ty + sr,
-      sr
-    );
-    path.lineTo(targetX - gapTarget - sr, by - sr);
-    path.arcTo(targetX - gapTarget - sr, by, targetX - gapTarget, by, sr);
-    path.lineTo(sourceX + gapSource, by);
-    path.arcTo(
-      sourceX + gapSource + sr,
-      by,
-      sourceX + gapSource + sr,
-      by - sr,
-      sr
-    );
-    path.lineTo(sourceX + gapSource + sr, sy + sr);
-    path.arcTo(sourceX + gapSource + sr, sy, sourceX + gapSource, sy, sr);
-    path.lineTo(sourceX, sy);
-    if (!reverse) path.closePath();
   }
   return path.toString();
 };
