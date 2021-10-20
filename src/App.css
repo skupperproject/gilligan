@@ -1220,12 +1220,6 @@ g.service-type.selected * {
   stroke: black;
 }
 
-.cloud {
-  stroke-width: 1;
-  stroke: black;
-  fill: white;
-}
-
 rect.client {
   stroke: black;
   stroke-width: 1px;
@@ -1874,4 +1868,10 @@ g.external text {
   margin-bottom: 0.5em;
   /* border-top: 1px solid #eaeaea; */
   font-weight: bold;
+}
+
+.mask {
+  stroke-width: 1;
+  fill: transparent;
+  stroke: black;
 }
