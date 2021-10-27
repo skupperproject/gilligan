@@ -15,7 +15,6 @@
  */
 
 import { Nodes } from "./nodes.js";
-import { utils } from "../../utilities";
 
 export function updateState(circle) {
   circle
