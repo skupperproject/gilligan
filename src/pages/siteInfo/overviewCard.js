@@ -66,7 +66,7 @@ class OverviewCard extends React.Component {
       .map((gateway) => [
         gateway.site_name,
         gateway.version,
-        gateway.parent_site.site_id,
+        gateway.parent_site ? gateway.parent_site.site_id : "",
         gateway.type,
       ])
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
@@ -88,7 +88,7 @@ class OverviewCard extends React.Component {
     });
     // change the gateway parent site_id into site_name
     gatewayRows.forEach((row) => {
-      row[2] = this.service.adapter.siteNameFromId(row[2]) || row[2];
+      row[2] = this.props.service.adapter.siteNameFromId(row[2]) || row[2];
     });
 
     const tableInfo = [
