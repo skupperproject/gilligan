@@ -133,7 +133,7 @@ class UseTokenModal extends React.Component {
         >
           {this.props.title ? this.props.title : "Use token"}
         </Button>
-        {!this.props.justButton && (
+        {!this.props.justButton && isModalOpen && (
           <Modal
             width={"50%"}
             title={this.props.title ? this.props.title : "Use token"}
