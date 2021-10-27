@@ -341,7 +341,14 @@ export class Site {
     const selection = this.masksSelection.data(targets, (d) => d.uid);
     selection.exit().remove();
     const enter = selection.enter().append("g");
-    enter.append("path").attr("class", "mask");
+    enter
+      .append("path")
+      .attr("class", "mask")
+      .attr("marker-end", (d) => {
+        return d.link.source.gateway || d.link.target.gateway
+          ? "url(#end--15)"
+          : null;
+      });
 
     return selection;
   };
@@ -521,8 +528,10 @@ export class Site {
       .append("path")
       .attr("class", "siteTrafficDir")
       .attr("stroke", "black")
-      .attr("stroke-width", 1);
-    //.attr("marker-end", "url(#end--15)"); // site markers are manually moved
+      .attr("stroke-width", 1)
+      .attr("marker-end", (d) =>
+        d.source.gateway || d.target.gateway ? "url(#end--15)" : null
+      ); // site markers are manually moved
 
     const eventPath = enter.append("path").attr("class", "hittarget");
     if (handleEvents) {
