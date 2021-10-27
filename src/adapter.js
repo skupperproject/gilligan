@@ -638,7 +638,6 @@ class Adapter {
     if (site) {
       return site.site_name;
     }
-    return `${site_id} doesn't exist`;
   };
 
   // gather raw data for all services that are involved with the given service
@@ -842,7 +841,9 @@ class Adapter {
     if (service[key]) {
       service[key].forEach((request) => {
         sums.push({
-          site_name: this.siteNameFromId(request.site_id),
+          site_name:
+            this.siteNameFromId(request.site_id) ||
+            `${request.site_id} doesn't exist`,
           sum: this.requestSum(request),
         });
       });

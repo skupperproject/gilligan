@@ -362,3 +362,7 @@ table.pf-c-table.pf-m-grid-md.pf-m-compact * {
 .sk-overview-row-current {
   background-color: #efefef;
 }
+
+.sk-overview-table .sk-overview-table-current-sitename {
+  font-weight: bold;
+}

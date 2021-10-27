@@ -46,7 +46,7 @@ class OverviewCard extends React.Component {
       deployment.service.address,
       deployment.service.protocol,
       deployment.site.site_name,
-      deployment.site.site_name === this.props.service.siteInfo.site_name,
+      deployment.site.site_id === this.props.service.siteInfo.site_id,
     ]);
 
     const siteRows = this.props.service.VAN.sites
@@ -55,7 +55,7 @@ class OverviewCard extends React.Component {
         site.site_name,
         site.namespace,
         site.version,
-        site.site_name === this.props.service.siteInfo.site_name,
+        site.site_id === this.props.service.siteInfo.site_id,
       ])
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
     const siteColumns = ["Site name", "Namespace", "version"];
@@ -66,7 +66,7 @@ class OverviewCard extends React.Component {
       .map((gateway) => [
         gateway.site_name,
         gateway.version,
-        gateway.parent_site.site_name,
+        gateway.parent_site.site_id,
         gateway.type,
       ])
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
@@ -84,7 +84,11 @@ class OverviewCard extends React.Component {
     }
     // add the 'isCurrentSite boolean after type has been removed (or not)
     gatewayRows.forEach((row) => {
-      row.push(row[2] === this.props.service.siteInfo.site_name);
+      row.push(row[2] === this.props.service.siteInfo.site_id);
+    });
+    // change the gateway parent site_id into site_name
+    gatewayRows.forEach((row) => {
+      row[2] = this.service.adapter.siteNameFromId(row[2]) || row[2];
     });
 
     const tableInfo = [
@@ -94,6 +98,7 @@ class OverviewCard extends React.Component {
         rows: siteRows,
         color: "blue",
         title: "sites",
+        siteColumn: 0,
         label: (
           <Label color="blue" className="sk-overview-table-label">
             {siteCount} {utils.safePlural(siteCount, "site")}
@@ -106,6 +111,7 @@ class OverviewCard extends React.Component {
         rows: serviceRows,
         color: "purple",
         title: "services",
+        siteColumn: 2,
         label: (
           <Label color="purple" className="sk-overview-table-label">
             {serviceCount} exposed {utils.safePlural(serviceCount, "service")}
@@ -118,6 +124,7 @@ class OverviewCard extends React.Component {
         rows: gatewayRows,
         color: "green",
         title: "gateways",
+        siteColumn: 2,
         label: (
           <Label color="green" className="sk-overview-table-label">
             {gatewayCount} {utils.safePlural(gatewayCount, "gateway")}
@@ -172,6 +179,12 @@ class OverviewCard extends React.Component {
                                 <Td
                                   key={`${rowIndex}_${cellIndex}`}
                                   dataLabel={table.columns[cellIndex]}
+                                  className={
+                                    cellIndex === table.siteColumn &&
+                                    row[row.length - 1] === true
+                                      ? `sk-overview-table-current-sitename`
+                                      : null
+                                  }
                                 >
                                   {cell}
                                 </Td>
