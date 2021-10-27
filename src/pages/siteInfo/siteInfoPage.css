@@ -333,3 +333,32 @@ table.pf-c-table.pf-m-grid-md.pf-m-compact * {
 .sk-sub-group {
   margin-left: 2em;
 }
+
+.sk-overview-table {
+  border: 1px solid black;
+  padding: 0.5em;
+}
+
+.sk-table-border-blue {
+  border: 1px solid lightblue;
+}
+.sk-table-border-green {
+  border: 1px solid lightgreen;
+}
+.sk-table-border-purple {
+  border: 1px solid #ddccff;
+}
+
+.sk-overview-table-label {
+  position: relative;
+  top: -1.5em;
+  left: 1em;
+}
+
+.sk-overview-table .sk-overview-table-empty {
+  margin: auto; /* centers horizontally in parent */
+}
+
+.sk-overview-row-current {
+  background-color: #efefef;
+}

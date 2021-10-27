@@ -2,6 +2,12 @@
 import React from "react";
 import { Card, CardBody, Label, Flex } from "@patternfly/react-core";
 import { Split, SplitItem } from "@patternfly/react-core";
+import {
+  Title,
+  EmptyState,
+  EmptyStateVariant,
+  EmptyStateBody,
+} from "@patternfly/react-core";
 import { utils } from "../../utilities";
 
 import {
@@ -40,11 +46,17 @@ class OverviewCard extends React.Component {
       deployment.service.address,
       deployment.service.protocol,
       deployment.site.site_name,
+      deployment.site.site_name === this.props.service.siteInfo.site_name,
     ]);
 
     const siteRows = this.props.service.VAN.sites
       .filter((s) => !s.gateway)
-      .map((site) => [site.site_name, site.namespace, site.version])
+      .map((site) => [
+        site.site_name,
+        site.namespace,
+        site.version,
+        site.site_name === this.props.service.siteInfo.site_name,
+      ])
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
     const siteColumns = ["Site name", "Namespace", "version"];
     const siteCount = siteRows.length;
@@ -70,16 +82,21 @@ class OverviewCard extends React.Component {
       gatewayRows.forEach((r) => r.pop());
       gatewayColumns.pop();
     }
+    // add the 'isCurrentSite boolean after type has been removed (or not)
+    gatewayRows.forEach((row) => {
+      row.push(row[2] === this.props.service.siteInfo.site_name);
+    });
 
     const tableInfo = [
       {
         count: siteCount,
         columns: siteColumns,
         rows: siteRows,
+        color: "blue",
+        title: "sites",
         label: (
-          <Label color="blue">
-            {siteCount} {`${siteCount > 1 ? "Linked s" : "S"}`}
-            {utils.safePlural(siteCount, "ite")}
+          <Label color="blue" className="sk-overview-table-label">
+            {siteCount} {utils.safePlural(siteCount, "site")}
           </Label>
         ),
       },
@@ -87,10 +104,11 @@ class OverviewCard extends React.Component {
         count: serviceCount,
         columns: serviceColumns,
         rows: serviceRows,
+        color: "purple",
+        title: "services",
         label: (
-          <Label color="purple">
-            {serviceCount} Exposed{" "}
-            {utils.safePlural(serviceCount, "deployment")}
+          <Label color="purple" className="sk-overview-table-label">
+            {serviceCount} exposed {utils.safePlural(serviceCount, "service")}
           </Label>
         ),
       },
@@ -98,9 +116,11 @@ class OverviewCard extends React.Component {
         count: gatewayCount,
         columns: gatewayColumns,
         rows: gatewayRows,
+        color: "green",
+        title: "gateways",
         label: (
-          <Label color="green">
-            {gatewayCount} {utils.safePlural(gatewayCount, "Gateway")}
+          <Label color="green" className="sk-overview-table-label">
+            {gatewayCount} {utils.safePlural(gatewayCount, "gateway")}
           </Label>
         ),
       },
@@ -115,17 +135,17 @@ class OverviewCard extends React.Component {
         <Card isCompact isPlain>
           <CardBody>
             <Split hasGutter isWrappable>
-              {tableInfo
-                .filter((table) => table.rows.length > 0)
-                .map((table, i) => (
-                  <SplitItem isFilled key={`table-${i}`}>
-                    <Flex
-                      spaceItems={{ default: "spaceItemsLg" }}
-                      alignItems={{ default: "alignItemsFlexStart" }}
-                      direction={{ default: "column" }}
-                      grow={{ default: "grow" }}
-                    >
-                      {table.label}
+              {tableInfo.map((table, i) => (
+                <SplitItem isFilled key={`table-${i}`}>
+                  <Flex
+                    spaceItems={{ default: "spaceItemsLg" }}
+                    alignItems={{ default: "alignItemsFlexStart" }}
+                    direction={{ default: "column" }}
+                    grow={{ default: "grow" }}
+                    className={`sk-overview-table sk-table-border-${table.color}`}
+                  >
+                    {table.label}
+                    {table.rows.length > 0 && (
                       <TableComposable
                         aria-label="Simple table"
                         variant="compact"
@@ -140,7 +160,14 @@ class OverviewCard extends React.Component {
                         </Thead>
                         <Tbody>
                           {table.rows.map((row, rowIndex) => (
-                            <Tr key={rowIndex}>
+                            <Tr
+                              key={rowIndex}
+                              className={
+                                row[row.length - 1]
+                                  ? "sk-overview-row-current"
+                                  : null
+                              }
+                            >
                               {row.map((cell, cellIndex) => (
                                 <Td
                                   key={`${rowIndex}_${cellIndex}`}
@@ -153,9 +180,24 @@ class OverviewCard extends React.Component {
                           ))}
                         </Tbody>
                       </TableComposable>
-                    </Flex>
-                  </SplitItem>
-                ))}
+                    )}
+                    {table.rows.length === 0 && (
+                      <EmptyState
+                        variant={EmptyStateVariant.xs}
+                        className="sk-overview-table-empty"
+                      >
+                        <Title headingLevel="h4" size="md">
+                          No {table.title} found.
+                        </Title>
+                        <EmptyStateBody>
+                          There are no {table.title} defined in this Skupper
+                          network.
+                        </EmptyStateBody>
+                      </EmptyState>
+                    )}
+                  </Flex>
+                </SplitItem>
+              ))}
             </Split>
           </CardBody>
         </Card>
