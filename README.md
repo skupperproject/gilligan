@@ -19,3 +19,23 @@ You can also disable authentication by specifying
 `--console-auth unsecured`
 
 If you are running on openshift you can use oauth against the openshift console by specifying --console-auth openshift.
+
+## Development
+
+To develop the console code
+
+> `git clone https://github.com/skupperproject/gilligan.git`
+
+> `cd gilligan`
+
+> `yarn install`
+
+> `yarn start`
+
+To test
+
+> `yarn run test`
+
+To build the console.tgz file for release
+
+> `yarn run release`
