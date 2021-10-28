@@ -183,6 +183,7 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
   let leftBottom = y0 + halfWidth;
   let rightTop = y1 - halfWidth;
   let rightBottom = y1 + halfWidth;
+  // external clients don't start in the middle
   if (link.source.isExternal) {
     leftTop = link.source.y + 22 - offsetY;
     leftBottom = link.source.y + 26 - offsetY;
@@ -228,6 +229,7 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
     path.bezierCurveTo(lx, midy, rx, midy, rx, ry);
   };
   const path = d3path.path();
+
   if (sankey) {
     if (overlapped) {
       // source bottom is above the target top
@@ -274,6 +276,7 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
         );
       }
     } else {
+      // source is to the right of the target
       if (link.source.x0 > link.target.x0 + link.target.getWidth()) {
         if (link.source.nodeType === "cluster" && !link.source.gateway) {
           x0 = link.source.x0 + link.source.getWidth() / 2;
@@ -315,7 +318,7 @@ const bezierPath = (link, sankey, width, reverse, offset) => {
       } else {
         if (link.source.x0 > link.target.x0 + link.target.getWidth()) {
           x0 = link.source.x0;
-          y0 = link.source.y0 + link.source.getHeight() / 2;
+          //y0 = link.source.y0 + link.source.getHeight() / 2;
           x1 = link.target.x0 + link.target.getWidth();
           //y1 = link.target.y0 + ;
           mid = (x0 + x1) / 2;
