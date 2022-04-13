@@ -213,15 +213,27 @@ class RESTService {
                   2
                 )} returned with a status of ${response.status}`
               );
-              const e =
-                response.status === 404
-                  ? new Error(`${method}::${type} not implemented`)
-                  : new Error(
+              response.text().then((body) => {
+                const e = 
+                  (body !== null && body.trim() !== "")
+                    ? new Error(`Error: ${body}`)
+                    : new Error(
                       `${method} ${type} ${response.statusText} (${response.status})`
                     );
-              console.log("rejecting with error");
-              console.log(e);
-              reject(e);
+                console.log("rejecting with error");
+                console.log(e);
+                reject(e);
+              }, () => {
+                const e =
+                  response.status === 404
+                    ? new Error(`${method}::${type} not implemented`)
+                    : new Error(
+                      `${method} ${type} ${response.statusText} (${response.status})`
+                    );
+                console.log("rejecting with error");
+                console.log(e);
+                reject(e);
+              });
             } else {
               resolve(response);
             }
