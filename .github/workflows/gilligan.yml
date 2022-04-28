@@ -1,0 +1,26 @@
+name: gilligan
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      CI: false
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Install 📦
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Build 🚧
+        run: |
+          yarn build
+
+      - name: Unit tests 🔧
+        run: |
+          yarn test
