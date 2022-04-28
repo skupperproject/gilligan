@@ -31,7 +31,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --silent",
+    "test:watch": "react-scripts test --silent",
+    "test": "yarn test:watch --watchAll=false",
     "release": "react-scripts build && cd build/ && tar -zcvf ../console.tgz --exclude='./data' . && cd -",
     "eject": "react-scripts eject"
   },
