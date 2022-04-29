@@ -12,7 +12,7 @@
   workflow will be automatically triggered once a tag matching the pattern x.y.z* (E.g. 1.0.0 or 1.0.0-rc1) is pushed to the git repo.
   This release workflow will:
   * Install dependencies, build, test and package gilligan, generating a file named console.tgz
-  * Creates a *draft release* which can be seen here - https://github.com/skupperproject/gilligan/releases/
+  * Creates a *draft release* which can be seen here - <https://github.com/skupperproject/gilligan/releases/>
 * Edit the draft release by clicking the pencil link and verify if the details in the draft release are accurate.
   * Add more details to the text box if necessary. The text box should already contain a link to the issues that
     were fixed in this milestone.
