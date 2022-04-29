@@ -35,7 +35,3 @@ To develop the console code
 To test
 
 > `yarn run test`
-
-To build the console.tgz file for release
-
-> `yarn run release`
