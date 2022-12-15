@@ -17,7 +17,7 @@
     "d3": "3.5.17",
     "d3-interpolate-path": "^2.1.2",
     "d3-queue": "^3.0.7",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "history": "^5.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
